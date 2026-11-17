@@ -6492,31 +6492,31 @@
 
             if (s.isGoalie) {
                 s.hipGroup.position.y = 0.78;
-                s.bodyPivot.rotation.set(0.28, 0, 0);
-                s.leftLegPivot.rotation.set(-0.38, 0, 0.22);
-                s.leftKneePivot.rotation.set(0.68, 0, 0);
-                s.rightLegPivot.rotation.set(-0.38, 0, -0.22);
-                s.rightKneePivot.rotation.set(0.68, 0, 0);
+                s.bodyPivot.rotation.set(-0.28, 0, 0);
+                s.leftLegPivot.rotation.set(0.38, 0, 0.22);
+                s.leftKneePivot.rotation.set(-0.68, 0, 0);
+                s.rightLegPivot.rotation.set(0.38, 0, -0.22);
+                s.rightKneePivot.rotation.set(-0.68, 0, 0);
 
-                s.leftArmPivot.rotation.set(-0.62, 0.2, 0.35);
-                s.leftElbowPivot.rotation.set(-0.55, 0, 0);
-                s.rightArmPivot.rotation.set(-0.48, -0.2, -0.25);
-                s.rightElbowPivot.rotation.set(-0.45, 0, 0);
+                s.leftArmPivot.rotation.set(0.62, -0.2, 0.35);
+                s.leftElbowPivot.rotation.set(0.55, 0, 0);
+                s.rightArmPivot.rotation.set(0.48, 0.2, -0.25);
+                s.rightElbowPivot.rotation.set(0.45, 0, 0);
                 updateSkaterStickPose(s);
                 return;
             }
 
             if (s.isRef) {
                 s.hipGroup.position.y = 0.88 - Math.abs(stride) * 0.04;
-                s.bodyPivot.rotation.set(0.10, 0, 0);
-                s.leftLegPivot.rotation.set(stride, 0, 0);
-                s.leftKneePivot.rotation.set(Math.max(0, -stride) * 0.7, 0, 0);
-                s.rightLegPivot.rotation.set(-stride, 0, 0);
-                s.rightKneePivot.rotation.set(Math.max(0, stride) * 0.7, 0, 0);
-                s.leftArmPivot.rotation.set(-stride * 0.45, 0, 0.08);
-                s.leftElbowPivot.rotation.set(-0.25, 0, 0);
-                s.rightArmPivot.rotation.set(stride * 0.45, 0, -0.08);
-                s.rightElbowPivot.rotation.set(-0.25, 0, 0);
+                s.bodyPivot.rotation.set(-0.10, 0, 0);
+                s.leftLegPivot.rotation.set(-stride, 0, 0);
+                s.leftKneePivot.rotation.set(-Math.max(0, -stride) * 0.7, 0, 0);
+                s.rightLegPivot.rotation.set(stride, 0, 0);
+                s.rightKneePivot.rotation.set(-Math.max(0, stride) * 0.7, 0, 0);
+                s.leftArmPivot.rotation.set(stride * 0.45, 0, 0.08);
+                s.leftElbowPivot.rotation.set(0.25, 0, 0);
+                s.rightArmPivot.rotation.set(-stride * 0.45, 0, -0.08);
+                s.rightElbowPivot.rotation.set(0.25, 0, 0);
                 return;
             }
 
@@ -6524,19 +6524,19 @@
             s.hipGroup.position.y = 0.88 - crouch;
 
             const twist = -charge * 0.42 + shootSwing * 0.55;
-            s.bodyPivot.rotation.set(0.18 + charge * 0.08, twist, -stride * 0.05);
+            s.bodyPivot.rotation.set(-0.18 - charge * 0.08, -twist, -stride * 0.05);
 
-            s.leftLegPivot.rotation.set(stride - 0.08, 0, 0.06 + Math.max(0, stride) * 0.14);
-            s.leftKneePivot.rotation.set(0.16 + Math.max(0, -stride) * 0.75 + crouch * 1.4, 0, 0);
+            s.leftLegPivot.rotation.set(-stride + 0.08, 0, 0.06 + Math.max(0, stride) * 0.14);
+            s.leftKneePivot.rotation.set(-0.16 - Math.max(0, -stride) * 0.75 - crouch * 1.4, 0, 0);
 
-            s.rightLegPivot.rotation.set(-stride - 0.08, 0, -0.06 - Math.max(0, -stride) * 0.14);
-            s.rightKneePivot.rotation.set(0.16 + Math.max(0, stride) * 0.75 + crouch * 1.4, 0, 0);
+            s.rightLegPivot.rotation.set(stride + 0.08, 0, -0.06 - Math.max(0, -stride) * 0.14);
+            s.rightKneePivot.rotation.set(-0.16 - Math.max(0, stride) * 0.75 - crouch * 1.4, 0, 0);
 
-            s.leftArmPivot.rotation.set(-0.62 - charge * 0.35 + shootSwing * 0.25, 0.28, 0.12);
-            s.leftElbowPivot.rotation.set(-0.48 - charge * 0.25, 0, 0);
+            s.leftArmPivot.rotation.set(0.62 + charge * 0.35 - shootSwing * 0.25, -0.28, 0.12);
+            s.leftElbowPivot.rotation.set(0.48 + charge * 0.25, 0, 0);
 
-            s.rightArmPivot.rotation.set(-0.42 + charge * 0.75 - shootSwing * 0.95, -0.22, -0.14);
-            s.rightElbowPivot.rotation.set(-0.42 - charge * 0.2 + shootSwing * 0.25, 0, 0);
+            s.rightArmPivot.rotation.set(0.42 - charge * 0.75 + shootSwing * 0.95, 0.22, -0.14);
+            s.rightElbowPivot.rotation.set(0.42 + charge * 0.2 - shootSwing * 0.25, 0, 0);
 
             updateSkaterStickPose(s);
         }
@@ -6558,7 +6558,7 @@
             if (s.contactShadow) s.contactShadow.visible = true;
 
             if (!s.isGoalie) {
-                s.bodyPivot.rotation.x += Math.min(0.2, speed * 0.013);
+                s.bodyPivot.rotation.x -= Math.min(0.2, speed * 0.013);
                 s.hipGroup.position.y -= Math.min(0.05, speed * 0.003);
             }
 
@@ -6596,23 +6596,23 @@
         function setSkaterBenchPose(s, celebrating = false) {
             if (!s) return;
             s.hipGroup.position.y = 0.62;
-            s.bodyPivot.rotation.set(0.05, 0, 0);
-            s.leftLegPivot.rotation.set(-1.35, 0, 0.04);
-            s.leftKneePivot.rotation.set(1.35, 0, 0);
-            s.rightLegPivot.rotation.set(-1.35, 0, -0.04);
-            s.rightKneePivot.rotation.set(1.35, 0, 0);
+            s.bodyPivot.rotation.set(-0.05, 0, 0);
+            s.leftLegPivot.rotation.set(1.35, 0, 0.04);
+            s.leftKneePivot.rotation.set(-1.35, 0, 0);
+            s.rightLegPivot.rotation.set(1.35, 0, -0.04);
+            s.rightKneePivot.rotation.set(-1.35, 0, 0);
 
             if (celebrating) {
                 const wave = Math.sin(clock.elapsedTime * 11 + s.benchSlot) * 0.18;
-                s.leftArmPivot.rotation.set(-2.45 + wave, 0.15, 0.22);
-                s.leftElbowPivot.rotation.set(-0.25, 0, 0);
-                s.rightArmPivot.rotation.set(-2.45 - wave, -0.15, -0.22);
-                s.rightElbowPivot.rotation.set(-0.25, 0, 0);
+                s.leftArmPivot.rotation.set(2.45 - wave, -0.15, 0.22);
+                s.leftElbowPivot.rotation.set(0.25, 0, 0);
+                s.rightArmPivot.rotation.set(2.45 + wave, 0.15, -0.22);
+                s.rightElbowPivot.rotation.set(0.25, 0, 0);
             } else {
-                s.leftArmPivot.rotation.set(-0.35, 0.15, 0.08);
-                s.leftElbowPivot.rotation.set(-0.65, 0, 0);
-                s.rightArmPivot.rotation.set(-0.35, -0.15, -0.08);
-                s.rightElbowPivot.rotation.set(-0.65, 0, 0);
+                s.leftArmPivot.rotation.set(0.35, -0.15, 0.08);
+                s.leftElbowPivot.rotation.set(0.65, 0, 0);
+                s.rightArmPivot.rotation.set(0.35, 0.15, -0.08);
+                s.rightElbowPivot.rotation.set(0.65, 0, 0);
             }
             updateSkaterStickPose(s);
         }
@@ -6625,17 +6625,17 @@
                 const bounce = Math.abs(Math.sin(t * 9.5 + s.lineIndex)) * 0.12;
                 s.mesh.position.y = bounce;
                 s.hipGroup.position.y = 0.86;
-                s.bodyPivot.rotation.set(-0.08, Math.sin(t * 6) * 0.14, 0);
-                s.leftLegPivot.rotation.set(-0.12, 0, 0.14);
-                s.leftKneePivot.rotation.set(0.24, 0, 0);
-                s.rightLegPivot.rotation.set(-0.12, 0, -0.14);
-                s.rightKneePivot.rotation.set(0.24, 0, 0);
+                s.bodyPivot.rotation.set(0.08, -Math.sin(t * 6) * 0.14, 0);
+                s.leftLegPivot.rotation.set(0.12, 0, 0.14);
+                s.leftKneePivot.rotation.set(-0.24, 0, 0);
+                s.rightLegPivot.rotation.set(0.12, 0, -0.14);
+                s.rightKneePivot.rotation.set(-0.24, 0, 0);
 
                 const wave = Math.sin(t * 12 + 1.2) * 0.22;
-                s.leftArmPivot.rotation.set(-2.55 + wave, 0.18, 0.28);
-                s.leftElbowPivot.rotation.set(-0.22, 0, 0);
-                s.rightArmPivot.rotation.set(-2.65 - wave, -0.18, -0.28);
-                s.rightElbowPivot.rotation.set(-0.22, 0, 0);
+                s.leftArmPivot.rotation.set(2.55 - wave, -0.18, 0.28);
+                s.leftElbowPivot.rotation.set(0.22, 0, 0);
+                s.rightArmPivot.rotation.set(2.65 + wave, 0.18, -0.28);
+                s.rightElbowPivot.rotation.set(0.22, 0, 0);
 
                 if (s.stickGroup) {
                     s.mesh.updateMatrixWorld(true);
@@ -6652,15 +6652,15 @@
                 const gallop = Math.abs(Math.sin(t * 11)) * 0.16;
                 s.mesh.position.y = gallop;
                 s.hipGroup.position.y = 0.78;
-                s.bodyPivot.rotation.set(0.14, 0, Math.sin(t * 11) * 0.06);
-                s.leftLegPivot.rotation.set(-0.42 + Math.sin(t * 11) * 0.25, 0, 0.22);
-                s.leftKneePivot.rotation.set(0.75, 0, 0);
-                s.rightLegPivot.rotation.set(-0.42 - Math.sin(t * 11) * 0.25, 0, -0.22);
-                s.rightKneePivot.rotation.set(0.75, 0, 0);
-                s.leftArmPivot.rotation.set(-0.85, 0.15, 0.08);
-                s.leftElbowPivot.rotation.set(-0.55, 0, 0);
-                s.rightArmPivot.rotation.set(-2.45 + Math.sin(t * 14) * 0.25, -0.1, -0.2);
-                s.rightElbowPivot.rotation.set(-0.25, 0, 0);
+                s.bodyPivot.rotation.set(-0.14, 0, Math.sin(t * 11) * 0.06);
+                s.leftLegPivot.rotation.set(0.42 - Math.sin(t * 11) * 0.25, 0, 0.22);
+                s.leftKneePivot.rotation.set(-0.75, 0, 0);
+                s.rightLegPivot.rotation.set(0.42 + Math.sin(t * 11) * 0.25, 0, -0.22);
+                s.rightKneePivot.rotation.set(-0.75, 0, 0);
+                s.leftArmPivot.rotation.set(0.85, -0.15, 0.08);
+                s.leftElbowPivot.rotation.set(0.55, 0, 0);
+                s.rightArmPivot.rotation.set(2.45 - Math.sin(t * 14) * 0.25, 0.1, -0.2);
+                s.rightElbowPivot.rotation.set(0.25, 0, 0);
                 if (s.stickGroup) {
                     s.stickGroup.position.set(0, 0.62, -0.15);
                     s.stickGroup.rotation.set(Math.PI / 2 - 0.18 + Math.sin(t * 11) * 0.08, 0, 0);
@@ -6668,16 +6668,16 @@
             } else if (celebId === 'knee_slide') {
                 s.mesh.position.y = 0;
                 s.hipGroup.position.y = 0.48;
-                s.bodyPivot.rotation.set(-0.18, 0, 0);
-                s.leftLegPivot.rotation.set(-0.25, 0, 0.16);
-                s.leftKneePivot.rotation.set(1.75, 0, 0);
-                s.rightLegPivot.rotation.set(-0.25, 0, -0.16);
-                s.rightKneePivot.rotation.set(1.75, 0, 0);
+                s.bodyPivot.rotation.set(0.18, 0, 0);
+                s.leftLegPivot.rotation.set(0.25, 0, 0.16);
+                s.leftKneePivot.rotation.set(-1.75, 0, 0);
+                s.rightLegPivot.rotation.set(0.25, 0, -0.16);
+                s.rightKneePivot.rotation.set(-1.75, 0, 0);
                 const pump = Math.sin(t * 14) * 0.35;
-                s.leftArmPivot.rotation.set(-1.3, 0.4, 0.9);
-                s.leftElbowPivot.rotation.set(-0.2, 0, 0);
-                s.rightArmPivot.rotation.set(-2.3 + pump, -0.2, -0.35);
-                s.rightElbowPivot.rotation.set(-0.4 + pump * 0.5, 0, 0);
+                s.leftArmPivot.rotation.set(1.3, -0.4, 0.9);
+                s.leftElbowPivot.rotation.set(0.2, 0, 0);
+                s.rightArmPivot.rotation.set(2.3 - pump, 0.2, -0.35);
+                s.rightElbowPivot.rotation.set(0.4 - pump * 0.5, 0, 0);
                 if (s.stickGroup) {
                     s.mesh.updateMatrixWorld(true);
                     const handPos = new THREE.Vector3();
@@ -6690,43 +6690,43 @@
                 const recoil = Math.max(0, Math.sin(t * 9)) * 0.14;
                 s.mesh.position.y = 0;
                 s.hipGroup.position.y = 0.72;
-                s.bodyPivot.rotation.set(0.12 - recoil, 0.35, 0);
-                s.leftLegPivot.rotation.set(-0.45, 0, 0.12);
-                s.leftKneePivot.rotation.set(0.85, 0, 0);
-                s.rightLegPivot.rotation.set(0.35, 0, -0.12);
-                s.rightKneePivot.rotation.set(1.15, 0, 0);
-                s.leftArmPivot.rotation.set(-1.35 - recoil, 0.35, 0.1);
-                s.leftElbowPivot.rotation.set(-0.35, 0, 0);
-                s.rightArmPivot.rotation.set(-1.15 - recoil, -0.25, -0.15);
-                s.rightElbowPivot.rotation.set(-0.85, 0, 0);
+                s.bodyPivot.rotation.set(-0.12 + recoil, -0.35, 0);
+                s.leftLegPivot.rotation.set(0.45, 0, 0.12);
+                s.leftKneePivot.rotation.set(-0.85, 0, 0);
+                s.rightLegPivot.rotation.set(-0.35, 0, -0.12);
+                s.rightKneePivot.rotation.set(-1.15, 0, 0);
+                s.leftArmPivot.rotation.set(1.35 + recoil, -0.35, 0.1);
+                s.leftElbowPivot.rotation.set(0.35, 0, 0);
+                s.rightArmPivot.rotation.set(1.15 + recoil, 0.25, -0.15);
+                s.rightElbowPivot.rotation.set(0.85, 0, 0);
                 updateSkaterStickPose(s);
             } else if (celebId === 'canoe') {
                 const paddle = Math.sin(t * 8);
                 s.mesh.position.y = 0;
                 s.hipGroup.position.y = 0.24;
-                s.bodyPivot.rotation.set(0.08, paddle * 0.55, paddle * 0.08);
-                s.leftLegPivot.rotation.set(-1.45, 0, 0.14);
-                s.leftKneePivot.rotation.set(0.25, 0, 0);
-                s.rightLegPivot.rotation.set(-1.45, 0, -0.14);
-                s.rightKneePivot.rotation.set(0.25, 0, 0);
-                s.leftArmPivot.rotation.set(-1.05 + paddle * 0.45, 0.25, 0.15);
-                s.leftElbowPivot.rotation.set(-0.45, 0, 0);
-                s.rightArmPivot.rotation.set(-1.05 - paddle * 0.45, -0.25, -0.15);
-                s.rightElbowPivot.rotation.set(-0.45, 0, 0);
+                s.bodyPivot.rotation.set(-0.08, -paddle * 0.55, paddle * 0.08);
+                s.leftLegPivot.rotation.set(1.45, 0, 0.14);
+                s.leftKneePivot.rotation.set(-0.25, 0, 0);
+                s.rightLegPivot.rotation.set(1.45, 0, -0.14);
+                s.rightKneePivot.rotation.set(-0.25, 0, 0);
+                s.leftArmPivot.rotation.set(1.05 - paddle * 0.45, -0.25, 0.15);
+                s.leftElbowPivot.rotation.set(0.45, 0, 0);
+                s.rightArmPivot.rotation.set(1.05 + paddle * 0.45, 0.25, -0.15);
+                s.rightElbowPivot.rotation.set(0.45, 0, 0);
                 updateSkaterStickPose(s);
             } else if (celebId === 'sword') {
                 const slash = Math.sin(t * 10);
                 s.mesh.position.y = Math.abs(slash) * 0.06;
                 s.hipGroup.position.y = 0.84;
-                s.bodyPivot.rotation.set(0.05, slash * 0.4, 0);
-                s.leftLegPivot.rotation.set(-0.18, 0, 0.18);
-                s.leftKneePivot.rotation.set(0.32, 0, 0);
-                s.rightLegPivot.rotation.set(0.15, 0, -0.18);
-                s.rightKneePivot.rotation.set(0.25, 0, 0);
-                s.leftArmPivot.rotation.set(-0.35, 0.2, 0.35);
-                s.leftElbowPivot.rotation.set(-0.5, 0, 0);
-                s.rightArmPivot.rotation.set(-1.8 + slash * 0.9, -0.3, -0.2);
-                s.rightElbowPivot.rotation.set(-0.3, 0, 0);
+                s.bodyPivot.rotation.set(-0.05, -slash * 0.4, 0);
+                s.leftLegPivot.rotation.set(0.18, 0, 0.18);
+                s.leftKneePivot.rotation.set(-0.32, 0, 0);
+                s.rightLegPivot.rotation.set(-0.15, 0, -0.18);
+                s.rightKneePivot.rotation.set(-0.25, 0, 0);
+                s.leftArmPivot.rotation.set(0.35, -0.2, 0.35);
+                s.leftElbowPivot.rotation.set(0.5, 0, 0);
+                s.rightArmPivot.rotation.set(1.8 - slash * 0.9, 0.3, -0.2);
+                s.rightElbowPivot.rotation.set(0.3, 0, 0);
                 if (s.stickGroup) {
                     s.mesh.updateMatrixWorld(true);
                     const handPos = new THREE.Vector3();
@@ -6739,15 +6739,15 @@
                 const pump = Math.sin(t * 14) * 0.38;
                 s.mesh.position.y = Math.max(0, Math.sin(t * 14)) * 0.1;
                 s.hipGroup.position.y = 0.85;
-                s.bodyPivot.rotation.set(-0.06, -0.2, 0);
-                s.leftLegPivot.rotation.set(-0.2, 0, 0.12);
-                s.leftKneePivot.rotation.set(0.35, 0, 0);
-                s.rightLegPivot.rotation.set(0.15, 0, -0.12);
-                s.rightKneePivot.rotation.set(0.25, 0, 0);
-                s.leftArmPivot.rotation.set(-2.65 + pump, 0.1, 0.2);
-                s.leftElbowPivot.rotation.set(-0.35 + pump * 0.6, 0, 0);
-                s.rightArmPivot.rotation.set(-0.35, -0.2, -0.15);
-                s.rightElbowPivot.rotation.set(-0.4, 0, 0);
+                s.bodyPivot.rotation.set(0.06, 0.2, 0);
+                s.leftLegPivot.rotation.set(0.2, 0, 0.12);
+                s.leftKneePivot.rotation.set(-0.35, 0, 0);
+                s.rightLegPivot.rotation.set(-0.15, 0, -0.12);
+                s.rightKneePivot.rotation.set(-0.25, 0, 0);
+                s.leftArmPivot.rotation.set(2.65 - pump, -0.1, 0.2);
+                s.leftElbowPivot.rotation.set(0.35 - pump * 0.6, 0, 0);
+                s.rightArmPivot.rotation.set(0.35, 0.2, -0.15);
+                s.rightElbowPivot.rotation.set(0.4, 0, 0);
                 if (s.stickGroup) {
                     s.mesh.updateMatrixWorld(true);
                     const handPos = new THREE.Vector3();
@@ -6760,15 +6760,15 @@
                 const bowDepth = 0.62 + Math.sin(t * 4) * 0.12;
                 s.mesh.position.y = 0;
                 s.hipGroup.position.y = 0.82;
-                s.bodyPivot.rotation.set(bowDepth, 0, 0);
-                s.leftLegPivot.rotation.set(-0.15, 0, 0.1);
-                s.leftKneePivot.rotation.set(0.28, 0, 0);
-                s.rightLegPivot.rotation.set(-0.15, 0, -0.1);
-                s.rightKneePivot.rotation.set(0.28, 0, 0);
-                s.leftArmPivot.rotation.set(-0.4, 0.3, 1.15);
-                s.leftElbowPivot.rotation.set(-0.15, 0, 0);
-                s.rightArmPivot.rotation.set(-0.4, -0.3, -1.15);
-                s.rightElbowPivot.rotation.set(-0.15, 0, 0);
+                s.bodyPivot.rotation.set(-bowDepth, 0, 0);
+                s.leftLegPivot.rotation.set(0.15, 0, 0.1);
+                s.leftKneePivot.rotation.set(-0.28, 0, 0);
+                s.rightLegPivot.rotation.set(0.15, 0, -0.1);
+                s.rightKneePivot.rotation.set(-0.28, 0, 0);
+                s.leftArmPivot.rotation.set(0.4, -0.3, 1.15);
+                s.leftElbowPivot.rotation.set(0.15, 0, 0);
+                s.rightArmPivot.rotation.set(0.4, 0.3, -1.15);
+                s.rightElbowPivot.rotation.set(0.15, 0, 0);
                 if (s.stickGroup) {
                     s.mesh.updateMatrixWorld(true);
                     const handPos = new THREE.Vector3();
@@ -6780,15 +6780,15 @@
             } else if (celebId === 'spin_jump') {
                 s.mesh.position.y = Math.abs(Math.sin(t * 7.5)) * 0.42;
                 s.hipGroup.position.y = 0.88;
-                s.bodyPivot.rotation.set(-0.05, 0, 0);
-                s.leftLegPivot.rotation.set(-0.25, 0, 0.25);
-                s.leftKneePivot.rotation.set(0.55, 0, 0);
-                s.rightLegPivot.rotation.set(-0.25, 0, -0.25);
-                s.rightKneePivot.rotation.set(0.55, 0, 0);
-                s.leftArmPivot.rotation.set(-2.7, 0.1, 0.35);
-                s.leftElbowPivot.rotation.set(-0.15, 0, 0);
-                s.rightArmPivot.rotation.set(-2.7, -0.1, -0.35);
-                s.rightElbowPivot.rotation.set(-0.15, 0, 0);
+                s.bodyPivot.rotation.set(0.05, 0, 0);
+                s.leftLegPivot.rotation.set(0.25, 0, 0.25);
+                s.leftKneePivot.rotation.set(-0.55, 0, 0);
+                s.rightLegPivot.rotation.set(0.25, 0, -0.25);
+                s.rightKneePivot.rotation.set(-0.55, 0, 0);
+                s.leftArmPivot.rotation.set(2.7, -0.1, 0.35);
+                s.leftElbowPivot.rotation.set(0.15, 0, 0);
+                s.rightArmPivot.rotation.set(2.7, 0.1, -0.35);
+                s.rightElbowPivot.rotation.set(0.15, 0, 0);
                 if (s.stickGroup) {
                     s.mesh.updateMatrixWorld(true);
                     const handPos = new THREE.Vector3();
@@ -6801,15 +6801,15 @@
                 const bank = Math.sin(t * 5.5) * 0.38;
                 s.mesh.position.y = 0.04;
                 s.hipGroup.position.y = 0.80;
-                s.bodyPivot.rotation.set(0.36, 0, bank);
-                s.leftLegPivot.rotation.set(-0.22, 0, 0.14);
-                s.leftKneePivot.rotation.set(0.42, 0, 0);
-                s.rightLegPivot.rotation.set(-0.22, 0, -0.14);
-                s.rightKneePivot.rotation.set(0.42, 0, 0);
-                s.leftArmPivot.rotation.set(-0.2, 0, 1.42);
-                s.leftElbowPivot.rotation.set(-0.08, 0, 0);
-                s.rightArmPivot.rotation.set(-0.2, 0, -1.42);
-                s.rightElbowPivot.rotation.set(-0.08, 0, 0);
+                s.bodyPivot.rotation.set(-0.36, 0, bank);
+                s.leftLegPivot.rotation.set(0.22, 0, 0.14);
+                s.leftKneePivot.rotation.set(-0.42, 0, 0);
+                s.rightLegPivot.rotation.set(0.22, 0, -0.14);
+                s.rightKneePivot.rotation.set(-0.42, 0, 0);
+                s.leftArmPivot.rotation.set(0.2, 0, 1.42);
+                s.leftElbowPivot.rotation.set(0.08, 0, 0);
+                s.rightArmPivot.rotation.set(0.2, 0, -1.42);
+                s.rightElbowPivot.rotation.set(0.08, 0, 0);
                 if (s.stickGroup) {
                     s.mesh.updateMatrixWorld(true);
                     const handPos = new THREE.Vector3();
@@ -6822,15 +6822,15 @@
                 s.mesh.position.y = 0.22;
                 s.mesh.rotation.x = -Math.PI / 2 + 0.08;
                 s.hipGroup.position.y = 0.85;
-                s.bodyPivot.rotation.set(-0.2, 0, 0);
-                s.leftLegPivot.rotation.set(0.1, 0, 0.1);
-                s.leftKneePivot.rotation.set(0.15, 0, 0);
-                s.rightLegPivot.rotation.set(0.1, 0, -0.1);
-                s.rightKneePivot.rotation.set(0.15, 0, 0);
-                s.leftArmPivot.rotation.set(-2.85, 0.1, 0.15);
-                s.leftElbowPivot.rotation.set(-0.1, 0, 0);
-                s.rightArmPivot.rotation.set(-2.85, -0.1, -0.15);
-                s.rightElbowPivot.rotation.set(-0.1, 0, 0);
+                s.bodyPivot.rotation.set(0.2, 0, 0);
+                s.leftLegPivot.rotation.set(-0.1, 0, 0.1);
+                s.leftKneePivot.rotation.set(-0.15, 0, 0);
+                s.rightLegPivot.rotation.set(-0.1, 0, -0.1);
+                s.rightKneePivot.rotation.set(-0.15, 0, 0);
+                s.leftArmPivot.rotation.set(2.85, -0.1, 0.15);
+                s.leftElbowPivot.rotation.set(0.1, 0, 0);
+                s.rightArmPivot.rotation.set(2.85, 0.1, -0.15);
+                s.rightElbowPivot.rotation.set(0.1, 0, 0);
                 if (s.stickGroup) {
                     s.mesh.updateMatrixWorld(true);
                     const handPos = new THREE.Vector3();
@@ -6843,15 +6843,15 @@
                 const strum = Math.sin(t * 22) * 0.32;
                 s.mesh.position.y = Math.abs(Math.sin(t * 7)) * 0.08;
                 s.hipGroup.position.y = 0.78;
-                s.bodyPivot.rotation.set(-0.16, -0.25, Math.sin(t * 7) * 0.12);
-                s.leftLegPivot.rotation.set(-0.32, 0, 0.22);
-                s.leftKneePivot.rotation.set(0.55, 0, 0);
-                s.rightLegPivot.rotation.set(0.15, 0, -0.22);
-                s.rightKneePivot.rotation.set(0.45, 0, 0);
-                s.leftArmPivot.rotation.set(-1.15, 0.4, 0.25);
-                s.leftElbowPivot.rotation.set(-0.75, 0, 0);
-                s.rightArmPivot.rotation.set(-0.85 + strum, -0.35, -0.15);
-                s.rightElbowPivot.rotation.set(-0.95 + strum, 0, 0);
+                s.bodyPivot.rotation.set(0.16, 0.25, Math.sin(t * 7) * 0.12);
+                s.leftLegPivot.rotation.set(0.32, 0, 0.22);
+                s.leftKneePivot.rotation.set(-0.55, 0, 0);
+                s.rightLegPivot.rotation.set(-0.15, 0, -0.22);
+                s.rightKneePivot.rotation.set(-0.45, 0, 0);
+                s.leftArmPivot.rotation.set(1.15, -0.4, 0.25);
+                s.leftElbowPivot.rotation.set(0.75, 0, 0);
+                s.rightArmPivot.rotation.set(0.85 - strum, 0.35, -0.15);
+                s.rightElbowPivot.rotation.set(0.95 - strum, 0, 0);
                 if (s.stickGroup) {
                     s.stickGroup.position.set(0.05, 0.92, -0.24);
                     s.stickGroup.rotation.set(0.25, 0.2, -1.15);
@@ -6860,15 +6860,15 @@
                 const jump = Math.abs(Math.sin(t * 10)) * 0.18;
                 s.mesh.position.y = jump;
                 s.hipGroup.position.y = 0.86;
-                s.bodyPivot.rotation.set(0.08, Math.sin(t * 8) * 0.2, 0);
-                s.leftLegPivot.rotation.set(-0.14, 0, 0.16);
-                s.leftKneePivot.rotation.set(0.26, 0, 0);
-                s.rightLegPivot.rotation.set(-0.14, 0, -0.16);
-                s.rightKneePivot.rotation.set(0.26, 0, 0);
-                s.leftArmPivot.rotation.set(-1.55, 0.45, 0.65);
-                s.leftElbowPivot.rotation.set(-0.35, 0, 0);
-                s.rightArmPivot.rotation.set(-1.55, -0.45, -0.65);
-                s.rightElbowPivot.rotation.set(-0.35, 0, 0);
+                s.bodyPivot.rotation.set(-0.08, -Math.sin(t * 8) * 0.2, 0);
+                s.leftLegPivot.rotation.set(0.14, 0, 0.16);
+                s.leftKneePivot.rotation.set(-0.26, 0, 0);
+                s.rightLegPivot.rotation.set(0.14, 0, -0.16);
+                s.rightKneePivot.rotation.set(-0.26, 0, 0);
+                s.leftArmPivot.rotation.set(1.55, -0.45, 0.65);
+                s.leftElbowPivot.rotation.set(0.35, 0, 0);
+                s.rightArmPivot.rotation.set(1.55, 0.45, -0.65);
+                s.rightElbowPivot.rotation.set(0.35, 0, 0);
                 if (s.stickGroup) {
                     s.mesh.updateMatrixWorld(true);
                     const handPos = new THREE.Vector3();
@@ -6973,7 +6973,7 @@
                 );
                 clipboard.position.set(0, -0.44, -0.14);
                 clipboard.rotation.x = 0.35;
-                leftArmPivot.rotation.x = -0.75;
+                leftArmPivot.rotation.x = 0.75;
                 leftArmPivot.add(clipboard);
             } else {
                 const spareStick = new THREE.Mesh(new THREE.BoxGeometry(0.032, 1.48, 0.042), getStickMaterial());
@@ -6984,8 +6984,8 @@
                     new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.8 })
                 );
                 tapeRoll.position.set(0, -0.44, -0.05);
-                rightArmPivot.rotation.x = -0.65;
-                leftArmPivot.rotation.x = -0.55;
+                rightArmPivot.rotation.x = 0.65;
+                leftArmPivot.rotation.x = 0.55;
                 rightArmPivot.add(spareStick);
                 leftArmPivot.add(tapeRoll);
             }
@@ -7056,8 +7056,8 @@
                 if (isCelebrating) {
                     const wave = Math.sin(t * 12 + st.phase) * 0.25;
                     st.mesh.position.y = 0.12 + Math.abs(Math.sin(t * 10 + st.phase)) * 0.14;
-                    st.rightArmPivot.rotation.x = -2.55 + wave;
-                    st.leftArmPivot.rotation.x = -2.35 - wave;
+                    st.rightArmPivot.rotation.x = 2.55 - wave;
+                    st.leftArmPivot.rotation.x = 2.35 + wave;
                     st.bodyPivot.rotation.z = wave * 0.15;
                 } else {
                     st.mesh.position.y = 0.12;
@@ -7065,16 +7065,16 @@
                     const spotIt = playerSpotlight && playerSpotlight.list[playerSpotlight.idx];
                     if (spotIt && spotIt.isCoach && spotIt.staff === st) {
                         st.mesh.rotation.y = Math.PI / 2;
-                        st.rightArmPivot.rotation.x = -2.5 + Math.sin(t * 6) * 0.25;
-                        st.leftArmPivot.rotation.x = -0.4;
+                        st.rightArmPivot.rotation.x = 2.5 - Math.sin(t * 6) * 0.25;
+                        st.leftArmPivot.rotation.x = 0.4;
                     } else if (st.staffRole === 'coach') {
-                        st.rightArmPivot.rotation.x = -0.85 + Math.sin(t * 3.2 + st.phase) * 0.35;
-                        st.leftArmPivot.rotation.x = -0.75;
+                        st.rightArmPivot.rotation.x = 0.85 - Math.sin(t * 3.2 + st.phase) * 0.35;
+                        st.leftArmPivot.rotation.x = 0.75;
                         const lookZ = Math.max(-0.45, Math.min(0.45, (puck.position.z - st.mesh.position.z) * 0.02));
                         st.mesh.rotation.y = Math.PI / 2 + lookZ;
                     } else {
-                        st.rightArmPivot.rotation.x = -0.65 + Math.sin(t * 5.5) * 0.14;
-                        st.leftArmPivot.rotation.x = -0.58 - Math.sin(t * 5.5) * 0.14;
+                        st.rightArmPivot.rotation.x = 0.65 - Math.sin(t * 5.5) * 0.14;
+                        st.leftArmPivot.rotation.x = 0.58 + Math.sin(t * 5.5) * 0.14;
                     }
                 }
             });
@@ -7348,9 +7348,9 @@
                         ref.mesh.rotation.y = ref.rotationY;
                         setSkaterHockeyReadyPose(ref, 0, 0);
                         const signalWave = Math.sin(clock.elapsedTime * 10 + ref.side) * 0.28;
-                        ref.rightArmPivot.rotation.set(-1.95 + signalWave, 0, -0.18);
-                        ref.rightElbowPivot.rotation.set(-0.2, 0, 0);
-                        ref.leftArmPivot.rotation.set(-0.85, 0.2, 0.15);
+                        ref.rightArmPivot.rotation.set(1.95 - signalWave, 0, -0.18);
+                        ref.rightElbowPivot.rotation.set(0.2, 0, 0);
+                        ref.leftArmPivot.rotation.set(0.85, -0.2, 0.15);
                     }
                     return;
                 }
@@ -7957,10 +7957,10 @@
                 introLineupData.forEach((item, idx) => {
                     const s = item.skater;
                     const wave = Math.sin(saluteTimer * 7 + idx * 0.6) * 0.14;
-                    s.rightArmPivot.rotation.set(-2.35 + wave, -0.1, -0.18);
-                    s.rightElbowPivot.rotation.set(-0.25, 0, 0);
-                    s.leftArmPivot.rotation.set(-2.05 - wave * 0.6, 0.1, 0.18);
-                    s.leftElbowPivot.rotation.set(-0.25, 0, 0);
+                    s.rightArmPivot.rotation.set(2.35 - wave, 0.1, -0.18);
+                    s.rightElbowPivot.rotation.set(0.25, 0, 0);
+                    s.leftArmPivot.rotation.set(2.05 + wave * 0.6, -0.1, 0.18);
+                    s.leftElbowPivot.rotation.set(0.25, 0, 0);
                     updateSkaterStickPose(s);
                 });
                 if (saluteTimer >= 2.6) {
@@ -8538,14 +8538,14 @@
             }
             if (sh.ref) {
                 // l'arbitro mostra il disco alzando il braccio
-                sh.ref.rightArmPivot.rotation.set(-2.3 + Math.sin(t * 2) * 0.05, 0, -0.15);
-                sh.ref.rightElbowPivot.rotation.set(-0.25, 0, 0);
+                sh.ref.rightArmPivot.rotation.set(2.3 - Math.sin(t * 2) * 0.05, 0, -0.15);
+                sh.ref.rightElbowPivot.rotation.set(0.25, 0, 0);
             }
             if (sh.goalie) {
                 // il portiere batte il bastone sul pavimento
                 const tap = Math.max(0, Math.sin(t * 7)) * 0.25;
                 setSkaterHockeyReadyPose(sh.goalie, 0, 0);
-                sh.goalie.rightArmPivot.rotation.x -= tap;
+                sh.goalie.rightArmPivot.rotation.x += tap;
                 updateSkaterStickPose(sh.goalie);
             }
             if (c.t >= shotDur) {
@@ -8722,14 +8722,14 @@
                 s.mesh.rotation.x = st.rotX;
                 s.mesh.rotation.y = st.rotY;
                 s.hipGroup.position.y = st.hipY;
-                s.bodyPivot.rotation.set(st.bodyRotX, st.bodyRotY, st.bodyRotZ);
-                s.leftLegPivot.rotation.set(st.leftLegX, 0, st.leftLegZ);
+                s.bodyPivot.rotation.set(-st.bodyRotX, -st.bodyRotY, st.bodyRotZ);
+                s.leftLegPivot.rotation.set(-st.leftLegX, 0, st.leftLegZ);
                 s.leftKneePivot.rotation.x = st.leftKneeX;
-                s.rightLegPivot.rotation.set(st.rightLegX, 0, st.rightLegZ);
+                s.rightLegPivot.rotation.set(-st.rightLegX, 0, st.rightLegZ);
                 s.rightKneePivot.rotation.x = st.rightKneeX;
-                s.leftArmPivot.rotation.set(st.leftArmX, 0.2, st.leftArmZ);
+                s.leftArmPivot.rotation.set(-st.leftArmX, -0.2, st.leftArmZ);
                 s.leftElbowPivot.rotation.x = st.leftElbowX;
-                s.rightArmPivot.rotation.set(st.rightArmX, -0.2, st.rightArmZ);
+                s.rightArmPivot.rotation.set(-st.rightArmX, 0.2, st.rightArmZ);
                 s.rightElbowPivot.rotation.x = st.rightElbowX;
                 if (s.stickGroup && st.stickPos && st.stickQuat) {
                     s.stickGroup.position.copy(st.stickPos);
