@@ -1271,6 +1271,65 @@
             position: absolute; left: 0; right: 0; bottom: 0; height: 38%;
             background: linear-gradient(180deg, transparent 0%, rgba(220,38,38,0.10) 60%, rgba(220,38,38,0.22) 100%);
         }
+
+        /* ---------- Caricamento "Lo sapevi che?" ---------- */
+        #funfact-loader { position: fixed; inset: 0; z-index: 9000; overflow: hidden; background: #050913; color: #fff; font-family: 'Oswald', 'Arial Narrow', sans-serif; opacity: 0; transition: opacity .45s ease; }
+        #funfact-loader.ff-hidden { display: none; }
+        #funfact-loader.is-in { opacity: 1; }
+        #funfact-loader.is-out { opacity: 0; }
+        .ff-bg { position: absolute; inset: -6%; background-size: cover; background-position: center; filter: blur(30px) saturate(1.25) brightness(.42); transform: scale(1.08); }
+        .ff-shade { position: absolute; inset: 0; background:
+            radial-gradient(ellipse 70% 80% at 30% 45%, transparent 0%, rgba(5,9,19,.55) 70%, rgba(5,9,19,.92) 100%),
+            linear-gradient(180deg, rgba(5,9,19,.55) 0%, transparent 22%, transparent 70%, rgba(5,9,19,.95) 100%); }
+        .ff-grain { position: absolute; inset: 0; opacity: .07; pointer-events: none; background-image: repeating-linear-gradient(0deg, rgba(255,255,255,.5) 0 1px, transparent 1px 3px); mix-blend-mode: overlay; }
+        .ff-top { position: absolute; top: clamp(16px, 3.5vh, 36px); left: clamp(16px, 4vw, 64px); right: clamp(16px, 4vw, 64px); display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+        .ff-brand { background: #fff; border-radius: 10px; padding: 6px 12px; box-shadow: 0 10px 30px rgba(0,0,0,.45); }
+        .ff-top img { display: block; height: clamp(26px, 4.4vh, 44px); width: auto; }
+        .ff-mode { font-weight: 600; font-size: clamp(11px, 1.1vw, 14px); letter-spacing: .28em; text-transform: uppercase; color: rgba(255,255,255,.7); border: 1px solid rgba(255,255,255,.22); padding: 6px 14px; border-radius: 999px; background: rgba(5,9,19,.45); backdrop-filter: blur(6px); white-space: nowrap; }
+        .ff-stage { position: absolute; left: clamp(16px, 4vw, 64px); right: clamp(16px, 4vw, 64px); top: clamp(80px, 14vh, 140px); bottom: clamp(110px, 18vh, 170px); display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: clamp(24px, 4.5vw, 80px); align-items: center; }
+        .ff-photo-wrap { position: relative; justify-self: center; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; min-height: 0; }
+        .ff-photo-inner { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
+        .ff-photo { position: relative; max-width: 100%; max-height: 100%; border-radius: 6px; box-shadow: 0 30px 80px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.14); transform: rotate(-1.4deg); opacity: 0; transition: opacity .6s ease .15s, transform .9s cubic-bezier(.2,.8,.2,1) .15s; }
+        #funfact-loader.is-in .ff-photo.is-ready { opacity: 1; transform: rotate(-1.4deg) translateY(0); }
+        .ff-photo img { display: block; width: 100%; height: 100%; object-fit: cover; transform-origin: 60% 40%; }
+        #funfact-loader.is-in .ff-photo img { animation: ffKenBurns 11s ease-out forwards; }
+        .ff-photo::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(135deg, rgba(255,255,255,.14) 0%, transparent 35%); }
+        .ff-corner { position: absolute; width: 34px; height: 34px; border: 4px solid var(--bx-gold); pointer-events: none; z-index: 2; }
+        .ff-corner.tl { top: -10px; left: -10px; border-right: 0; border-bottom: 0; }
+        .ff-corner.br { bottom: -10px; right: -10px; border-left: 0; border-top: 0; }
+        .ff-text { min-width: 0; }
+        .ff-kicker { display: inline-flex; align-items: center; gap: 12px; font-weight: 700; font-size: clamp(13px, 1.35vw, 18px); letter-spacing: .32em; text-transform: uppercase; color: var(--bx-ink); background: var(--bx-gold); padding: 7px 16px 7px 12px; border-radius: 3px; animation: bxWipe .5s cubic-bezier(.2,.8,.2,1) .25s both; }
+        .ff-kicker svg { flex: none; }
+        .ff-num { display: block; margin-top: clamp(12px, 2vh, 22px); font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: clamp(48px, 6.5vw, 100px); line-height: .8; color: transparent; -webkit-text-stroke: 2px rgba(246,181,17,.55); letter-spacing: -.02em; opacity: 0; animation: ffRise .7s cubic-bezier(.2,.8,.2,1) .35s both; }
+        .ff-title { margin: clamp(10px, 2vh, 20px) 0 0; font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: clamp(20px, 2.3vw, 36px); line-height: 1.12; letter-spacing: -.01em; text-wrap: balance; text-shadow: 0 4px 24px rgba(0,0,0,.6); opacity: 0; animation: ffRise .8s cubic-bezier(.2,.8,.2,1) .45s both; }
+        .ff-fact { margin: clamp(10px, 1.8vh, 18px) 0 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; font-weight: 500; font-size: clamp(14px, 1.12vw, 19px); line-height: 1.55; color: rgba(255,255,255,.86); text-wrap: pretty; text-shadow: 0 2px 12px rgba(0,0,0,.6); max-width: 62ch; opacity: 0; animation: ffRise .8s cubic-bezier(.2,.8,.2,1) .6s both; }
+        .ff-fact.is-long { font-size: clamp(13px, 1.02vw, 17px); }
+        .ff-rule { margin-top: clamp(16px, 3vh, 30px); width: 72px; height: 4px; border-radius: 2px; background: linear-gradient(90deg, var(--bx-gold), rgba(246,181,17,0)); animation: bxWipe .6s ease .8s both; }
+        .ff-bottom { position: absolute; left: clamp(16px, 4vw, 64px); right: clamp(16px, 4vw, 64px); bottom: clamp(22px, 5vh, 52px); }
+        .ff-status-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
+        .ff-status { font-weight: 500; font-size: clamp(12px, 1.2vw, 16px); letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.78); display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .ff-status span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; transition: opacity .25s ease; }
+        .ff-dot { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--bx-gold); box-shadow: 0 0 12px var(--bx-gold); animation: ffPulse 1s ease-in-out infinite; }
+        .ff-pct { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: clamp(26px, 3.2vw, 46px); line-height: 1; font-variant-numeric: tabular-nums; }
+        .ff-pct small { font-size: .45em; margin-left: 2px; color: var(--bx-gold); }
+        .ff-bar { position: relative; height: 8px; border-radius: 999px; background: rgba(255,255,255,.12); overflow: hidden; box-shadow: inset 0 1px 2px rgba(0,0,0,.5); }
+        .ff-bar-fill { position: absolute; inset: 0 auto 0 0; width: 0%; border-radius: inherit; background: linear-gradient(90deg, #d98e00, var(--bx-gold) 70%, #ffe08a); box-shadow: 0 0 18px rgba(246,181,17,.7); }
+        .ff-bar-fill::after { content: ''; position: absolute; inset: 0; background: linear-gradient(90deg, transparent, rgba(255,255,255,.55), transparent); background-size: 120px 100%; background-repeat: no-repeat; animation: ffShine 1.4s linear infinite; }
+        @keyframes ffKenBurns { from { transform: scale(1.0) translate(0, 0); } to { transform: scale(1.12) translate(-1.5%, -1%); } }
+        @keyframes ffRise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+        @keyframes ffPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .35; transform: scale(.7); } }
+        @keyframes ffShine { from { background-position: -120px 0; } to { background-position: calc(100% + 120px) 0; } }
+        @media (max-width: 820px), (max-aspect-ratio: 1/1) {
+            .ff-stage { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; gap: 22px; align-items: stretch; }
+            .ff-num { display: none; }
+            .ff-text { text-align: left; }
+            .ff-photo-wrap { min-height: 18vh; }
+            .ff-stage { bottom: clamp(96px, 14vh, 130px); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            #funfact-loader *, #funfact-loader { animation: none !important; transition: none !important; }
+            #funfact-loader .ff-photo, #funfact-loader .ff-title, #funfact-loader .ff-fact, #funfact-loader .ff-num { opacity: 1; }
+        }
     </style>
 </head>
 <body>
@@ -11857,12 +11916,18 @@
                 item.addEventListener('click', () => {
                     const action = item.dataset.splashAction;
                     titleSplashScreen.classList.add('hidden');
-                    if (action === 'quick') {
-                        launchMatchFromCurrentConfig();
-                    } else {
-                        startScreen.classList.remove('hidden');
-                        setPreMatchStep(1);
-                    }
+                    const proceed = () => {
+                        if (action === 'quick') {
+                            launchMatchFromCurrentConfig();
+                        } else {
+                            startScreen.classList.remove('hidden');
+                            setPreMatchStep(1);
+                        }
+                    };
+                    // finto caricamento con un fun fact prima di entrare nella modalità scelta
+                    const modeLabel = (item.querySelector('.splash-tile-title') || {}).textContent || '';
+                    if (window.showFunFactLoading) window.showFunFactLoading(modeLabel.trim(), proceed);
+                    else proceed();
                     // keyboard highlight
                     document.querySelectorAll('.nhl-menu-item').forEach(el => el.classList.remove('active'));
                     item.classList.add('active');
@@ -12507,6 +12572,151 @@
             window.addEventListener('DOMContentLoaded', safeBootGame);
             window.addEventListener('load', safeBootGame);
         }
+    </script>
+
+    <!-- CARICAMENTO "LO SAPEVI CHE?" (dopo la scelta della modalità) -->
+    <div id="funfact-loader" class="ff-hidden" role="status" aria-live="polite">
+        <div class="ff-bg" id="ff-bg"></div>
+        <div class="ff-shade"></div>
+        <div class="ff-grain"></div>
+        <div class="ff-top">
+            <div class="ff-brand"><img src="assets/logos/game%20extended.png" alt="FISR Hockey in line" draggable="false"></div>
+            <div class="ff-mode" id="ff-mode">Amichevole</div>
+        </div>
+        <div class="ff-stage">
+            <div class="ff-photo-wrap">
+                <div class="ff-photo" id="ff-photo">
+                    <div class="ff-photo-inner"><img id="ff-img" alt="" draggable="false"></div>
+                    <span class="ff-corner tl"></span><span class="ff-corner br"></span>
+                </div>
+            </div>
+            <div class="ff-text">
+                <div class="ff-kicker">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 18h6"/><path d="M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.3h6c0-1 .4-1.8 1-2.3A7 7 0 0 0 12 2z"/></svg>
+                    Lo sapevi che?
+                </div>
+                <span class="ff-num" id="ff-num">#01</span>
+                <h2 class="ff-title" id="ff-title"></h2>
+                <p class="ff-fact" id="ff-fact"></p>
+                <div class="ff-rule"></div>
+            </div>
+        </div>
+        <div class="ff-bottom">
+            <div class="ff-status-row">
+                <div class="ff-status"><i class="ff-dot"></i><span id="ff-status">Caricamento</span></div>
+                <div class="ff-pct"><span id="ff-pct">0</span><small>%</small></div>
+            </div>
+            <div class="ff-bar"><div class="ff-bar-fill" id="ff-bar"></div></div>
+        </div>
+    </div>
+
+    <script src="src/data/funFacts.js"></script>
+    <script>
+        // Finto caricamento di 10 secondi con un fun fact e un'immagine scelti a caso.
+        (function () {
+            const DURATION_MS = 10000;
+            const STATUS_LINES = [
+                'Nastrando i bastoni',
+                'Montando le ruote dei pattini',
+                'Lucidando la pista',
+                'Tendendo le reti delle porte',
+                'Riscaldando i portieri',
+                'Accordando il fischietto dell\'arbitro',
+                'Facendo entrare il pubblico',
+                'Pronti all\'ingaggio'
+            ];
+            let lastFact = -1, lastImg = -1, running = false;
+
+            function pickIndex(len, last) {
+                if (len <= 1) return 0;
+                let i;
+                do { i = Math.floor(Math.random() * len); } while (i === last);
+                return i;
+            }
+            // avanzamento regolare con qualche piccola esitazione, così sembra un caricamento vero
+            // (derivata sempre positiva: la barra non torna mai indietro)
+            function fakeProgress(t) {
+                return Math.max(0, Math.min(1, t - 0.03 * Math.sin(t * Math.PI * 4)));
+            }
+
+            // La foto viene adattata al riquadro disponibile mantenendo le proporzioni,
+            // anche ingrandendo le immagini piccole.
+            function fitPhoto() {
+                const wrap = document.querySelector('#funfact-loader .ff-photo-wrap');
+                const photo = document.getElementById('ff-photo');
+                const img = document.getElementById('ff-img');
+                if (!wrap || !img.naturalWidth) return;
+                const bw = wrap.clientWidth, bh = wrap.clientHeight;
+                const k = Math.min(bw / img.naturalWidth, bh / img.naturalHeight);
+                photo.style.width = Math.floor(img.naturalWidth * k) + 'px';
+                photo.style.height = Math.floor(img.naturalHeight * k) + 'px';
+            }
+            window.addEventListener('resize', () => { if (running) fitPhoto(); });
+
+            window.showFunFactLoading = function (modeLabel, onDone) {
+                const root = document.getElementById('funfact-loader');
+                const facts = window.FUN_FACTS || [];
+                const imgs = window.FUN_FACT_IMAGES || [];
+                if (!root || running || !facts.length) { if (onDone) onDone(); return; }
+                running = true;
+
+                const fi = pickIndex(facts.length, lastFact); lastFact = fi;
+                const ii = pickIndex(imgs.length, lastImg); lastImg = ii;
+                const fact = typeof facts[fi] === 'string' ? { title: '', text: facts[fi] } : facts[fi];
+                const titleEl = document.getElementById('ff-title');
+                titleEl.textContent = fact.title || '';
+                titleEl.style.display = fact.title ? '' : 'none';
+                const factEl = document.getElementById('ff-fact');
+                factEl.textContent = fact.text || '';
+                factEl.classList.toggle('is-long', (fact.text || '').length > 480);
+                document.getElementById('ff-num').textContent = '#' + String(fi + 1).padStart(2, '0');
+                document.getElementById('ff-mode').textContent = modeLabel || '';
+
+                const photo = document.getElementById('ff-photo');
+                const img = document.getElementById('ff-img');
+                photo.classList.remove('is-ready');
+                photo.style.display = imgs.length ? '' : 'none';
+                if (imgs.length) {
+                    const src = imgs[ii];
+                    img.onload = () => { fitPhoto(); photo.classList.add('is-ready'); };
+                    img.onerror = () => { photo.style.display = 'none'; };
+                    img.src = src;
+                    if (img.complete && img.naturalWidth) img.onload();
+                    document.getElementById('ff-bg').style.backgroundImage = 'url("' + src + '")';
+                }
+
+                const bar = document.getElementById('ff-bar');
+                const pct = document.getElementById('ff-pct');
+                const status = document.getElementById('ff-status');
+                bar.style.width = '0%'; pct.textContent = '0';
+                status.textContent = STATUS_LINES[0];
+
+                // riavvia le animazioni d'ingresso
+                root.classList.remove('ff-hidden', 'is-in', 'is-out');
+                void root.offsetWidth;
+                root.classList.add('is-in');
+
+                const t0 = performance.now();
+                let lastLine = 0;
+                function tick(now) {
+                    const t = Math.min(1, (now - t0) / DURATION_MS);
+                    const p = fakeProgress(t);
+                    bar.style.width = (p * 100).toFixed(2) + '%';
+                    pct.textContent = String(Math.round(p * 100));
+                    const line = Math.min(STATUS_LINES.length - 1, Math.floor(t * STATUS_LINES.length));
+                    if (line !== lastLine) { lastLine = line; status.textContent = STATUS_LINES[line]; }
+                    if (t < 1) { requestAnimationFrame(tick); return; }
+                    root.classList.add('is-out');
+                    setTimeout(() => {
+                        root.classList.add('ff-hidden');
+                        root.classList.remove('is-in', 'is-out');
+                        running = false;
+                        if (onDone) onDone();
+                    }, 450);
+                }
+                requestAnimationFrame(tick);
+            };
+        })();
     </script>
 
     <!-- Moduli ES: main.js avvia Phaser 3 dopo che Three.js è stato inizializzato -->
