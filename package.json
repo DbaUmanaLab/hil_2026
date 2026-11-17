@@ -1,0 +1,8 @@
+{
+  "name": "inline-hockey-3d",
+  "version": "1.0.0",
+  "description": "Inline Hockey 3D Serie A FISR — Three.js + Phaser 3",
+  "scripts": {
+    "start": "npx serve . --listen 8080"
+  }
+}

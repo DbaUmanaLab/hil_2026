@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 365" role="img" aria-label="Logo FISR Hockey Inline Serie A">
+    <g fill="none" stroke-linecap="butt">
+        <path d="M 315 62 A 168 155 0 0 1 516 216" stroke="#ef231c" stroke-width="11" stroke-dasharray="135 12 95"/>
+        <path d="M 278 76 A 150 140 0 0 1 495 216" stroke="#15803d" stroke-width="14" stroke-dasharray="155 14 75"/>
+        <path d="M 332 82 A 132 124 0 0 1 474 216" stroke="#facc15" stroke-width="13" stroke-dasharray="125 10 65"/>
+        <path d="M 392 115 A 114 108 0 0 1 454 216" stroke="#1d4ed8" stroke-width="9"/>
+    </g>
+    <g fill="#0d1f6b">
+        <rect x="115" y="56" width="28" height="13" rx="3" transform="rotate(-27 129 62)"/>
+        <path d="M 124 68 L 139 60 L 252 282 C 258 293, 268 297, 285 299 L 352 306 C 367 308, 373 317, 370 327 C 367 336, 357 340, 342 338 L 272 329 C 249 326, 238 315, 229 296 Z"/>
+    </g>
+    <g transform="translate(214, 112) rotate(-17)">
+        <ellipse cx="0" cy="8" rx="30" ry="11" fill="#09154a"/>
+        <rect x="-30" y="-4" width="60" height="12" fill="#0d1f6b"/>
+        <ellipse cx="0" cy="-4" rx="30" ry="11" fill="#17329c" stroke="#0d1f6b" stroke-width="2"/>
+    </g>
+    <g>
+        <rect x="204" y="128" width="194" height="82" rx="20" fill="#ffffff"/>
+        <rect x="210" y="133" width="182" height="72" rx="16" fill="#0d1f6b"/>
+        <text x="301" y="182" text-anchor="middle" fill="#ffffff" font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-style="italic" font-size="52" letter-spacing="1">F.I.S.R.</text>
+        <rect x="224" y="191" width="51" height="5" rx="2" fill="#16a34a"/>
+        <rect x="275" y="191" width="52" height="5" fill="#ffffff"/>
+        <rect x="327" y="191" width="51" height="5" rx="2" fill="#dc2626"/>
+    </g>
+    <g font-family="'Arial Black', Impact, sans-serif" font-weight="900" font-style="italic" font-size="52" text-anchor="middle">
+        <text x="300" y="264" fill="#0d1f6b" stroke="#0d1f6b" stroke-width="11" stroke-linejoin="round">HOCKEY INLINE</text>
+        <text x="300" y="264" fill="#ffffff">HOCKEY INLINE</text>
+    </g>
+    <text x="155" y="328" text-anchor="middle" fill="#0d1f6b" font-family="Arial, sans-serif" font-weight="900" font-size="34" letter-spacing="2">SERIE A</text>
+</svg>
