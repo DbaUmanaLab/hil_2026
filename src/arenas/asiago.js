@@ -123,15 +123,16 @@
             root.add(bodyPivot);
             const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.19, 0.55, 10), mat); torso.position.y = 0.27; bodyPivot.add(torso);
             const headGroup = new THREE.Group(); headGroup.position.y = 0.69;
-            const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 12), getRealisticFaceMaterial(Math.floor(Math.random() * 3)));
+            const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 12), getRandomPhotoFaceMaterial());
             const hair = new THREE.Mesh(new THREE.SphereGeometry(0.148, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), hairM); hair.position.x = -0.015;
             headGroup.add(head, hair); bodyPivot.add(headGroup);
             const arm = sz => { const ap = new THREE.Group(); ap.position.set(0, 0.48, sz); const sl = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.052, 0.42, 7), mat); sl.position.y = -0.21; const hd = new THREE.Mesh(new THREE.SphereGeometry(0.05, 7, 7), handM); hd.position.y = -0.44; ap.add(sl, hd); bodyPivot.add(ap); return ap; };
             const leftArmPivot = arm(-0.24), rightArmPivot = arm(0.24);
             root.position.set(x, y, z);
             root.rotation.y = -Math.PI / 2 + (Math.random() - 0.5) * 0.4;
+            const childLift = maybeMakeCrowdChild(root, headGroup, false);
             targetGroup.add(root);
-            crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y, phase: Math.random() * Math.PI * 2, standing: true });
+            crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: true });
         };
         const keep = preset.crowdKeepRatio;
         [ZG - 0.55, ZG - 1.35, ZG - 2.15].forEach((z, row) => {

@@ -159,7 +159,7 @@
                 bodyPivot.add(torso);
                 const headGroup = new THREE.Group();
                 headGroup.position.y = 0.68;
-                const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 12), getRealisticFaceMaterial(Math.floor(Math.random() * 3)));
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 12), getRandomPhotoFaceMaterial());
                 const hair = new THREE.Mesh(new THREE.SphereGeometry(0.148, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMatF);
                 hair.position.x = -0.015;
                 headGroup.add(head, hair);
@@ -178,8 +178,9 @@
                 const leftArmPivot = mkArm(-0.24), rightArmPivot = mkArm(0.24);
                 fan.position.set(fx, fy, fz);
                 fan.rotation.y = rotY;
+                const childLift = maybeMakeCrowdChild(fan, headGroup, true);
                 targetGroup.add(fan);
-                crowdMembers.push({ mesh: fan, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: fy, phase: Math.random() * Math.PI * 2, standing: false });
+                crowdMembers.push({ mesh: fan, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: fy + childLift, phase: Math.random() * Math.PI * 2, standing: false });
         };
         rowsX.forEach((rx, r) => {
             const ry = 1.55 + r * 0.55;

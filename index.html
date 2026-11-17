@@ -3744,6 +3744,22 @@
             return getPhotoFaceMaterial(Math.floor(Math.random() * PHOTO_FACE_FILES.length));
         }
 
+        // Qualche bambino tra il pubblico: stesso modello del tifoso, rimpicciolito e con la
+        // testa proporzionalmente più grande. Da seduti il bacino resta sulla panca (piedi
+        // penzoloni), in piedi i piedi restano a terra. Restituisce lo spostamento in Y da
+        // sommare a baseY dell'animazione del pubblico.
+        const CROWD_CHILD_RATIO = 0.1;
+        const CROWD_SEAT_HIP_Y = 0.36;
+        function maybeMakeCrowdChild(root, headGroup, seated) {
+            if (Math.random() >= CROWD_CHILD_RATIO) return 0;
+            const s = 0.62 + Math.random() * 0.1;
+            root.scale.setScalar(s);
+            if (headGroup) headGroup.scale.setScalar(1.2);
+            const lift = seated ? CROWD_SEAT_HIP_Y * (1 - s) : 0;
+            root.position.y += lift;
+            return lift;
+        }
+
         function createBannerTexture(title, subtitle, bg, fg) {
             const c = document.createElement('canvas');
             c.width = 512;
@@ -5148,7 +5164,7 @@
                     if (Math.random() > crowdKeepRatio) continue;
 
                     const style = outfitStyles[Math.floor(Math.random() * outfitStyles.length)];
-                    const faceMat = getRealisticFaceMaterial(Math.floor(Math.random() * 3));
+                    const faceMat = getRandomPhotoFaceMaterial();
                     const jacketMat = new THREE.MeshStandardMaterial({ color: style.jacket, roughness: 0.6 });
                     const shirtMat = new THREE.MeshStandardMaterial({ color: style.shirt, roughness: 0.5 });
 
@@ -5204,6 +5220,7 @@
                     const fanZ = z + (Math.random() - 0.5) * 0.3;
                     fanRoot.position.set(rowX, rowY, fanZ);
                     fanRoot.rotation.y = Math.atan2(-fanZ, 18) * 0.35;
+                    const childLift = maybeMakeCrowdChild(fanRoot, headGroup, true);
                     targetGroup.add(fanRoot);
 
                     crowdMembers.push({
@@ -5212,7 +5229,7 @@
                         headGroup,
                         leftArmPivot,
                         rightArmPivot,
-                        baseY: rowY,
+                        baseY: rowY + childLift,
                         phase: Math.random() * Math.PI * 2,
                         standing: false
                     });
@@ -6239,29 +6256,75 @@
             if (isGoalie) {
                 const maskMat = new THREE.MeshPhysicalMaterial({ color: 0xf8fafc, roughness: 0.2, metalness: 0.1, clearcoat: 0.9 });
                 const cageMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.2 });
-                const dome = new THREE.Mesh(new THREE.SphereGeometry(0.17, 24, 18, 0, Math.PI * 2, 0, Math.PI * 0.7), maskMat);
-                dome.scale.set(0.98, 1.08, 1.12);
-                dome.position.set(0, 0.18, 0.012);
-                const stripe = new THREE.Mesh(new THREE.SphereGeometry(0.172, 24, 6, -0.25, 0.5, 0, Math.PI * 0.62), padAccentMat);
-                stripe.scale.copy(dome.scale);
-                stripe.position.copy(dome.position);
-                stripe.rotation.y = Math.PI;
-                const chin = new THREE.Mesh(new THREE.SphereGeometry(0.14, 18, 10, Math.PI * 0.2, Math.PI * 0.6, Math.PI * 0.45, Math.PI * 0.4), maskMat);
-                chin.position.set(0, 0.11, -0.03);
-                chin.rotation.y = Math.PI;
+                maskMat.side = THREE.DoubleSide;   // l'interno della calotta si vede dall'apertura
+                const linerMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: 0.85, side: THREE.BackSide });
+                cageMat.color.setHex(0x1f2937);    // griglia scura, come le maschere da gara
+
+                // Ellissoide della maschera. Nella SphereGeometry il davanti (-Z) è a phi = 3π/2.
+                const MR = 0.17, MSC = new THREE.Vector3(0.98, 1.08, 1.12), MPOS = new THREE.Vector3(0, 0.18, 0.012);
+                const FRONT = Math.PI * 1.5;
+                const T_TOP = Math.PI * 0.30;      // fronte: inizio dell'apertura
+                const T_CHIN = Math.PI * 0.72;     // fine dell'apertura, inizio mentoniera
+                const T_BOTTOM = Math.PI * 0.80;   // bordo inferiore di fianchi e nuca
+                const T_CHIN_LOW = Math.PI * 0.88; // bordo inferiore della mentoniera
+                const HALF_W = Math.PI * 0.30;     // semiampiezza dell'apertura (~54°)
+                const maskPart = (mat, phiStart, phiLen, thStart, thLen, ws, hs, r = MR) => {
+                    const m = new THREE.Mesh(new THREE.SphereGeometry(r, ws, hs, phiStart, phiLen, thStart, thLen), mat);
+                    m.scale.copy(MSC);
+                    m.position.copy(MPOS);
+                    return m;
+                };
+                const cap = maskPart(maskMat, 0, Math.PI * 2, 0, T_TOP, 28, 8);
+                const sides = maskPart(maskMat, FRONT + HALF_W, Math.PI * 2 - HALF_W * 2, T_TOP, T_BOTTOM - T_TOP, 24, 12);
+                const chin = maskPart(maskMat, FRONT - HALF_W, HALF_W * 2, T_CHIN, T_CHIN_LOW - T_CHIN, 14, 5);
+                const liner = maskPart(linerMat, FRONT + HALF_W, Math.PI * 2 - HALF_W * 2, 0.15, T_BOTTOM - 0.15, 20, 10, MR * 0.97);
+                // fascia colorata dalla fronte alla nuca
+                const stripeTop = maskPart(padAccentMat, FRONT - 0.22, 0.44, 0.02, T_TOP - 0.02, 6, 6, MR * 1.004);
+                const stripeBack = maskPart(padAccentMat, Math.PI * 0.5 - 0.22, 0.44, 0.02, Math.PI * 0.7, 6, 12, MR * 1.004);
+
+                // punto sulla superficie dell'ellissoide (stessa parametrizzazione di SphereGeometry)
+                const maskPoint = (theta, phi, k) => new THREE.Vector3(
+                    -MR * k * Math.cos(phi) * Math.sin(theta) * MSC.x + MPOS.x,
+                    MR * k * Math.cos(theta) * MSC.y + MPOS.y,
+                    MR * k * Math.sin(phi) * Math.sin(theta) * MSC.z + MPOS.z
+                );
+                // la griglia sporge dal viso: più avanti al centro, a filo della calotta ai bordi
+                const cageK = (theta, phi) => {
+                    const dp = (phi - FRONT) / HALF_W, dt = (theta - (T_TOP + T_CHIN) / 2) / ((T_CHIN - T_TOP) / 2);
+                    return 1.0 + 0.07 * Math.max(0, 1 - dp * dp) * Math.max(0, 1 - 0.5 * dt * dt);
+                };
                 const cage = new THREE.Group();
-                for (let i = 0; i < 5; i++) {
-                    const bar = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.005, 5, 16, Math.PI * 0.7), cageMat);
-                    bar.rotation.set(Math.PI / 2, 0, Math.PI * 0.15);
-                    bar.position.y = 0.09 + i * 0.03;
-                    cage.add(bar);
+                const addBar = (pts, radius) => {
+                    const curve = new THREE.CatmullRomCurve3(pts);
+                    cage.add(new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(6, pts.length * 2), radius, 5, false), cageMat));
+                };
+                const N = 14;
+                // barre orizzontali (cornice superiore e inferiore più spesse)
+                const rows = 6;
+                for (let i = 0; i <= rows; i++) {
+                    const th = T_TOP + (T_CHIN - T_TOP) * (i / rows);
+                    const pts = [];
+                    for (let j = 0; j <= N; j++) {
+                        const ph = FRONT - HALF_W + (HALF_W * 2) * (j / N);
+                        pts.push(maskPoint(th, ph, cageK(th, ph)));
+                    }
+                    addBar(pts, (i === 0 || i === rows) ? 0.0055 : 0.0032);
                 }
-                [-0.07, -0.035, 0, 0.035, 0.07].forEach(x => {
-                    const v = new THREE.Mesh(new THREE.CylinderGeometry(0.004, 0.004, 0.14, 5), cageMat);
-                    v.position.set(x, 0.15, -0.13 + Math.abs(x) * 0.35);
-                    cage.add(v);
-                });
-                headGroup.add(dome, stripe, chin, cage);
+                // barre verticali; le due centrali lasciano libera la zona degli occhi (stile "cat-eye")
+                const cols = 8;
+                for (let j = 0; j <= cols; j++) {
+                    const ph = FRONT - HALF_W + (HALF_W * 2) * (j / cols);
+                    const edge = (j === 0 || j === cols);
+                    const eyeGap = (j === 2 || j === 6);
+                    const thFrom = eyeGap ? T_TOP + (T_CHIN - T_TOP) * (3 / rows) : T_TOP;
+                    const pts = [];
+                    for (let i = 0; i <= N; i++) {
+                        const th = thFrom + (T_CHIN - thFrom) * (i / N);
+                        pts.push(maskPoint(th, ph, cageK(th, ph)));
+                    }
+                    addBar(pts, edge ? 0.0055 : 0.0032);
+                }
+                headGroup.add(cap, sides, chin, liner, stripeTop, stripeBack, cage);
             } else {
                 // calotta: parte alta completa + fianchi/nuca, lasciando libero il viso (davanti = -Z, phi 3π/2)
                 const shell = new THREE.Group();
