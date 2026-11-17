@@ -9877,6 +9877,11 @@
             const goalH = 1.35;
             const goalD = 1.25;
 
+            // la gabbia è chiusa su retro, lati e tetto: il disco può entrare solo dalla bocca
+            collidePuckWithGoalCage(1, halfGoalW, goalH, goalD);
+            collidePuckWithGoalCage(-1, halfGoalW, goalH, goalD);
+            puckPrevPos.copy(puck.position);
+
             if (puck.position.z < -goalOffsetZ && puck.position.z > -goalOffsetZ - goalD) {
                 if (Math.abs(puck.position.x) < halfGoalW && puck.position.y < goalH) {
                     if (!goalCooldown) handleGoal('home');
@@ -9888,6 +9893,83 @@
                 if (Math.abs(puck.position.x) < halfGoalW && puck.position.y < goalH) {
                     if (!goalCooldown) handleGoal('guest');
                     puckPhysics.velocity.multiplyScalar(0.45);
+                }
+            }
+        }
+
+        // Posizione del disco al frame precedente (persistente, così anche gli spostamenti
+        // fatti dal portatore del disco vengono controllati contro la rete).
+        const puckPrevPos = new THREE.Vector3();
+
+        // side = +1 porta a z = +goalOffsetZ (rete verso +z), -1 porta a z = -goalOffsetZ.
+        // Coordinate locali: u = profondità dentro la porta (0 = linea di porta, goalD = rete posteriore).
+        function collidePuckWithGoalCage(side, hw, h, d) {
+            const p = puck.position, v = puckPhysics.velocity;
+            const r = puckPhysics.radius;
+            const halfH = puckPhysics.height / 2;
+            const NET_DAMP = 0.25;   // la rete assorbe gran parte dell'energia
+            const POST_REST = 0.6;   // i pali sono rigidi
+            const postR = 0.065;
+
+            const u = side * p.z - goalOffsetZ;
+            const pu = side * puckPrevPos.z - goalOffsetZ;
+            const ax = Math.abs(p.x), pax = Math.abs(puckPrevPos.x);
+            const sx = Math.sign(p.x) || 1;
+            if (p.y - halfH > h + 0.05) return;           // sopra la porta
+            if (u < -(r + postR) || u > d + r) return;    // lontano in profondità
+            if (ax > hw + r + postR) return;              // lontano lateralmente
+
+            const setU = (val) => { p.z = side * (val + goalOffsetZ); };
+
+            // Rete posteriore
+            if (ax < hw + r) {
+                if (pu >= d && u < d + r) {               // dall'esterno (dietro la porta)
+                    setU(d + r);
+                    if (side * v.z < 0) v.z = -v.z * NET_DAMP;
+                    v.x *= 0.7;
+                } else if (pu < d && pu > 0 && u > d - r) { // dall'interno
+                    setU(d - r);
+                    if (side * v.z > 0) v.z = -v.z * NET_DAMP;
+                    v.x *= 0.7;
+                }
+            }
+
+            // Reti laterali
+            const u2 = side * p.z - goalOffsetZ;
+            if (u2 > 0 && u2 < d) {
+                if (pax >= hw && ax < hw + r) {           // dall'esterno
+                    p.x = sx * (hw + r);
+                    if (sx * v.x < 0) v.x = -v.x * NET_DAMP;
+                    v.z *= 0.7;
+                } else if (pax < hw && pu > 0 && ax > hw - r) { // dall'interno
+                    p.x = sx * (hw - r);
+                    if (sx * v.x > 0) v.x = -v.x * NET_DAMP;
+                }
+            }
+
+            // Tetto della rete (disco che ci cade sopra)
+            const u3 = side * p.z - goalOffsetZ;
+            if (u3 > 0 && u3 < d && Math.abs(p.x) < hw && puckPrevPos.y - halfH >= h && p.y - halfH < h) {
+                p.y = h + halfH;
+                if (v.y < 0) v.y = -v.y * 0.2;
+                v.x *= 0.6; v.z *= 0.6;
+            }
+
+            // Pali (cilindri verticali sulla linea di porta)
+            if (p.y - halfH < h) {
+                for (const px of [-hw, hw]) {
+                    const dx = p.x - px, dz = p.z - side * goalOffsetZ;
+                    const dist = Math.hypot(dx, dz), minD = r + postR;
+                    if (dist < minD && dist > 1e-6) {
+                        const nx = dx / dist, nz = dz / dist;
+                        p.x = px + nx * minD;
+                        p.z = side * goalOffsetZ + nz * minD;
+                        const vn = v.x * nx + v.z * nz;
+                        if (vn < 0) {
+                            v.x -= (1 + POST_REST) * vn * nx;
+                            v.z -= (1 + POST_REST) * vn * nz;
+                        }
+                    }
                 }
             }
         }
