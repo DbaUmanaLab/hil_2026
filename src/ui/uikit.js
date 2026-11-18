@@ -183,6 +183,7 @@
         { sel: '#match-stats-modal' },
         { sel: '#pz-content', when: () => typeof gamePaused !== 'undefined' && gamePaused && typeof pausePage !== 'undefined' && !!pausePage, ownEsc: true },
         { sel: '#comp-root', ownEsc: true },
+        { sel: '#mgr-root', ownEsc: true },
         { sel: '#start-screen' }
     ];
     const FOCUSABLE = 'button, [role="button"], a[href], input, select, [tabindex="0"]';

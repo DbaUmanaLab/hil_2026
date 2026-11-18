@@ -1423,11 +1423,10 @@
                 </div>
             </div>
 
-            <!-- MODALITÀ IN ARRIVO (non selezionabili) -->
-            <div class="splash-tile is-disabled" role="button" tabindex="-1" aria-disabled="true" title="Modalità non ancora disponibile">
+            <!-- TILE 4: HOCKEY MANAGER (carriera manageriale, src/manager/) -->
+            <div class="splash-tile nhl-menu-item" id="splash-btn-manager" data-splash-action="manager" role="button" tabindex="0">
                 <img src="assets/tiles/tile_6.jpg" alt="" aria-hidden="true" class="splash-tile-bg">
                 <div class="splash-tile-overlay"></div>
-                <div class="splash-tile-lock"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Prossimamente</div>
                 <div class="splash-tile-label">
                     <div class="splash-tile-category">Carriera</div>
                     <div class="splash-tile-title">Hockey Manager</div>
@@ -2797,7 +2796,13 @@
         const OVERTIME_DURATION_SECONDS = 300;
         let overtimeGoldenGoal = false;     // gol nel supplementare: la partita finisce dopo il replay
         let matchShootout = null;           // { home, guest, winner, kicks: [...] } se si arriva ai rigori
-        function isCompetitionMatch() { return !!(window.Competition && window.Competition.isMatchActive()); }
+        // modalità che possiede la partita in corso (Hockey Manager o torneo): riceve il risultato
+        function competitionHost() {
+            if (window.Manager && window.Manager.isMatchActive()) return window.Manager;
+            if (window.Competition && window.Competition.isMatchActive()) return window.Competition;
+            return null;
+        }
+        function isCompetitionMatch() { return !!competitionHost(); }
         let matchStats = {
             homeShots: 0,
             guestShots: 0,
@@ -11534,7 +11539,7 @@
                     gameState = 'menu';
                     uiLayer.classList.add('hidden');
                     replayUi.classList.add('hidden');
-                    window.Competition.onUserMatchFinished({
+                    competitionHost().onUserMatchFinished({
                         hg: scoreHome, ag: scoreGuest, type: resultType,
                         soWinner: matchShootout ? matchShootout.winner : null,
                         so: matchShootout ? [matchShootout.home, matchShootout.guest] : null
@@ -11777,7 +11782,7 @@
             startScreen.classList.add('hidden');
             overtimeGoldenGoal = false;
             // partita di competizione abbandonata: non conta, si torna alla schermata della competizione
-            if (isCompetitionMatch()) { window.Competition.onUserMatchAbandoned(); return; }
+            if (isCompetitionMatch()) { competitionHost().onUserMatchAbandoned(); return; }
             titleSplashScreen.classList.remove('hidden');
         }
 
@@ -12218,6 +12223,8 @@
                             launchMatchFromCurrentConfig();
                         } else if (action === 'competition' && window.Competition) {
                             window.Competition.open();
+                        } else if (action === 'manager' && window.Manager) {
+                            window.Manager.open();
                         } else {
                             startScreen.classList.remove('hidden');
                             setPreMatchStep(1);
@@ -12911,6 +12918,10 @@
 
     <!-- Modalità Competizione (Serie A / Coppa Italia): usa i globali dello script principale -->
     <script src="src/competition/competition.js"></script>
+    <!-- Hockey Manager: sponsor, logica della carriera e interfaccia -->
+    <script src="src/data/sponsors.js"></script>
+    <script src="src/manager/manager-core.js"></script>
+    <script src="src/manager/manager.js"></script>
     <!-- Impaginazione con frecce, adattamento allo schermo e navigazione da tastiera -->
     <script src="src/ui/uikit.js"></script>
     <script src="src/data/funFacts.js"></script>

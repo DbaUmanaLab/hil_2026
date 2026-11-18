@@ -291,7 +291,7 @@
         return `Stagione conclusa • Campione: ${clubName(s.champion)}`;
     }
     function saveCurrent(silent) {
-        if (!state) return;
+        if (!state || embedded) return;
         const list = readSaves();
         const i = list.findIndex(x => x.id === state.id);
         const entry = { id: state.id, name: state.name, savedAt: Date.now(), data: state };
@@ -918,7 +918,83 @@
         setTimeout(step, 700);
     }
 
+    // ------------------------------------------------------------------ motore riusabile (Hockey Manager)
+    // Esegue le funzioni qui sopra su uno stato esterno (una Serie A o una Coppa Italia della carriera)
+    // senza toccare la stagione della modalità torneo e senza salvarla.
+    let embedded = 0;
+    function onState(s, fn) {
+        return (...args) => {
+            const prev = state;
+            state = s; embedded++;
+            try { return fn(...args); } finally { embedded--; state = prev; }
+        };
+    }
+    // le gare che si giocano nel turno corrente (riferimenti: dopo completeTurn hanno il risultato)
+    function turnFixtures() {
+        if (isCup()) return state.phase === 'cup' ? state.cup.rounds[state.cup.round].slice() : [];
+        if (state.phase === 'regular') { const r = state.rounds[state.roundIdx]; return r ? r.fixtures.slice() : []; }
+        if (state.phase === 'playoff') return currentPoSeries().map(turnGame).filter(Boolean);
+        return [];
+    }
+    // finalista sconfitto della Serie A (null finché la finale non è decisa)
+    function leagueRunnerUp() {
+        if (!state.playoffs || state.phase !== 'done') return null;
+        const f = state.playoffs.series[PO_ROUNDS.length - 1][0];
+        return f.hi === state.champion ? f.lo : f.hi;
+    }
+    function leagueFinalists() {
+        const po = state.playoffs;
+        if (!po || po.round !== PO_ROUNDS.length - 1 || !po.series[po.round]) return [];
+        const f = po.series[po.round][0];
+        return [f.hi, f.lo];
+    }
+    function turnLabel() {
+        if (isCup()) return state.phase === 'cup' ? `Coppa Italia • ${cupRoundLabel(state.cup.round)}` : 'Coppa Italia';
+        if (state.phase === 'regular') return `Serie A • Giornata ${state.roundIdx + 1} di ${state.rounds.length}`;
+        if (state.phase === 'playoff') return `Serie A • ${PO_ROUNDS[state.playoffs.round].label}`;
+        return 'Serie A';
+    }
+    const engine = {
+        PO_ROUNDS, CUP_ROUNDS, PLAYOFF_TEAMS, SERIE_A_LOGO: COMPS[0].logo, CUP_LOGO: COMPS[1].logo,
+        serieATeams,
+        newLeague(user, season) {
+            const teams = serieATeams();
+            return { comp: 'serie_a', season, user, teams, rounds: buildSchedule(teams), roundIdx: 0, phase: 'regular', playoffs: null, champion: null, lastTurn: null };
+        },
+        newCup(user, season) {
+            const cup = createCup(user);
+            return { comp: 'coppa_italia', season, user, teams: cup.teams, cup, phase: 'cup', champion: null, runnerUp: null, lastTurn: null };
+        },
+        simulateMatch, winnerOf,
+        userFixture: s => onState(s, userFixture)(),
+        turnFixtures: s => onState(s, turnFixtures)(),
+        completeTurn: s => onState(s, completeTurn)(),
+        standings: s => onState(s, standings)(),
+        seriesFor: (s, id) => onState(s, () => state.playoffs ? currentPoSeries().find(x => x.hi === id || x.lo === id) || null : null)(),
+        seriesWins: (s, ser) => onState(s, seriesWins)(ser),
+        seriesWinner: (s, ser) => onState(s, seriesWinner)(ser),
+        leagueRunnerUp: s => onState(s, leagueRunnerUp)(),
+        leagueFinalists: s => onState(s, leagueFinalists)(),
+        turnLabel: s => onState(s, turnLabel)(),
+        progressLabel: s => progressLabel(s),
+        // HTML già stilizzato da competition.css
+        tableHtml: s => onState(s, tableHtml)(),
+        bracketHtml: s => onState(s, bracketHtml)(),
+        cupBracketHtml: s => onState(s, cupBracketHtml)(),
+        resultRow: (s, f) => onState(s, resultRow)(f),
+        lastResults: s => onState(s, () => isCup()
+            ? (state.lastTurn ? { title: 'Risultati • ' + cupRoundLabel(state.lastTurn.round), body: state.cup.rounds[state.lastTurn.round].map(resultRow).join('') } : { title: 'Risultati', body: '<div class="cp-empty">Nessuna partita giocata</div>' })
+            : lastResultsHtml())(),
+        ensureCss() {
+            if (document.querySelector('link[data-comp-css]')) return;
+            const l = document.createElement('link');
+            l.rel = 'stylesheet'; l.href = 'src/competition/competition.css'; l.dataset.compCss = '1';
+            document.head.appendChild(l);
+        }
+    };
+
     window.Competition = {
+        engine,
         open() { ensureRoot(); showScreen('select'); },
         isMatchActive: () => matchActive,
         onUserMatchFinished,
