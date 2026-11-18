@@ -19,7 +19,8 @@
         const XW = -27.5, XE = 24.5, ZL = 42;              // pareti: ovest (tribuna), est (panchine), testate
         const XC = (XW + XE) / 2, HALF = (XE - XW) / 2;
         const BEAM_H = 0.9;
-        const yb = x => 8.4 + 1.6 * (1 - Math.pow((x - XC) / HALF, 2));   // intradosso centinato delle travi
+        // intradosso centinato delle travi: 12,6 m alle pareti, 15 m al centro (sopra le telecamere alte)
+        const yb = x => 12.6 + 2.4 * (1 - Math.pow((x - XC) / HALF, 2));
         const yt = x => yb(x) + BEAM_H;
         const tmpM = new THREE.Matrix4();
         const V = (x, y, z) => new THREE.Vector3(x, y, z);
@@ -34,6 +35,10 @@
             targetGroup.add(m);
             return m;
         };
+        // soffitto (travi, copertura, fari): nascosto se una telecamera sale sopra le travi
+        const ceilGroup = new THREE.Group();
+        targetGroup.add(ceilGroup);
+        arenaCeilingHide = { group: ceilGroup, y: 14.2 };
         const lit = (t, k) => new THREE.MeshStandardMaterial({ map: t, emissive: 0xffffff, emissiveMap: t, emissiveIntensity: k || 0.15, roughness: 0.8, side: THREE.DoubleSide });
 
         // ---------- 1. pavimento sportivo azzurro attorno alla pista
@@ -56,7 +61,7 @@
         const beams = new THREE.InstancedMesh(beamGeo, woodMat, beamZ.length);
         beamZ.forEach((z, k) => { tmpM.makeTranslation(0, 0, z); beams.setMatrixAt(k, tmpM); });
         beams.instanceMatrix.needsUpdate = true;
-        targetGroup.add(beams);
+        ceilGroup.add(beams);
 
         // ---------- 3. copertura in pannelli blu ardesia appoggiata sulle travi
         const NX = lowQ ? 20 : 40;
@@ -75,11 +80,11 @@
         roofGeo.setAttribute('uv', new THREE.Float32BufferAttribute(rUv, 2));
         roofGeo.setIndex(rIdx);
         roofGeo.computeVertexNormals();
-        targetGroup.add(new THREE.Mesh(roofGeo, new THREE.MeshStandardMaterial({ map: tex('roof_panels.jpg', [1, 1]), roughness: 0.85, side: THREE.DoubleSide })));
+        ceilGroup.add(new THREE.Mesh(roofGeo, new THREE.MeshStandardMaterial({ map: tex('roof_panels.jpg', [1, 1]), roughness: 0.85, side: THREE.DoubleSide })));
         // arcarecci in acciaio sotto i pannelli
         const purl = [];
         [-22, -14, -6, 2, 10, 18].forEach(x => purl.push([V(x, yt(x) - 0.08, -ZL), V(x, yt(x) - 0.08, ZL), 0.06]));
-        targetGroup.add(new THREE.Mesh(mergeBeamGeometry(purl), steelMat));
+        ceilGroup.add(new THREE.Mesh(mergeBeamGeometry(purl), steelMat));
 
         // ---------- 4. pareti lunghe
         const LEN = 2 * ZL;
@@ -89,13 +94,15 @@
         // ovest (tribuna): blocchi, fascia, galleria vetrata con montanti gialli, fascia beige
         flat(LEN, 3.0, block(3.0), XW, 1.5, 0, Math.PI / 2);
         flat(LEN, 0.8, adsMat, XW + 0.03, 3.4, 0, Math.PI / 2);
-        flat(LEN, 4.0, lit(tex('gallery_glass.jpg', [LEN / 8, 2]), 0.35), XW, 5.8, 0, Math.PI / 2);
-        flat(LEN, yt(XW) - 7.8 + 0.1, beige(LEN, 1.6), XW, (7.8 + yt(XW) + 0.1) / 2, 0, Math.PI / 2);
+        flat(LEN, 5.0, lit(tex('gallery_glass.jpg', [LEN / 8, 2.5]), 0.35), XW, 6.3, 0, Math.PI / 2);
+        flat(LEN, 1.4, beige(LEN, 1.4), XW, 9.5, 0, Math.PI / 2);
+        flat(LEN, 2.2, lit(tex('windows_day.jpg', [LEN / 8, 1.1]), 0.25), XW, 11.3, 0, Math.PI / 2);   // finestre alte
+        flat(LEN, yt(XW) - 12.4 + 0.1, beige(LEN, yt(XW) - 12.4), XW, (12.4 + yt(XW) + 0.1) / 2, 0, Math.PI / 2);
         // est (panchine): blocchi con porte gialle, fascia, finestroni
         flat(LEN, 3.2, block(3.2), XE, 1.6, 0, -Math.PI / 2);
         flat(LEN, 0.8, adsMat, XE - 0.03, 3.6, 0, -Math.PI / 2);
-        flat(LEN, 4.0, lit(tex('windows_day.jpg', [LEN / 8, 2]), 0.25), XE, 6.0, 0, -Math.PI / 2);
-        flat(LEN, yt(XE) - 8.0 + 0.1, beige(LEN, 1.4), XE, (8.0 + yt(XE) + 0.1) / 2, 0, -Math.PI / 2);
+        flat(LEN, 7.0, lit(tex('windows_day.jpg', [LEN / 8, 3.5]), 0.25), XE, 7.5, 0, -Math.PI / 2);   // finestroni alti
+        flat(LEN, yt(XE) - 11.0 + 0.1, beige(LEN, yt(XE) - 11.0), XE, (11.0 + yt(XE) + 0.1) / 2, 0, -Math.PI / 2);
         const doorMat = new THREE.MeshStandardMaterial({ color: 0xe9c21f, roughness: 0.5 });
         [-30, -10, 10, 30].forEach(z => {
             const d = new THREE.Mesh(new THREE.BoxGeometry(0.08, 2.2, 1.9), doorMat);
@@ -147,17 +154,17 @@
         };
         hoop(XC, 4.3, -ZL + 1.1, 0);
         hoop(XC, 4.3, ZL - 1.1, Math.PI);
-        [-14, 14].forEach(z => { hoop(XE - 1.1, 5.2, z, -Math.PI / 2); hoop(XW + 1.1, 8.0, z, Math.PI / 2); });
+        [-14, 14].forEach(z => { hoop(XE - 1.1, 5.2, z, -Math.PI / 2); hoop(XW + 1.1, 9.6, z, Math.PI / 2); });
 
         // ---------- 7. testata -z: bandiere, striscioni del club (il tabellone lo posiziona index.html)
         const zF = -ZL + 0.08;
-        flat(2.6, 1.7, lit(tex('flag_france.jpg'), 0.12), -15, 6.6, zF, 0);
-        flat(2.6, 1.7, lit(tex('flag_czech.jpg'), 0.12), 17.5, 6.6, zF, 0);
-        flat(2.6, 5.2, lit(tex('banner_club.jpg'), 0.15), XC, 6.3, zF, 0);
-        flat(1.7, 3.4, lit(tex('banner_white.jpg'), 0.15), XC - 4.2, 6.4, zF, 0);
-        flat(1.7, 3.4, lit(tex('banner_white.jpg'), 0.15), XE - 11.5, 6.4, zF, 0);
+        flat(2.6, 1.7, lit(tex('flag_france.jpg'), 0.12), -15, 8.2, zF, 0);
+        flat(2.6, 1.7, lit(tex('flag_czech.jpg'), 0.12), 17.5, 8.2, zF, 0);
+        flat(2.6, 5.2, lit(tex('banner_club.jpg'), 0.15), XC, 7.4, zF, 0);
+        flat(1.7, 3.4, lit(tex('banner_white.jpg'), 0.15), XC - 4.2, 7.6, zF, 0);
+        flat(1.7, 3.4, lit(tex('banner_white.jpg'), 0.15), XE - 11.5, 7.6, zF, 0);
         // stendardi verticali sui finestroni (lato panchine)
-        [-22, 22].forEach(z => flat(1.4, 3.6, lit(tex('banner_club.jpg'), 0.15), XE - 0.06, 6.2, z, -Math.PI / 2));
+        [-22, 22].forEach(z => flat(1.4, 3.6, lit(tex('banner_club.jpg'), 0.15), XE - 0.06, 6.6, z, -Math.PI / 2));
 
         // ---------- 8. fari tondi appesi tra le travi
         const lampX = [-17, -7, 3, 13];
@@ -169,23 +176,23 @@
         const glowTex = loadFileTexture(CIT_TEX + 'glow.png');
         let li = 0;
         lampX.forEach(x => lampZ.forEach((z, k) => {
-            const y = yb(x) - 0.9;
+            const y = yb(x) - 0.7;
             tmpM.makeTranslation(x, y, z); lampBody.setMatrixAt(li, tmpM);
             tmpM.makeTranslation(x, y - 0.16, z); lampFace.setMatrixAt(li, tmpM);
             if (!lowQ && k % 2 === 0) {
                 const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xfff4d6, transparent: true, opacity: 0.6, depthWrite: false, blending: THREE.AdditiveBlending }));
                 spr.scale.set(2.6, 2.6, 1);
                 spr.position.set(x, y - 0.35, z);
-                targetGroup.add(spr);
+                ceilGroup.add(spr);
             }
             li++;
         }));
         lampBody.instanceMatrix.needsUpdate = true;
         lampFace.instanceMatrix.needsUpdate = true;
-        targetGroup.add(lampBody, lampFace);
+        ceilGroup.add(lampBody, lampFace);
         const cables = [];
-        lampX.forEach(x => lampZ.forEach(z => cables.push([V(x, yb(x) - 0.75, z), V(x, yb(x), z), 0.01])));
-        targetGroup.add(new THREE.Mesh(mergeBeamGeometry(cables), darkMat));
+        lampX.forEach(x => lampZ.forEach(z => cables.push([V(x, yb(x) - 0.55, z), V(x, yb(x), z), 0.01])));
+        ceilGroup.add(new THREE.Mesh(mergeBeamGeometry(cables), darkMat));
 
         // ---------- 9. tribuna: gradoni in cemento, panche di legno, corrimano arancione
         const ZS0 = -26, ZS1 = 22, SL = ZS1 - ZS0, TIERS = 4, STEP_D = 1.05, STEP_H = 0.42, X0 = -21.4;
