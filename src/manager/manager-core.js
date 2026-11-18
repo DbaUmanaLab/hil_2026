@@ -6,6 +6,8 @@
 //
 // Una carriera è un unico oggetto serializzabile (salvato in localStorage dall'interfaccia):
 //  - rose di tutte le squadre di Serie A + svincolati, con valutazione, età, stipendio, infortuni
+//  - due divisioni: Serie A e Serie B. A fine stagione l'ultima di A retrocede e la vincente dei
+//    play-off di B sale. Si gioca il campionato della propria divisione; l'altro va avanti in parallelo
 //  - stagione: estate (mercato) → andata → gennaio (Coppa Italia + mercato) → ritorno → play-off → fine
 //  - economia: saldo, movimenti per categoria, storico del saldo; fallimento se il saldo va sotto zero
 //  - tifosi (gradimento 0-100), reputazione (decide gli sponsor), messaggi
@@ -18,10 +20,18 @@
         START_BUDGET: 100000,
         MIN_ROSTER: 14, MAX_ROSTER: 20, MIN_SKATERS: 12, MIN_GOALIES: 1,
         SLOTS: { main: 1, sec: 4 },                 // sponsor: 1 di maglia + 4 secondari
-        TIER_BASE: [0, 250, 450, 700, 1000, 1400],  // €/mese per livello di sponsor (1..5)
+        TIER_BASE: [0, 50, 85, 130, 185, 250],      // €/mese per livello di sponsor (1..5), Serie A
         MAIN_MULT: 1.8,
-        TICKET: 8, BAR: 3,                          // € a spettatore
-        PRIZES: { leagueFinal: 10000, leagueWin: 25000, cupFinal: 6000, cupWin: 12000 },
+        // per divisione: biglietto e bar a spettatore, peso di stipendi / palazzetto / sponsor rispetto alla A
+        DIV: {
+            A: { name: 'Serie A', league: 'SERIE A', ticket: 3.5, bar: 1.5, salary: 1, arena: 1, sponsor: 1 },
+            B: { name: 'Serie B', league: 'SERIE B', ticket: 2.5, bar: 1, salary: 0.6, arena: 0.6, sponsor: 0.6 }
+        },
+        PRIZES: {
+            A: { final: 2500, win: 5000, label: 'scudetto' },
+            B: { final: 1200, win: 2500, label: 'promozione' },
+            cupFinal: 1200, cupWin: 2500
+        },
         INJ_P: 0.12,                                // probabilità di infortunio per squadra e partita
         MAX_MESSAGES: 250
     };
@@ -100,7 +110,7 @@
         const R = rosters(), T = ratingsTable();
         Object.keys(PRISTINE.rosters).forEach(id => {
             if (!R[id]) return;
-            ['goalie', 'backupGoalies', 'lines', 'reserves'].forEach(k => {
+            ['goalie', 'backupGoalies', 'lines', 'reserves', 'league'].forEach(k => {
                 if (PRISTINE.rosters[id][k] !== undefined) R[id][k] = JSON.parse(JSON.stringify(PRISTINE.rosters[id][k]));
             });
         });
@@ -120,20 +130,31 @@
         const a = arenas && arenas[(homes && homes[team]) || team];
         return a ? a.shortTitle : '';
     }
-    const arenaFee = team => round(400 + arenaCapacity(team) * 1.6, 50);
+    // divisione di una squadra nella carriera ('A' o 'B')
+    const divOf = (c, team) => (c.div && c.div.B && c.div.B.includes(team) ? 'B' : 'A');
+    const userDiv = c => divOf(c, c.user);
+    const divTeams = (c, d) => (c.div ? c.div[d] : c.teams);
+    // affitto del palazzetto a settimana: 50-100 € in Serie A secondo la capienza, meno in B
+    function arenaFee(team, c) {
+        const k = clamp((arenaCapacity(team) - 150) / (1100 - 150), 0, 1);
+        const d = c ? divOf(c, team) : 'A';
+        return Math.round((50 + 50 * k) * CFG.DIV[d].arena);
+    }
+    const arenaMonthly = c => Math.round(arenaFee(c.user, c) * 52 / 12);
+    const monthlyCosts = c => payroll(c) + arenaMonthly(c);
 
     // ------------------------------------------------------------------ giocatori
     // stipendio mensile e valore di mercato in funzione della valutazione (ovr) e dell'età
-    // curva dolce fino a 78, poi i campioni costano molto di più
-    const salaryFor = ovr => round(40 + Math.pow(Math.max(0, ovr - 58), 2) + Math.pow(Math.max(0, ovr - 78), 2) * 4, 10);
+    // in Serie A un giocatore prende in media circa 100 € al mese; i campioni molto di più, in B meno
+    const salaryFor = (ovr, div) => Math.max(10, round((12 + Math.pow(Math.max(0, ovr - 55), 2) * 0.245 + Math.pow(Math.max(0, ovr - 78), 2) * 1.0) * CFG.DIV[div || 'A'].salary, 5));
     function ageFactor(age) { return age <= 21 ? 1.3 : age <= 25 ? 1.15 : age <= 29 ? 1 : age <= 32 ? 0.8 : 0.55; }
-    const valueOf = p => Math.max(500, round(Math.pow(Math.max(0, p.ovr - 50), 2) * 20 * ageFactor(p.age), 500));
+    const valueOf = p => Math.max(100, round(Math.pow(Math.max(0, p.ovr - 50), 2) * 4 * ageFactor(p.age), 100));
 
     function newPlayer(c, o) {
         const id = 'p' + (c.nextPid++);
         const p = Object.assign({ id, first: pick(FIRST), name: pick(LAST), num: '', pos: 'F', role: 'C', ovr: 60, age: 24, salary: 0, team: null, inj: null, forSale: false, gp: 0, w: 0 }, o);
         p.ovr = clamp(Math.round(p.ovr), 40, 95);
-        if (!p.salary) p.salary = round(salaryFor(p.ovr) * rnd(0.9, 1.1), 10);
+        if (!p.salary) p.salary = round(salaryFor(p.ovr, p.team ? divOf(c, p.team) : 'A') * rnd(0.9, 1.1), 5);
         c.players[id] = p;
         return p;
     }
@@ -181,7 +202,11 @@
         newPlayer(c, { first: R.goalie.first || '', name: R.goalie.name, num: R.goalie.num, pos: 'G', role: 'G', ovr: r.goa + rint(-1, 1), age: age(21, 33), team });
         (R.backupGoalies || []).forEach(g => newPlayer(c, { first: g.first || '', name: g.name, num: g.num, pos: 'G', role: 'G', ovr: r.goa - rint(6, 11), age: age(18, 30), team }));
         const off = [3, 0, -4];
+        const seen = new Set();
         R.lines.forEach((line, li) => line.forEach(pl => {
+            const key = pl.num + '|' + pl.name + '|' + (pl.first || '');
+            if (seen.has(key)) return;
+            seen.add(key);
             const isD = pl.role === 'D';
             newPlayer(c, {
                 first: pl.first || '', name: pl.name, num: pl.num, pos: isD ? 'D' : 'F', role: pl.role,
@@ -238,6 +263,7 @@
         c.teams.forEach(team => {
             T[team] = ratingsOf(c, team);
             if (!R[team]) return;
+            if (c.div) R[team].league = CFG.DIV[divOf(c, team)].league;
             const L = lineup(c, team);
             const entry = (p, role) => ({ role, num: p.num, name: p.name, first: p.first, g: p.g || 0, a: p.a || 0, pts: (p.g || 0) + (p.a || 0) });
             R[team].goalie = { num: L.goalie.num, name: L.goalie.name, first: L.goalie.first };
@@ -293,11 +319,19 @@
                 const mon = MONTHS[m];
                 c.sponsors.active.forEach(s => money(c, 'sponsor', s.monthly, `${sponsorById(s.sid) ? sponsorById(s.sid).name : 'Sponsor'} • ${mon}`));
                 money(c, 'stipendi', -payroll(c), `Stipendi di ${mon}`);
-                money(c, 'palazzetto', -arenaFee(c.user), `${arenaName(c.user) || 'Palazzetto'} • ${mon}`);
                 pushHistory(c);
                 c.date = saved;
             }
             m++;
+        }
+        // affitto del palazzetto: ogni lunedì tra le due date, sommato in un unico movimento
+        let weeks = 0, firstMon = null;
+        for (let d2 = dAdd(from, 1); d2 <= to; d2 = dAdd(d2, 1)) if (dParse(d2).getUTCDay() === 1) { weeks++; if (!firstMon) firstMon = d2; }
+        if (weeks) {
+            const saved = c.date;
+            c.date = to;
+            money(c, 'palazzetto', -arenaFee(c.user, c) * weeks, `${arenaName(c.user) || 'Palazzetto'} • ${weeks} ${weeks > 1 ? 'settimane' : 'settimana'}`);
+            c.date = saved;
         }
     }
 
@@ -313,7 +347,7 @@
     }
     // posizione attesa per rating, posizione reale: base della reputazione
     function expectedRank(c) {
-        return c.teams.slice().sort((a, b) => teamStrength(c, b) - teamStrength(c, a)).indexOf(c.user) + 1;
+        return divTeams(c, userDiv(c)).slice().sort((a, b) => teamStrength(c, b) - teamStrength(c, a)).indexOf(c.user) + 1;
     }
     function currentRank(c) {
         if (!c.league) return null;
@@ -322,7 +356,7 @@
         return t.findIndex(r => r.id === c.user) + 1;
     }
     function updateReputation(c) {
-        const n = c.teams.length;
+        const n = Math.max(2, divTeams(c, userDiv(c)).length);
         const exp = expectedRank(c);
         const pos = currentRank(c) || c.lastRank || exp;
         const abs = 100 * (n - pos) / (n - 1);
@@ -341,7 +375,7 @@
         return { main: CFG.SLOTS.main - main, sec: CFG.SLOTS.sec - sec };
     }
     function sponsorAmount(c, tier, slot) {
-        return round(CFG.TIER_BASE[tier] * (slot === 'main' ? CFG.MAIN_MULT : 1) * (0.7 + c.rep / 100 * 0.5) * rnd(0.9, 1.1), 50);
+        return round(CFG.TIER_BASE[tier] * CFG.DIV[userDiv(c)].sponsor * (slot === 'main' ? CFG.MAIN_MULT : 1) * (0.7 + c.rep / 100 * 0.5) * rnd(0.9, 1.1), 10);
     }
     function sponsorOffer(c, forcedSlot, sid, quiet) {
         const free = freeSlots(c);
@@ -457,9 +491,11 @@
         return round(valueOf(p) * k * negotiation(c, p.id).club, 500);
     }
     function playerAsk(c, p) {
-        let base = p.team ? Math.max(p.salary * 1.05, salaryFor(p.ovr)) : salaryFor(p.ovr);
+        const ud = userDiv(c);
+        let base = p.team ? Math.max(p.salary * 1.05, salaryFor(p.ovr, ud)) : salaryFor(p.ovr, ud);
         if (p.team && teamStrength(c, p.team) > teamStrength(c, c.user) + 3) base *= 1.15;
-        return Math.max(50, round(base * negotiation(c, p.id).player, 10));
+        if (p.team && ud === 'B' && divOf(c, p.team) === 'A') base *= 1.2;    // scendere di categoria costa
+        return Math.max(10, round(base * negotiation(c, p.id).player, 5));
     }
     function marketBlock(c, p) {
         if (!windowOpen(c)) return 'Il mercato è chiuso: riapre a fine stagione e a gennaio.';
@@ -575,7 +611,7 @@
         const rk = topRank(c, c.user, p);
         o.status = 'accepted';
         transfer(c, p, o.buyer);
-        p.salary = Math.max(p.salary, salaryFor(p.ovr));
+        p.salary = Math.max(p.salary, salaryFor(p.ovr, divOf(c, o.buyer)));
         money(c, 'cessioni', o.fee, `${p.name} a ${clubShort(o.buyer)}`);
         closeAction(c, 'cpu_offer', o.id, 'Accettata');
         msg(c, 'mercato', `Ceduto ${p.name}`, `${p.first} ${p.name} passa a ${clubName(o.buyer)} per ${eur(o.fee)}.`);
@@ -599,7 +635,7 @@
                 let p = fa().find(x => (need === 'G' ? x.pos === 'G' : need === 'S' ? x.pos !== 'G' : true));
                 if (!p && need === 'G') p = newPlayer(c, { pos: 'G', role: 'G', ovr: rint(56, 68), age: rint(19, 32), team: null });
                 if (!p) break;
-                transfer(c, p, t); p.salary = salaryFor(p.ovr);
+                transfer(c, p, t); p.salary = salaryFor(p.ovr, divOf(c, t));
                 if (news && p.ovr >= 66) msg(c, 'mercato', 'Notizie di mercato', `${clubName(t)} ingaggia lo svincolato ${p.first} ${p.name} (${ROLE_LABEL[p.pos]}, ${p.ovr}).`);
                 k = counts(c, t);
             }
@@ -617,7 +653,7 @@
                 const weakest = starters[starters.length - 1];
                 const p = fa().find(x => x.pos === pos && (!weakest || x.ovr > weakest.ovr + 1));
                 if (p) {
-                    transfer(c, p, t); p.salary = salaryFor(p.ovr);
+                    transfer(c, p, t); p.salary = salaryFor(p.ovr, divOf(c, t));
                     msg(c, 'mercato', 'Notizie di mercato', `${clubName(t)} ingaggia lo svincolato ${p.first} ${p.name} (${ROLE_LABEL[p.pos]}, ${p.ovr}).`);
                 }
             }
@@ -650,7 +686,7 @@
         let k = counts(c, c.user);
         for (let guard = 0; guard < 30 && (k.total < CFG.MIN_ROSTER || k.goalies < CFG.MIN_GOALIES || k.skaters < CFG.MIN_SKATERS); guard++) {
             const pos = k.goalies < CFG.MIN_GOALIES ? 'G' : (Math.random() < 0.35 ? 'D' : 'F');
-            const p = newPlayer(c, { pos, role: pos === 'G' ? 'G' : pos === 'D' ? 'D' : pick(['C', 'LW', 'RW']), ovr: rint(50, 58), age: rint(17, 19), team: c.user, salary: 80 });
+            const p = newPlayer(c, { pos, role: pos === 'G' ? 'G' : pos === 'D' ? 'D' : pick(['C', 'LW', 'RW']), ovr: rint(50, 58), age: rint(17, 19), team: c.user, salary: 15 });
             p.num = freeNumber(c, c.user);
             msg(c, 'club', `Dalle giovanili: ${p.name}`, `La rosa era sotto il minimo: ${p.first} ${p.name} (${ROLE_LABEL[p.pos]}, ${p.age} anni, ${p.ovr}) viene aggregato alla prima squadra con uno stipendio di ${eur(p.salary)} al mese.`);
             k = counts(c, c.user);
@@ -685,11 +721,11 @@
         return {
             summer: [ymd(y, 7, 15), ymd(y, 8, 5), ymd(y, 8, 26)],
             start: ymd(y, 9, 8),
-            first: i => dAdd(ymd(y, 9, 20), 11 * i),
+            first: (i, n) => dAdd(ymd(y, 9, 20), Math.floor(i * 88 / Math.max(1, n - 1))),
             winterOpen: ymd(y + 1, 1, 3),
             cup: [ymd(y + 1, 1, 10), ymd(y + 1, 1, 17), ymd(y + 1, 1, 31)],
             winterClose: ymd(y + 1, 2, 2),
-            second: i => dAdd(ymd(y + 1, 2, 8), 10 * i),
+            second: (i, n) => dAdd(ymd(y + 1, 2, 8), Math.floor(i * 80 / Math.max(1, n - 1))),
             playoff: n => dAdd(ymd(y + 1, 5, 2), 4 * n),
             end: ymd(y + 1, 6, 14)
         };
@@ -706,14 +742,14 @@
                     : { kind: 'season_start', date: at(D.start), label: `Inizio della stagione ${seasonLabelOf(c.seasonYear)}` };
             case 'first_half':
                 return c.league.roundIdx < halfRounds(c)
-                    ? { kind: 'league', comp: 'league', date: at(D.first(c.league.roundIdx)), label: engine().turnLabel(c.league) }
+                    ? { kind: 'league', comp: 'league', date: at(D.first(c.league.roundIdx, halfRounds(c))), label: engine().turnLabel(c.league) }
                     : { kind: 'winter_open', date: at(D.winterOpen), label: 'Sosta invernale • sorteggio della Coppa Italia' };
             case 'winter':
                 return c.cup && c.cup.phase === 'cup'
                     ? { kind: 'cup', comp: 'cup', date: at(D.cup[c.cup.cup.round]), label: engine().turnLabel(c.cup) }
                     : { kind: 'winter_close', date: at(D.winterClose), label: 'Chiusura del mercato di gennaio' };
             case 'second_half':
-                return { kind: 'league', comp: 'league', date: at(D.second(c.league.roundIdx - halfRounds(c))), label: engine().turnLabel(c.league) };
+                return { kind: 'league', comp: 'league', date: at(D.second(c.league.roundIdx - halfRounds(c), c.league.rounds.length - halfRounds(c))), label: engine().turnLabel(c.league) };
             case 'playoff':
                 return c.league.phase === 'playoff'
                     ? { kind: 'playoff', comp: 'league', date: at(D.playoff(c.league.playoffs.turnNo)), label: engine().turnLabel(c.league) }
@@ -743,8 +779,9 @@
         const oppStrength = teamStrength(c, f.away);
         const fill = clamp(0.2 + 0.55 * c.fans / 100 + (big ? 0.15 : 0) + (ev.kind !== 'league' ? 0.1 : 0) + clamp((oppStrength - 70) / 100, -0.05, 0.1) + rnd(-0.05, 0.05), 0.12, 1);
         const people = Math.round(cap * fill);
-        money(c, 'biglietti', people * CFG.TICKET, `${people} spettatori vs ${clubShort(f.away)}`);
-        money(c, 'bar', Math.round(people * CFG.BAR * rnd(0.85, 1.15)), `Bar • ${clubShort(f.away)}`);
+        const D = CFG.DIV[userDiv(c)];
+        money(c, 'biglietti', people * D.ticket, `${people} spettatori vs ${clubShort(f.away)}`);
+        money(c, 'bar', Math.round(people * D.bar * rnd(0.85, 1.15)), `Bar • ${clubShort(f.away)}`);
         return people;
     }
     function applyTurn(c, ev, userResult) {
@@ -764,7 +801,7 @@
         // la gara dell'utente: incasso, tifosi, bonus sponsor
         if (uf && uf.result) {
             const home = uf.home === c.user, opp = home ? uf.away : uf.home;
-            const big = ev.kind === 'playoff' && before.poRound === E.PO_ROUNDS.length - 1 || (ev.kind === 'cup' && s.cup.rounds.length === E.CUP_ROUNDS.length && uf === s.cup.rounds[E.CUP_ROUNDS.length - 1][0]);
+            const big = ev.kind === 'playoff' && before.poRound === E.poRounds(s).length - 1 || (ev.kind === 'cup' && s.cup.rounds.length === E.CUP_ROUNDS.length && uf === s.cup.rounds[E.CUP_ROUNDS.length - 1][0]);
             const people = home ? homeGate(c, uf, ev, big) : 0;
             const sc = resultScore(uf, c.user), exp = expectedScore(c, c.user, opp, home);
             const won = sc >= 0.5;
@@ -788,15 +825,50 @@
             const pos = E.standings(s).findIndex(r => r.id === c.user) + 1;
             c.lastRank = pos;
             c.season.regularPos = pos;
-            if (pos > E.PLAYOFF_TEAMS) addFans(c, -6, `Stagione regolare chiusa al ${pos}° posto: niente play-off.`);
-            msg(c, 'gare', 'Regular season conclusa', `${clubName(c.user)} chiude al ${pos}° posto${pos <= E.PLAYOFF_TEAMS ? ' e si qualifica ai play-off scudetto.' : '.'}`);
+            const nPo = E.playoffTeams(s), nT = s.teams.length;
+            if (pos > nPo) addFans(c, -6, `Stagione regolare chiusa al ${pos}° posto: niente play-off.`);
+            msg(c, 'gare', 'Regular season conclusa', `${clubName(c.user)} chiude al ${pos}° posto${pos <= nPo ? ` e si qualifica ai play-off ${userDiv(c) === 'A' ? 'scudetto' : 'promozione'}.` : '.'}${userDiv(c) === 'A' && pos === nT ? ' Ultimo posto: a fine stagione si retrocede in Serie B.' : ''}`);
         }
         if (ev.kind === 'playoff') trackPlayoffs(c, s, before);
         if (ev.kind === 'cup') trackCup(c, s);
+        if (ev.comp === 'league') advanceOther(c);
     }
-    const PO_STAGE = ['Quarti di finale', 'Semifinale', 'Finale'];
+    // l'altra divisione avanza in proporzione: finisce la regular season quando la finisce l'utente
+    function advanceOther(c, all) {
+        const o = c.other, s = c.league, E = engine();
+        if (!o) return;
+        const step = () => { const fx = E.turnFixtures(o); E.completeTurn(o); fx.forEach(f => { if (f.result) { maybeInjure(c, f.home); maybeInjure(c, f.away); } }); };
+        let guard = 0;
+        if (all) { while (o.phase !== 'done' && guard++ < 400) step(); return; }
+        if (o.phase === 'regular') {
+            const target = s.phase === 'regular' ? Math.ceil(o.rounds.length * s.roundIdx / s.rounds.length) : o.rounds.length;
+            while (o.phase === 'regular' && o.roundIdx < target && guard++ < 60) step();
+        } else if (o.phase === 'playoff' && s.phase !== 'regular') step();
+    }
+    // promozione e retrocessione a fine stagione
+    function promoteRelegate(c) {
+        const E = engine();
+        if (!c.other || !c.div || !c.div.B.length) return;
+        advanceOther(c, true);
+        const A = userDiv(c) === 'A' ? c.league : c.other, B = userDiv(c) === 'A' ? c.other : c.league;
+        const down = E.standings(A).slice(-1)[0].id, up = B.champion;
+        if (!down || !up) return;
+        c.div.A = c.div.A.filter(t => t !== down).concat([up]);
+        c.div.B = c.div.B.filter(t => t !== up).concat([down]);
+        c.season.moved = down === c.user ? 'Retrocessa in Serie B' : (up === c.user ? 'Promossa in Serie A' : null);
+        msg(c, 'gare', 'Promozione e retrocessione', `${clubName(up)} vince la Serie B e sale in Serie A. ${clubName(down)}, ultima in Serie A, retrocede in Serie B.`);
+        if (down === c.user) {
+            addFans(c, -12, 'Retrocessione: i tifosi sono furiosi.');
+            msg(c, 'club', 'Retrocessi in Serie B', 'La prossima stagione si gioca in Serie B: incassi, sponsor e ingaggi più bassi. Obiettivo: tornare subito in Serie A vincendo i play-off.');
+        } else if (up === c.user) {
+            addFans(c, 12, 'Promozione in Serie A!');
+            msg(c, 'club', 'Promossi in Serie A', 'La prossima stagione si gioca in Serie A: più pubblico e sponsor più ricchi, ma anche avversari più forti e ingaggi più alti.');
+        }
+    }
     function trackPlayoffs(c, s, before) {
         const E = engine();
+        const PO_STAGE = E.poRounds(s).map(r => r.label);
+        const PZ = CFG.PRIZES[userDiv(c)];
         const po = s.playoffs;
         const inPo = po.seeds.includes(c.user);
         if (!inPo) return;
@@ -808,19 +880,19 @@
             const won = E.seriesWinner(s, ser) === c.user;
             const w = E.seriesWins(s, ser);
             const mine = ser.hi === c.user ? w : [w[1], w[0]];
-            if (roundJustPlayed === E.PO_ROUNDS.length - 1) {
-                money(c, 'premi', CFG.PRIZES.leagueFinal, 'Finale scudetto disputata');
+            if (roundJustPlayed === PO_STAGE.length - 1) {
+                money(c, 'premi', PZ.final, `Finale ${PZ.label} disputata`);
                 if (won) {
-                    money(c, 'premi', CFG.PRIZES.leagueWin, 'Scudetto');
-                    c.trophies.push({ season: c.seasonYear, comp: 'serie_a' });
+                    money(c, 'premi', PZ.win, userDiv(c) === 'A' ? 'Scudetto' : 'Serie B vinta');
+                    c.trophies.push({ season: c.seasonYear, comp: userDiv(c) === 'A' ? 'serie_a' : 'serie_b' });
                     c.sponsors.active.forEach(a => money(c, 'bonus', a.trophyBonus, `Bonus trofeo • ${sponsorById(a.sid) ? sponsorById(a.sid).name : ''}`));
-                    addFans(c, 14, 'Campioni d\'Italia!');
+                    addFans(c, 14, userDiv(c) === 'A' ? 'Campioni d\'Italia!' : 'Serie B vinta: si sale in Serie A!');
                     c.season.playoff = 'Campione';
                 } else {
                     addFans(c, 4, null);
                     c.season.playoff = 'Finale';
                 }
-                msg(c, 'finanze', 'Premio finale scudetto', `Finale disputata: ${eur(CFG.PRIZES.leagueFinal)}${won ? ` + ${eur(CFG.PRIZES.leagueWin)} per lo scudetto` : ''}.`);
+                msg(c, 'finanze', `Premio finale ${PZ.label}`, `Finale disputata: ${eur(PZ.final)}${won ? ` + ${eur(PZ.win)} per la vittoria` : ''}.`);
             } else if (won) {
                 msg(c, 'gare', `Play-off: passaggio del turno`, `${PO_STAGE[roundJustPlayed]} vinti ${mine[0]}-${mine[1]}.`);
             } else {
@@ -873,12 +945,15 @@
     function endSeason(c) {
         const E = engine();
         const s = c.season;
+        const divBefore = userDiv(c);
+        promoteRelegate(c);
         const inc = c.ledger.filter(l => l.s === c.seasonYear && l.amt > 0).reduce((a, l) => a + l.amt, 0);
         const exp = c.ledger.filter(l => l.s === c.seasonYear && l.amt < 0).reduce((a, l) => a + l.amt, 0);
         c.seasons.push({
             season: c.seasonYear, label: seasonLabelOf(c.seasonYear),
             pos: s.regularPos || null,
-            playoff: s.playoff || (s.regularPos && s.regularPos <= E.PLAYOFF_TEAMS ? '—' : 'Non qualificata'),
+            div: divBefore, divName: CFG.DIV[divBefore].name, moved: s.moved || null,
+            playoff: s.playoff || (s.regularPos && s.regularPos <= E.playoffTeams(c.league) ? '—' : 'Non qualificata'),
             cup: s.cup || (c.cup && c.cup.teams.includes(c.user) ? '—' : 'Non qualificata'),
             champion: c.league.champion, cupWinner: c.cup ? c.cup.champion : null,
             income: inc, expense: exp, balance: Math.round(c.balance), fans: Math.round(c.fans)
@@ -907,6 +982,27 @@
         for (let i = 0; i < 2; i++) sponsorOffer(c);
     }
 
+    // campionato della propria divisione e quello dell'altra (senza l'utente)
+    function startLeagues(c) {
+        const E = engine(), ud = userDiv(c), od = ud === 'A' ? 'B' : 'A';
+        const season = seasonLabelOf(c.seasonYear);
+        c.league = E.newLeague(c.user, season, CFG.DIV[ud].league, c.div[ud].slice());
+        c.other = c.div[od].length >= 2 ? E.newLeague(null, season, CFG.DIV[od].league, c.div[od].slice()) : null;
+        [c.league, c.other].forEach(l => { if (!l) return; l.relegate = l.league === 'SERIE A' && c.div.B.length ? 1 : 0; l.promote = l.league === 'SERIE B'; });
+    }
+    // carriere salvate prima della Serie B: si aggiunge la seconda divisione
+    function migrate(c) {
+        if (c.div) return c;
+        const B = engine().leagueTeams('SERIE B').filter(t => !c.teams.includes(t));
+        c.div = { A: c.teams.slice(), B };
+        B.forEach(t => seedTeam(c, t));
+        c.teams = c.teams.concat(B);
+        c.other = null;
+        syncWorld(c);
+        ensureMinRoster(c);
+        return c;
+    }
+
     // ------------------------------------------------------------------ avanzamento
     // esegue il prossimo evento del calendario; userResult = esito della partita giocata in 3D
     function advance(c, userResult) {
@@ -922,12 +1018,14 @@
                 break;
             case 'season_start':
                 closeWindow(c);
-                c.league = engine().newLeague(c.user, seasonLabelOf(c.seasonYear));
+                startLeagues(c);
                 c.cup = null;
                 c.season = {};
                 c.form = [];
                 c.stage = 'first_half';
-                msg(c, 'gare', `Al via la Serie A ${seasonLabelOf(c.seasonYear)}`, `Girone all'italiana con andata e ritorno (${c.league.rounds.length} giornate), poi i play-off scudetto per le prime ${engine().PLAYOFF_TEAMS}. A gennaio la Coppa Italia.`);
+                msg(c, 'gare', `Al via la ${CFG.DIV[userDiv(c)].name} ${seasonLabelOf(c.seasonYear)}`, userDiv(c) === 'A'
+                    ? `Girone all'italiana con andata e ritorno (${c.league.rounds.length} giornate), poi i play-off scudetto per le prime ${engine().playoffTeams(c.league)}. L'ultima retrocede in Serie B. A gennaio la Coppa Italia.`
+                    : `Girone all'italiana con andata e ritorno (${c.league.rounds.length} giornate), poi i play-off promozione per le prime ${engine().playoffTeams(c.league)}: chi li vince sale in Serie A.`);
                 break;
             case 'league':
             case 'playoff':
@@ -940,7 +1038,9 @@
                 c.stage = 'winter';
                 c.cup = engine().newCup(c.user, seasonLabelOf(c.seasonYear));
                 openWindow(c, 'winter');
-                msg(c, 'gare', 'Sorteggio della Coppa Italia', `Tabellone a gare secche con le migliori ${c.cup.teams.length} squadre. Ai quarti: ${(() => { const f = c.cup.cup.rounds[0].find(x => x.home === c.user || x.away === c.user); return f ? `${clubName(f.home)} - ${clubName(f.away)}` : '—'; })()}.`);
+                msg(c, 'gare', 'Sorteggio della Coppa Italia', c.cup.teams.includes(c.user)
+                    ? `Tabellone a gare secche con le migliori ${c.cup.teams.length} squadre. Ai quarti: ${(() => { const f = c.cup.cup.rounds[0].find(x => x.home === c.user || x.away === c.user); return f ? `${clubName(f.home)} - ${clubName(f.away)}` : '—'; })()}.`
+                    : `La Coppa Italia è riservata alle squadre di Serie A: quest'anno ${clubName(c.user)} la guarda da fuori.`);
                 break;
             case 'cup':
                 applyTurn(c, ev, userResult);
@@ -962,10 +1062,10 @@
         if (c.balance < 0) {
             c.over = { date: c.date, balance: Math.round(c.balance) };
             msg(c, 'finanze', 'Fallimento', `Il saldo è sceso a ${eur(c.balance)}: la società non può far fronte ai debiti e viene dichiarata fallita.`);
-        } else if (c.balance < (payroll(c) + arenaFee(c.user)) * 2 && !c.warnedLow) {
+        } else if (c.balance < monthlyCosts(c) * 2 && !c.warnedLow) {
             c.warnedLow = true;
-            msg(c, 'finanze', 'Allarme cassa', `Restano ${eur(c.balance)}: bastano per meno di due mesi di spese (${eur(payroll(c) + arenaFee(c.user))} al mese). Se il saldo va sotto zero la società fallisce.`);
-        } else if (c.balance > (payroll(c) + arenaFee(c.user)) * 4) c.warnedLow = false;
+            msg(c, 'finanze', 'Allarme cassa', `Restano ${eur(c.balance)}: bastano per meno di due mesi di spese (${eur(monthlyCosts(c))} al mese). Se il saldo va sotto zero la società fallisce.`);
+        } else if (c.balance > monthlyCosts(c) * 4) c.warnedLow = false;
         const rep = c.report;
         rep.balanceAfter = c.balance;
         c.report = null;
@@ -975,10 +1075,11 @@
     // ------------------------------------------------------------------ nuova carriera
     function newCareer(user, year) {
         const E = engine();
-        const teams = E.serieATeams();
+        const div = { A: E.leagueTeams('SERIE A'), B: E.leagueTeams('SERIE B') };
+        const teams = div.A.concat(div.B);
         const c = {
-            v: 1, id: 'm' + Date.now().toString(36), name: '', createdAt: Date.now(),
-            user, teams,
+            v: 2, id: 'm' + Date.now().toString(36), name: '', createdAt: Date.now(),
+            user, teams, div, other: null,
             seasonYear: year, date: ymd(year, 7, 1), stage: 'summer', summerWeek: 0,
             balance: CFG.START_BUDGET, fans: 58, rep: null, lastRank: null, form: [],
             players: {}, nextPid: 1, nextMid: 1,
@@ -998,11 +1099,12 @@
             }
         });
         refillFreeAgents(c, 26);
+        ensureMinRoster(c);          // le rose corte (es. Serie B) si completano con gli svincolati
         updateReputation(c);
         syncWorld(c);
         openWindow(c, 'summer');
         msg(c, 'club', `Benvenuto alla guida di ${clubName(user)}`,
-            `Il presidente ti affida la squadra con un budget di ${eur(CFG.START_BUDGET)}. Ogni mese paghi stipendi (${eur(payroll(c))}) e l'affitto del palazzetto (${eur(arenaFee(user))}). Biglietti, bar, sponsor e premi portano entrate. Se il saldo va sotto zero la società fallisce.`);
+            `Il presidente ti affida la squadra con un budget di ${eur(CFG.START_BUDGET)}. Ogni mese paghi gli stipendi (${eur(payroll(c))}) e ogni settimana l'affitto del palazzetto (${eur(arenaFee(user, c))}). Si parte in ${CFG.DIV[userDiv(c)].name}: l'ultima di Serie A retrocede, la vincente dei play-off di Serie B sale. Biglietti, bar, sponsor e premi portano entrate. Se il saldo va sotto zero la società fallisce.`);
         sponsorOffer(c, 'main');
         sponsorOffer(c, 'sec');
         sponsorOffer(c, 'sec');
@@ -1013,11 +1115,11 @@
 
     G.ManagerCore = {
         CFG, CAT, ROLE_LABEL, INCOME_CATS, EXPENSE_CATS,
-        newCareer, advance, nextEvent, userFixture, syncWorld, restoreWorld,
+        newCareer, advance, nextEvent, userFixture, syncWorld, restoreWorld, migrate, divOf, userDiv,
         lineup, ratingsOf, teamStrength, teamPlayers, freeAgents, counts, canRemove,
         valueOf, salaryFor, clubAsk, playerAsk, marketBlock, makeOffer, releasePlayer, toggleForSale, answerIncoming,
         acceptSponsor, rejectSponsor, freeSlots, sponsorById, maxTier,
-        payroll, sponsorMonthly, arenaFee, arenaCapacity, arenaName,
+        payroll, sponsorMonthly, arenaFee, arenaMonthly, monthlyCosts, arenaCapacity, arenaName,
         fansMood, expectedRank, currentRank, windowOpen, negotiation,
         eur, dateLabel, seasonLabelOf, dAdd, dDiff, clubName, clubShort
     };

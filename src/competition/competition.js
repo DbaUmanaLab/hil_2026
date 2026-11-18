@@ -1,5 +1,5 @@
 // --- src/competition/competition.js ---
-// Modalità Competizione: Serie A e Coppa Italia.
+// Modalità Competizione: Serie A, Serie B e Coppa Italia.
 // Script classico caricato dopo lo script principale di index.html: usa i suoi globali
 // (CLUB_ROSTERS, CLUB_RATINGS, ARENA_CATALOG, HOME_CLUB_ARENAS, matchConfig,
 //  launchMatchFromCurrentConfig, logoSrcOf, titleSplashScreen, showFunFactLoading, ...).
@@ -8,7 +8,8 @@
 //  - Regular season: girone unico all'italiana, andata e ritorno; con un numero dispari di
 //    squadre ogni giornata una squadra riposa. Niente pareggi: 3 punti alla vittoria nei
 //    regolamentari, 2 a quella al supplementare/rigori, 1 alla sconfitta al supplementare/rigori.
-//  - Play-off scudetto: prime 8, quarti al meglio delle 3, semifinali e finale al meglio delle 5.
+//  - Play-off: con almeno 8 squadre quarti (al meglio delle 3), semifinali e finale (al meglio delle 5);
+//    con 4-7 squadre semifinali al meglio delle 3 e finale al meglio delle 5 (es. Serie B).
 //
 // COPPA ITALIA
 //  - 8 squadre: quella dell'utente più le 7 migliori per rating; sorteggio libero.
@@ -19,12 +20,22 @@
 //  - Salvataggi in localStorage con nome assegnato automaticamente; autosalvataggio a ogni turno.
 (function () {
     const SAVE_KEY = 'hil_comp_saves';
-    const PLAYOFF_TEAMS = 8;
-    const PO_ROUNDS = [
-        { id: 'QF', label: 'Quarti di finale', bestOf: 3 },
-        { id: 'SF', label: 'Semifinali', bestOf: 5 },
-        { id: 'F', label: 'Finale scudetto', bestOf: 5 }
-    ];
+    // campionati a girone: nomi, loghi e titoli
+    const LEAGUES = {
+        'SERIE A': { comp: 'serie_a', name: 'Serie A', logo: 'assets/logos/serie_a.png', final: 'Finale scudetto', po: 'Play-off scudetto', champ: "Campione d'Italia", title: "Campione d'Italia" },
+        'SERIE B': { comp: 'serie_b', name: 'Serie B', logo: 'assets/logos/serie_b.png', final: 'Finale promozione', po: 'Play-off promozione', champ: 'Campione di Serie B', title: 'Campione di Serie B • promossa in Serie A' }
+    };
+    const leagueOf = s => (s && s.league) || 'SERIE A';         // le stagioni salvate prima della Serie B sono di Serie A
+    const L = s => LEAGUES[leagueOf(s)] || LEAGUES['SERIE A'];
+    // turni dei play-off in base al numero di squadre del girone
+    function poRounds(s) {
+        s = s || state;
+        const n = s && s.teams ? s.teams.length : 8, fin = L(s).final;
+        if (n >= 8) return [{ id: 'QF', label: 'Quarti di finale', bestOf: 3 }, { id: 'SF', label: 'Semifinali', bestOf: 5 }, { id: 'F', label: fin, bestOf: 5 }];
+        if (n >= 4) return [{ id: 'SF', label: 'Semifinali', bestOf: 3 }, { id: 'F', label: fin, bestOf: 5 }];
+        return [{ id: 'F', label: fin, bestOf: 3 }];
+    }
+    const playoffTeams = s => Math.pow(2, poRounds(s).length);
     const CUP_TEAMS = 8;
     const CUP_ROUNDS = [
         { id: 'QF', label: 'Quarti di finale' },
@@ -34,9 +45,14 @@
     // competizioni mostrate nel carosello di scelta
     const COMPS = [
         {
-            id: 'serie_a', name: 'Campionato di Serie A', short: 'Serie A', logo: 'assets/logos/serie_a.png', active: true,
+            id: 'serie_a', league: 'SERIE A', name: 'Campionato di Serie A', short: 'Serie A', logo: 'assets/logos/serie_a.png', active: true,
             desc: 'Girone unico all\'italiana con andata e ritorno, poi i play-off scudetto a serie.',
-            facts: () => [[String(serieATeams().length), 'Squadre'], [String((serieATeams().length - (serieATeams().length % 2 ? 0 : 1)) * 2), 'Giornate'], ['Top 8', 'Play-off']]
+            facts: () => leagueFacts('SERIE A')
+        },
+        {
+            id: 'serie_b', league: 'SERIE B', name: 'Campionato di Serie B', short: 'Serie B', logo: 'assets/logos/serie_b.png', active: true,
+            desc: 'Girone all\'italiana con andata e ritorno, poi i play-off promozione: semifinali e finale a serie.',
+            facts: () => leagueFacts('SERIE B')
         },
         {
             id: 'coppa_italia', name: 'Coppa Italia', short: 'Coppa Italia', logo: 'assets/logos/coppa_italia.png', active: true,
@@ -77,7 +93,12 @@
     }
     function shuffle(a) { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
     function poisson(l) { const L = Math.exp(-l); let k = 0, p = 1; do { k++; p *= Math.random(); } while (p > L); return k - 1; }
-    function serieATeams() { return CLUB_IDS.filter(id => club(id) && club(id).league === 'SERIE A'); }
+    function leagueTeams(lg) { return CLUB_IDS.filter(id => club(id) && club(id).league === lg); }
+    function serieATeams() { return leagueTeams('SERIE A'); }
+    function leagueFacts(lg) {
+        const n = leagueTeams(lg).length;
+        return [[String(n), 'Squadre'], [String((n - (n % 2 ? 0 : 1)) * 2), 'Giornate'], ['Top ' + playoffTeams({ teams: leagueTeams(lg), league: lg }), 'Play-off']];
+    }
 
     // ------------------------------------------------------------------ calendario (metodo del cerchio)
     function buildSchedule(teams) {
@@ -160,13 +181,15 @@
 
     // ------------------------------------------------------------------ play-off
     function createPlayoffs() {
-        const seeds = standings().slice(0, PLAYOFF_TEAMS).map(r => r.id);
+        const nPo = playoffTeams();
+        const seeds = standings().slice(0, nPo).map(r => r.id);
         state.playoffs = { seeds, round: 0, series: [], turnNo: 0 };
-        const pairs = [[0, 7], [3, 4], [1, 6], [2, 5]];   // tabellone fisso: 1-8 / 4-5 e 2-7 / 3-6
+        // tabellone fisso: 1-8 / 4-5 e 2-7 / 3-6 (con 4 squadre 1-4 / 2-3)
+        const pairs = nPo === 8 ? [[0, 7], [3, 4], [1, 6], [2, 5]] : (nPo === 4 ? [[0, 3], [1, 2]] : [[0, 1]]);
         state.playoffs.series.push(pairs.map(([a, b]) => newSeries(seeds[a], seeds[b], 0)));
         state.phase = 'playoff';
     }
-    function newSeries(hi, lo, roundIdx) { return { hi, lo, bestOf: PO_ROUNDS[roundIdx].bestOf, games: [] }; }
+    function newSeries(hi, lo, roundIdx) { return { hi, lo, bestOf: poRounds()[roundIdx].bestOf, games: [] }; }
     function seriesWins(s) {
         let w = [0, 0];
         s.games.forEach(g => { if (g.result) { const win = winnerOf(g); w[win === s.hi ? 0 : 1]++; } });
@@ -198,7 +221,7 @@
         const po = state.playoffs, cur = currentPoSeries();
         if (!cur.every(s => seriesWinner(s))) return;
         const winners = cur.map(seriesWinner);
-        if (po.round === PO_ROUNDS.length - 1) {
+        if (po.round === poRounds().length - 1) {
             state.champion = winners[0];
             state.phase = 'done';
             return;
@@ -214,9 +237,11 @@
 
     // ------------------------------------------------------------------ Coppa Italia
     function avgRating(id) { const r = ratingOf(id); return (r.off + r.def + r.goa) / 3; }
+    // l'utente più le migliori di Serie A per rating (se l'utente non è in Serie A: le migliori 8)
     function cupParticipants(user) {
+        const inA = user && serieATeams().includes(user);
         const others = serieATeams().filter(id => id !== user).sort((a, b) => avgRating(b) - avgRating(a));
-        return [user].concat(others.slice(0, CUP_TEAMS - 1));
+        return inA ? [user].concat(others.slice(0, CUP_TEAMS - 1)) : others.slice(0, CUP_TEAMS);
     }
     function createCup(user) {
         const teams = shuffle(cupParticipants(user));     // sorteggio libero
@@ -293,7 +318,7 @@
             return `Coppa conclusa • Vincitrice: ${clubName(s.champion)}`;
         }
         if (s.phase === 'regular') return `Regular season • giornata ${Math.min(s.roundIdx + 1, s.rounds.length)} di ${s.rounds.length}`;
-        if (s.phase === 'playoff') return `Play-off • ${PO_ROUNDS[s.playoffs.round].label}`;
+        if (s.phase === 'playoff') return `Play-off • ${poRounds(s)[s.playoffs.round].label}`;
         return `Stagione conclusa • Campione: ${clubName(s.champion)}`;
     }
     function saveCurrent(silent) {
@@ -431,7 +456,7 @@
                     </div>`).join('') : '<div class="cp-empty">Nessuna stagione salvata</div>'}</div>
             </div>`;
         el.querySelector('[data-act="back"]').onclick = exitToMenu;
-        const pick = () => { if (!COMPS[compIdx].active) return; selectedTeam = selectedTeam || serieATeams()[0]; showScreen('teams'); };
+        const pick = () => { if (!COMPS[compIdx].active) return; const t = compTeams(COMPS[compIdx]); if (!t.includes(selectedTeam)) selectedTeam = t[0]; showScreen('teams'); };
         const move = d => {
             compIdx = (compIdx + d + COMPS.length) % COMPS.length;
             renderSelect();
@@ -468,9 +493,11 @@
         const n = Math.max(1, Math.min(5, Math.round((avg - 60) / 5)));
         return '★'.repeat(n) + `<i>${'★'.repeat(5 - n)}</i>`;
     }
+    // squadre selezionabili: quelle del girone, oppure di Serie A per la coppa
+    function compTeams(comp) { return comp.league ? leagueTeams(comp.league) : serieATeams(); }
     function renderTeams() {
         const el = root.querySelector('[data-screen="teams"]');
-        const teams = serieATeams();
+        const teams = compTeams(COMPS[compIdx]);
         if (!teams.includes(selectedTeam)) selectedTeam = teams[0];
         const r = ratingOf(selectedTeam);
         const comp = COMPS[compIdx];
@@ -519,12 +546,14 @@
         });
     }
     function startSeason(user) {
-        if (COMPS[compIdx].id === 'coppa_italia') { startCup(user); return; }
-        const teams = serieATeams();
+        const comp = COMPS[compIdx];
+        if (comp.id === 'coppa_italia') { startCup(user); return; }
+        const teams = leagueTeams(comp.league);
         state = {
             id: 'c' + Date.now().toString(36),
-            name: autoName(user, 'serie_a'),
-            comp: 'serie_a',
+            name: autoName(user, comp.id),
+            comp: comp.id,
+            league: comp.league,
             season: seasonLabel(),
             user,
             teams,
@@ -580,24 +609,26 @@
     }
     function tableHtml() {
         const rows = standings();
+        const nPo = playoffTeams();
         return `<div class="cp-table-wrap" data-pager="y" data-pager-items="tbody tr"><table class="cp-table">
             <thead><tr><th>#</th><th class="l">Squadra</th><th>PG</th><th>V</th><th title="Vittorie al supplementare o ai rigori">VS</th><th title="Sconfitte al supplementare o ai rigori">PS</th><th>P</th><th class="hide-sm">GF</th><th class="hide-sm">GS</th><th>DR</th><th>PT</th></tr></thead>
             <tbody>${rows.map((r, i) => `
-                <tr class="${r.id === state.user ? 'is-user ' : ''}${i < PLAYOFF_TEAMS ? 'is-po ' : ''}${i === PLAYOFF_TEAMS - 1 ? 'cut' : ''}">
+                <tr class="${r.id === state.user ? 'is-user ' : ''}${i < nPo ? 'is-po ' : ''}${i === nPo - 1 ? 'cut ' : ''}${state.relegate && i >= rows.length - state.relegate ? 'is-rel' : ''}">
                     <td class="pos">${i + 1}</td>
                     <td class="l"><span class="team"><img src="${logo(r.id)}" alt="">${esc(club(r.id).shortName || clubName(r.id))}</span></td>
                     <td>${r.pg}</td><td>${r.v}</td><td>${r.vs}</td><td>${r.ps}</td><td>${r.p}</td>
                     <td class="hide-sm">${r.gf}</td><td class="hide-sm">${r.gs}</td><td>${r.gf - r.gs > 0 ? '+' : ''}${r.gf - r.gs}</td>
                     <td class="pts">${r.pts}</td>
                 </tr>`).join('')}</tbody></table></div>
-            <div class="cp-legend"><span><b>■</b> Zona play-off (prime ${PLAYOFF_TEAMS})</span><span>Vittoria 3 pt • al supplementare/rigori 2 pt • sconfitta al supplementare/rigori 1 pt</span></div>`;
+            <div class="cp-legend"><span><b>■</b> Zona play-off (prime ${nPo})</span>${state.relegate ? `<span><b class="rel">■</b> Retrocessione in Serie B</span>` : ''}${state.promote ? `<span>La vincente dei play-off sale in Serie A</span>` : ''}<span>Vittoria 3 pt • al supplementare/rigori 2 pt • sconfitta al supplementare/rigori 1 pt</span></div>`;
     }
     function bracketHtml() {
         if (!state.playoffs) return `<div class="cp-empty" style="margin:auto">Il tabellone dei play-off sarà pronto alla fine della regular season</div>`;
         const po = state.playoffs;
-        return `<div class="cp-bracket" data-pager="x" data-pager-items=".cp-round">${PO_ROUNDS.map((rd, ri) => {
+        const rounds = poRounds();
+        return `<div class="cp-bracket" data-pager="x" data-pager-items=".cp-round">${rounds.map((rd, ri) => {
             const list = po.series[ri];
-            const slots = ri === 0 ? 4 : (ri === 1 ? 2 : 1);
+            const slots = Math.pow(2, rounds.length - 1 - ri);
             let html = `<div class="cp-round"><h4>${rd.label} • al meglio di ${rd.bestOf}</h4><div class="cp-round-body">`;
             for (let k = 0; k < slots; k++) {
                 const s = list && list[k];
@@ -611,13 +642,13 @@
     }
     function nextMatchHtml() {
         if (state.phase === 'done') {
-            return `<div class="cp-rest"><b>Stagione conclusa</b>Campione d'Italia: ${esc(clubName(state.champion))}</div>
+            return `<div class="cp-rest"><b>Stagione conclusa</b>${esc(L(state).champ)}: ${esc(clubName(state.champion))}</div>
                 <div class="cp-next-actions"><button class="cp-btn is-primary" data-act="champion">Premiazione ▶</button></div>`;
         }
         const f = userFixture();
         let meta;
         if (state.phase === 'regular') meta = `Giornata ${state.roundIdx + 1} di ${state.rounds.length}`;
-        else meta = PO_ROUNDS[state.playoffs.round].label;
+        else meta = poRounds()[state.playoffs.round].label;
         if (!f) {
             let why = 'Turno di riposo';
             if (state.phase === 'playoff') {
@@ -656,7 +687,7 @@
         }
         const list = state.playoffs.series[lt.round];
         return {
-            title: `Risultati • ${PO_ROUNDS[lt.round].label}`,
+            title: `Risultati • ${poRounds()[lt.round].label}`,
             body: lt.played.map(p => { const s = list[p.si]; const g = s.games.find(x => x.n === p.n); return g ? resultRow(g) : ''; }).join('')
         };
     }
@@ -672,14 +703,14 @@
     function renderHub() {
         if (isCup()) { renderCupHub(); return; }
         const el = root.querySelector('[data-screen="hub"]');
-        const phaseTxt = state.phase === 'regular' ? 'Regular season' : (state.phase === 'playoff' ? 'Play-off scudetto' : 'Stagione conclusa');
+        const phaseTxt = state.phase === 'regular' ? 'Regular season' : (state.phase === 'playoff' ? L(state).po : 'Stagione conclusa');
         const lr = lastResultsHtml();
         const up = upcomingBody();
         if (!up) resTab = 'last';
         el.innerHTML = `
             <div class="cp-head">
-                <img class="cp-head-logo" src="assets/logos/serie_a.png" alt="">
-                <div class="cp-head-titles"><span class="cp-kicker">${phaseTxt}</span><span class="cp-title">Serie A ${esc(state.season)}</span></div>
+                <img class="cp-head-logo" src="${L(state).logo}" alt="">
+                <div class="cp-head-titles"><span class="cp-kicker">${phaseTxt}</span><span class="cp-title">${L(state).name} ${esc(state.season)}</span></div>
                 <div class="cp-head-right">
                     <span class="cp-pill"><img src="${logo(state.user)}" alt="">${esc(clubName(state.user))}</span>
                     <span class="cp-pill">${esc(progressLabel(state).split(' • ').slice(-1)[0])}</span>
@@ -737,7 +768,7 @@
                 html += state.champion
                     ? `<div class="cp-cup-podium"><div><span>1°</span><img src="${logo(state.champion)}" alt=""><b>${esc(club(state.champion).shortName || clubName(state.champion))}</b></div>
                         <div><span>2°</span><img src="${logo(state.runnerUp)}" alt=""><b>${esc(club(state.runnerUp).shortName || clubName(state.runnerUp))}</b></div></div>`
-                    : `<div class="cp-cup-trophy"><img src="${COMPS[1].logo}" alt=""></div>`;
+                    : `<div class="cp-cup-trophy"><img src="${compOf('coppa_italia').logo}" alt=""></div>`;
             }
             return html + '</div></div>';
         }).join('')}</div>`;
@@ -770,7 +801,7 @@
         const alive = state.phase === 'done' ? (state.champion === state.user) : !!userFixture();
         el.innerHTML = `
             <div class="cp-head">
-                <img class="cp-head-logo" src="${COMPS[1].logo}" alt="">
+                <img class="cp-head-logo" src="${compOf('coppa_italia').logo}" alt="">
                 <div class="cp-head-titles"><span class="cp-kicker">${state.phase === 'done' ? 'Coppa conclusa' : 'Eliminazione diretta • gare secche'}</span><span class="cp-title">Coppa Italia ${esc(state.season)}</span></div>
                 <div class="cp-head-right">
                     <span class="cp-pill"><img src="${logo(state.user)}" alt="">${esc(clubName(state.user))}</span>
@@ -812,7 +843,7 @@
         if (wasRegular && state.phase === 'playoff') {
             hubTab = 'bracket';
             const pos = standings().findIndex(r => r.id === state.user) + 1;
-            toast(`Regular season conclusa • ${clubName(state.user)} ${pos}° ${pos <= PLAYOFF_TEAMS ? '• qualificata ai play-off' : '• fuori dai play-off'}`);
+            toast(`Regular season conclusa • ${clubName(state.user)} ${pos}° ${pos <= playoffTeams() ? '• qualificata ai play-off' : '• fuori dai play-off'}`);
         }
         if (wasCupAlive && state.phase !== 'done') {
             const won = state.cup.rounds[state.cup.round - 1].some(g => winnerOf(g) === state.user);
@@ -831,9 +862,9 @@
                 : (state.runnerUp === state.user ? `${esc(clubName(state.user))} chiude al 2° posto: finale persa, ma che cammino!` : `${esc(clubName(state.user))} esce dalla coppa. Ci si riprova l'anno prossimo!`))
             : (isUser ? 'Scudetto! Una stagione da ricordare.' : `${esc(clubName(state.user))} chiude la stagione. Ci si riprova l'anno prossimo!`);
         o.innerHTML = `<div class="cp-panel cp-dialog">
-            <span class="cp-kicker">${cup ? `Coppa Italia ${esc(state.season)} • Finale 1°-2° posto` : `Serie A ${esc(state.season)} • Finale scudetto`}</span>
+            <span class="cp-kicker">${cup ? `Coppa Italia ${esc(state.season)} • Finale 1°-2° posto` : `${L(state).name} ${esc(state.season)} • ${L(state).final}`}</span>
             <img class="cp-champ-crest" src="${logo(state.champion)}" alt="">
-            <h2>${esc(clubName(state.champion))}<br>${cup ? 'Vince la Coppa Italia' : "Campione d'Italia"}</h2>
+            <h2>${esc(clubName(state.champion))}<br>${cup ? 'Vince la Coppa Italia' : esc(L(state).title)}</h2>
             ${cup ? `<p>2° posto: ${esc(clubName(state.runnerUp))}</p>` : ''}
             <p>${msg}</p>
             <div class="cp-next-actions"><button class="cp-btn" data-x="hub">${cup ? 'Tabellone' : 'Classifica'}</button><button class="cp-btn is-primary" data-x="menu">Torna al menu ▶</button></div>
@@ -866,7 +897,7 @@
         matchActive = true;
         hideRoot();
         const label = isCup() ? `Coppa Italia • ${cupRoundLabel(state.cup.round)}`
-            : (state.phase === 'regular' ? `Serie A • Giornata ${state.roundIdx + 1}` : `Serie A • ${PO_ROUNDS[state.playoffs.round].label}`);
+            : (state.phase === 'regular' ? `${L(state).name} • Giornata ${state.roundIdx + 1}` : `${L(state).name} • ${poRounds()[state.playoffs.round].label}`);
         if (typeof showFunFactLoading === 'function') showFunFactLoading(label, launchMatchFromCurrentConfig);
         else launchMatchFromCurrentConfig();
     }
@@ -945,27 +976,31 @@
     // finalista sconfitto della Serie A (null finché la finale non è decisa)
     function leagueRunnerUp() {
         if (!state.playoffs || state.phase !== 'done') return null;
-        const f = state.playoffs.series[PO_ROUNDS.length - 1][0];
+        const f = state.playoffs.series[poRounds().length - 1][0];
         return f.hi === state.champion ? f.lo : f.hi;
     }
     function leagueFinalists() {
         const po = state.playoffs;
-        if (!po || po.round !== PO_ROUNDS.length - 1 || !po.series[po.round]) return [];
+        if (!po || po.round !== poRounds().length - 1 || !po.series[po.round]) return [];
         const f = po.series[po.round][0];
         return [f.hi, f.lo];
     }
     function turnLabel() {
         if (isCup()) return state.phase === 'cup' ? `Coppa Italia • ${cupRoundLabel(state.cup.round)}` : 'Coppa Italia';
-        if (state.phase === 'regular') return `Serie A • Giornata ${state.roundIdx + 1} di ${state.rounds.length}`;
-        if (state.phase === 'playoff') return `Serie A • ${PO_ROUNDS[state.playoffs.round].label}`;
-        return 'Serie A';
+        if (state.phase === 'regular') return `${L(state).name} • Giornata ${state.roundIdx + 1} di ${state.rounds.length}`;
+        if (state.phase === 'playoff') return `${L(state).name} • ${poRounds()[state.playoffs.round].label}`;
+        return L(state).name;
     }
     const engine = {
-        PO_ROUNDS, CUP_ROUNDS, PLAYOFF_TEAMS, SERIE_A_LOGO: COMPS[0].logo, CUP_LOGO: COMPS[1].logo,
-        serieATeams,
-        newLeague(user, season) {
-            const teams = serieATeams();
-            return { comp: 'serie_a', season, user, teams, rounds: buildSchedule(teams), roundIdx: 0, phase: 'regular', playoffs: null, champion: null, lastTurn: null };
+        CUP_ROUNDS, LEAGUES, CUP_LOGO: compOf('coppa_italia').logo,
+        poRounds: s => poRounds(s), playoffTeams: s => playoffTeams(s),
+        leagueName: s => L(s).name, leagueLogo: s => L(s).logo,
+        serieATeams, leagueTeams,
+        // girone all'italiana: 'SERIE A' o 'SERIE B'; user può non farne parte (null)
+        newLeague(user, season, league, teams) {
+            league = league || 'SERIE A';
+            teams = teams || leagueTeams(league);
+            return { comp: L({ league }).comp, league, season, user, teams, rounds: buildSchedule(teams), roundIdx: 0, phase: 'regular', playoffs: null, champion: null, lastTurn: null };
         },
         newCup(user, season) {
             const cup = createCup(user);

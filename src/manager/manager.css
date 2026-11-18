@@ -270,3 +270,8 @@
 .mg-infirmary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .mg-messages { grid-template-columns: minmax(260px, 1fr) minmax(0, 2fr); }
 .mg-messages .mg-span2 { grid-column: auto; }
+/* divisioni */
+.mg-div-label { grid-column: 1 / -1; font-size: 12px; letter-spacing: .24em; text-transform: uppercase; color: var(--mg-gold); padding: 6px 2px 0; }
+.mg-move { font-size: 18px; letter-spacing: .1em; text-transform: uppercase; font-weight: 700; }
+.mg-move.is-up { color: var(--mg-pos); }
+.mg-move.is-down { color: var(--mg-neg); }

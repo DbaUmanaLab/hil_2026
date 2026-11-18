@@ -293,3 +293,7 @@
     .cp-dialog h2 { font-size: 22px; }
 }
 @media (prefers-reduced-motion: reduce) { #comp-root *, .cp-overlay * { animation: none !important; transition: none !important; } }
+/* zona retrocessione (Hockey Manager) */
+.cp-table tr.is-rel td.pos { color: #f87171; }
+.cp-table tr.is-rel td { background: rgba(239, 68, 68, .08); }
+.cp-legend b.rel { color: #f87171; }

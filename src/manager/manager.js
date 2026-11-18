@@ -125,13 +125,20 @@
     // ------------------------------------------------------------------ 1. scelta della squadra
     function renderStart() {
         const el = root.querySelector('[data-screen="start"]');
-        const teams = E().serieATeams();
+        const teamsA = E().leagueTeams('SERIE A'), teamsB = E().leagueTeams('SERIE B');
+        const teams = teamsA.concat(teamsB);
         if (!teams.includes(selectedTeam)) selectedTeam = teams[0];
+        const inB = teamsB.includes(selectedTeam);
         const saves = readSaves();
         const r = CLUB_RATINGS[selectedTeam] || { off: 70, def: 70, goa: 70 };
         const cap = MC().arenaCapacity(selectedTeam);
         const avg = (r.off + r.def + r.goa) / 3;
-        const diff = avg >= 80 ? ['Facile', 'Squadra di vertice: si punta allo scudetto'] : avg >= 75 ? ['Media', 'Ambizioni da play-off, bilancio da curare'] : ['Difficile', 'Rosa giovane e palazzetto piccolo: ogni euro conta'];
+        const diff = inB ? ['Serie B', 'Si parte dalla seconda divisione: vinci i play-off per salire in Serie A']
+            : avg >= 80 ? ['Facile', 'Squadra di vertice: si punta allo scudetto'] : avg >= 75 ? ['Media', 'Ambizioni da play-off, bilancio da curare'] : ['Difficile', 'Rosa giovane e palazzetto piccolo: occhio alla retrocessione'];
+        const tile = id => `
+                        <button type="button" class="cp-team-tile${id === selectedTeam ? ' is-active' : ''}" data-team="${id}" ${id === selectedTeam ? 'data-focus' : ''}>
+                            <img src="${logo(id)}" alt=""><span>${esc(short(id))}</span>
+                        </button>`;
         el.innerHTML = `
             <div class="cp-head">
                 <img class="cp-head-logo" src="assets/logos/game%20badge.png" alt="" onerror="this.style.display='none'">
@@ -140,11 +147,10 @@
             </div>
             <div class="mg-start">
                 <div class="cp-panel mg-start-teams">
-                    <div class="cp-panel-title"><span>Serie A</span><b>${teams.length} club</b></div>
-                    <div class="cp-team-grid" data-pager="y">${teams.map(id => `
-                        <button type="button" class="cp-team-tile${id === selectedTeam ? ' is-active' : ''}" data-team="${id}" ${id === selectedTeam ? 'data-focus' : ''}>
-                            <img src="${logo(id)}" alt=""><span>${esc(short(id))}</span>
-                        </button>`).join('')}</div>
+                    <div class="cp-panel-title"><span>Serie A • Serie B</span><b>${teamsA.length} + ${teamsB.length} club</b></div>
+                    <div class="cp-team-grid" data-pager="y">
+                        <div class="mg-div-label">Serie A</div>${teamsA.map(tile).join('')}
+                        <div class="mg-div-label">Serie B</div>${teamsB.map(tile).join('')}</div>
                 </div>
                 <div class="cp-panel mg-start-side">
                     <img class="crest" src="${logo(selectedTeam)}" alt="">
@@ -152,7 +158,7 @@
                     <div class="arena">${esc(MC().arenaName(selectedTeam))} • ${cap} posti</div>
                     <div class="cp-ratings"><div><small>OFF</small><b>${r.off}</b></div><div><small>DEF</small><b>${r.def}</b></div><div><small>GOA</small><b>${r.goa}</b></div></div>
                     <div class="mg-diff"><b>${diff[0]}</b><span>${diff[1]}</span></div>
-                    <div class="mg-facts"><div><small>Affitto palazzetto</small><b>${eur(MC().arenaFee(selectedTeam))}/mese</b></div></div>
+                    <div class="mg-facts"><div><small>Divisione</small><b>${inB ? 'Serie B' : 'Serie A'}</b></div><div><small>Affitto palazzetto</small><b>${eur(MC().arenaFee(selectedTeam) * (inB ? MC().CFG.DIV.B.arena : 1))}/sett.</b></div></div>
                     <button class="cp-btn is-primary" data-act="new">Inizia la carriera ▶</button>
                 </div>
                 <div class="cp-panel mg-start-saves">
@@ -168,7 +174,7 @@
             </div>
             <div class="cp-foot">
                 <button class="cp-btn" data-act="back" data-keyback>◀ Menu</button>
-                <span class="cp-hint">Stagioni infinite • Serie A e, a gennaio, la Coppa Italia • niente retrocessioni</span>
+                <span class="cp-hint">Stagioni infinite • Serie A e Serie B • l'ultima di A retrocede, la vincente dei play-off di B sale • a gennaio la Coppa Italia</span>
             </div>`;
         el.querySelector('[data-act="back"]').onclick = exitToMenu;
         el.querySelector('[data-act="new"]').onclick = () => startCareer(selectedTeam);
@@ -179,7 +185,7 @@
         el.querySelectorAll('[data-load]').forEach(b => b.onclick = () => {
             const s = readSaves().find(x => x.id === b.dataset.load);
             if (!s) return;
-            career = s.data;
+            career = MC().migrate(s.data);
             MC().syncWorld(career);
             tab = 'office';
             showScreen('hub');
@@ -220,13 +226,13 @@
         const el = root.querySelector('[data-screen="hub"]');
         const c = career;
         const ev = MC().nextEvent(c);
-        const low = c.balance < (MC().payroll(c) + MC().arenaFee(c.user)) * 2;
+        const low = c.balance < MC().monthlyCosts(c) * 2;
         const n = unread();
         const T = TAB_IMPL[tab] || TAB_IMPL.office;
         el.innerHTML = `
             <div class="cp-head mg-head">
                 <img class="mg-crest" src="${logo(c.user)}" alt="">
-                <div class="cp-head-titles"><span class="cp-kicker">Hockey Manager • Stagione ${esc(MC().seasonLabelOf(c.seasonYear))}</span><span class="cp-title">${esc(MC().clubName(c.user))}</span></div>
+                <div class="cp-head-titles"><span class="cp-kicker">Hockey Manager • ${MC().CFG.DIV[MC().userDiv(c)].name} • Stagione ${esc(MC().seasonLabelOf(c.seasonYear))}</span><span class="cp-title">${esc(MC().clubName(c.user))}</span></div>
                 <div class="cp-head-right mg-status">
                     <span class="cp-pill mg-pill-date">📅 ${esc(MC().dateLabel(c.date, true))}</span>
                     <button type="button" class="cp-pill mg-pill-btn${low ? ' is-alert' : ''}" data-tab="finance" title="Saldo del club">💶 <b>${eur(c.balance)}</b></button>
@@ -379,19 +385,22 @@
         const s = career.seasons[career.seasons.length - 1];
         if (!s) return;
         const champ = s.champion === career.user, cupW = s.cupWinner === career.user;
+        const inA = (s.div || 'A') === 'A';
+        const title = champ ? (inA ? 'Campioni d\'Italia!' : 'Serie B vinta!') : `${inA ? 'Scudetto' : 'Serie B'} a ${esc(MC().clubName(s.champion))}`;
         overlay(`
             <span class="cp-kicker">Stagione ${esc(s.label)} conclusa</span>
             <img class="cp-champ-crest" src="${logo(champ ? career.user : s.champion)}" alt="">
-            <h2>${champ ? 'Campioni d\'Italia!' : `Scudetto a ${esc(MC().clubName(s.champion))}`}</h2>
+            <h2>${title}</h2>
+            ${s.moved ? `<p class="mg-move ${/Promossa/.test(s.moved) ? 'is-up' : 'is-down'}">${/Promossa/.test(s.moved) ? '▲' : '▼'} ${esc(s.moved)}</p>` : ''}
             <div class="mg-facts mg-facts-grid">
-                <div><small>Regular season</small><b>${s.pos ? s.pos + '° posto' : '—'}</b></div>
+                <div><small>${esc(s.divName || 'Serie A')}</small><b>${s.pos ? s.pos + '° posto' : '—'}</b></div>
                 <div><small>Play-off</small><b>${esc(s.playoff)}</b></div>
                 <div><small>Coppa Italia</small><b>${esc(cupW ? 'Vinta' : s.cup)}</b></div>
                 <div><small>Bilancio stagione</small><b class="${s.income + s.expense >= 0 ? 'mg-pos' : 'mg-neg'}">${s.income + s.expense >= 0 ? '+' : ''}${eur(s.income + s.expense)}</b></div>
                 <div><small>Saldo</small><b>${eur(s.balance)}</b></div>
                 <div><small>Tifosi</small><b>${s.fans} • ${esc(MC().fansMood(s.fans))}</b></div>
             </div>
-            <p>Si apre il mercato estivo: rinforza la squadra, rinnova gli sponsor e preparati alla stagione ${esc(MC().seasonLabelOf(career.seasonYear))}.</p>
+            <p>Si apre il mercato estivo: rinforza la squadra, rinnova gli sponsor e preparati alla stagione ${esc(MC().seasonLabelOf(career.seasonYear))} in ${esc(MC().CFG.DIV[MC().userDiv(career)].name)}.</p>
             <div class="cp-next-actions"><button class="cp-btn is-primary" data-x="ok" data-keyback data-focus>Avanti ▶</button></div>`, (o, close) => {
             o.querySelector('[data-x="ok"]').onclick = close;
         });
@@ -425,7 +434,7 @@
             const ev = M.nextEvent(c);
             const f = ev ? M.userFixture(c, ev) : null;
             const pos = M.currentRank(c);
-            const monthly = M.payroll(c) + M.arenaFee(c.user);
+            const monthly = M.monthlyCosts(c);
             const injured = M.teamPlayers(c, c.user).filter(p => p.inj).length;
             const offersIn = c.market.incoming.filter(o => o.status === 'open').length;
             const alerts = [];
@@ -454,7 +463,7 @@
                         <div><small>Saldo</small><b>${eur(c.balance)}</b></div>
                         <div><small>Spese al mese</small><b>${eur(monthly)}</b></div>
                         <div><small>Sponsor al mese</small><b>${eur(M.sponsorMonthly(c))}</b></div>
-                        <div><small>Serie A</small><b>${pos ? pos + '° posto' : '—'}</b></div>
+                        <div><small>${M.CFG.DIV[M.userDiv(c)].name}</small><b>${pos ? pos + '° posto' : '—'}</b></div>
                         <div><small>Rosa</small><b>${M.counts(c, c.user).total} / ${M.CFG.MAX_ROSTER}</b></div>
                         <div><small>Forma</small><b class="mg-form">${form.length ? form.map(x => `<i class="${x === 'W' ? 'w' : 'l'}">${x === 'W' ? 'V' : 'S'}</i>`).join('') : '—'}</b></div>
                     </div>
@@ -486,7 +495,7 @@
             season_end: ' • Premi, bilanci, rinnovi e ritiri',
             league: ' • Turno di riposo per la tua squadra',
             playoff: ' • La tua squadra non gioca in questo turno',
-            cup: ' • La tua squadra non è più in coppa'
+            cup: career && career.cup && !career.cup.teams.includes(career.user) ? ' • La Coppa Italia è riservata alla Serie A' : ' • La tua squadra non è più in coppa'
         }[ev.kind] || '';
     }
     function fansNote(c) {
@@ -768,7 +777,7 @@
                     <div class="mg-inj-list" data-pager="y">${inj.length ? inj.map(card).join('') : '<div class="cp-empty">Nessun infortunato: tutta la rosa è a disposizione.</div>'}</div>
                 </div>
                 <div class="cp-panel mg-fill">
-                    <div class="cp-panel-title"><span>Infortunati in Serie A</span><b>${others.length}</b></div>
+                    <div class="cp-panel-title"><span>Infortunati nelle altre squadre</span><b>${others.length}</b></div>
                     <div class="cp-table-wrap" data-pager="y" data-pager-items="tbody tr"><table class="cp-table mg-table">
                         <thead><tr><th class="l">Giocatore</th><th class="l">Squadra</th><th class="l hide-sm">Infortunio</th><th>Rientro</th></tr></thead>
                         <tbody>${others.map(p => `<tr><td class="l"><b>${esc(p.name)}</b> <span class="mg-ovr ${ovrCls(p.ovr)}">${p.ovr}</span></td><td class="l"><span class="team"><img src="${logo(p.team)}" alt="">${esc(short(p.team))}</span></td><td class="l hide-sm">${esc(p.inj.t)}</td><td>${esc(M.dateLabel(p.inj.until))}</td></tr>`).join('') || '<tr><td colspan="4">Nessuno</td></tr>'}</tbody>
@@ -783,25 +792,29 @@
     TAB_IMPL.comps = {
         html() {
             const c = career, En = E();
-            const leagueBody = !c.league ? '<div class="cp-empty" style="margin:auto">Il campionato inizia a settembre</div>'
-                : (ui.compView === 'table' ? En.tableHtml(c.league) : En.bracketHtml(c.league));
-            const lr = c.league ? En.lastResults(c.league) : null;
+            if (ui.comp === 'other' && !c.other) ui.comp = 'league';
+            const lg = ui.comp === 'other' ? c.other : c.league;
+            const leagueBody = !lg ? '<div class="cp-empty" style="margin:auto">Il campionato inizia a settembre</div>'
+                : (ui.compView === 'table' ? En.tableHtml(lg) : En.bracketHtml(lg));
+            const lr = lg ? En.lastResults(lg) : null;
+            const ud = MC().userDiv(c), od = ud === 'A' ? 'B' : 'A';
             const cupBody = c.cup ? En.cupBracketHtml(c.cup) : '<div class="cp-empty" style="margin:auto">La Coppa Italia si gioca a gennaio, durante la sosta del campionato</div>';
             const hist = c.seasons.slice().reverse();
             return `<div class="mg-grid mg-comps">
                 <div class="cp-panel mg-span2 mg-fill">
                     <div class="cp-panel-title"><div class="cp-tabs">
-                        <button class="cp-tab${ui.comp === 'league' ? ' is-active' : ''}" data-comp="league">Serie A</button>
+                        <button class="cp-tab${ui.comp === 'league' ? ' is-active' : ''}" data-comp="league">${MC().CFG.DIV[ud].name}</button>
+                        ${c.other ? `<button class="cp-tab${ui.comp === 'other' ? ' is-active' : ''}" data-comp="other">${MC().CFG.DIV[od].name}</button>` : ''}
                         <button class="cp-tab${ui.comp === 'cup' ? ' is-active' : ''}" data-comp="cup">Coppa Italia</button>
-                        ${ui.comp === 'league' && c.league ? `<button class="cp-tab${ui.compView === 'table' ? ' is-active' : ''}" data-view="table">Classifica</button><button class="cp-tab${ui.compView === 'bracket' ? ' is-active' : ''}" data-view="bracket">Play-off</button>` : ''}
-                    </div><span>${ui.comp === 'league' ? (c.league ? esc(En.progressLabel(c.league)) : '') : (c.cup ? esc(En.progressLabel(c.cup)) : '')}</span></div>
-                    ${ui.comp === 'league' ? leagueBody : cupBody}
+                        ${ui.comp !== 'cup' && lg ? `<button class="cp-tab${ui.compView === 'table' ? ' is-active' : ''}" data-view="table">Classifica</button><button class="cp-tab${ui.compView === 'bracket' ? ' is-active' : ''}" data-view="bracket">Play-off</button>` : ''}
+                    </div><span>${ui.comp !== 'cup' ? (lg ? esc(En.progressLabel(lg)) : '') : (c.cup ? esc(En.progressLabel(c.cup)) : '')}</span></div>
+                    ${ui.comp !== 'cup' ? leagueBody : cupBody}
                 </div>
                 <div class="cp-col">
                     <div class="cp-panel mg-fill"><div class="cp-panel-title"><span>${lr ? esc(lr.title) : 'Risultati'}</span></div>
                         <div class="cp-results" data-pager="y">${ui.comp === 'cup' && c.cup ? En.lastResults(c.cup).body : (lr ? lr.body : '<div class="cp-empty">Nessuna partita giocata</div>')}</div></div>
                     <div class="cp-panel mg-fill"><div class="cp-panel-title"><span>Albo della carriera</span><b>${c.trophies.length} trofei</b></div>
-                        <div class="mg-hist" data-pager="y">${hist.length ? hist.map(s => `<div class="mg-hist-row"><b>${esc(s.label)}</b><span>${s.pos ? s.pos + '°' : '—'} • PO: ${esc(s.playoff)} • Coppa: ${esc(s.cupWinner === c.user ? 'Vinta' : s.cup)}</span><em class="${s.income + s.expense >= 0 ? 'mg-pos' : 'mg-neg'}">${eur(s.income + s.expense)}</em></div>`).join('') : '<div class="cp-empty">La prima stagione è in corso</div>'}</div></div>
+                        <div class="mg-hist" data-pager="y">${hist.length ? hist.map(s => `<div class="mg-hist-row"><b>${esc(s.label)}</b><span>${esc((s.divName || 'Serie A').replace('Serie ', ''))} ${s.pos ? s.pos + '°' : '—'}${s.moved ? (/Promossa/.test(s.moved) ? ' ▲' : ' ▼') : ''} • PO: ${esc(s.playoff)} • Coppa: ${esc(s.cupWinner === c.user ? 'Vinta' : s.cup)}</span><em class="${s.income + s.expense >= 0 ? 'mg-pos' : 'mg-neg'}">${eur(s.income + s.expense)}</em></div>`).join('') : '<div class="cp-empty">La prima stagione è in corso</div>'}</div></div>
                 </div>
             </div>`;
         },
@@ -822,7 +835,7 @@
             const incs = byCat(M.INCOME_CATS), exps = byCat(M.EXPENSE_CATS);
             const maxV = Math.max(1, ...incs.map(x => x.v), ...exps.map(x => x.v));
             const bars = (list, cls) => list.length ? list.map(x => `<div class="mg-bar ${cls}"><span>${esc(x.label)}</span><div><i style="width:${Math.max(2, 100 * x.v / maxV)}%"></i></div><b>${eur(x.v)}</b></div>`).join('') : '<div class="cp-empty">Nessun movimento</div>';
-            const monthlyOut = M.payroll(c) + M.arenaFee(c.user), monthlyIn = M.sponsorMonthly(c);
+            const monthlyOut = M.monthlyCosts(c), monthlyIn = M.sponsorMonthly(c);
             const recent = c.ledger.slice().reverse().slice(0, 60);
             const cats = Object.assign({}, M.INCOME_CATS, M.EXPENSE_CATS);
             return `<div class="mg-grid mg-finance">
@@ -831,7 +844,7 @@
                     <div><small>Entrate stagione</small><b>${eur(inc)}</b></div>
                     <div><small>Uscite stagione</small><b>${eur(-exp)}</b></div>
                     <div><small>Risultato</small><b class="${inc + exp >= 0 ? 'mg-pos' : 'mg-neg'}">${inc + exp >= 0 ? '+' : ''}${eur(inc + exp)}</b></div>
-                    <div><small>Fisse al mese</small><b>${eur(monthlyIn - monthlyOut)}</b><em>sponsor ${eur(monthlyIn)} − stipendi ${eur(M.payroll(c))} − palazzetto ${eur(M.arenaFee(c.user))}</em></div>
+                    <div><small>Fisse al mese</small><b>${eur(monthlyIn - monthlyOut)}</b><em>sponsor ${eur(monthlyIn)} − stipendi ${eur(M.payroll(c))} − palazzetto ${eur(M.arenaFee(c.user, c))}/sett.</em></div>
                 </div></div>
                 <div class="cp-panel mg-span2 mg-fill">
                     <div class="cp-panel-title"><span>Andamento del saldo</span><div class="cp-tabs"><button class="cp-tab${ui.finRange === 'season' ? ' is-active' : ''}" data-range="season">Stagione</button><button class="cp-tab${ui.finRange === 'all' ? ' is-active' : ''}" data-range="all">Carriera</button></div></div>
