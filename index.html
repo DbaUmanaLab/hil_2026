@@ -2606,11 +2606,48 @@
                 kits: {
                     white: { id: 'white', label: 'Divisa Bianca', primary: 0xffffff, pants: 0x1a1f5c, helmet: 0x1a1f5c, glove: 0x111114 }
                 }
+            },
+            // Asiago Black-Out (Serie B): nomi e statistiche dal roster (1 partita). Il roster non riporta
+            // numeri e ruoli: numeri PROVVISORI (il 27 è quello della maglia) e linee composte per punti.
+            // Solo 11 giocatori di movimento: RIGONI Edoardo fa il doppio turno da difensore in terza linea.
+            // VELLAR Massimo è anche l'allenatore. Gioca all'Arena Via Cinque di Asiago. Una sola divisa.
+            asiago_blackout: {
+                id: 'asiago_blackout',
+                league: 'SERIE B',
+                jerseyClubId: 'asiago_blackout',
+                name: 'ASIAGO BLACK-OUT',
+                shortName: 'BLACK-OUT',
+                goalie: { num: "1", name: "PESAVENTO", first: "Marco" },
+                backupGoalies: [],
+                lines: [
+                    [
+                        { role: "C", num: "10", name: "RIGONI", first: "Daniele", g: 1, a: 0, pts: 1 },
+                        { role: "LW", num: "17", name: "ZAGO", first: "Matteo", g: 1, a: 0, pts: 1 },
+                        { role: "RW", num: "27", name: "TESSARI", first: "Sascha Primo", g: 1, a: 0, pts: 1 },
+                        { role: "D", num: "4", name: "RIGONI", first: "Edoardo", g: 0, a: 1, pts: 1 }
+                    ],
+                    [
+                        { role: "C", num: "9", name: "VALENTE", first: "Carlo", g: 1, a: 0, pts: 1 },
+                        { role: "LW", num: "11", name: "STELLA", first: "Stefano", g: 0, a: 1, pts: 1 },
+                        { role: "RW", num: "19", name: "CARLI", first: "Simone", g: 0, a: 0, pts: 0 },
+                        { role: "D", num: "5", name: "VELLAR", first: "Massimo", g: 0, a: 0, pts: 0 }
+                    ],
+                    [
+                        { role: "C", num: "21", name: "ROSSI", first: "Filippo", g: 0, a: 0, pts: 0 },
+                        { role: "LW", num: "23", name: "SARTORI", first: "Filippo", g: 0, a: 0, pts: 0 },
+                        { role: "RW", num: "88", name: "RIGONI", first: "Filippo", g: 0, a: 0, pts: 0 },
+                        { role: "D", num: "4", name: "RIGONI", first: "Edoardo", g: 0, a: 1, pts: 1 }
+                    ]
+                ],
+                reserves: [],
+                kits: {
+                    white: { id: 'white', label: 'Divisa Bianca', primary: 0xffffff, pants: 0x0b0b0f, helmet: 0x0b0b0f, glove: 0x0b0b0f }
+                }
             }
         };
 
-        const CLUB_IDS = ['cittadella', 'vicenza', 'milano', 'asiago', 'cittadella_pike', 'cus_verona', 'forli', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore'];
-        const LEAGUE_MODES = ['TUTTE', 'SERIE A', 'UISP'];
+        const CLUB_IDS = ['cittadella', 'vicenza', 'milano', 'asiago', 'cittadella_pike', 'cus_verona', 'forli', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'asiago_blackout'];
+        const LEAGUE_MODES = ['TUTTE', 'SERIE A', 'SERIE B', 'UISP'];
 
         const ARENA_CATALOG = {
             cittadella: {
@@ -2651,7 +2688,7 @@
                 name: 'ARENA VIA CINQUE',
                 shortTitle: 'Arena Via Cinque Asiago',
                 location: 'Via Cinque • Asiago (VI), Veneto',
-                clubBadge: 'Casa: Asiago Vipers',
+                clubBadge: 'Casa: Asiago Vipers • Black-Out',
                 desc: 'Soffitto basso in cemento bianco con travi e fari rettangolari, pista SportCourt azzurra con le linee rosse, balaustre con la fascia Ceccato Automobili, la parete degli stendardi dei trofei arancioneri, vetrate verdi e il pubblico in piedi dietro il vetro del bar, con gli striscioni dei tifosi appesi alla rete.',
                 capacity: '450 Spettatori (In piedi dietro il vetro)',
                 surface: 'Piastrelle SportCourt Azzurre',
@@ -2729,7 +2766,8 @@
             forli: 'forli',
             fox_legnaro: 'fox_legnaro',
             edera_trieste: 'edera_trieste',
-            kraken_camaiore: 'kraken_camaiore'
+            kraken_camaiore: 'kraken_camaiore',
+            asiago_blackout: 'asiago'
         };
 
         // Catalogo di 12 Esultanze Diverse dei Giocatori al Gol
@@ -3770,7 +3808,8 @@
                 forli:           'forli.png',
                 fox_legnaro:     'fox_legnaro.png',
                 edera_trieste:   'edera_trieste.png',
-                kraken_camaiore: 'kraken_camaiore.png'
+                kraken_camaiore: 'kraken_camaiore.png',
+                asiago_blackout: 'asiago_blackout.png'
             };
             const file = fileMap[clubId] || 'vicenza.svg';
             return `<img src="assets/logos/${file}" class="${sizeClass}" alt="Logo ${clubId}" draggable="false">`;
@@ -3789,7 +3828,8 @@
             forli: ['assets/jerseys/forli_1.png', 'assets/jerseys/forli_2.png'],
             fox_legnaro: ['assets/jerseys/fox_legnaro_1.png', 'assets/jerseys/fox_legnaro_2.png'],
             edera_trieste: ['assets/jerseys/edera_trieste_1.png', 'assets/jerseys/edera_trieste_2.png'],
-            kraken_camaiore: ['assets/jerseys/kraken_camaiore.png']
+            kraken_camaiore: ['assets/jerseys/kraken_camaiore.png'],
+            asiago_blackout: ['assets/jerseys/asiago_blackout.png']
         };
         function getJerseyImageSrc(jerseyClubId, kitIndex) {
             const list = JERSEY_IMAGES[jerseyClubId];
@@ -5630,7 +5670,7 @@
 
         const pngLogoCache = {};
         // Club senza logo disegnato a mano: sul tabellone si usa il PNG
-        const PNG_LOGO_CLUBS = new Set(['cus_verona', 'forli', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore']);
+        const PNG_LOGO_CLUBS = new Set(['cus_verona', 'forli', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'asiago_blackout']);
         function drawClubPngLogo(ctx, clubId, cx, cy, size) {
             let img = pngLogoCache[clubId];
             if (!img) {
@@ -7281,13 +7321,14 @@
 
             const primaryColor = (baseClubId === 'cittadella' || baseClubId === 'cittadella_pike') ? 0xdc2626
                 : baseClubId === 'kraken_camaiore' ? 0x1a1f5c
+                : baseClubId === 'asiago_blackout' ? 0x0b0b0f
                 : baseClubId === 'edera_trieste' ? 0x1d7a3a
                 : baseClubId === 'fox_legnaro' ? 0x111114
                 : baseClubId === 'cus_verona' ? 0x14206a
                 : baseClubId === 'forli' ? 0x16244f
                 : (baseClubId === 'milano' ? 0x0f2557
                 : (baseClubId === 'asiago' ? 0xf97316 : 0x09090b));
-            const secondaryColor = baseClubId === 'kraken_camaiore' ? 0x78bee4 : baseClubId === 'edera_trieste' ? 0xd7262e : baseClubId === 'fox_legnaro' ? 0xd01f26 : baseClubId === 'cus_verona' ? 0xf5c400 : baseClubId === 'forli' ? 0x3d8bd1 : baseClubId === 'cittadella' ? 0x172554
+            const secondaryColor = baseClubId === 'asiago_blackout' ? 0x3fa9f5 : baseClubId === 'kraken_camaiore' ? 0x78bee4 : baseClubId === 'edera_trieste' ? 0xd7262e : baseClubId === 'fox_legnaro' ? 0xd01f26 : baseClubId === 'cus_verona' ? 0xf5c400 : baseClubId === 'forli' ? 0x3d8bd1 : baseClubId === 'cittadella' ? 0x172554
                 : (baseClubId === 'milano' ? 0xdc2626
                 : (baseClubId === 'asiago' ? 0x09090b : 0xdc2626));
 
@@ -7692,7 +7733,8 @@
             cus_verona: { first: 'Nicola', last: 'Olivieri', role: 'Primo allenatore', note: 'Responsabile dello staff tecnico' },
             milano:     { first: 'Matteo', last: 'Zerbi', role: 'Head Coach', note: 'Direttore tecnico: Mattia Mai' },
             forli:      { first: 'Alessandro', last: 'Cintori', role: 'Head Coach', note: 'Nuovo head coach 2026/27' },
-            vicenza:    { first: 'Jacopo', last: 'Rizzotto', role: 'Head Coach', note: 'Confermato alla guida del Vicenza' }
+            vicenza:    { first: 'Jacopo', last: 'Rizzotto', role: 'Head Coach', note: 'Confermato alla guida del Vicenza' },
+            asiago_blackout: { first: 'Massimo', last: 'Vellar', role: 'Allenatore-giocatore', note: 'In pista anche come difensore' }
         };
 
         const OFFICIAL_REFEREES = [
@@ -8471,7 +8513,7 @@
         }
 
         // --- HUD BROADCAST: SIGLE, VISIBILITÀ, FRECCIA, CONO DI TIRO, ETICHETTA TIRO, AVVISI ---
-        const CLUB_ABBR = { cittadella: 'CIT', vicenza: 'VIC', milano: 'MIL', asiago: 'ASI', cittadella_pike: 'PIK', cus_verona: 'CUS', forli: 'FOR', fox_legnaro: 'FOX', edera_trieste: 'EDE', kraken_camaiore: 'KRA' };
+        const CLUB_ABBR = { cittadella: 'CIT', vicenza: 'VIC', milano: 'MIL', asiago: 'ASI', cittadella_pike: 'PIK', cus_verona: 'CUS', forli: 'FOR', fox_legnaro: 'FOX', edera_trieste: 'EDE', kraken_camaiore: 'KRA', asiago_blackout: 'BKO' };
         let hudStateKey = '';
         let hudToastTimer = null;
         let playerChevron = null;
@@ -10721,7 +10763,8 @@
         function formatLeagueBadgeLabel(filterVal, clubLeague) {
             if (filterVal === 'UISP') return 'Lega UISP • Italia';
             if (filterVal === 'SERIE A') return 'Serie A • FISR';
-            return clubLeague === 'UISP' ? 'Tutte (UISP)' : 'Tutte (Serie A)';
+            if (filterVal === 'SERIE B') return 'Serie B • FISR';
+            return clubLeague === 'UISP' ? 'Tutte (UISP)' : (clubLeague === 'SERIE B' ? 'Tutte (Serie B)' : 'Tutte (Serie A)');
         }
 
         // Rating statici per club (OFF, DEF, GOA)
@@ -10735,7 +10778,8 @@
             forli:           { off: 70, def: 71, goa: 74 },
             fox_legnaro:     { off: 72, def: 69, goa: 73 },
             edera_trieste:   { off: 67, def: 68, goa: 76 },
-            kraken_camaiore: { off: 70, def: 66, goa: 68 }
+            kraken_camaiore: { off: 70, def: 66, goa: 68 },
+            asiago_blackout: { off: 64, def: 61, goa: 66 }
         };
 
         function _animateCrest(el) {
@@ -11267,7 +11311,8 @@
             forli:           { photo: 'forli.jpg',      focus: '62% 35%', primary: '#1b2d5c', secondary: '#3d8bd1' },
             fox_legnaro:     { photo: 'fox_legnaro.jpg', focus: '55% 35%', primary: '#d01f26', secondary: '#0b0b0f' },
             edera_trieste:   { photo: 'edera_trieste.jpg', focus: '48% 30%', primary: '#d7262e', secondary: '#1d7a3a' },
-            kraken_camaiore: { photo: 'kraken_camaiore.jpg', focus: '40% 30%', primary: '#1a1f5c', secondary: '#78bee4' }
+            kraken_camaiore: { photo: 'kraken_camaiore.jpg', focus: '40% 30%', primary: '#1a1f5c', secondary: '#78bee4' },
+            asiago_blackout: { photo: 'asiago_blackout.jpg', focus: '45% 30%', primary: '#0b0b0f', secondary: '#3fa9f5' }
         };
         const ROSTER_ROLE_LABELS = { C: 'Centro', LW: 'Ala sinistra', RW: 'Ala destra', D: 'Difensore', G: 'Portiere' };
         let rosterShowIdx = -1;
@@ -11348,6 +11393,7 @@
                 logo.src = logoSrc;
                 logo.alt = 'Logo ' + club.name;
                 document.getElementById('rs-team-name').textContent = club.name;
+                fitTeamNameToBox(document.getElementById('rs-team-name'));
                 document.getElementById('rs-league').textContent = league;
                 document.getElementById('rs-sub').textContent = club.name + ' • ' + (isHome ? 'Squadra di casa' : 'Squadra ospite');
                 document.getElementById('rs-list').innerHTML = renderRosterRowsHTML(club);
