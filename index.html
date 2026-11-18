@@ -1721,6 +1721,14 @@
                                 <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="asiago"></span><span class="as-home-chip hidden" data-home-chip="asiago">Casa</span></span>
                             </span>
                         </button>
+                        <button type="button" data-arena="fox_legnaro" class="arena-pill-btn as-card" role="option">
+                            <span class="as-thumb"><img src="assets/arenas/thumbs/fox_legnaro.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">7</span></span>
+                            <span class="min-w-0">
+                                <span class="as-card-name block">Fox Arena</span>
+                                <span class="as-card-loc block">Legnaro (PD) • Veneto</span>
+                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="fox_legnaro"></span><span class="as-home-chip hidden" data-home-chip="fox_legnaro">Casa</span></span>
+                            </span>
+                        </button>
                     </div>
                     <div class="as-details">
                         <div class="as-stats">
@@ -2461,10 +2469,46 @@
                     navy: { id: 'navy', label: 'Divisa Blu', primary: 0x16244f, pants: 0x16244f, helmet: 0xf8fafc, glove: 0x16244f },
                     white: { id: 'white', label: 'Divisa Bianca', primary: 0xffffff, pants: 0x16244f, helmet: 0xf8fafc, glove: 0x2f6fb5 }
                 }
+            },
+            // Fox Legnaro: nomi e statistiche dal roster (5 partite). Il roster non riporta
+            // numeri di maglia e ruoli: numeri PROVVISORI e linee composte per punti.
+            fox_legnaro: {
+                id: 'fox_legnaro',
+                league: 'SERIE A',
+                jerseyClubId: 'fox_legnaro',
+                name: 'FOX LEGNARO',
+                shortName: 'FOX LEGNARO',
+                goalie: { num: "1", name: "LANER", first: "Ermanno" },
+                backupGoalies: [{ num: "30", name: "MIOZZI", first: "Tommaso" }],
+                lines: [
+                    [
+                        { role: "C", num: "13", name: "FRANCON", first: "Matteo Carlo", g: 5, a: 10, pts: 15 },
+                        { role: "LW", num: "9", name: "CALORE", first: "Elia", g: 9, a: 1, pts: 10 },
+                        { role: "RW", num: "21", name: "CARRON", first: "Daniele", g: 3, a: 3, pts: 6 },
+                        { role: "D", num: "5", name: "PIETROBON", first: "Mattia", g: 1, a: 2, pts: 3 }
+                    ],
+                    [
+                        { role: "C", num: "8", name: "MARCHET", first: "Gabriele", g: 2, a: 0, pts: 2 },
+                        { role: "LW", num: "17", name: "SOBBERI", first: "Abderahmane", g: 0, a: 1, pts: 1 },
+                        { role: "RW", num: "95", name: "GUERRIERO", first: "Mattia", g: 0, a: 1, pts: 1 },
+                        { role: "D", num: "4", name: "DANIELE", first: "Giovanni", g: 1, a: 0, pts: 1 }
+                    ],
+                    [
+                        { role: "C", num: "11", name: "ZANETTE", first: "Alberto", g: 0, a: 0, pts: 0 },
+                        { role: "LW", num: "19", name: "BALLAN", first: "Filippo", g: 0, a: 0, pts: 0 },
+                        { role: "RW", num: "88", name: "MARCHET", first: "Mattia", g: 0, a: 0, pts: 0 },
+                        { role: "D", num: "2", name: "DE ANGELIS", first: "Leonardo", g: 0, a: 0, pts: 0 }
+                    ]
+                ],
+                reserves: [{ num: "7", name: "OMETTO", first: "Diego" }, { num: "22", name: "VESENTINI", first: "Gabriele" }],
+                kits: {
+                    black: { id: 'black', label: 'Divisa Nera', primary: 0x111114, pants: 0x111114, helmet: 0x111114, glove: 0x111114 },
+                    white: { id: 'white', label: 'Divisa Bianca', primary: 0xffffff, pants: 0x111114, helmet: 0x111114, glove: 0x111114 }
+                }
             }
         };
 
-        const CLUB_IDS = ['cittadella', 'vicenza', 'milano', 'asiago', 'cittadella_pike', 'cus_verona', 'forli'];
+        const CLUB_IDS = ['cittadella', 'vicenza', 'milano', 'asiago', 'cittadella_pike', 'cus_verona', 'forli', 'fox_legnaro'];
         const LEAGUE_MODES = ['TUTTE', 'SERIE A', 'UISP'];
 
         const ARENA_CATALOG = {
@@ -2533,10 +2577,21 @@
                 capacity: '500 Spettatori',
                 surface: 'Cemento Levigato Grigio',
                 roof: 'Capriate in Acciaio'
+            },
+            fox_legnaro: {
+                id: 'fox_legnaro',
+                name: 'FOX ARENA',
+                shortTitle: 'Fox Arena Legnaro',
+                location: 'Legnaro (PD) • Veneto, Italia',
+                clubBadge: 'Casa: Fox Legnaro',
+                desc: 'Volta a botte su archi in legno lamellare con fitti arcarecci e lastre grigio chiaro, testate con telaio in legno e pannelli traslucidi, canestri da basket sopra le porte, reti di protezione, balaustre bianche con lo zoccolo verde, pista bianca con linee rosse e gialle e la volpe al centro, la bandiera nera della FOX e una piccola tribuna dietro il vetro.',
+                capacity: '250 Spettatori',
+                surface: 'Piastrelle Bianche Multisport',
+                roof: 'Archi in Legno Lamellare'
             }
         };
 
-        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago'];
+        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro'];
         // Palazzetti presenti nel menu ma non selezionabili (al momento nessuno)
         const DISABLED_ARENAS = new Set();
         const SELECTABLE_ARENA_IDS = ARENA_IDS.filter(id => !DISABLED_ARENAS.has(id));
@@ -2548,7 +2603,8 @@
             asiago: 'asiago',
             cittadella_pike: 'cittadella',
             cus_verona: 'cus_verona',
-            forli: 'forli'
+            forli: 'forli',
+            fox_legnaro: 'fox_legnaro'
         };
 
         // Catalogo di 12 Esultanze Diverse dei Giocatori al Gol
@@ -3575,7 +3631,8 @@
                 milano:          'milano.png',
                 asiago:          'asiago.png',
                 cus_verona:      'cus_verona.png',
-                forli:           'forli.png'
+                forli:           'forli.png',
+                fox_legnaro:     'fox_legnaro.png'
             };
             const file = fileMap[clubId] || 'vicenza.svg';
             return `<img src="assets/logos/${file}" class="${sizeClass}" alt="Logo ${clubId}" draggable="false">`;
@@ -3591,7 +3648,8 @@
             asiago:     ['assets/jerseys/asiago_1.png',     'assets/jerseys/asiago_2.png'],
             cittadella_pike: ['assets/jerseys/cittadella_pike_1.png'],
             cus_verona: ['assets/jerseys/cus_verona_1.png', 'assets/jerseys/cus_verona_2.png'],
-            forli: ['assets/jerseys/forli_1.png', 'assets/jerseys/forli_2.png']
+            forli: ['assets/jerseys/forli_1.png', 'assets/jerseys/forli_2.png'],
+            fox_legnaro: ['assets/jerseys/fox_legnaro_1.png', 'assets/jerseys/fox_legnaro_2.png']
         };
         function getJerseyImageSrc(jerseyClubId, kitIndex) {
             const list = JERSEY_IMAGES[jerseyClubId];
@@ -4300,8 +4358,12 @@
             const n = arenaScoreboards.north;
             if (!n) return;
             n.rotation.y = 0;
-            if (arenaScoreboards.south) arenaScoreboards.south.visible = matchConfig.arena !== 'forli' && matchConfig.arena !== 'asiago';
-            if (matchConfig.arena === 'forli') {
+            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro'].includes(matchConfig.arena);
+            if (matchConfig.arena === 'fox_legnaro') {
+                // piccolo tabellone sul muretto della testata, di fianco al canestro
+                n.position.set(-9.5, 4.6, -39.8);
+                n.scale.setScalar(0.4);
+            } else if (matchConfig.arena === 'forli') {
                 n.position.set(24.05, 7.1, 0);
                 n.rotation.y = -Math.PI / 2;
                 n.scale.setScalar(0.45);
@@ -4432,7 +4494,7 @@
                 arenaGroup.add(b);
 
                 const g = new THREE.Mesh(new THREE.BoxGeometry(0.06, glassH, sec.len), glassMat);
-                if (fileArena && (fileArena.glassBoards || fileArena.noSideGlass)) g.visible = false;
+                if (fileArena && (fileArena.glassBoards || fileArena.noSideGlass || fileArena.noGlass)) g.visible = false;
                 g.position.set(leftX, boardHeight + glassH / 2, sec.z);
                 arenaGroup.add(g);
             });
@@ -4447,7 +4509,7 @@
                 arenaGroup.add(endB);
 
                 const endG = new THREE.Mesh(new THREE.BoxGeometry(straightEndLen, 1.35, 0.06), glassMat);
-                if (fileArena && fileArena.glassBoards) endG.visible = false;
+                if (fileArena && (fileArena.glassBoards || fileArena.noGlass)) endG.visible = false;
                 endG.position.set(0, boardHeight + 0.675, endZ);
                 arenaGroup.add(endG);
             });
@@ -4473,7 +4535,7 @@
                     glassMat
                 );
                 curveGlass.position.set(c.cx, boardHeight + glassH / 2, c.cz);
-                if (fileArena && fileArena.glassBoards) curveGlass.visible = false;
+                if (fileArena && (fileArena.glassBoards || fileArena.noGlass)) curveGlass.visible = false;
                 arenaGroup.add(curveGlass);
             });
 
@@ -4490,7 +4552,7 @@
                 arenaGroup.add(b);
 
                 const g = new THREE.Mesh(new THREE.BoxGeometry(0.06, glassH, sec.len), glassMat);
-                if (fileArena && (fileArena.glassBoards || fileArena.noSideGlass)) g.visible = false;
+                if (fileArena && (fileArena.glassBoards || fileArena.noSideGlass || fileArena.noGlass)) g.visible = false;
                 g.position.set(rightX, boardHeight + glassH / 2, sec.z);
                 arenaGroup.add(g);
             });
@@ -4507,7 +4569,7 @@
                 roughness: 0.55
             });
             const benchBackMat = isAsiago ? new THREE.MeshStandardMaterial({ map: pbr.woodDiffuse, bumpMap: preset.usePhysicalMat ? pbr.woodBump : null, bumpScale: 0.015, color: 0xc8955a, roughness: 0.6 }) : new THREE.MeshStandardMaterial({
-                color: arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
+                color: arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
                 roughness: 0.8
             });
 
@@ -4600,7 +4662,8 @@
             forli: 'src/arenas/forli.js',
             cus_verona: 'src/arenas/cus_verona.js',
             milano: 'src/arenas/milano.js',
-            asiago: 'src/arenas/asiago.js'
+            asiago: 'src/arenas/asiago.js',
+            fox_legnaro: 'src/arenas/fox_legnaro.js'
         };
         const arenaBuilders = {};
         const arenaModulePromises = {};
@@ -4857,7 +4920,9 @@
             milano: { dir: 'assets/textures/milano/', normal: CIT_TEX + 'rink_normal.jpg', floorTint: 0xa4bedf, floorTintLow: 0x8aa6cc },
             cus_verona: { dir: 'assets/textures/cus_verona/', normal: 'assets/textures/cus_verona/rink_normal.jpg', floorTint: 0xb4b6b9, floorTintLow: 0x86888c, glassBoards: true },
             forli: { dir: 'assets/textures/forli/', normal: 'assets/textures/forli/rink_normal.jpg', floorTint: 0xa6a49f, floorTintLow: 0x8a8884, noSideGlass: true },
-            asiago: { dir: 'assets/textures/asiago/', normal: 'assets/textures/asiago/rink_normal.jpg', floorTint: 0x8fa3b2, floorTintLow: 0x7d909e }
+            asiago: { dir: 'assets/textures/asiago/', normal: 'assets/textures/asiago/rink_normal.jpg', floorTint: 0x8fa3b2, floorTintLow: 0x7d909e },
+            // Fox Arena: niente vetro sopra le balaustre, solo le reti di protezione
+            fox_legnaro: { dir: 'assets/textures/fox_legnaro/', normal: 'assets/textures/fox_legnaro/rink_normal.jpg', floorTint: 0xa4a6a8, floorTintLow: 0x96989a, noGlass: true }
         };
 
         // Balaustre: ogni striscia rappresenta 18,5 m di pannelli pubblicitari
@@ -5193,7 +5258,7 @@
                             { jacket: 0xf8fafc, shirt: 0xdc2626, isJersey: true }
                         ]))));
 
-            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago') return;   // pubblico costruito dall'architettura del palazzetto
+            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro') return;   // pubblico costruito dall'architettura del palazzetto
 
             // Spalti laterali dietro il tavolo cronometristi (con spazio sull'angolo destro per la casetta bar a Cittadella)
             for (let row = 0; row < 4; row++) {
@@ -5412,6 +5477,8 @@
         }
 
         const pngLogoCache = {};
+        // Club senza logo disegnato a mano: sul tabellone si usa il PNG
+        const PNG_LOGO_CLUBS = new Set(['cus_verona', 'forli', 'fox_legnaro']);
         function drawClubPngLogo(ctx, clubId, cx, cy, size) {
             let img = pngLogoCache[clubId];
             if (!img) {
@@ -5453,7 +5520,7 @@
             ctx.font = 'bold 11px Arial, sans-serif';
             ctx.fillText(`ALGE-TIMING • ${arenaInfo.shortTitle.toUpperCase()}`, 256, 86);
 
-            if (homeClub.id === 'cus_verona' || homeClub.id === 'forli') drawClubPngLogo(ctx, homeClub.id, 44, 152, 52);
+            if (PNG_LOGO_CLUBS.has(homeClub.id)) drawClubPngLogo(ctx, homeClub.id, 44, 152, 52);
             else if (homeClub.id === 'cittadella' || homeClub.id === 'cittadella_pike') drawWingedCLogo(ctx, 44, 152, 0.56);
             else if (homeClub.id === 'milano') drawRhinoLogo(ctx, 44, 152, 0.72);
             else if (homeClub.id === 'asiago') drawViperLogo(ctx, 44, 152, 0.52);
@@ -5463,7 +5530,7 @@
             ctx.font = '900 22px Arial, sans-serif';
             ctx.fillText('HOME', 124, 130);
 
-            if (guestClub.id === 'cus_verona' || guestClub.id === 'forli') drawClubPngLogo(ctx, guestClub.id, 468, 152, 52);
+            if (PNG_LOGO_CLUBS.has(guestClub.id)) drawClubPngLogo(ctx, guestClub.id, 468, 152, 52);
             else if (guestClub.id === 'cittadella' || guestClub.id === 'cittadella_pike') drawWingedCLogo(ctx, 468, 152, 0.56);
             else if (guestClub.id === 'milano') drawRhinoLogo(ctx, 468, 152, 0.72);
             else if (guestClub.id === 'asiago') drawViperLogo(ctx, 468, 152, 0.52);
@@ -7061,11 +7128,12 @@
             const baseClubId = (clubCfg && clubCfg.jerseyClubId) || clubId;
 
             const primaryColor = (baseClubId === 'cittadella' || baseClubId === 'cittadella_pike') ? 0xdc2626
+                : baseClubId === 'fox_legnaro' ? 0x111114
                 : baseClubId === 'cus_verona' ? 0x14206a
                 : baseClubId === 'forli' ? 0x16244f
                 : (baseClubId === 'milano' ? 0x0f2557
                 : (baseClubId === 'asiago' ? 0xf97316 : 0x09090b));
-            const secondaryColor = baseClubId === 'cus_verona' ? 0xf5c400 : baseClubId === 'forli' ? 0x3d8bd1 : baseClubId === 'cittadella' ? 0x172554
+            const secondaryColor = baseClubId === 'fox_legnaro' ? 0xd01f26 : baseClubId === 'cus_verona' ? 0xf5c400 : baseClubId === 'forli' ? 0x3d8bd1 : baseClubId === 'cittadella' ? 0x172554
                 : (baseClubId === 'milano' ? 0xdc2626
                 : (baseClubId === 'asiago' ? 0x09090b : 0xdc2626));
 
@@ -8244,7 +8312,7 @@
         }
 
         // --- HUD BROADCAST: SIGLE, VISIBILITÀ, FRECCIA, CONO DI TIRO, ETICHETTA TIRO, AVVISI ---
-        const CLUB_ABBR = { cittadella: 'CIT', vicenza: 'VIC', milano: 'MIL', asiago: 'ASI', cittadella_pike: 'PIK', cus_verona: 'CUS', forli: 'FOR' };
+        const CLUB_ABBR = { cittadella: 'CIT', vicenza: 'VIC', milano: 'MIL', asiago: 'ASI', cittadella_pike: 'PIK', cus_verona: 'CUS', forli: 'FOR', fox_legnaro: 'FOX' };
         let hudStateKey = '';
         let hudToastTimer = null;
         let playerChevron = null;
@@ -10497,7 +10565,8 @@
             asiago:          { off: 76, def: 77, goa: 75 },
             cittadella_pike: { off: 72, def: 70, goa: 71 },
             cus_verona:      { off: 71, def: 72, goa: 69 },
-            forli:           { off: 70, def: 71, goa: 74 }
+            forli:           { off: 70, def: 71, goa: 74 },
+            fox_legnaro:     { off: 72, def: 69, goa: 73 }
         };
 
         function _animateCrest(el) {
@@ -11010,7 +11079,8 @@
             milano:          { photo: 'milano.jpg',     focus: '50% 22%', primary: '#123a8c', secondary: '#0a1a44' },
             asiago:          { photo: 'asiago.jpg',     focus: '34% 30%', primary: '#f26b11', secondary: '#0b0b0f' },
             cus_verona:      { photo: 'cus_verona.jpg', focus: '40% 30%', primary: '#17246e', secondary: '#c99a00' },
-            forli:           { photo: 'forli.jpg',      focus: '62% 35%', primary: '#1b2d5c', secondary: '#3d8bd1' }
+            forli:           { photo: 'forli.jpg',      focus: '62% 35%', primary: '#1b2d5c', secondary: '#3d8bd1' },
+            fox_legnaro:     { photo: 'fox_legnaro.jpg', focus: '55% 35%', primary: '#d01f26', secondary: '#0b0b0f' }
         };
         const ROSTER_ROLE_LABELS = { C: 'Centro', LW: 'Ala sinistra', RW: 'Ala destra', D: 'Difensore', G: 'Portiere' };
         let rosterShowIdx = -1;
