@@ -2796,6 +2796,199 @@
           "glove": "#2a3fb0"
         }
       }
+    },
+    {
+      "id": "novi",
+      "league": "SERIE B",
+      "name": "NOVI HOCKEY",
+      "shortName": "NOVI",
+      "abbr": "NOV",
+      "note": "ROSA PROVVISORIA: il roster ufficiale non riporta giocatori (solo lo staff). Nomi e numeri inventati, da sostituire con quelli veri (41 e 52 dalle foto).",
+      "jerseyClubId": "novi",
+      "homeArena": "novi",
+      "logo": "novi.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/novi_1.png",
+        "assets/jerseys/novi_2.png"
+      ],
+      "ratings": {
+        "off": 62,
+        "def": 62,
+        "goa": 64
+      },
+      "colors": {
+        "primary": "#c81e28",
+        "secondary": "#141416",
+        "staffJacket": "#141416",
+        "coachJacket": "#c81e28"
+      },
+      "rosterScreen": {
+        "photo": "novi.jpg",
+        "focus": "50% 35%"
+      },
+      "coach": {
+        "first": "Lamberto",
+        "last": "Cantarutti",
+        "role": "Allenatore",
+        "note": "Staff con Mancin, Crisci, Bellizzi, F. Cantarutti, F. Crisci, Lovazzano"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "FERRARIS",
+        "first": "Luca"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "GHIGLIONE",
+          "first": "Marco"
+        }
+      ],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "41",
+            "name": "REPETTO",
+            "first": "Andrea",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "52",
+            "name": "BOVONE",
+            "first": "Matteo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "7",
+            "name": "CAVANNA",
+            "first": "Simone",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "MERLO",
+            "first": "Davide",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "PERSANO",
+            "first": "Lorenzo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "BAGNASCO",
+            "first": "Riccardo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "17",
+            "name": "TRAVERSO",
+            "first": "Nicolò",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "DAMERI",
+            "first": "Stefano",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "21",
+            "name": "GAGGERO",
+            "first": "Tommaso",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "14",
+            "name": "LAZZARINI",
+            "first": "Paolo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "19",
+            "name": "BARISONE",
+            "first": "Giacomo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "ODDONE",
+            "first": "Federico",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "8",
+          "name": "CALCAGNO",
+          "first": "Pietro"
+        },
+        {
+          "num": "23",
+          "name": "POGGIO",
+          "first": "Alessio"
+        }
+      ],
+      "kits": {
+        "black": {
+          "label": "Divisa Nero-Rossa",
+          "primary": "#141416",
+          "pants": "#141416",
+          "helmet": "#141416",
+          "glove": "#c81e28"
+        },
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#ffffff",
+          "pants": "#c81e28",
+          "helmet": "#141416",
+          "glove": "#141416"
+        }
+      }
     }
   ]
 }
