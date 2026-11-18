@@ -304,7 +304,10 @@
             text-transform: uppercase;
             letter-spacing: .01em;
             text-shadow: 0 2px 10px rgba(0,0,0,0.65);
+            overflow-wrap: anywhere;
         }
+        /* titoli lunghi in una sola parola (es. COMPETIZIONE): un filo più piccoli per stare nella tile */
+        #splash-btn-competition .splash-tile-title { font-size: clamp(18px, 2.2vw, 34px); }
         .splash-tile-sub {
             font-family: 'Arial Black', Impact, system-ui, sans-serif;
             font-weight: 700;
@@ -1387,37 +1390,26 @@
                 </div>
             </div>
 
-            <!-- MODALITÀ IN ARRIVO (non selezionabili) -->
-            <div class="splash-tile is-disabled" role="button" tabindex="-1" aria-disabled="true" title="Modalità non ancora disponibile">
+            <!-- TILE 3: COMPETIZIONE (Serie A; Coppa Italia in arrivo) -->
+            <div class="splash-tile nhl-menu-item" id="splash-btn-competition" data-splash-action="competition" role="button" tabindex="0">
                 <img src="assets/tiles/tile_4.png" alt="" aria-hidden="true" class="splash-tile-bg">
                 <div class="splash-tile-overlay"></div>
-                <div class="splash-tile-lock"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Prossimamente</div>
                 <div class="splash-tile-label">
                     <div class="splash-tile-category">Torneo</div>
-                    <div class="splash-tile-title">Campionato</div>
-                    <div class="splash-tile-sub">Stagione di Serie A</div>
+                    <div class="splash-tile-title">Competizione</div>
+                    <div class="splash-tile-sub">Serie A • Coppa Italia</div>
                 </div>
             </div>
 
+            <!-- MODALITÀ IN ARRIVO (non selezionabili) -->
             <div class="splash-tile is-disabled" role="button" tabindex="-1" aria-disabled="true" title="Modalità non ancora disponibile">
-                <img src="assets/tiles/tile_5.jpg" alt="" aria-hidden="true" class="splash-tile-bg">
+                <img src="assets/tiles/tile_6.jpg" alt="" aria-hidden="true" class="splash-tile-bg">
                 <div class="splash-tile-overlay"></div>
                 <div class="splash-tile-lock"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Prossimamente</div>
                 <div class="splash-tile-label">
-                    <div class="splash-tile-category">Torneo</div>
-                    <div class="splash-tile-title">Coppa Italia</div>
-                    <div class="splash-tile-sub">Eliminazione diretta</div>
-                </div>
-            </div>
-
-            <div class="splash-tile is-disabled" role="button" tabindex="-1" aria-disabled="true" title="Modalità non ancora disponibile">
-                <img src="assets/tiles/tile_3.jpg" alt="" aria-hidden="true" class="splash-tile-bg">
-                <div class="splash-tile-overlay"></div>
-                <div class="splash-tile-lock"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Prossimamente</div>
-                <div class="splash-tile-label">
-                    <div class="splash-tile-category">Torneo</div>
-                    <div class="splash-tile-title">Mondiali FISR</div>
-                    <div class="splash-tile-sub">Le nazionali in pista</div>
+                    <div class="splash-tile-category">Carriera</div>
+                    <div class="splash-tile-title">Hockey Manager</div>
+                    <div class="splash-tile-sub">Guida il tuo club dalla panchina</div>
                 </div>
             </div>
 
@@ -2779,6 +2771,11 @@
         let currentPeriod = 1;
         const TOTAL_PERIODS = 2;
         const PERIOD_DURATION_SECONDS = 1200;
+        // Partite di competizione: niente pareggio. Supplementare a golden goal, poi rigori.
+        const OVERTIME_DURATION_SECONDS = 300;
+        let overtimeGoldenGoal = false;     // gol nel supplementare: la partita finisce dopo il replay
+        let matchShootout = null;           // { home, guest, winner, kicks: [...] } se si arriva ai rigori
+        function isCompetitionMatch() { return !!(window.Competition && window.Competition.isMatchActive()); }
         let matchStats = {
             homeShots: 0,
             guestShots: 0,
@@ -5683,11 +5680,11 @@
             ctx.fillText('PERIOD', 256, 155);
             ctx.fillStyle = '#eab308';
             ctx.font = 'bold 44px "Courier New", monospace';
-            ctx.fillText(String(currentPeriod), 256, 198);
+            ctx.fillText(currentPeriod > TOTAL_PERIODS ? 'OT' : String(currentPeriod), 256, 198);
 
             scoreboardTex.needsUpdate = true;
             const periodBadgeEl = document.getElementById('hudPeriodBadge');
-            if (periodBadgeEl) periodBadgeEl.textContent = `${currentPeriod}° P`;
+            if (periodBadgeEl) periodBadgeEl.textContent = currentPeriod > TOTAL_PERIODS ? 'OT' : `${currentPeriod}° P`;
         }
 
         // --- DISCO PROPORZIONATO CON OMBRA DINAMICA DI ALTEZZA ---
@@ -9171,6 +9168,13 @@
             replayUi.classList.add('hidden');
             actionControlsBar.classList.remove('hidden');
             goalCooldown = false;
+            if (overtimeGoldenGoal) {            // golden goal: la partita è finita
+                overtimeGoldenGoal = false;
+                gameState = 'match_over';
+                if (window.gameAudio) window.gameAudio.playPeriodBuzzer();
+                openMatchStatsModal(true);
+                return;
+            }
             startFaceoff();
         }
 
@@ -10380,6 +10384,7 @@
 
             const mins = Math.floor(gameTime / 60).toString().padStart(2, '0');
             const secs = (gameTime % 60).toString().padStart(2, '0');
+            if (currentPeriod > TOTAL_PERIODS) overtimeGoldenGoal = true;
 
             if (scoringTeam === 'home') {
                 scoreHome++;
@@ -11395,22 +11400,47 @@
                 window.gameAudio.playPeriodBuzzer();
                 window.gameAudio.setCrowdIntensity(0.15);
             }
-            const isFinal = currentPeriod >= TOTAL_PERIODS;
+            let isFinal = currentPeriod >= TOTAL_PERIODS;
+            // competizione in parità: supplementare a golden goal, poi rigori (niente pareggi)
+            if (isFinal && isCompetitionMatch() && scoreHome === scoreGuest) {
+                if (currentPeriod === TOTAL_PERIODS) {
+                    gameState = 'period_break';
+                    openMatchStatsModal(false);
+                    return;
+                }
+                gameState = 'match_over';
+                window.Competition.runShootout(result => {
+                    matchShootout = result;
+                    openMatchStatsModal(true);
+                });
+                return;
+            }
             gameState = isFinal ? 'match_over' : 'period_break';
             openMatchStatsModal(isFinal);
+        }
+
+        // Esito della partita appena conclusa: 'REG' tempi regolamentari, 'OT' supplementare, 'SO' rigori
+        function currentMatchResultType() {
+            if (matchShootout) return 'SO';
+            return currentPeriod > TOTAL_PERIODS ? 'OT' : 'REG';
         }
 
         function openMatchStatsModal(isFinal) {
             if (window.gameAudio) window.gameAudio.playStinger(isFinal ? 'victory' : 'period');
             const homeClub = CLUB_ROSTERS[matchConfig.homeClub];
             const guestClub = CLUB_ROSTERS[matchConfig.guestClub];
+            const goingToOvertime = !isFinal && currentPeriod >= TOTAL_PERIODS;
+            const resultType = currentMatchResultType();
+            const finalNote = resultType === 'SO'
+                ? ` • AI RIGORI ${matchShootout.home}-${matchShootout.guest}`
+                : (resultType === 'OT' ? ' • DOPO SUPPLEMENTARE' : '');
 
             document.getElementById('stats-modal-badge').textContent = isFinal
-                ? 'FINE PARTITA • RISULTATO FINALE'
-                : `FINE ${currentPeriod}° PERIODO`;
+                ? 'FINE PARTITA • RISULTATO FINALE' + finalNote
+                : (goingToOvertime ? 'PARITÀ • SI VA AL SUPPLEMENTARE' : `FINE ${currentPeriod}° PERIODO`);
             document.getElementById('stats-modal-title').textContent = isFinal
                 ? 'Statistiche finali'
-                : `Statistiche ${currentPeriod}° periodo`;
+                : (goingToOvertime ? 'Statistiche dei tempi regolamentari' : `Statistiche ${currentPeriod}° periodo`);
 
             const sxCol = getMatchTeamColors();
             const sxEl = document.getElementById('match-stats-modal');
@@ -11449,7 +11479,7 @@
             } else {
                 scorersListEl.innerHTML = matchStats.scorers.map(sc => `
                     <div class="sx-scorer" style="--c:${sc.team === 'home' ? sxCol.home : sxCol.guestBar}">
-                        <span class="t">${sc.period}° P • ${sc.timeStr}</span>
+                        <span class="t">${sc.period > TOTAL_PERIODS ? 'OT' : sc.period + '° P'} • ${sc.timeStr}</span>
                         <span class="n">#${sc.num} ${sc.name}</span>
                         <span class="c">${sc.clubName}</span>
                     </div>
@@ -11458,15 +11488,30 @@
 
             const actionsEl = document.getElementById('stats-modal-actions');
             if (!isFinal) {
-                actionsEl.innerHTML = `
-                    <button type="button" id="start-next-period-btn" class="sx-btn is-primary">Inizia ${currentPeriod + 1}° periodo ▶</button>
-                `;
+                actionsEl.innerHTML = goingToOvertime
+                    ? `<button type="button" id="start-next-period-btn" class="sx-btn is-primary">Supplementare • golden goal ▶</button>`
+                    : `<button type="button" id="start-next-period-btn" class="sx-btn is-primary">Inizia ${currentPeriod + 1}° periodo ▶</button>`;
                 document.getElementById('start-next-period-btn').addEventListener('click', () => {
                     document.getElementById('match-stats-modal').classList.add('hidden');
                     currentPeriod++;
-                    gameTime = PERIOD_DURATION_SECONDS;
+                    gameTime = currentPeriod > TOTAL_PERIODS ? OVERTIME_DURATION_SECONDS : PERIOD_DURATION_SECONDS;
                     updateScoreboardVisuals();
                     startFaceoff();
+                });
+            } else if (isCompetitionMatch()) {
+                // partita di competizione: il risultato va in classifica, poi si torna alla competizione
+                actionsEl.innerHTML = `<button type="button" id="stats-comp-btn" class="sx-btn is-primary">Continua ▶</button>`;
+                document.getElementById('stats-comp-btn').addEventListener('click', () => {
+                    document.getElementById('match-stats-modal').classList.add('hidden');
+                    if (window.gameAudio && window.gameAudio.stopCrowd) window.gameAudio.stopCrowd();
+                    gameState = 'menu';
+                    uiLayer.classList.add('hidden');
+                    replayUi.classList.add('hidden');
+                    window.Competition.onUserMatchFinished({
+                        hg: scoreHome, ag: scoreGuest, type: resultType,
+                        soWinner: matchShootout ? matchShootout.winner : null,
+                        so: matchShootout ? [matchShootout.home, matchShootout.guest] : null
+                    });
                 });
             } else {
                 actionsEl.innerHTML = `
@@ -11496,6 +11541,8 @@
             scoreGuest = 0;
             currentPeriod = 1;
             gameTime = PERIOD_DURATION_SECONDS;
+            overtimeGoldenGoal = false;
+            matchShootout = null;
             matchStats = {
                 homeShots: 0,
                 guestShots: 0,
@@ -11701,6 +11748,9 @@
             if (window.gameAudio && window.gameAudio.stopCrowd) window.gameAudio.stopCrowd();
             setPreMatchStep(1);                  // riporta la selezione allo step 1 (e la camera del menu)
             startScreen.classList.add('hidden');
+            overtimeGoldenGoal = false;
+            // partita di competizione abbandonata: non conta, si torna alla schermata della competizione
+            if (isCompetitionMatch()) { window.Competition.onUserMatchAbandoned(); return; }
             titleSplashScreen.classList.remove('hidden');
         }
 
@@ -11904,7 +11954,7 @@
             };
             const scorers = matchStats.scorers.length
                 ? matchStats.scorers.map(sc => `<div class="pz-scorer" style="--c:${sc.team === 'home' ? col.home : col.guestBar}">
-                        <span class="t">${sc.period}° P • ${sc.timeStr}</span><span class="n">#${rosterEsc(sc.num)} ${rosterEsc(sc.name)}</span><span class="c">${rosterEsc(sc.clubName)}</span></div>`).join('')
+                        <span class="t">${sc.period > TOTAL_PERIODS ? 'OT' : sc.period + '° P'} • ${sc.timeStr}</span><span class="n">#${rosterEsc(sc.num)} ${rosterEsc(sc.name)}</span><span class="c">${rosterEsc(sc.clubName)}</span></div>`).join('')
                 : '<div class="pz-empty">Nessuna rete segnata finora.</div>';
             document.getElementById('pz-stats').innerHTML = `
                 <div class="pz-stat-head">
@@ -12139,6 +12189,8 @@
                     const proceed = () => {
                         if (action === 'quick') {
                             launchMatchFromCurrentConfig();
+                        } else if (action === 'competition' && window.Competition) {
+                            window.Competition.open();
                         } else {
                             startScreen.classList.remove('hidden');
                             setPreMatchStep(1);
@@ -12830,6 +12882,8 @@
         </div>
     </div>
 
+    <!-- Modalità Competizione (Serie A / Coppa Italia): usa i globali dello script principale -->
+    <script src="src/competition/competition.js"></script>
     <script src="src/data/funFacts.js"></script>
     <script>
         // Finto caricamento di 10 secondi con un fun fact e un'immagine scelti a caso.
