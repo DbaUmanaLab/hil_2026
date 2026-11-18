@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Inline Hockey 3D - Serie A FISR & UISP</title>
+    <title>HIL 2026 - Hockey in line • Serie A FISR & UISP</title>
     <link rel="icon" type="image/png" href="assets/logos/game%20badge.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1348,7 +1348,7 @@
             <div class="flex items-center gap-4">
                 <div class="game-logo-plate" style="background:linear-gradient(180deg,#ffffff 0%,#e2e8f0 100%);border-radius:12px;padding:clamp(4px,0.6vw,8px) clamp(8px,1.2vw,14px);box-shadow:0 2px 10px rgba(0,0,0,0.6),inset 0 0 0 1px rgba(255,255,255,0.8);">
                     <img src="assets/logos/game%20extended.png"
-                         alt="FISR Hockey In Line"
+                         alt="HIL 2026 - Hockey in line"
                          style="height:clamp(30px,4.6vw,52px);width:auto;display:block;">
                 </div>
                 <button type="button" id="splash-music-btn" class="splash-music-btn" aria-label="Musica on/off" title="Musica">
@@ -1439,13 +1439,13 @@
             <!-- Intestazione Elegante con Tabs Rapidi -->
             <div class="flex items-stretch border-b-2 border-black shrink-0">
                 <button type="button" id="back-to-splash-btn" title="Torna alla schermata iniziale" class="w-16 sm:w-24 bg-gradient-to-b from-amber-500 to-amber-700 hover:from-amber-400 hover:to-amber-600 flex flex-col items-center justify-center p-2 border-r-2 border-black shrink-0 transition cursor-pointer">
-                    <span class="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white flex items-center justify-center shadow-[0_2px_6px_rgba(0,0,0,0.55)]"><img src="assets/logos/game%20badge.png" alt="FISR Hockey In Line" class="w-[88%] h-[88%] object-contain" draggable="false"></span>
+                    <span class="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white flex items-center justify-center shadow-[0_2px_6px_rgba(0,0,0,0.55)]"><img src="assets/logos/game%20badge.png" alt="HIL 2026 - Hockey in line" class="w-[88%] h-[88%] object-contain" draggable="false"></span>
                     <span class="text-[9px] font-black uppercase tracking-tighter text-slate-950 mt-0.5">◀ TITOLO</span>
                 </button>
                 <div class="flex-1 flex flex-col">
                     <div class="bg-gradient-to-r from-[#58742c] via-[#6d8c38] to-[#4c6624] px-4 sm:px-6 py-2 flex items-center justify-between border-b border-black/60">
                         <h1 class="text-xl sm:text-3xl font-black tracking-widest text-[#e6f2c2] drop-shadow-[0_2px_2px_rgba(0,0,0,0.85)] uppercase">
-                            INLINE HOCKEY <span class="text-amber-300">SERIE A &amp; UISP</span>
+                            HIL 2026 <span class="text-amber-300">SERIE A &amp; UISP</span>
                         </h1>
                         <span id="prematch-step-badge" class="text-[10px] sm:text-xs font-black uppercase tracking-widest bg-black/45 text-amber-200 px-3 py-1 rounded border border-amber-300/40">
                             Step 1 di 3
@@ -1805,7 +1805,7 @@
                             <div id="rs-league" class="rs-league">Serie A • FISR</div>
                         </div>
                     </div>
-                    <div class="rs-game-plate"><img src="assets/logos/game%20extended.png" alt="FISR Hockey In Line" draggable="false"></div>
+                    <div class="rs-game-plate"><img src="assets/logos/game%20extended.png" alt="HIL 2026 - Hockey in line" draggable="false"></div>
                 </div>
             </aside>
             <div class="rs-goldbar"></div>
@@ -8419,7 +8419,12 @@
             // in silenzio durante l'azione (ingaggio, gioco, esultanza con il suo stacchetto)
             const cinematic = gamePaused || statsOpen || gameState === 'menu' || gameState === 'lineup_loading' || gameState === 'logo_intro'
                 || gameState === 'arena_tour' || gameState === 'intro' || gameState === 'cutaway' || gameState === 'replay';
-            ga.setMusicTrack(null);
+            // playlist: menu (track 1-3), schermate della competizione (track 4), momenti di partita (track 6)
+            if (ga.setBgContext) {
+                const compRoot = document.getElementById('comp-root');
+                const inComp = compRoot && !compRoot.classList.contains('cp-hidden');
+                ga.setBgContext(gameState === 'menu' ? (inComp ? 'competition' : 'menu') : 'match');
+            }
             if (ga.setBgMusic) ga.setBgMusic(cinematic);
 
             // rotolio delle ruote: velocità media dei giocatori in pista
@@ -12852,7 +12857,7 @@
         <div class="ff-shade"></div>
         <div class="ff-grain"></div>
         <div class="ff-top">
-            <div class="ff-brand"><img src="assets/logos/game%20extended.png" alt="FISR Hockey in line" draggable="false"></div>
+            <div class="ff-brand"><img src="assets/logos/game%20extended.png" alt="HIL 2026 - Hockey in line" draggable="false"></div>
             <div class="ff-mode" id="ff-mode">Amichevole</div>
         </div>
         <div class="ff-stage">
