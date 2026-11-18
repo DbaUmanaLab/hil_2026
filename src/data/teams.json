@@ -1,0 +1,2801 @@
+{
+  "version": 1,
+  "leagues": [
+    {
+      "id": "SERIE A",
+      "name": "Serie A",
+      "federation": "FISR",
+      "badge": "Serie A • FISR",
+      "rosterLabel": "SERIE A • FISR"
+    },
+    {
+      "id": "SERIE B",
+      "name": "Serie B",
+      "federation": "FISR",
+      "badge": "Serie B • FISR",
+      "rosterLabel": "SERIE B • FISR"
+    },
+    {
+      "id": "UISP",
+      "name": "UISP",
+      "federation": "Lega UISP",
+      "badge": "Lega UISP • Italia",
+      "rosterLabel": "UISP • Lega UISP"
+    },
+    {
+      "id": "LIGUE ELITE",
+      "name": "Ligue Élite",
+      "federation": "FFRS",
+      "badge": "Ligue Élite • Francia",
+      "rosterLabel": "LIGUE ÉLITE • FFRS"
+    }
+  ],
+  "teams": [
+    {
+      "id": "cittadella",
+      "league": "SERIE A",
+      "name": "CITTADELLA HP",
+      "shortName": "CITTADELLA",
+      "abbr": "CIT",
+      "jerseyClubId": "cittadella",
+      "homeArena": "cittadella",
+      "logo": "cittadella.png",
+      "logoOnScoreboard": "drawn",
+      "jerseys": [
+        "assets/jerseys/cittadella_1.png",
+        "assets/jerseys/cittadella_2.png"
+      ],
+      "ratings": {
+        "off": 85,
+        "def": 80,
+        "goa": 82
+      },
+      "colors": {
+        "primary": "#c8102e",
+        "secondary": "#14235a",
+        "staffJacket": "#dc2626",
+        "coachJacket": "#172554"
+      },
+      "rosterScreen": {
+        "photo": "cittadella.jpg",
+        "focus": "42% 50%"
+      },
+      "coach": {
+        "first": "Denis",
+        "last": "Sommadossi",
+        "role": "Head Coach",
+        "note": "Assistant coach: Marco Zulian"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "BORTOLI",
+        "first": "Stefano"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "FRATTINI",
+          "first": "Tommaso"
+        }
+      ],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "21",
+            "name": "LAGO",
+            "first": "Edoardo",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "10",
+            "name": "BALDAN",
+            "first": "Samuele",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          },
+          {
+            "role": "RW",
+            "num": "77",
+            "name": "BERGAMO",
+            "first": "Giovanni Mario",
+            "g": 2,
+            "a": 0,
+            "pts": 2
+          },
+          {
+            "role": "D",
+            "num": "14",
+            "name": "BERTAGNA",
+            "first": "Colton Bernard",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "PAQUET",
+            "first": "Sebastien David",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "18",
+            "name": "SCREMIN",
+            "first": "Tommaso",
+            "g": 2,
+            "a": 0,
+            "pts": 2
+          },
+          {
+            "role": "RW",
+            "num": "27",
+            "name": "NICEFORO",
+            "first": "Francesco",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "GRIGOLETTO",
+            "first": "Marco",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "ROFFO",
+            "first": "Luca",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "23",
+            "name": "LIEVORE",
+            "first": "Edoardo",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "88",
+            "name": "SECURO",
+            "first": "Leandro",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "BELTRAME",
+            "first": "Lorenzo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "7",
+          "name": "BORTOLAN",
+          "first": "Elia"
+        },
+        {
+          "num": "15",
+          "name": "TORNI",
+          "first": "Tommaso"
+        }
+      ],
+      "kits": {
+        "white": {
+          "label": "Schema Bianco",
+          "primary": "#ffffff",
+          "pants": "#dc2626",
+          "helmet": "#dc2626",
+          "glove": "#dc2626"
+        },
+        "red": {
+          "label": "Schema Rosso",
+          "primary": "#dc2626",
+          "pants": "#172554",
+          "helmet": "#172554",
+          "glove": "#172554"
+        }
+      }
+    },
+    {
+      "id": "vicenza",
+      "league": "SERIE A",
+      "name": "DIAVOLI VICENZA",
+      "shortName": "DIAVOLI",
+      "abbr": "VIC",
+      "jerseyClubId": "vicenza",
+      "homeArena": "vicenza",
+      "logo": "vicenza.png",
+      "logoOnScoreboard": "drawn",
+      "jerseys": [
+        "assets/jerseys/vicenza_1.png",
+        "assets/jerseys/vicenza_2.png"
+      ],
+      "ratings": {
+        "off": 78,
+        "def": 84,
+        "goa": 80
+      },
+      "colors": {
+        "primary": "#d11f2a",
+        "secondary": "#0b0b0f",
+        "staffJacket": "#09090b",
+        "coachJacket": "#dc2626"
+      },
+      "rosterScreen": {
+        "photo": "vicenza.jpg",
+        "focus": "46% 35%"
+      },
+      "coach": {
+        "first": "Jacopo",
+        "last": "Rizzotto",
+        "role": "Head Coach",
+        "note": "Confermato alla guida del Vicenza"
+      },
+      "goalie": {
+        "num": "35",
+        "name": "PIEROBON",
+        "first": "Andrea"
+      },
+      "backupGoalies": [
+        {
+          "num": "1",
+          "name": "FRIGO",
+          "first": "Michele"
+        },
+        {
+          "num": "30",
+          "name": "BONSU",
+          "first": "Angelo Kevin"
+        }
+      ],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "33",
+            "name": "PACE",
+            "first": "Fabrizio",
+            "g": 9,
+            "a": 7,
+            "pts": 16
+          },
+          {
+            "role": "LW",
+            "num": "71",
+            "name": "DELFINO",
+            "first": "Andrea",
+            "g": 8,
+            "a": 8,
+            "pts": 16
+          },
+          {
+            "role": "RW",
+            "num": "24",
+            "name": "DAL SASSO",
+            "first": "Davide",
+            "g": 7,
+            "a": 6,
+            "pts": 13
+          },
+          {
+            "role": "D",
+            "num": "8",
+            "name": "VENDRAME",
+            "first": "Tobia",
+            "g": 4,
+            "a": 4,
+            "pts": 8
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "19",
+            "name": "FARMER",
+            "first": "Illan",
+            "g": 4,
+            "a": 3,
+            "pts": 7
+          },
+          {
+            "role": "LW",
+            "num": "16",
+            "name": "FRIGO",
+            "first": "Nicola",
+            "g": 3,
+            "a": 4,
+            "pts": 7
+          },
+          {
+            "role": "RW",
+            "num": "91",
+            "name": "CAMPULLA",
+            "first": "Francesco",
+            "g": 3,
+            "a": 2,
+            "pts": 5
+          },
+          {
+            "role": "D",
+            "num": "3",
+            "name": "MIGLIORANZI",
+            "first": "Enrico",
+            "g": 1,
+            "a": 3,
+            "pts": 4
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "12",
+            "name": "GONZALEZ",
+            "first": "Valentin Thomas Antoine",
+            "g": 3,
+            "a": 0,
+            "pts": 3
+          },
+          {
+            "role": "LW",
+            "num": "44",
+            "name": "CENTOFANTE",
+            "first": "Filippo",
+            "g": 2,
+            "a": 1,
+            "pts": 3
+          },
+          {
+            "role": "RW",
+            "num": "61",
+            "name": "TREVISAN",
+            "first": "Lorenzo",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "22",
+            "name": "ALBANTI",
+            "first": "Mattia",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "6",
+          "name": "DELL'UOMO",
+          "first": "Lorenzo"
+        }
+      ],
+      "kits": {
+        "red": {
+          "label": "Schema Rosso",
+          "primary": "#dc2626",
+          "pants": "#09090b",
+          "helmet": "#09090b",
+          "glove": "#09090b"
+        },
+        "black": {
+          "label": "Schema Nero",
+          "primary": "#09090b",
+          "pants": "#09090b",
+          "helmet": "#09090b",
+          "glove": "#dc2626"
+        }
+      }
+    },
+    {
+      "id": "milano",
+      "league": "SERIE A",
+      "name": "HC MILANO QUANTA",
+      "shortName": "MILANO",
+      "abbr": "MIL",
+      "jerseyClubId": "milano",
+      "homeArena": "milano",
+      "logo": "milano.png",
+      "logoOnScoreboard": "drawn",
+      "jerseys": [
+        "assets/jerseys/milano_1.png",
+        "assets/jerseys/milano_2.png"
+      ],
+      "ratings": {
+        "off": 83,
+        "def": 79,
+        "goa": 81
+      },
+      "colors": {
+        "primary": "#123a8c",
+        "secondary": "#0a1a44",
+        "staffJacket": "#0f2557",
+        "coachJacket": "#dc2626"
+      },
+      "rosterScreen": {
+        "photo": "milano.jpg",
+        "focus": "50% 22%"
+      },
+      "coach": {
+        "first": "Matteo",
+        "last": "Zerbi",
+        "role": "Head Coach",
+        "note": "Direttore tecnico: Mattia Mai"
+      },
+      "goalie": {
+        "num": "55",
+        "name": "MARIANI",
+        "first": "Riccardo"
+      },
+      "backupGoalies": [],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "88",
+            "name": "CAMPULLA",
+            "first": "Lorenzo",
+            "g": 9,
+            "a": 0,
+            "pts": 9
+          },
+          {
+            "role": "LW",
+            "num": "66",
+            "name": "QUARTUCCIO",
+            "first": "Riccardo",
+            "g": 3,
+            "a": 2,
+            "pts": 5
+          },
+          {
+            "role": "RW",
+            "num": "25",
+            "name": "LAVRISA",
+            "first": "Marcel",
+            "g": 1,
+            "a": 4,
+            "pts": 5
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "MECONI",
+            "first": "Ruggero",
+            "g": 0,
+            "a": 2,
+            "pts": 2
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "90",
+            "name": "MASIERO",
+            "first": "Giacomo",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          },
+          {
+            "role": "LW",
+            "num": "5",
+            "name": "ANASTASI",
+            "first": "Alessandro Carlo",
+            "g": 0,
+            "a": 2,
+            "pts": 2
+          },
+          {
+            "role": "RW",
+            "num": "19",
+            "name": "BRIANZONI",
+            "first": "Pietro Andrea",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          },
+          {
+            "role": "D",
+            "num": "27",
+            "name": "SESANA",
+            "first": "Ettore",
+            "g": 0,
+            "a": 2,
+            "pts": 2
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "DAL BEN",
+            "first": "Riccardo",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "GRANDELLI",
+            "first": "Mattia",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "71",
+            "name": "NOVARA",
+            "first": "Nicola",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "8",
+            "name": "GALLIVANONE",
+            "first": "Mattia",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "14",
+          "name": "CRISCI",
+          "first": "Edoardo Fabrizio"
+        },
+        {
+          "num": "21",
+          "name": "ZUCCARDI-MERLI",
+          "first": "Brando Emilio"
+        },
+        {
+          "num": "23",
+          "name": "MELIS",
+          "first": "Leonardo"
+        },
+        {
+          "num": "7",
+          "name": "FACCHETTI",
+          "first": "Jago"
+        },
+        {
+          "num": "2",
+          "name": "MARIANI",
+          "first": "Davide"
+        }
+      ],
+      "kits": {
+        "white": {
+          "label": "Schema Bianco",
+          "primary": "#ffffff",
+          "pants": "#0f2557",
+          "helmet": "#1d4ed8",
+          "glove": "#dc2626"
+        },
+        "navy": {
+          "label": "Schema Blu Navy",
+          "primary": "#0f2557",
+          "pants": "#0f2557",
+          "helmet": "#dc2626",
+          "glove": "#dc2626"
+        }
+      }
+    },
+    {
+      "id": "asiago",
+      "league": "SERIE A",
+      "name": "ASIAGO VIPERS",
+      "shortName": "ASIAGO",
+      "abbr": "ASI",
+      "jerseyClubId": "asiago",
+      "homeArena": "asiago",
+      "logo": "asiago.png",
+      "logoOnScoreboard": "drawn",
+      "jerseys": [
+        "assets/jerseys/asiago_1.png",
+        "assets/jerseys/asiago_2.png"
+      ],
+      "ratings": {
+        "off": 76,
+        "def": 77,
+        "goa": 75
+      },
+      "colors": {
+        "primary": "#f26b11",
+        "secondary": "#0b0b0f",
+        "staffJacket": "#f97316",
+        "coachJacket": "#09090b"
+      },
+      "rosterScreen": {
+        "photo": "asiago.jpg",
+        "focus": "34% 30%"
+      },
+      "coach": {
+        "first": "Luca",
+        "last": "Rigoni",
+        "role": "Head Coach",
+        "note": "Confermato alla guida dei Vipers"
+      },
+      "goalie": {
+        "num": "29",
+        "name": "STEVAN",
+        "first": "Luca"
+      },
+      "backupGoalies": [
+        {
+          "num": "1",
+          "name": "FRACARO",
+          "first": "Davide"
+        }
+      ],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "44",
+            "name": "VELLAR",
+            "first": "Mattia",
+            "g": 4,
+            "a": 3,
+            "pts": 7
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "RODEGHIERO",
+            "first": "Davide",
+            "g": 2,
+            "a": 2,
+            "pts": 4
+          },
+          {
+            "role": "RW",
+            "num": "9",
+            "name": "TESSARI",
+            "first": "Matteo",
+            "g": 0,
+            "a": 4,
+            "pts": 4
+          },
+          {
+            "role": "D",
+            "num": "21",
+            "name": "ROSSETTO",
+            "first": "Alessandro",
+            "g": 3,
+            "a": 0,
+            "pts": 3
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "LAZZARI",
+            "first": "Tommaso Enzo",
+            "g": 2,
+            "a": 1,
+            "pts": 3
+          },
+          {
+            "role": "LW",
+            "num": "77",
+            "name": "ROSSETTO",
+            "first": "Gabriele",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "19",
+            "name": "MARINI",
+            "first": "Andrea",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "LAZZARI",
+            "first": "Leo",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "8",
+            "name": "CORA'",
+            "first": "Michele",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "24",
+            "name": "PANOZZO",
+            "first": "Matteo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "71",
+            "name": "GLODER",
+            "first": "Riccardo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "ROSSI",
+            "first": "Marco",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "12",
+          "name": "STELLA",
+          "first": "Gianluca"
+        },
+        {
+          "num": "3",
+          "name": "BAÙ",
+          "first": "Gianluca"
+        },
+        {
+          "num": "6",
+          "name": "RIGONI",
+          "first": "Pierpaolo"
+        },
+        {
+          "num": "91",
+          "name": "RODEGHIERO",
+          "first": "Gabriele"
+        }
+      ],
+      "kits": {
+        "black": {
+          "label": "Schema Nero",
+          "primary": "#09090b",
+          "pants": "#09090b",
+          "helmet": "#09090b",
+          "glove": "#09090b"
+        },
+        "white": {
+          "label": "Schema Bianco",
+          "primary": "#ffffff",
+          "pants": "#09090b",
+          "helmet": "#09090b",
+          "glove": "#f97316"
+        }
+      }
+    },
+    {
+      "id": "cittadella_pike",
+      "league": "UISP",
+      "name": "CITTADELLA PIKE",
+      "shortName": "PIKE UISP",
+      "abbr": "PIK",
+      "jerseyClubId": "cittadella_pike",
+      "homeArena": "cittadella",
+      "logo": "cittadella_pike.png",
+      "logoOnScoreboard": "drawn",
+      "jerseys": [
+        "assets/jerseys/cittadella_pike_1.png"
+      ],
+      "ratings": {
+        "off": 72,
+        "def": 70,
+        "goa": 71
+      },
+      "colors": {
+        "primary": "#b91c1c",
+        "secondary": "#172554",
+        "staffJacket": "#dc2626",
+        "coachJacket": "#dc2626"
+      },
+      "rosterScreen": {
+        "photo": "pike.jpg",
+        "focus": "50% 45%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "31",
+        "name": "NICEFORO"
+      },
+      "backupGoalies": [],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "15",
+            "name": "PIKE"
+          },
+          {
+            "role": "LW",
+            "num": "22",
+            "name": "ZANELLA"
+          },
+          {
+            "role": "RW",
+            "num": "19",
+            "name": "BAGGIO"
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "GUIDOLIN"
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "28",
+            "name": "MARCON"
+          },
+          {
+            "role": "LW",
+            "num": "13",
+            "name": "TONIOLO"
+          },
+          {
+            "role": "RW",
+            "num": "34",
+            "name": "ZANON"
+          },
+          {
+            "role": "D",
+            "num": "2",
+            "name": "BERTON"
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "77",
+            "name": "SARTORI"
+          },
+          {
+            "role": "LW",
+            "num": "12",
+            "name": "CECCATO"
+          },
+          {
+            "role": "RW",
+            "num": "90",
+            "name": "PIEROBON"
+          },
+          {
+            "role": "D",
+            "num": "7",
+            "name": "MENEGHETTI"
+          }
+        ]
+      ],
+      "reserves": [],
+      "kits": {
+        "pike": {
+          "label": "Maglia Pike",
+          "primary": "#dc2626",
+          "pants": "#172554",
+          "helmet": "#172554",
+          "glove": "#172554"
+        }
+      }
+    },
+    {
+      "id": "cus_verona",
+      "league": "SERIE A",
+      "name": "CUS VERONA",
+      "shortName": "CUS VERONA",
+      "abbr": "CUS",
+      "jerseyClubId": "cus_verona",
+      "homeArena": "cus_verona",
+      "logo": "cus_verona.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/cus_verona_1.png",
+        "assets/jerseys/cus_verona_2.png"
+      ],
+      "ratings": {
+        "off": 71,
+        "def": 72,
+        "goa": 69
+      },
+      "colors": {
+        "primary": "#17246e",
+        "secondary": "#c99a00",
+        "staffJacket": "#14206a",
+        "coachJacket": "#f5c400"
+      },
+      "rosterScreen": {
+        "photo": "cus_verona.jpg",
+        "focus": "40% 30%"
+      },
+      "coach": {
+        "first": "Nicola",
+        "last": "Olivieri",
+        "role": "Primo allenatore",
+        "note": "Responsabile dello staff tecnico"
+      },
+      "goalie": {
+        "num": "33",
+        "name": "MORANDIN",
+        "first": "Giacomo"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "PERUZZI",
+          "first": "Marco"
+        }
+      ],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "98",
+            "name": "PERINI",
+            "first": "Luca",
+            "g": 6,
+            "a": 0,
+            "pts": 6
+          },
+          {
+            "role": "LW",
+            "num": "16",
+            "name": "SABAINI",
+            "first": "Giovanni",
+            "g": 1,
+            "a": 2,
+            "pts": 3
+          },
+          {
+            "role": "RW",
+            "num": "8",
+            "name": "CRIVELLARI",
+            "first": "Alessio",
+            "g": 2,
+            "a": 1,
+            "pts": 3
+          },
+          {
+            "role": "D",
+            "num": "3",
+            "name": "CARRER",
+            "first": "Simone",
+            "g": 2,
+            "a": 1,
+            "pts": 3
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "EDERLE",
+            "first": "Pietro",
+            "g": 1,
+            "a": 2,
+            "pts": 3
+          },
+          {
+            "role": "LW",
+            "num": "19",
+            "name": "ZABBARI",
+            "first": "Raffaele",
+            "g": 2,
+            "a": 0,
+            "pts": 2
+          },
+          {
+            "role": "RW",
+            "num": "21",
+            "name": "TOMBOLATO",
+            "first": "Riccardo",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "CHIAMENTI",
+            "first": "Filippo",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "CARRETTA",
+            "first": "Giulio",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "LUPI",
+            "first": "Pietro",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "71",
+            "name": "MAGNABOSCO",
+            "first": "Marco",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "OLIVIERI",
+            "first": "Claudio",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "7",
+          "name": "MONTANARI",
+          "first": "Stefano"
+        },
+        {
+          "num": "12",
+          "name": "ZAMPIERI",
+          "first": "Morgan"
+        },
+        {
+          "num": "14",
+          "name": "RIGHETTI TEGESER",
+          "first": "Giovanni"
+        },
+        {
+          "num": "22",
+          "name": "SANTACÀ",
+          "first": "Milo Ram"
+        },
+        {
+          "num": "23",
+          "name": "KRAMPERA",
+          "first": "Alessandro"
+        },
+        {
+          "num": "27",
+          "name": "LAZZARI",
+          "first": "Luca"
+        },
+        {
+          "num": "44",
+          "name": "MONTOLLI",
+          "first": "Riccardo"
+        },
+        {
+          "num": "91",
+          "name": "MONTANARI",
+          "first": "Riccardo"
+        }
+      ],
+      "kits": {
+        "navy": {
+          "label": "Divisa Blu",
+          "primary": "#14206a",
+          "pants": "#14206a",
+          "helmet": "#f8fafc",
+          "glove": "#14206a"
+        },
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#ffffff",
+          "pants": "#14206a",
+          "helmet": "#f8fafc",
+          "glove": "#14206a"
+        }
+      }
+    },
+    {
+      "id": "forli",
+      "league": "SERIE A",
+      "name": "LIBERTAS FORLÌ",
+      "shortName": "FORLÌ",
+      "abbr": "FOR",
+      "jerseyClubId": "forli",
+      "homeArena": "forli",
+      "logo": "forli.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/forli_1.png",
+        "assets/jerseys/forli_2.png"
+      ],
+      "ratings": {
+        "off": 70,
+        "def": 71,
+        "goa": 74
+      },
+      "colors": {
+        "primary": "#1b2d5c",
+        "secondary": "#3d8bd1",
+        "staffJacket": "#16244f",
+        "coachJacket": "#3d8bd1"
+      },
+      "rosterScreen": {
+        "photo": "forli.jpg",
+        "focus": "62% 35%"
+      },
+      "coach": {
+        "first": "Alessandro",
+        "last": "Cintori",
+        "role": "Head Coach",
+        "note": "Nuovo head coach 2026/27"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "FACCHINETTI",
+        "first": "Daniele"
+      },
+      "backupGoalies": [],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "98",
+            "name": "CIMATTI",
+            "first": "Diego",
+            "g": 3,
+            "a": 1,
+            "pts": 4
+          },
+          {
+            "role": "LW",
+            "num": "80",
+            "name": "FRIZZERA",
+            "first": "Patrik",
+            "g": 1,
+            "a": 2,
+            "pts": 3
+          },
+          {
+            "role": "RW",
+            "num": "46",
+            "name": "BERNARDONI",
+            "first": "Niki",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          },
+          {
+            "role": "D",
+            "num": "84",
+            "name": "VAGLIERI",
+            "first": "Elia",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "19",
+            "name": "CASTAGNERI",
+            "first": "Fabrizio",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "4",
+            "name": "USTIGNANI",
+            "first": "Andrea",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "10",
+            "name": "GUERZONI",
+            "first": "Moreno",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "21",
+            "name": "FABBRI",
+            "first": "Jacopo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "MUCCHETTI",
+            "first": "Ivo Perseo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "MAZZONI",
+            "first": "Robin",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "5",
+            "name": "FOLLI",
+            "first": "Francesco",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "8",
+            "name": "CORAZZARI",
+            "first": "Riccardo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "7",
+          "name": "PERPIGNANI",
+          "first": "Alessio"
+        },
+        {
+          "num": "12",
+          "name": "TROIANO",
+          "first": "Gabriele"
+        },
+        {
+          "num": "14",
+          "name": "BELLANTONIO",
+          "first": "Andrea"
+        },
+        {
+          "num": "22",
+          "name": "MARCHIANDO",
+          "first": "Jacopo"
+        },
+        {
+          "num": "23",
+          "name": "CARLI",
+          "first": "Michelangelo"
+        },
+        {
+          "num": "27",
+          "name": "BELLANTONIO",
+          "first": "Marco"
+        }
+      ],
+      "kits": {
+        "navy": {
+          "label": "Divisa Blu",
+          "primary": "#16244f",
+          "pants": "#16244f",
+          "helmet": "#f8fafc",
+          "glove": "#16244f"
+        },
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#ffffff",
+          "pants": "#16244f",
+          "helmet": "#f8fafc",
+          "glove": "#2f6fb5"
+        }
+      }
+    },
+    {
+      "id": "fox_legnaro",
+      "league": "SERIE A",
+      "name": "FOX LEGNARO",
+      "shortName": "FOX LEGNARO",
+      "abbr": "FOX",
+      "jerseyClubId": "fox_legnaro",
+      "homeArena": "fox_legnaro",
+      "logo": "fox_legnaro.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/fox_legnaro_1.png",
+        "assets/jerseys/fox_legnaro_2.png"
+      ],
+      "ratings": {
+        "off": 72,
+        "def": 69,
+        "goa": 73
+      },
+      "colors": {
+        "primary": "#d01f26",
+        "secondary": "#0b0b0f",
+        "staffJacket": "#111114",
+        "coachJacket": "#d01f26"
+      },
+      "rosterScreen": {
+        "photo": "fox_legnaro.jpg",
+        "focus": "55% 35%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "1",
+        "name": "LANER",
+        "first": "Ermanno"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "MIOZZI",
+          "first": "Tommaso"
+        }
+      ],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "13",
+            "name": "FRANCON",
+            "first": "Matteo Carlo",
+            "g": 5,
+            "a": 10,
+            "pts": 15
+          },
+          {
+            "role": "LW",
+            "num": "9",
+            "name": "CALORE",
+            "first": "Elia",
+            "g": 9,
+            "a": 1,
+            "pts": 10
+          },
+          {
+            "role": "RW",
+            "num": "21",
+            "name": "CARRON",
+            "first": "Daniele",
+            "g": 3,
+            "a": 3,
+            "pts": 6
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "PIETROBON",
+            "first": "Mattia",
+            "g": 1,
+            "a": 2,
+            "pts": 3
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "8",
+            "name": "MARCHET",
+            "first": "Gabriele",
+            "g": 2,
+            "a": 0,
+            "pts": 2
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "SOBBERI",
+            "first": "Abderahmane",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "95",
+            "name": "GUERRIERO",
+            "first": "Mattia",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "DANIELE",
+            "first": "Giovanni",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "ZANETTE",
+            "first": "Alberto",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "19",
+            "name": "BALLAN",
+            "first": "Filippo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "88",
+            "name": "MARCHET",
+            "first": "Mattia",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "2",
+            "name": "DE ANGELIS",
+            "first": "Leonardo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "7",
+          "name": "OMETTO",
+          "first": "Diego"
+        },
+        {
+          "num": "22",
+          "name": "VESENTINI",
+          "first": "Gabriele"
+        }
+      ],
+      "kits": {
+        "black": {
+          "label": "Divisa Nera",
+          "primary": "#111114",
+          "pants": "#111114",
+          "helmet": "#111114",
+          "glove": "#111114"
+        },
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#ffffff",
+          "pants": "#111114",
+          "helmet": "#111114",
+          "glove": "#111114"
+        }
+      }
+    },
+    {
+      "id": "edera_trieste",
+      "league": "SERIE A",
+      "name": "EDERA TRIESTE",
+      "shortName": "EDERA TRIESTE",
+      "abbr": "EDE",
+      "jerseyClubId": "edera_trieste",
+      "homeArena": "edera_trieste",
+      "logo": "edera_trieste.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/edera_trieste_1.png",
+        "assets/jerseys/edera_trieste_2.png"
+      ],
+      "ratings": {
+        "off": 67,
+        "def": 68,
+        "goa": 76
+      },
+      "colors": {
+        "primary": "#d7262e",
+        "secondary": "#1d7a3a",
+        "staffJacket": "#1d7a3a",
+        "coachJacket": "#d7262e"
+      },
+      "rosterScreen": {
+        "photo": "edera_trieste.jpg",
+        "focus": "48% 30%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "1",
+        "name": "SKRUBEJ",
+        "first": "Jon"
+      },
+      "backupGoalies": [],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "COCOZZA",
+            "first": "Axel",
+            "g": 4,
+            "a": 2,
+            "pts": 6
+          },
+          {
+            "role": "LW",
+            "num": "9",
+            "name": "FUMAGALLI",
+            "first": "Morgan",
+            "g": 2,
+            "a": 2,
+            "pts": 4
+          },
+          {
+            "role": "RW",
+            "num": "17",
+            "name": "ZDESAR",
+            "first": "Alen",
+            "g": 2,
+            "a": 2,
+            "pts": 4
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "MILANESE",
+            "first": "Mattia",
+            "g": 1,
+            "a": 2,
+            "pts": 3
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "21",
+            "name": "CIOCCOLANTI",
+            "first": "Samuele",
+            "g": 0,
+            "a": 2,
+            "pts": 2
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "OVSEC",
+            "first": "Enrico",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "19",
+            "name": "MOCELLIN",
+            "first": "Lorenzo",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "PAGNONI",
+            "first": "Francesco",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "8",
+            "name": "GERMAN",
+            "first": "Giordana",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "56",
+            "name": "SCRIMALI",
+            "first": "Claudio",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "24",
+            "name": "MATTIUSSI",
+            "first": "Michele",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "3",
+            "name": "DELPIANO",
+            "first": "Nicolas",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "14",
+          "name": "PRODAN",
+          "first": "Dominik Marjan"
+        },
+        {
+          "num": "27",
+          "name": "MACHADO",
+          "first": "Matteo"
+        }
+      ],
+      "kits": {
+        "black": {
+          "label": "Divisa Nera",
+          "primary": "#111114",
+          "pants": "#111114",
+          "helmet": "#111114",
+          "glove": "#111114"
+        },
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#ffffff",
+          "pants": "#111114",
+          "helmet": "#111114",
+          "glove": "#111114"
+        }
+      }
+    },
+    {
+      "id": "kraken_camaiore",
+      "league": "SERIE A",
+      "name": "KRAKEN CAMAIORE",
+      "shortName": "KRAKEN",
+      "abbr": "KRA",
+      "jerseyClubId": "kraken_camaiore",
+      "homeArena": "kraken_camaiore",
+      "logo": "kraken_camaiore.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/kraken_camaiore.png"
+      ],
+      "ratings": {
+        "off": 70,
+        "def": 66,
+        "goa": 68
+      },
+      "colors": {
+        "primary": "#1a1f5c",
+        "secondary": "#78bee4",
+        "staffJacket": "#1a1f5c",
+        "coachJacket": "#78bee4"
+      },
+      "rosterScreen": {
+        "photo": "kraken_camaiore.jpg",
+        "focus": "40% 30%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "1",
+        "name": "BACINELLI",
+        "first": "Tommaso"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "DE SANTI",
+          "first": "Niccolò"
+        }
+      ],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "LETTERA",
+            "first": "Alessio",
+            "g": 4,
+            "a": 3,
+            "pts": 7
+          },
+          {
+            "role": "LW",
+            "num": "4",
+            "name": "LETTERA",
+            "first": "Nicola",
+            "g": 1,
+            "a": 2,
+            "pts": 3
+          },
+          {
+            "role": "RW",
+            "num": "10",
+            "name": "BELLINI",
+            "first": "Andrea",
+            "g": 2,
+            "a": 0,
+            "pts": 2
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "PODDA",
+            "first": "Alessio",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "17",
+            "name": "STRICKER",
+            "first": "David Enrico Andrea",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "LILLI",
+            "first": "Matteo",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "21",
+            "name": "LUCCHESI",
+            "first": "Alessio",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "3",
+            "name": "BELLINI",
+            "first": "Matteo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "19",
+            "name": "SARASSO",
+            "first": "Riccardo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "8",
+            "name": "SIMONELLI",
+            "first": "Luca",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "88",
+            "name": "BASTIANONI",
+            "first": "Giampaolo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "CECCHINI",
+            "first": "Federico",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "14",
+          "name": "DELL'ANTICO",
+          "first": "Lorenzo"
+        },
+        {
+          "num": "22",
+          "name": "CIOTTI",
+          "first": "Matteo"
+        },
+        {
+          "num": "27",
+          "name": "SANNA",
+          "first": "Federico"
+        },
+        {
+          "num": "77",
+          "name": "MERCURI",
+          "first": "Mirco"
+        }
+      ],
+      "kits": {
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#ffffff",
+          "pants": "#1a1f5c",
+          "helmet": "#1a1f5c",
+          "glove": "#111114"
+        }
+      }
+    },
+    {
+      "id": "asiago_blackout",
+      "league": "SERIE B",
+      "name": "ASIAGO BLACK-OUT",
+      "shortName": "BLACK-OUT",
+      "abbr": "BKO",
+      "jerseyClubId": "asiago_blackout",
+      "homeArena": "asiago",
+      "logo": "asiago_blackout.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/asiago_blackout.png"
+      ],
+      "ratings": {
+        "off": 64,
+        "def": 61,
+        "goa": 66
+      },
+      "colors": {
+        "primary": "#0b0b0f",
+        "secondary": "#3fa9f5",
+        "staffJacket": "#0b0b0f",
+        "coachJacket": "#3fa9f5"
+      },
+      "rosterScreen": {
+        "photo": "asiago_blackout.jpg",
+        "focus": "45% 30%"
+      },
+      "coach": {
+        "first": "Massimo",
+        "last": "Vellar",
+        "role": "Allenatore-giocatore",
+        "note": "In pista anche come difensore"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "PESAVENTO",
+        "first": "Marco"
+      },
+      "backupGoalies": [],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "RIGONI",
+            "first": "Daniele",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "ZAGO",
+            "first": "Matteo",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "27",
+            "name": "TESSARI",
+            "first": "Sascha Primo",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "RIGONI",
+            "first": "Edoardo",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "VALENTE",
+            "first": "Carlo",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "STELLA",
+            "first": "Stefano",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "19",
+            "name": "CARLI",
+            "first": "Simone",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "VELLAR",
+            "first": "Massimo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "21",
+            "name": "ROSSI",
+            "first": "Filippo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "23",
+            "name": "SARTORI",
+            "first": "Filippo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "88",
+            "name": "RIGONI",
+            "first": "Filippo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "RIGONI",
+            "first": "Edoardo",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          }
+        ]
+      ],
+      "reserves": [],
+      "kits": {
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#ffffff",
+          "pants": "#0b0b0f",
+          "helmet": "#0b0b0f",
+          "glove": "#0b0b0f"
+        }
+      }
+    },
+    {
+      "id": "villeneuve",
+      "league": "LIGUE ELITE",
+      "name": "FDB VILLENEUVE",
+      "shortName": "VILLENEUVE",
+      "abbr": "VIL",
+      "jerseyClubId": "villeneuve",
+      "homeArena": "villeneuve",
+      "logo": "villeneuve.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/villeneuve.png"
+      ],
+      "ratings": {
+        "off": 80,
+        "def": 77,
+        "goa": 79
+      },
+      "colors": {
+        "primary": "#1c8fc4",
+        "secondary": "#0b0b0f",
+        "staffJacket": "#38b6e8",
+        "coachJacket": "#0b0b0f"
+      },
+      "rosterScreen": {
+        "photo": "villeneuve.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "41",
+        "name": "BRABEC",
+        "first": "Daniel"
+      },
+      "backupGoalies": [],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "GAUZE",
+            "first": "Alex",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "5",
+            "name": "GABILLET",
+            "first": "Karl",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "79",
+            "name": "ALLO",
+            "first": "Louis",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "29",
+            "name": "LE BOHELLEC",
+            "first": "Léon",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "CLISSON",
+            "first": "Julien",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "77",
+            "name": "NAUD",
+            "first": "Alexandre",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "70",
+            "name": "LANGLOIS",
+            "first": "Maxime",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "GRÉGOIRE",
+            "first": "Clément",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "7",
+            "name": "CUZIN",
+            "first": "Léo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "91",
+            "name": "CLISSON",
+            "first": "Edouard",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "19",
+            "name": "MAHIEU",
+            "first": "Mattéo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "3",
+            "name": "FAUCHERAND",
+            "first": "Théo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [],
+      "kits": {
+        "sky": {
+          "label": "Divisa Azzurra",
+          "primary": "#38b6e8",
+          "pants": "#0b0b0f",
+          "helmet": "#0b0b0f",
+          "glove": "#0b0b0f"
+        }
+      }
+    },
+    {
+      "id": "asiago_newts",
+      "league": "SERIE B",
+      "name": "ASIAGO NEWTS",
+      "shortName": "NEWTS",
+      "abbr": "NEW",
+      "jerseyClubId": "asiago_newts",
+      "homeArena": "asiago",
+      "logo": "asiago_newts.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/asiago_newts_1.png",
+        "assets/jerseys/asiago_newts_2.png"
+      ],
+      "ratings": {
+        "off": 65,
+        "def": 63,
+        "goa": 68
+      },
+      "colors": {
+        "primary": "#f5c400",
+        "secondary": "#111111",
+        "staffJacket": "#111111",
+        "coachJacket": "#f5c400"
+      },
+      "rosterScreen": {
+        "photo": "asiago_newts.jpg",
+        "focus": "50% 35%"
+      },
+      "coach": {
+        "first": "Rossano",
+        "last": "Solmi",
+        "role": "Allenatore",
+        "note": "Staff tecnico con Filippo Carturan"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "OLANDO",
+        "first": "Filippo"
+      },
+      "backupGoalies": [],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "ROSSETTO",
+            "first": "Matteo",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          },
+          {
+            "role": "LW",
+            "num": "23",
+            "name": "RIGONI",
+            "first": "Francesco",
+            "g": 2,
+            "a": 0,
+            "pts": 2
+          },
+          {
+            "role": "RW",
+            "num": "17",
+            "name": "LONGHINI",
+            "first": "Davide",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "STELLA",
+            "first": "Alessandro",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "SCHIVO",
+            "first": "Riccardo",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "AGERDE",
+            "first": "Matteo",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "19",
+            "name": "TESSARI",
+            "first": "Nicola",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "CAPPELLARI",
+            "first": "Alex",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "21",
+            "name": "STONA",
+            "first": "Andrea",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "14",
+            "name": "ZENOBINI",
+            "first": "Luca",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "88",
+            "name": "DALLE AVE",
+            "first": "Ivan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "MARTELLO",
+            "first": "Giovanni",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "27",
+          "name": "RIGONI",
+          "first": "Tommaso"
+        },
+        {
+          "num": "7",
+          "name": "PESAVENTO",
+          "first": "Luca"
+        },
+        {
+          "num": "8",
+          "name": "PERTILE",
+          "first": "Simone"
+        }
+      ],
+      "kits": {
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#ffffff",
+          "pants": "#111111",
+          "helmet": "#111111",
+          "glove": "#f5c400"
+        },
+        "black": {
+          "label": "Divisa Nera",
+          "primary": "#111111",
+          "pants": "#111111",
+          "helmet": "#111111",
+          "glove": "#f5c400"
+        }
+      }
+    },
+    {
+      "id": "roma",
+      "league": "SERIE B",
+      "name": "MAMMUTH ROMA",
+      "shortName": "MAMMUTH",
+      "abbr": "MAM",
+      "jerseyClubId": "roma",
+      "homeArena": "roma",
+      "logo": "roma.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/roma_1.png"
+      ],
+      "ratings": {
+        "off": 64,
+        "def": 63,
+        "goa": 67
+      },
+      "colors": {
+        "primary": "#7a1f2b",
+        "secondary": "#f2a516",
+        "staffJacket": "#7a1f2b",
+        "coachJacket": "#f2a516"
+      },
+      "rosterScreen": {
+        "photo": "roma.jpg",
+        "focus": "62% 40%"
+      },
+      "coach": {
+        "first": "Lorenzo",
+        "last": "Pieralli",
+        "role": "Allenatore-portiere",
+        "note": "Guida la squadra e difende la porta"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "PIERALLI",
+        "first": "Lorenzo"
+      },
+      "backupGoalies": [],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "80",
+            "name": "STRAFONDA",
+            "first": "Alessandro",
+            "g": 3,
+            "a": 0,
+            "pts": 3
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "JANUS",
+            "first": "Filip Edward",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          },
+          {
+            "role": "RW",
+            "num": "10",
+            "name": "QUATTRINI",
+            "first": "Giovanni",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "ACCARDO",
+            "first": "Filippo",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "ROSSI",
+            "first": "Francesco",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "COLANGELO",
+            "first": "Davide",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "33",
+            "name": "RANDA",
+            "first": "Fabio",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "PIZZI",
+            "first": "Federico",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "21",
+            "name": "GOBBI",
+            "first": "Daniele",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "14",
+            "name": "ACCARDO",
+            "first": "Jacopo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "19",
+            "name": "BADESSI",
+            "first": "Emanuele",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "ACETI",
+            "first": "Alice",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "7",
+          "name": "SQUATRITI",
+          "first": "Flavio"
+        },
+        {
+          "num": "8",
+          "name": "CARUSI",
+          "first": "Andrea"
+        },
+        {
+          "num": "23",
+          "name": "INGRAO",
+          "first": "Gianmaria"
+        },
+        {
+          "num": "27",
+          "name": "BRESCIA",
+          "first": "Nazario"
+        }
+      ],
+      "kits": {
+        "maroon": {
+          "label": "Divisa Bordeaux-Oro",
+          "primary": "#7a1f2b",
+          "pants": "#141414",
+          "helmet": "#141414",
+          "glove": "#f2a516"
+        }
+      }
+    },
+    {
+      "id": "treviso",
+      "league": "SERIE B",
+      "name": "SPORTING TREVISO",
+      "shortName": "TREVISO",
+      "abbr": "TRE",
+      "jerseyClubId": "treviso",
+      "homeArena": "treviso",
+      "logo": "treviso.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/treviso_1.png"
+      ],
+      "ratings": {
+        "off": 61,
+        "def": 62,
+        "goa": 64
+      },
+      "colors": {
+        "primary": "#2a3fb0",
+        "secondary": "#f6d61e",
+        "staffJacket": "#2a3fb0",
+        "coachJacket": "#f6d61e"
+      },
+      "rosterScreen": {
+        "photo": "treviso.jpg",
+        "focus": "45% 35%"
+      },
+      "coach": {
+        "first": "Jacopo",
+        "last": "Rizzotto",
+        "role": "Allenatore",
+        "note": "Staff tecnico con Edoardo Bortoluzzi"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "VENDRAME",
+        "first": "Elia"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "PROSDOCIMO",
+          "first": "Marino"
+        }
+      ],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "SAGUI",
+            "first": "David",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "29",
+            "name": "PALÙ",
+            "first": "Alessandro",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "5",
+            "name": "DA RIN",
+            "first": "Mattia",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "CANER",
+            "first": "Tommaso",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "DE CONTI",
+            "first": "Filippo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "BIANCHIN",
+            "first": "Daniele",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "17",
+            "name": "BORTOLUZZI",
+            "first": "Edoardo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "PACE",
+            "first": "Mattia",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "21",
+            "name": "BIANCHIN",
+            "first": "Mattia",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "10",
+            "name": "SAGUI",
+            "first": "David",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "29",
+            "name": "PALÙ",
+            "first": "Alessandro",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "CANER",
+            "first": "Tommaso",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          }
+        ]
+      ],
+      "reserves": [],
+      "kits": {
+        "white": {
+          "label": "Divisa Bianco-Blu",
+          "primary": "#ffffff",
+          "pants": "#2a3fb0",
+          "helmet": "#2a3fb0",
+          "glove": "#2a3fb0"
+        }
+      }
+    }
+  ]
+}

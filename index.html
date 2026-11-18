@@ -1766,6 +1766,22 @@
                                 <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="villeneuve"></span><span class="as-home-chip hidden" data-home-chip="villeneuve">Casa</span></span>
                             </span>
                         </button>
+                        <button type="button" data-arena="roma" class="arena-pill-btn as-card" role="option">
+                            <span class="as-thumb"><img src="assets/arenas/thumbs/roma.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">11</span></span>
+                            <span class="min-w-0">
+                                <span class="as-card-name block">Palamunicipio Roma XI</span>
+                                <span class="as-card-loc block">Roma (RM) • Lazio</span>
+                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="roma"></span><span class="as-home-chip hidden" data-home-chip="roma">Casa</span></span>
+                            </span>
+                        </button>
+                        <button type="button" data-arena="treviso" class="arena-pill-btn as-card" role="option">
+                            <span class="as-thumb"><img src="assets/arenas/thumbs/treviso.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">12</span></span>
+                            <span class="min-w-0">
+                                <span class="as-card-name block">Pattinodromo delle Acquette</span>
+                                <span class="as-card-loc block">Treviso (TV) • Veneto</span>
+                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="treviso"></span><span class="as-home-chip hidden" data-home-chip="treviso">Casa</span></span>
+                            </span>
+                        </button>
                     </div>
                     <div class="as-details">
                         <div class="as-stats">
@@ -2269,431 +2285,14 @@
     <!-- Canvas Principale 3D -->
     <canvas id="gameCanvas"></canvas>
 
+    <!-- Squadre e leghe: src/data/teams.json (deve precedere lo script principale) -->
+    <script src="src/data/teams-loader.js"></script>
     <script>
-        // --- CONFIGURAZIONE SQUADRE (SERIE A FISR & LEGA UISP), DIVISE E PALAZZETTI ---
-        const CLUB_ROSTERS = {
-            cittadella: {
-                id: 'cittadella',
-                league: 'SERIE A',
-                jerseyClubId: 'cittadella',
-                name: 'CITTADELLA HP',
-                shortName: 'CITTADELLA',
-                goalie: { num: "1", name: "BORTOLI", first: "Stefano" },
-                backupGoalies: [{ num: "30", name: "FRATTINI", first: "Tommaso" }],
-                lines: [
-                    [
-                        { role: "C", num: "21", name: "LAGO", first: "Edoardo", g: 1, a: 0, pts: 1 },
-                        { role: "LW", num: "10", name: "BALDAN", first: "Samuele", g: 1, a: 1, pts: 2 },
-                        { role: "RW", num: "77", name: "BERGAMO", first: "Giovanni Mario", g: 2, a: 0, pts: 2 },
-                        { role: "D", num: "14", name: "BERTAGNA", first: "Colton Bernard", g: 0, a: 1, pts: 1 }
-                    ],
-                    [
-                        { role: "C", num: "9", name: "PAQUET", first: "Sebastien David", g: 1, a: 0, pts: 1 },
-                        { role: "LW", num: "18", name: "SCREMIN", first: "Tommaso", g: 2, a: 0, pts: 2 },
-                        { role: "RW", num: "27", name: "NICEFORO", first: "Francesco", g: 0, a: 1, pts: 1 },
-                        { role: "D", num: "4", name: "GRIGOLETTO", first: "Marco", g: 0, a: 0, pts: 0 }
-                    ],
-                    [
-                        { role: "C", num: "11", name: "ROFFO", first: "Luca", g: 0, a: 1, pts: 1 },
-                        { role: "LW", num: "23", name: "LIEVORE", first: "Edoardo", g: 0, a: 1, pts: 1 },
-                        { role: "RW", num: "88", name: "SECURO", first: "Leandro", g: 0, a: 1, pts: 1 },
-                        { role: "D", num: "5", name: "BELTRAME", first: "Lorenzo", g: 0, a: 0, pts: 0 }
-                    ]
-                ],
-                reserves: [{ num: "7", name: "BORTOLAN", first: "Elia" }, { num: "15", name: "TORNI", first: "Tommaso" }],
-                kits: {
-                    white: { id: 'white', label: 'Schema Bianco', primary: 0xffffff, pants: 0xdc2626, helmet: 0xdc2626, glove: 0xdc2626 },
-                    red: { id: 'red', label: 'Schema Rosso', primary: 0xdc2626, pants: 0x172554, helmet: 0x172554, glove: 0x172554 }
-                }
-            },
-            vicenza: {
-                id: 'vicenza',
-                league: 'SERIE A',
-                jerseyClubId: 'vicenza',
-                name: 'DIAVOLI VICENZA',
-                shortName: 'DIAVOLI',
-                goalie: { num: "35", name: "PIEROBON", first: "Andrea" },
-                backupGoalies: [{ num: "1", name: "FRIGO", first: "Michele" }, { num: "30", name: "BONSU", first: "Angelo Kevin" }],
-                lines: [
-                    [
-                        { role: "C", num: "33", name: "PACE", first: "Fabrizio", g: 9, a: 7, pts: 16 },
-                        { role: "LW", num: "71", name: "DELFINO", first: "Andrea", g: 8, a: 8, pts: 16 },
-                        { role: "RW", num: "24", name: "DAL SASSO", first: "Davide", g: 7, a: 6, pts: 13 },
-                        { role: "D", num: "8", name: "VENDRAME", first: "Tobia", g: 4, a: 4, pts: 8 }
-                    ],
-                    [
-                        { role: "C", num: "19", name: "FARMER", first: "Illan", g: 4, a: 3, pts: 7 },
-                        { role: "LW", num: "16", name: "FRIGO", first: "Nicola", g: 3, a: 4, pts: 7 },
-                        { role: "RW", num: "91", name: "CAMPULLA", first: "Francesco", g: 3, a: 2, pts: 5 },
-                        { role: "D", num: "3", name: "MIGLIORANZI", first: "Enrico", g: 1, a: 3, pts: 4 }
-                    ],
-                    [
-                        { role: "C", num: "12", name: "GONZALEZ", first: "Valentin Thomas Antoine", g: 3, a: 0, pts: 3 },
-                        { role: "LW", num: "44", name: "CENTOFANTE", first: "Filippo", g: 2, a: 1, pts: 3 },
-                        { role: "RW", num: "61", name: "TREVISAN", first: "Lorenzo", g: 0, a: 1, pts: 1 },
-                        { role: "D", num: "22", name: "ALBANTI", first: "Mattia", g: 1, a: 0, pts: 1 }
-                    ]
-                ],
-                reserves: [{ num: "6", name: "DELL'UOMO", first: "Lorenzo" }],
-                kits: {
-                    red: { id: 'red', label: 'Schema Rosso', primary: 0xdc2626, pants: 0x09090b, helmet: 0x09090b, glove: 0x09090b },
-                    black: { id: 'black', label: 'Schema Nero', primary: 0x09090b, pants: 0x09090b, helmet: 0x09090b, glove: 0xdc2626 }
-                }
-            },
-            milano: {
-                id: 'milano',
-                league: 'SERIE A',
-                jerseyClubId: 'milano',
-                name: 'HC MILANO QUANTA',
-                shortName: 'MILANO',
-                goalie: { num: "55", name: "MARIANI", first: "Riccardo" },
-                backupGoalies: [],
-                lines: [
-                    [
-                        { role: "C", num: "88", name: "CAMPULLA", first: "Lorenzo", g: 9, a: 0, pts: 9 },
-                        { role: "LW", num: "66", name: "QUARTUCCIO", first: "Riccardo", g: 3, a: 2, pts: 5 },
-                        { role: "RW", num: "25", name: "LAVRISA", first: "Marcel", g: 1, a: 4, pts: 5 },
-                        { role: "D", num: "4", name: "MECONI", first: "Ruggero", g: 0, a: 2, pts: 2 }
-                    ],
-                    [
-                        { role: "C", num: "90", name: "MASIERO", first: "Giacomo", g: 1, a: 1, pts: 2 },
-                        { role: "LW", num: "5", name: "ANASTASI", first: "Alessandro Carlo", g: 0, a: 2, pts: 2 },
-                        { role: "RW", num: "19", name: "BRIANZONI", first: "Pietro Andrea", g: 1, a: 1, pts: 2 },
-                        { role: "D", num: "27", name: "SESANA", first: "Ettore", g: 0, a: 2, pts: 2 }
-                    ],
-                    [
-                        { role: "C", num: "11", name: "DAL BEN", first: "Riccardo", g: 1, a: 1, pts: 2 },
-                        { role: "LW", num: "17", name: "GRANDELLI", first: "Mattia", g: 1, a: 0, pts: 1 },
-                        { role: "RW", num: "71", name: "NOVARA", first: "Nicola", g: 0, a: 0, pts: 0 },
-                        { role: "D", num: "8", name: "GALLIVANONE", first: "Mattia", g: 0, a: 0, pts: 0 }
-                    ]
-                ],
-                reserves: [{ num: "14", name: "CRISCI", first: "Edoardo Fabrizio" }, { num: "21", name: "ZUCCARDI-MERLI", first: "Brando Emilio" }, { num: "23", name: "MELIS", first: "Leonardo" }, { num: "7", name: "FACCHETTI", first: "Jago" }, { num: "2", name: "MARIANI", first: "Davide" }],
-                kits: {
-                    white: { id: 'white', label: 'Schema Bianco', primary: 0xffffff, pants: 0x0f2557, helmet: 0x1d4ed8, glove: 0xdc2626 },
-                    navy: { id: 'navy', label: 'Schema Blu Navy', primary: 0x0f2557, pants: 0x0f2557, helmet: 0xdc2626, glove: 0xdc2626 }
-                }
-            },
-            asiago: {
-                id: 'asiago',
-                league: 'SERIE A',
-                jerseyClubId: 'asiago',
-                name: 'ASIAGO VIPERS',
-                shortName: 'ASIAGO',
-                goalie: { num: "29", name: "STEVAN", first: "Luca" },
-                backupGoalies: [{ num: "1", name: "FRACARO", first: "Davide" }],
-                lines: [
-                    [
-                        { role: "C", num: "44", name: "VELLAR", first: "Mattia", g: 4, a: 3, pts: 7 },
-                        { role: "LW", num: "17", name: "RODEGHIERO", first: "Davide", g: 2, a: 2, pts: 4 },
-                        { role: "RW", num: "9", name: "TESSARI", first: "Matteo", g: 0, a: 4, pts: 4 },
-                        { role: "D", num: "21", name: "ROSSETTO", first: "Alessandro", g: 3, a: 0, pts: 3 }
-                    ],
-                    [
-                        { role: "C", num: "11", name: "LAZZARI", first: "Tommaso Enzo", g: 2, a: 1, pts: 3 },
-                        { role: "LW", num: "77", name: "ROSSETTO", first: "Gabriele", g: 1, a: 0, pts: 1 },
-                        { role: "RW", num: "19", name: "MARINI", first: "Andrea", g: 0, a: 1, pts: 1 },
-                        { role: "D", num: "4", name: "LAZZARI", first: "Leo", g: 1, a: 0, pts: 1 }
-                    ],
-                    [
-                        { role: "C", num: "8", name: "CORA'", first: "Michele", g: 1, a: 0, pts: 1 },
-                        { role: "LW", num: "24", name: "PANOZZO", first: "Matteo", g: 0, a: 0, pts: 0 },
-                        { role: "RW", num: "71", name: "GLODER", first: "Riccardo", g: 0, a: 0, pts: 0 },
-                        { role: "D", num: "5", name: "ROSSI", first: "Marco", g: 0, a: 0, pts: 0 }
-                    ]
-                ],
-                reserves: [{ num: "12", name: "STELLA", first: "Gianluca" }, { num: "3", name: "BAÙ", first: "Gianluca" }, { num: "6", name: "RIGONI", first: "Pierpaolo" }, { num: "91", name: "RODEGHIERO", first: "Gabriele" }],
-                kits: {
-                    black: { id: 'black', label: 'Schema Nero', primary: 0x09090b, pants: 0x09090b, helmet: 0x09090b, glove: 0x09090b },
-                    white: { id: 'white', label: 'Schema Bianco', primary: 0xffffff, pants: 0x09090b, helmet: 0x09090b, glove: 0xf97316 }
-                }
-            },
-            cittadella_pike: {
-                id: 'cittadella_pike',
-                league: 'UISP',
-                jerseyClubId: 'cittadella_pike',
-                name: 'CITTADELLA PIKE',
-                shortName: 'PIKE UISP',
-                goalie: { num: '31', name: 'NICEFORO' },
-                lines: [
-                    [
-                        { role: 'C', num: '15', name: 'PIKE' },
-                        { role: 'LW', num: '22', name: 'ZANELLA' },
-                        { role: 'RW', num: '19', name: 'BAGGIO' },
-                        { role: 'D', num: '6', name: 'GUIDOLIN' }
-                    ],
-                    [
-                        { role: 'C', num: '28', name: 'MARCON' },
-                        { role: 'LW', num: '13', name: 'TONIOLO' },
-                        { role: 'RW', num: '34', name: 'ZANON' },
-                        { role: 'D', num: '2', name: 'BERTON' }
-                    ],
-                    [
-                        { role: 'C', num: '77', name: 'SARTORI' },
-                        { role: 'LW', num: '12', name: 'CECCATO' },
-                        { role: 'RW', num: '90', name: 'PIEROBON' },
-                        { role: 'D', num: '7', name: 'MENEGHETTI' }
-                    ]
-                ],
-                kits: {
-                    pike: { id: 'pike', label: 'Maglia Pike', primary: 0xdc2626, pants: 0x172554, helmet: 0x172554, glove: 0x172554 }
-                }
-            },
-            cus_verona: {
-                id: 'cus_verona',
-                league: 'SERIE A',
-                jerseyClubId: 'cus_verona',
-                name: 'CUS VERONA',
-                shortName: 'CUS VERONA',
-                goalie: { num: "33", name: "MORANDIN", first: "Giacomo" },
-                backupGoalies: [{ num: "30", name: "PERUZZI", first: "Marco" }],
-                lines: [
-                    [
-                        { role: "C", num: "98", name: "PERINI", first: "Luca", g: 6, a: 0, pts: 6 },
-                        { role: "LW", num: "16", name: "SABAINI", first: "Giovanni", g: 1, a: 2, pts: 3 },
-                        { role: "RW", num: "8", name: "CRIVELLARI", first: "Alessio", g: 2, a: 1, pts: 3 },
-                        { role: "D", num: "3", name: "CARRER", first: "Simone", g: 2, a: 1, pts: 3 }
-                    ],
-                    [
-                        { role: "C", num: "10", name: "EDERLE", first: "Pietro", g: 1, a: 2, pts: 3 },
-                        { role: "LW", num: "19", name: "ZABBARI", first: "Raffaele", g: 2, a: 0, pts: 2 },
-                        { role: "RW", num: "21", name: "TOMBOLATO", first: "Riccardo", g: 1, a: 1, pts: 2 },
-                        { role: "D", num: "4", name: "CHIAMENTI", first: "Filippo", g: 1, a: 0, pts: 1 }
-                    ],
-                    [
-                        { role: "C", num: "11", name: "CARRETTA", first: "Giulio", g: 0, a: 0, pts: 0 },
-                        { role: "LW", num: "17", name: "LUPI", first: "Pietro", g: 0, a: 0, pts: 0 },
-                        { role: "RW", num: "71", name: "MAGNABOSCO", first: "Marco", g: 0, a: 0, pts: 0 },
-                        { role: "D", num: "5", name: "OLIVIERI", first: "Claudio", g: 0, a: 0, pts: 0 }
-                    ]
-                ],
-                reserves: [{ num: "7", name: "MONTANARI", first: "Stefano" }, { num: "12", name: "ZAMPIERI", first: "Morgan" }, { num: "14", name: "RIGHETTI TEGESER", first: "Giovanni" }, { num: "22", name: "SANTACÀ", first: "Milo Ram" }, { num: "23", name: "KRAMPERA", first: "Alessandro" }, { num: "27", name: "LAZZARI", first: "Luca" }, { num: "44", name: "MONTOLLI", first: "Riccardo" }, { num: "91", name: "MONTANARI", first: "Riccardo" }],
-                kits: {
-                    navy: { id: 'navy', label: 'Divisa Blu', primary: 0x14206a, pants: 0x14206a, helmet: 0xf8fafc, glove: 0x14206a },
-                    white: { id: 'white', label: 'Divisa Bianca', primary: 0xffffff, pants: 0x14206a, helmet: 0xf8fafc, glove: 0x14206a }
-                }
-            },
-            forli: {
-                id: 'forli',
-                league: 'SERIE A',
-                jerseyClubId: 'forli',
-                name: 'LIBERTAS FORLÌ',
-                shortName: 'FORLÌ',
-                goalie: { num: "1", name: "FACCHINETTI", first: "Daniele" },
-                backupGoalies: [],
-                lines: [
-                    [
-                        { role: "C", num: "98", name: "CIMATTI", first: "Diego", g: 3, a: 1, pts: 4 },
-                        { role: "LW", num: "80", name: "FRIZZERA", first: "Patrik", g: 1, a: 2, pts: 3 },
-                        { role: "RW", num: "46", name: "BERNARDONI", first: "Niki", g: 1, a: 1, pts: 2 },
-                        { role: "D", num: "84", name: "VAGLIERI", first: "Elia", g: 1, a: 1, pts: 2 }
-                    ],
-                    [
-                        { role: "C", num: "19", name: "CASTAGNERI", first: "Fabrizio", g: 1, a: 0, pts: 1 },
-                        { role: "LW", num: "4", name: "USTIGNANI", first: "Andrea", g: 0, a: 1, pts: 1 },
-                        { role: "RW", num: "10", name: "GUERZONI", first: "Moreno", g: 0, a: 0, pts: 0 },
-                        { role: "D", num: "21", name: "FABBRI", first: "Jacopo", g: 0, a: 0, pts: 0 }
-                    ],
-                    [
-                        { role: "C", num: "11", name: "MUCCHETTI", first: "Ivo Perseo", g: 0, a: 0, pts: 0 },
-                        { role: "LW", num: "17", name: "MAZZONI", first: "Robin", g: 0, a: 0, pts: 0 },
-                        { role: "RW", num: "5", name: "FOLLI", first: "Francesco", g: 0, a: 0, pts: 0 },
-                        { role: "D", num: "8", name: "CORAZZARI", first: "Riccardo", g: 0, a: 0, pts: 0 }
-                    ]
-                ],
-                reserves: [{ num: "7", name: "PERPIGNANI", first: "Alessio" }, { num: "12", name: "TROIANO", first: "Gabriele" }, { num: "14", name: "BELLANTONIO", first: "Andrea" }, { num: "22", name: "MARCHIANDO", first: "Jacopo" }, { num: "23", name: "CARLI", first: "Michelangelo" }, { num: "27", name: "BELLANTONIO", first: "Marco" }],
-                kits: {
-                    navy: { id: 'navy', label: 'Divisa Blu', primary: 0x16244f, pants: 0x16244f, helmet: 0xf8fafc, glove: 0x16244f },
-                    white: { id: 'white', label: 'Divisa Bianca', primary: 0xffffff, pants: 0x16244f, helmet: 0xf8fafc, glove: 0x2f6fb5 }
-                }
-            },
-            // Fox Legnaro: nomi e statistiche dal roster (5 partite). Il roster non riporta
-            // numeri di maglia e ruoli: numeri PROVVISORI e linee composte per punti.
-            fox_legnaro: {
-                id: 'fox_legnaro',
-                league: 'SERIE A',
-                jerseyClubId: 'fox_legnaro',
-                name: 'FOX LEGNARO',
-                shortName: 'FOX LEGNARO',
-                goalie: { num: "1", name: "LANER", first: "Ermanno" },
-                backupGoalies: [{ num: "30", name: "MIOZZI", first: "Tommaso" }],
-                lines: [
-                    [
-                        { role: "C", num: "13", name: "FRANCON", first: "Matteo Carlo", g: 5, a: 10, pts: 15 },
-                        { role: "LW", num: "9", name: "CALORE", first: "Elia", g: 9, a: 1, pts: 10 },
-                        { role: "RW", num: "21", name: "CARRON", first: "Daniele", g: 3, a: 3, pts: 6 },
-                        { role: "D", num: "5", name: "PIETROBON", first: "Mattia", g: 1, a: 2, pts: 3 }
-                    ],
-                    [
-                        { role: "C", num: "8", name: "MARCHET", first: "Gabriele", g: 2, a: 0, pts: 2 },
-                        { role: "LW", num: "17", name: "SOBBERI", first: "Abderahmane", g: 0, a: 1, pts: 1 },
-                        { role: "RW", num: "95", name: "GUERRIERO", first: "Mattia", g: 0, a: 1, pts: 1 },
-                        { role: "D", num: "4", name: "DANIELE", first: "Giovanni", g: 1, a: 0, pts: 1 }
-                    ],
-                    [
-                        { role: "C", num: "11", name: "ZANETTE", first: "Alberto", g: 0, a: 0, pts: 0 },
-                        { role: "LW", num: "19", name: "BALLAN", first: "Filippo", g: 0, a: 0, pts: 0 },
-                        { role: "RW", num: "88", name: "MARCHET", first: "Mattia", g: 0, a: 0, pts: 0 },
-                        { role: "D", num: "2", name: "DE ANGELIS", first: "Leonardo", g: 0, a: 0, pts: 0 }
-                    ]
-                ],
-                reserves: [{ num: "7", name: "OMETTO", first: "Diego" }, { num: "22", name: "VESENTINI", first: "Gabriele" }],
-                kits: {
-                    black: { id: 'black', label: 'Divisa Nera', primary: 0x111114, pants: 0x111114, helmet: 0x111114, glove: 0x111114 },
-                    white: { id: 'white', label: 'Divisa Bianca', primary: 0xffffff, pants: 0x111114, helmet: 0x111114, glove: 0x111114 }
-                }
-            },
-            // Edera Trieste: nomi e statistiche dal roster (5 partite). Il roster non riporta
-            // numeri e ruoli: solo il 56 di Scrimali viene dalle foto, gli altri numeri sono
-            // PROVVISORI e le linee sono composte per punti.
-            edera_trieste: {
-                id: 'edera_trieste',
-                league: 'SERIE A',
-                jerseyClubId: 'edera_trieste',
-                name: 'EDERA TRIESTE',
-                shortName: 'EDERA TRIESTE',
-                goalie: { num: "1", name: "SKRUBEJ", first: "Jon" },
-                backupGoalies: [],
-                lines: [
-                    [
-                        { role: "C", num: "10", name: "COCOZZA", first: "Axel", g: 4, a: 2, pts: 6 },
-                        { role: "LW", num: "9", name: "FUMAGALLI", first: "Morgan", g: 2, a: 2, pts: 4 },
-                        { role: "RW", num: "17", name: "ZDESAR", first: "Alen", g: 2, a: 2, pts: 4 },
-                        { role: "D", num: "6", name: "MILANESE", first: "Mattia", g: 1, a: 2, pts: 3 }
-                    ],
-                    [
-                        { role: "C", num: "21", name: "CIOCCOLANTI", first: "Samuele", g: 0, a: 2, pts: 2 },
-                        { role: "LW", num: "11", name: "OVSEC", first: "Enrico", g: 1, a: 0, pts: 1 },
-                        { role: "RW", num: "19", name: "MOCELLIN", first: "Lorenzo", g: 1, a: 0, pts: 1 },
-                        { role: "D", num: "4", name: "PAGNONI", first: "Francesco", g: 0, a: 1, pts: 1 }
-                    ],
-                    [
-                        { role: "C", num: "8", name: "GERMAN", first: "Giordana", g: 0, a: 0, pts: 0 },
-                        { role: "LW", num: "56", name: "SCRIMALI", first: "Claudio", g: 0, a: 0, pts: 0 },
-                        { role: "RW", num: "24", name: "MATTIUSSI", first: "Michele", g: 0, a: 0, pts: 0 },
-                        { role: "D", num: "3", name: "DELPIANO", first: "Nicolas", g: 0, a: 0, pts: 0 }
-                    ]
-                ],
-                reserves: [{ num: "14", name: "PRODAN", first: "Dominik Marjan" }, { num: "27", name: "MACHADO", first: "Matteo" }],
-                kits: {
-                    black: { id: 'black', label: 'Divisa Nera', primary: 0x111114, pants: 0x111114, helmet: 0x111114, glove: 0x111114 },
-                    white: { id: 'white', label: 'Divisa Bianca', primary: 0xffffff, pants: 0x111114, helmet: 0x111114, glove: 0x111114 }
-                }
-            },
-            // Kraken Camaiore: nomi e statistiche dal roster (4 partite). Il roster non riporta
-            // numeri e ruoli: numeri PROVVISORI e linee composte per punti. Una sola divisa.
-            kraken_camaiore: {
-                id: 'kraken_camaiore',
-                league: 'SERIE A',
-                jerseyClubId: 'kraken_camaiore',
-                name: 'KRAKEN CAMAIORE',
-                shortName: 'KRAKEN',
-                goalie: { num: "1", name: "BACINELLI", first: "Tommaso" },
-                backupGoalies: [{ num: "30", name: "DE SANTI", first: "Niccolò" }],
-                lines: [
-                    [
-                        { role: "C", num: "9", name: "LETTERA", first: "Alessio", g: 4, a: 3, pts: 7 },
-                        { role: "LW", num: "4", name: "LETTERA", first: "Nicola", g: 1, a: 2, pts: 3 },
-                        { role: "RW", num: "10", name: "BELLINI", first: "Andrea", g: 2, a: 0, pts: 2 },
-                        { role: "D", num: "5", name: "PODDA", first: "Alessio", g: 1, a: 0, pts: 1 }
-                    ],
-                    [
-                        { role: "C", num: "17", name: "STRICKER", first: "David Enrico Andrea", g: 0, a: 1, pts: 1 },
-                        { role: "LW", num: "11", name: "LILLI", first: "Matteo", g: 1, a: 0, pts: 1 },
-                        { role: "RW", num: "21", name: "LUCCHESI", first: "Alessio", g: 0, a: 0, pts: 0 },
-                        { role: "D", num: "3", name: "BELLINI", first: "Matteo", g: 0, a: 0, pts: 0 }
-                    ],
-                    [
-                        { role: "C", num: "19", name: "SARASSO", first: "Riccardo", g: 0, a: 0, pts: 0 },
-                        { role: "LW", num: "8", name: "SIMONELLI", first: "Luca", g: 0, a: 0, pts: 0 },
-                        { role: "RW", num: "88", name: "BASTIANONI", first: "Giampaolo", g: 0, a: 0, pts: 0 },
-                        { role: "D", num: "6", name: "CECCHINI", first: "Federico", g: 0, a: 0, pts: 0 }
-                    ]
-                ],
-                reserves: [{ num: "14", name: "DELL'ANTICO", first: "Lorenzo" }, { num: "22", name: "CIOTTI", first: "Matteo" }, { num: "27", name: "SANNA", first: "Federico" }, { num: "77", name: "MERCURI", first: "Mirco" }],
-                kits: {
-                    white: { id: 'white', label: 'Divisa Bianca', primary: 0xffffff, pants: 0x1a1f5c, helmet: 0x1a1f5c, glove: 0x111114 }
-                }
-            },
-            // Asiago Black-Out (Serie B): nomi e statistiche dal roster (1 partita). Il roster non riporta
-            // numeri e ruoli: numeri PROVVISORI (il 27 è quello della maglia) e linee composte per punti.
-            // Solo 11 giocatori di movimento: RIGONI Edoardo fa il doppio turno da difensore in terza linea.
-            // VELLAR Massimo è anche l'allenatore. Gioca all'Arena Via Cinque di Asiago. Una sola divisa.
-            asiago_blackout: {
-                id: 'asiago_blackout',
-                league: 'SERIE B',
-                jerseyClubId: 'asiago_blackout',
-                name: 'ASIAGO BLACK-OUT',
-                shortName: 'BLACK-OUT',
-                goalie: { num: "1", name: "PESAVENTO", first: "Marco" },
-                backupGoalies: [],
-                lines: [
-                    [
-                        { role: "C", num: "10", name: "RIGONI", first: "Daniele", g: 1, a: 0, pts: 1 },
-                        { role: "LW", num: "17", name: "ZAGO", first: "Matteo", g: 1, a: 0, pts: 1 },
-                        { role: "RW", num: "27", name: "TESSARI", first: "Sascha Primo", g: 1, a: 0, pts: 1 },
-                        { role: "D", num: "4", name: "RIGONI", first: "Edoardo", g: 0, a: 1, pts: 1 }
-                    ],
-                    [
-                        { role: "C", num: "9", name: "VALENTE", first: "Carlo", g: 1, a: 0, pts: 1 },
-                        { role: "LW", num: "11", name: "STELLA", first: "Stefano", g: 0, a: 1, pts: 1 },
-                        { role: "RW", num: "19", name: "CARLI", first: "Simone", g: 0, a: 0, pts: 0 },
-                        { role: "D", num: "5", name: "VELLAR", first: "Massimo", g: 0, a: 0, pts: 0 }
-                    ],
-                    [
-                        { role: "C", num: "21", name: "ROSSI", first: "Filippo", g: 0, a: 0, pts: 0 },
-                        { role: "LW", num: "23", name: "SARTORI", first: "Filippo", g: 0, a: 0, pts: 0 },
-                        { role: "RW", num: "88", name: "RIGONI", first: "Filippo", g: 0, a: 0, pts: 0 },
-                        { role: "D", num: "4", name: "RIGONI", first: "Edoardo", g: 0, a: 1, pts: 1 }
-                    ]
-                ],
-                reserves: [],
-                kits: {
-                    white: { id: 'white', label: 'Divisa Bianca', primary: 0xffffff, pants: 0x0b0b0f, helmet: 0x0b0b0f, glove: 0x0b0b0f }
-                }
-            },
-            // FDB Villeneuve (Les Fous du Bitume, Villeneuve-la-Garenne • Ligue Élite francese): roster 2026/27.
-            // Niente statistiche. Doppio n° 9 nel roster (Gauze e E. Clisson): a Clisson il 91 PROVVISORIO.
-            // Numeri di Langlois, Faucherand e Mahieu non confermati a Villeneuve. 4 difensori puri per 3 posti:
-            // Langlois e Allo (ibridi) giocano in attacco, Mahieu adattato ala in terza linea.
-            // Gioca al PalaHockey di Cittadella. Una sola divisa.
-            villeneuve: {
-                id: 'villeneuve',
-                league: 'LIGUE ELITE',
-                jerseyClubId: 'villeneuve',
-                name: 'FDB VILLENEUVE',
-                shortName: 'VILLENEUVE',
-                goalie: { num: "41", name: "BRABEC", first: "Daniel" },
-                backupGoalies: [],
-                lines: [
-                    [
-                        { role: "C", num: "9", name: "GAUZE", first: "Alex", g: 0, a: 0, pts: 0 },
-                        { role: "LW", num: "5", name: "GABILLET", first: "Karl", g: 0, a: 0, pts: 0 },
-                        { role: "RW", num: "79", name: "ALLO", first: "Louis", g: 0, a: 0, pts: 0 },
-                        { role: "D", num: "29", name: "LE BOHELLEC", first: "Léon", g: 0, a: 0, pts: 0 }
-                    ],
-                    [
-                        { role: "C", num: "10", name: "CLISSON", first: "Julien", g: 0, a: 0, pts: 0 },
-                        { role: "LW", num: "77", name: "NAUD", first: "Alexandre", g: 0, a: 0, pts: 0 },
-                        { role: "RW", num: "70", name: "LANGLOIS", first: "Maxime", g: 0, a: 0, pts: 0 },
-                        { role: "D", num: "4", name: "GRÉGOIRE", first: "Clément", g: 0, a: 0, pts: 0 }
-                    ],
-                    [
-                        { role: "C", num: "7", name: "CUZIN", first: "Léo", g: 0, a: 0, pts: 0 },
-                        { role: "LW", num: "91", name: "CLISSON", first: "Edouard", g: 0, a: 0, pts: 0 },
-                        { role: "RW", num: "19", name: "MAHIEU", first: "Mattéo", g: 0, a: 0, pts: 0 },
-                        { role: "D", num: "3", name: "FAUCHERAND", first: "Théo", g: 0, a: 0, pts: 0 }
-                    ]
-                ],
-                reserves: [],
-                kits: {
-                    sky: { id: 'sky', label: 'Divisa Azzurra', primary: 0x38b6e8, pants: 0x0b0b0f, helmet: 0x0b0b0f, glove: 0x0b0b0f }
-                }
-            }
-        };
+        // --- SQUADRE E LEGHE: dati in src/data/teams.json, caricati da src/data/teams-loader.js (TEAM_DATA) ---
+        const CLUB_ROSTERS = TEAM_DATA.rosters;
 
-        const CLUB_IDS = ['cittadella', 'vicenza', 'milano', 'asiago', 'cittadella_pike', 'cus_verona', 'forli', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'asiago_blackout', 'villeneuve'];
-        const LEAGUE_MODES = ['TUTTE', 'SERIE A', 'SERIE B', 'UISP', 'LIGUE ELITE'];
+        const CLUB_IDS = TEAM_DATA.ids;
+        const LEAGUE_MODES = ['TUTTE'].concat(TEAM_DATA.leagues.map(l => l.id));
 
         const ARENA_CATALOG = {
             cittadella: {
@@ -2734,7 +2333,7 @@
                 name: 'ARENA VIA CINQUE',
                 shortTitle: 'Arena Via Cinque Asiago',
                 location: 'Via Cinque • Asiago (VI), Veneto',
-                clubBadge: 'Casa: Asiago Vipers • Black-Out',
+                clubBadge: 'Casa: Asiago Vipers • Black-Out • Newts',
                 desc: 'Soffitto basso in cemento bianco con travi e fari rettangolari, pista SportCourt azzurra con le linee rosse, balaustre con la fascia Ceccato Automobili, la parete degli stendardi dei trofei arancioneri, vetrate verdi e il pubblico in piedi dietro il vetro del bar, con gli striscioni dei tifosi appesi alla rete.',
                 capacity: '450 Spettatori (In piedi dietro il vetro)',
                 surface: 'Piastrelle SportCourt Azzurre',
@@ -2805,28 +2404,37 @@
                 capacity: '400 Spettatori',
                 surface: 'Pavimento Sportivo in Resina Azzurra',
                 roof: 'Travi in Legno Lamellare e Pannelli'
+            },
+            roma: {
+                id: 'roma',
+                name: 'PALAMUNICIPIO ROMA XI',
+                shortTitle: 'Palamunicipio Roma XI',
+                location: 'Roma (RM) • Lazio, Italia',
+                clubBadge: 'Casa: Mammuth Roma',
+                desc: 'Tensostruttura a cupola geodetica allungata: reticolo di tubi d\'acciaio scuri a triangoli e telo color crema, pareti basse verde scuro, parquet d\'acero con le linee di basket, calcetto e pallavolo, balaustre bianche con il vetro, fari e casse appesi alla struttura, il tricolore e lo striscione dei Mammuth in fondo e una piccola tribuna con i seggiolini verdi.',
+                capacity: '250 Spettatori',
+                surface: 'Parquet d\'Acero Multisport',
+                roof: 'Cupola Geodetica con Telo'
+            },
+            treviso: {
+                id: 'treviso',
+                name: 'PATTINODROMO DELLE ACQUETTE',
+                shortTitle: 'Pattinodromo delle Acquette',
+                location: 'Treviso (TV) • Veneto, Italia',
+                clubBadge: 'Casa: Sporting Treviso',
+                desc: 'Tensostruttura a botte con il reticolo d\'acciaio a triangoli e il telo bianco, pilastri in cemento con le vetrate verde scuro, pista in cemento lucidato grigio chiaro, balaustre bianche con lo zoccolo verde e gli striscioni, testate con il grigliato alto, bandiere tricolori appese alla struttura e reti con i montanti verdi dietro le porte.',
+                capacity: '300 Spettatori (In piedi)',
+                surface: 'Cemento Lucidato',
+                roof: 'Tensostruttura a Botte con Reticolo d\'Acciaio'
             }
         };
 
-        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve'];
+        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso'];
         // Palazzetti presenti nel menu ma non selezionabili (al momento nessuno)
         const DISABLED_ARENAS = new Set();
         const SELECTABLE_ARENA_IDS = ARENA_IDS.filter(id => !DISABLED_ARENAS.has(id));
 
-        const HOME_CLUB_ARENAS = {
-            cittadella: 'cittadella',
-            vicenza: 'vicenza',
-            milano: 'milano',
-            asiago: 'asiago',
-            cittadella_pike: 'cittadella',
-            cus_verona: 'cus_verona',
-            forli: 'forli',
-            fox_legnaro: 'fox_legnaro',
-            edera_trieste: 'edera_trieste',
-            kraken_camaiore: 'kraken_camaiore',
-            asiago_blackout: 'asiago',
-            villeneuve: 'villeneuve'
-        };
+        const HOME_CLUB_ARENAS = TEAM_DATA.homeArenas;
 
         // Catalogo di 12 Esultanze Diverse dei Giocatori al Gol
         const GOAL_CELEBRATIONS = [
@@ -3856,20 +3464,7 @@
 
         // --- LOGHI SVG PER INTERFACCIA HTML ---
         function getClubLogoSVG(clubId, sizeClass = 'w-12 h-12') {
-            const fileMap = {
-                cittadella:      'cittadella.png',
-                cittadella_pike: 'cittadella_pike.png',
-                vicenza:         'vicenza.png',
-                milano:          'milano.png',
-                asiago:          'asiago.png',
-                cus_verona:      'cus_verona.png',
-                forli:           'forli.png',
-                fox_legnaro:     'fox_legnaro.png',
-                edera_trieste:   'edera_trieste.png',
-                kraken_camaiore: 'kraken_camaiore.png',
-                asiago_blackout: 'asiago_blackout.png',
-                villeneuve:      'villeneuve.png'
-            };
+            const fileMap = TEAM_DATA.logos;
             const file = fileMap[clubId] || 'vicenza.svg';
             return `<img src="assets/logos/${file}" class="${sizeClass}" alt="Logo ${clubId}" draggable="false">`;
         }
@@ -3877,20 +3472,7 @@
         // Mappa clubId (jerseyClubId) → immagini PNG trasparenti per kit index 0 e 1.
         // Kit 0 → {id}_1.png  |  Kit 1 → {id}_2.png  |  fallback → generic.png
         const JERSEY_FALLBACK = 'assets/jerseys/generic.png';
-        const JERSEY_IMAGES = {
-            cittadella: ['assets/jerseys/cittadella_1.png', 'assets/jerseys/cittadella_2.png'],
-            vicenza:    ['assets/jerseys/vicenza_1.png',    'assets/jerseys/vicenza_2.png'],
-            milano:     ['assets/jerseys/milano_1.png',     'assets/jerseys/milano_2.png'],
-            asiago:     ['assets/jerseys/asiago_1.png',     'assets/jerseys/asiago_2.png'],
-            cittadella_pike: ['assets/jerseys/cittadella_pike_1.png'],
-            cus_verona: ['assets/jerseys/cus_verona_1.png', 'assets/jerseys/cus_verona_2.png'],
-            forli: ['assets/jerseys/forli_1.png', 'assets/jerseys/forli_2.png'],
-            fox_legnaro: ['assets/jerseys/fox_legnaro_1.png', 'assets/jerseys/fox_legnaro_2.png'],
-            edera_trieste: ['assets/jerseys/edera_trieste_1.png', 'assets/jerseys/edera_trieste_2.png'],
-            kraken_camaiore: ['assets/jerseys/kraken_camaiore.png'],
-            asiago_blackout: ['assets/jerseys/asiago_blackout.png'],
-            villeneuve: ['assets/jerseys/villeneuve.png']
-        };
+        const JERSEY_IMAGES = TEAM_DATA.jerseys;
         function getJerseyImageSrc(jerseyClubId, kitIndex) {
             const list = JERSEY_IMAGES[jerseyClubId];
             return (list && list[kitIndex]) ? list[kitIndex] : JERSEY_FALLBACK;
@@ -4598,8 +4180,14 @@
             const n = arenaScoreboards.north;
             if (!n) return;
             n.rotation.y = 0;
-            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve'].includes(matchConfig.arena);
-            if (matchConfig.arena === 'villeneuve') {
+            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso'].includes(matchConfig.arena);
+            if (matchConfig.arena === 'treviso') {
+                n.position.set(-1.5, 7.4, -41.8);
+                n.scale.setScalar(0.42);
+            } else if (matchConfig.arena === 'roma') {
+                n.position.set(8.5, 6.4, -40.2);
+                n.scale.setScalar(0.42);
+            } else if (matchConfig.arena === 'villeneuve') {
                 // tabellone elettronico sulla testata, a destra degli striscioni
                 n.position.set(7.5, 7.6, -41.8);
                 n.scale.setScalar(0.42);
@@ -4819,7 +4407,7 @@
                 roughness: 0.55
             });
             const benchBackMat = isAsiago ? new THREE.MeshStandardMaterial({ map: pbr.woodDiffuse, bumpMap: preset.usePhysicalMat ? pbr.woodBump : null, bumpScale: 0.015, color: 0xc8955a, roughness: 0.6 }) : new THREE.MeshStandardMaterial({
-                color: arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
+                color: arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
                 roughness: 0.8
             });
 
@@ -4916,7 +4504,9 @@
             fox_legnaro: 'src/arenas/fox_legnaro.js',
             edera_trieste: 'src/arenas/edera_trieste.js',
             kraken_camaiore: 'src/arenas/kraken_camaiore.js',
-            villeneuve: 'src/arenas/villeneuve.js'
+            villeneuve: 'src/arenas/villeneuve.js',
+            roma: 'src/arenas/roma.js',
+            treviso: 'src/arenas/treviso.js'
         };
         const arenaBuilders = {};
         const arenaModulePromises = {};
@@ -5181,7 +4771,11 @@
             // Pardini Sporting Center: parquet lucido, niente vetro sopra le balaustre
             kraken_camaiore: { dir: 'assets/textures/kraken_camaiore/', normal: 'assets/textures/kraken_camaiore/rink_normal.jpg', floorTint: 0xa9a399, floorTintLow: 0x99938a, noGlass: true },
             // Gymnase Fernand Schwartz: resina azzurra multisport, vetro sopra le balaustre
-            villeneuve: { dir: 'assets/textures/villeneuve/', normal: 'assets/textures/villeneuve/rink_normal.jpg', floorTint: 0x9fabb9, floorTintLow: 0x919dab }
+            villeneuve: { dir: 'assets/textures/villeneuve/', normal: 'assets/textures/villeneuve/rink_normal.jpg', floorTint: 0x9fabb9, floorTintLow: 0x919dab },
+            // Palamunicipio Roma XI: parquet d'acero, vetro sopra le balaustre bianche
+            roma: { dir: 'assets/textures/roma/', normal: 'assets/textures/roma/rink_normal.jpg', floorTint: 0xaaa49a, floorTintLow: 0x9a948b },
+            // Pattinodromo delle Acquette: cemento lucidato, niente vetro sopra le balaustre
+            treviso: { dir: 'assets/textures/treviso/', normal: 'assets/textures/treviso/rink_normal.jpg', floorTint: 0x969b9f, floorTintLow: 0x8b9094, noGlass: true }
         };
 
         // Balaustre: ogni striscia rappresenta 18,5 m di pannelli pubblicitari
@@ -5517,7 +5111,7 @@
                             { jacket: 0xf8fafc, shirt: 0xdc2626, isJersey: true }
                         ]))));
 
-            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve') return;   // pubblico costruito dall'architettura del palazzetto
+            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'roma' || arenaId === 'treviso') return;   // pubblico costruito dall'architettura del palazzetto
 
             // Spalti laterali dietro il tavolo cronometristi (con spazio sull'angolo destro per la casetta bar a Cittadella)
             for (let row = 0; row < 4; row++) {
@@ -5737,7 +5331,7 @@
 
         const pngLogoCache = {};
         // Club senza logo disegnato a mano: sul tabellone si usa il PNG
-        const PNG_LOGO_CLUBS = new Set(['cus_verona', 'forli', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'asiago_blackout', 'villeneuve']);
+        const PNG_LOGO_CLUBS = TEAM_DATA.pngLogoClubs;
         function drawClubPngLogo(ctx, clubId, cx, cy, size) {
             let img = pngLogoCache[clubId];
             if (!img) {
@@ -7386,19 +6980,9 @@
             const clubCfg = CLUB_ROSTERS[clubId];
             const baseClubId = (clubCfg && clubCfg.jerseyClubId) || clubId;
 
-            const primaryColor = (baseClubId === 'cittadella' || baseClubId === 'cittadella_pike') ? 0xdc2626
-                : baseClubId === 'kraken_camaiore' ? 0x1a1f5c
-                : baseClubId === 'asiago_blackout' ? 0x0b0b0f
-                : baseClubId === 'villeneuve' ? 0x38b6e8
-                : baseClubId === 'edera_trieste' ? 0x1d7a3a
-                : baseClubId === 'fox_legnaro' ? 0x111114
-                : baseClubId === 'cus_verona' ? 0x14206a
-                : baseClubId === 'forli' ? 0x16244f
-                : (baseClubId === 'milano' ? 0x0f2557
-                : (baseClubId === 'asiago' ? 0xf97316 : 0x09090b));
-            const secondaryColor = baseClubId === 'villeneuve' ? 0x0b0b0f : baseClubId === 'asiago_blackout' ? 0x3fa9f5 : baseClubId === 'kraken_camaiore' ? 0x78bee4 : baseClubId === 'edera_trieste' ? 0xd7262e : baseClubId === 'fox_legnaro' ? 0xd01f26 : baseClubId === 'cus_verona' ? 0xf5c400 : baseClubId === 'forli' ? 0x3d8bd1 : baseClubId === 'cittadella' ? 0x172554
-                : (baseClubId === 'milano' ? 0xdc2626
-                : (baseClubId === 'asiago' ? 0x09090b : 0xdc2626));
+            const staffCol = TEAM_DATA.staffColors[clubId] || TEAM_DATA.staffColors[baseClubId] || { primary: 0x09090b, secondary: 0xdc2626 };
+            const primaryColor = staffCol.primary;
+            const secondaryColor = staffCol.secondary;
 
             const jacketMat = new THREE.MeshStandardMaterial({
                 color: isCoach ? secondaryColor : primaryColor,
@@ -7795,15 +7379,7 @@
         // --- DUE ARBITRI IN MAGLIA A RIGHE BIANCO-NERE (VANNO AL TAVOLO CRONOMETRISTI AL GOL) ---
         // Arbitri ufficiali FISR: a ogni partita ne vengono designati due a caso
         // Allenatori delle squadre (stagione 2026/27): presentati prima degli arbitri all'inizio della partita
-        const CLUB_COACHES = {
-            asiago:     { first: 'Luca', last: 'Rigoni', role: 'Head Coach', note: 'Confermato alla guida dei Vipers' },
-            cittadella: { first: 'Denis', last: 'Sommadossi', role: 'Head Coach', note: 'Assistant coach: Marco Zulian' },
-            cus_verona: { first: 'Nicola', last: 'Olivieri', role: 'Primo allenatore', note: 'Responsabile dello staff tecnico' },
-            milano:     { first: 'Matteo', last: 'Zerbi', role: 'Head Coach', note: 'Direttore tecnico: Mattia Mai' },
-            forli:      { first: 'Alessandro', last: 'Cintori', role: 'Head Coach', note: 'Nuovo head coach 2026/27' },
-            vicenza:    { first: 'Jacopo', last: 'Rizzotto', role: 'Head Coach', note: 'Confermato alla guida del Vicenza' },
-            asiago_blackout: { first: 'Massimo', last: 'Vellar', role: 'Allenatore-giocatore', note: 'In pista anche come difensore' }
-        };
+        const CLUB_COACHES = TEAM_DATA.coaches;
 
         const OFFICIAL_REFEREES = [
             'Marco Rigoni', 'Simone Lega', 'Andrea Davoli', 'Davide Marri', 'Matteo Gallo',
@@ -8581,7 +8157,7 @@
         }
 
         // --- HUD BROADCAST: SIGLE, VISIBILITÀ, FRECCIA, CONO DI TIRO, ETICHETTA TIRO, AVVISI ---
-        const CLUB_ABBR = { cittadella: 'CIT', vicenza: 'VIC', milano: 'MIL', asiago: 'ASI', cittadella_pike: 'PIK', cus_verona: 'CUS', forli: 'FOR', fox_legnaro: 'FOX', edera_trieste: 'EDE', kraken_camaiore: 'KRA', asiago_blackout: 'BKO', villeneuve: 'VIL' };
+        const CLUB_ABBR = TEAM_DATA.abbr;
         let hudStateKey = '';
         let hudToastTimer = null;
         let playerChevron = null;
@@ -10832,28 +10408,12 @@
         }
 
         function formatLeagueBadgeLabel(filterVal, clubLeague) {
-            if (filterVal === 'UISP') return 'Lega UISP • Italia';
-            if (filterVal === 'SERIE A') return 'Serie A • FISR';
-            if (filterVal === 'SERIE B') return 'Serie B • FISR';
-            if (filterVal === 'LIGUE ELITE') return 'Ligue Élite • Francia';
-            return clubLeague === 'UISP' ? 'Tutte (UISP)' : (clubLeague === 'SERIE B' ? 'Tutte (Serie B)' : (clubLeague === 'LIGUE ELITE' ? 'Tutte (Ligue Élite)' : 'Tutte (Serie A)'));
+            if (filterVal !== 'TUTTE') return TEAM_DATA.leagueOf(filterVal).badge;
+            return 'Tutte (' + TEAM_DATA.leagueOf(clubLeague).name + ')';
         }
 
         // Rating statici per club (OFF, DEF, GOA)
-        const CLUB_RATINGS = {
-            cittadella:      { off: 85, def: 80, goa: 82 },
-            vicenza:         { off: 78, def: 84, goa: 80 },
-            milano:          { off: 83, def: 79, goa: 81 },
-            asiago:          { off: 76, def: 77, goa: 75 },
-            cittadella_pike: { off: 72, def: 70, goa: 71 },
-            cus_verona:      { off: 71, def: 72, goa: 69 },
-            forli:           { off: 70, def: 71, goa: 74 },
-            fox_legnaro:     { off: 72, def: 69, goa: 73 },
-            edera_trieste:   { off: 67, def: 68, goa: 76 },
-            kraken_camaiore: { off: 70, def: 66, goa: 68 },
-            asiago_blackout: { off: 64, def: 61, goa: 66 },
-            villeneuve:      { off: 80, def: 77, goa: 79 }
-        };
+        const CLUB_RATINGS = TEAM_DATA.ratings;
 
         function _animateCrest(el) {
             if (!el) return;
@@ -11374,20 +10934,7 @@
         const ROSTER_TEAM_DURATION = 10;
         // Foto della fascia (ritagliate/ingrandite in assets/rosters_backgrounds/strip),
         // punto focale del ritaglio e colori della squadra.
-        const ROSTER_THEMES = {
-            cittadella:      { photo: 'cittadella.jpg', focus: '42% 50%', primary: '#c8102e', secondary: '#14235a' },
-            cittadella_pike: { photo: 'pike.jpg',       focus: '50% 45%', primary: '#b91c1c', secondary: '#172554' },
-            vicenza:         { photo: 'vicenza.jpg',    focus: '46% 35%', primary: '#d11f2a', secondary: '#0b0b0f' },
-            milano:          { photo: 'milano.jpg',     focus: '50% 22%', primary: '#123a8c', secondary: '#0a1a44' },
-            asiago:          { photo: 'asiago.jpg',     focus: '34% 30%', primary: '#f26b11', secondary: '#0b0b0f' },
-            cus_verona:      { photo: 'cus_verona.jpg', focus: '40% 30%', primary: '#17246e', secondary: '#c99a00' },
-            forli:           { photo: 'forli.jpg',      focus: '62% 35%', primary: '#1b2d5c', secondary: '#3d8bd1' },
-            fox_legnaro:     { photo: 'fox_legnaro.jpg', focus: '55% 35%', primary: '#d01f26', secondary: '#0b0b0f' },
-            edera_trieste:   { photo: 'edera_trieste.jpg', focus: '48% 30%', primary: '#d7262e', secondary: '#1d7a3a' },
-            kraken_camaiore: { photo: 'kraken_camaiore.jpg', focus: '40% 30%', primary: '#1a1f5c', secondary: '#78bee4' },
-            asiago_blackout: { photo: 'asiago_blackout.jpg', focus: '45% 30%', primary: '#0b0b0f', secondary: '#3fa9f5' },
-            villeneuve:      { photo: 'villeneuve.jpg', focus: '50% 30%', primary: '#1c8fc4', secondary: '#0b0b0f' }
-        };
+        const ROSTER_THEMES = TEAM_DATA.rosterThemes;
         const ROSTER_ROLE_LABELS = { C: 'Centro', LW: 'Ala sinistra', RW: 'Ala destra', D: 'Difensore', G: 'Portiere' };
         let rosterShowIdx = -1;
         let rosterClubs = [];
@@ -11441,7 +10988,7 @@
             rosterShowIdx = idx;
             const theme = ROSTER_THEMES[club.id] || ROSTER_THEMES.cittadella;
             const isHome = idx === 0;
-            const league = club.league === 'LIGUE ELITE' ? 'LIGUE ÉLITE • FFRS' : club.league + ' • ' + (club.league === 'UISP' ? 'Lega UISP' : 'FISR');
+            const league = TEAM_DATA.leagueOf(club.league).rosterLabel;
 
             // Foto: dissolvenza incrociata tra i due livelli
             const front = document.getElementById(rosterPhotoFront === 'a' ? 'rs-photo-a' : 'rs-photo-b');
