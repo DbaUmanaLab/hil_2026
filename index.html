@@ -1729,6 +1729,14 @@
                                 <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="fox_legnaro"></span><span class="as-home-chip hidden" data-home-chip="fox_legnaro">Casa</span></span>
                             </span>
                         </button>
+                        <button type="button" data-arena="edera_trieste" class="arena-pill-btn as-card" role="option">
+                            <span class="as-thumb"><img src="assets/arenas/thumbs/edera_trieste.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">8</span></span>
+                            <span class="min-w-0">
+                                <span class="as-card-name block">Pattinodromo Edera</span>
+                                <span class="as-card-loc block">Trieste (TS) • Friuli-Venezia Giulia</span>
+                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="edera_trieste"></span><span class="as-home-chip hidden" data-home-chip="edera_trieste">Casa</span></span>
+                            </span>
+                        </button>
                     </div>
                     <div class="as-details">
                         <div class="as-stats">
@@ -2505,10 +2513,47 @@
                     black: { id: 'black', label: 'Divisa Nera', primary: 0x111114, pants: 0x111114, helmet: 0x111114, glove: 0x111114 },
                     white: { id: 'white', label: 'Divisa Bianca', primary: 0xffffff, pants: 0x111114, helmet: 0x111114, glove: 0x111114 }
                 }
+            },
+            // Edera Trieste: nomi e statistiche dal roster (5 partite). Il roster non riporta
+            // numeri e ruoli: solo il 56 di Scrimali viene dalle foto, gli altri numeri sono
+            // PROVVISORI e le linee sono composte per punti.
+            edera_trieste: {
+                id: 'edera_trieste',
+                league: 'SERIE A',
+                jerseyClubId: 'edera_trieste',
+                name: 'EDERA TRIESTE',
+                shortName: 'EDERA TRIESTE',
+                goalie: { num: "1", name: "SKRUBEJ", first: "Jon" },
+                backupGoalies: [],
+                lines: [
+                    [
+                        { role: "C", num: "10", name: "COCOZZA", first: "Axel", g: 4, a: 2, pts: 6 },
+                        { role: "LW", num: "9", name: "FUMAGALLI", first: "Morgan", g: 2, a: 2, pts: 4 },
+                        { role: "RW", num: "17", name: "ZDESAR", first: "Alen", g: 2, a: 2, pts: 4 },
+                        { role: "D", num: "6", name: "MILANESE", first: "Mattia", g: 1, a: 2, pts: 3 }
+                    ],
+                    [
+                        { role: "C", num: "21", name: "CIOCCOLANTI", first: "Samuele", g: 0, a: 2, pts: 2 },
+                        { role: "LW", num: "11", name: "OVSEC", first: "Enrico", g: 1, a: 0, pts: 1 },
+                        { role: "RW", num: "19", name: "MOCELLIN", first: "Lorenzo", g: 1, a: 0, pts: 1 },
+                        { role: "D", num: "4", name: "PAGNONI", first: "Francesco", g: 0, a: 1, pts: 1 }
+                    ],
+                    [
+                        { role: "C", num: "8", name: "GERMAN", first: "Giordana", g: 0, a: 0, pts: 0 },
+                        { role: "LW", num: "56", name: "SCRIMALI", first: "Claudio", g: 0, a: 0, pts: 0 },
+                        { role: "RW", num: "24", name: "MATTIUSSI", first: "Michele", g: 0, a: 0, pts: 0 },
+                        { role: "D", num: "3", name: "DELPIANO", first: "Nicolas", g: 0, a: 0, pts: 0 }
+                    ]
+                ],
+                reserves: [{ num: "14", name: "PRODAN", first: "Dominik Marjan" }, { num: "27", name: "MACHADO", first: "Matteo" }],
+                kits: {
+                    black: { id: 'black', label: 'Divisa Nera', primary: 0x111114, pants: 0x111114, helmet: 0x111114, glove: 0x111114 },
+                    white: { id: 'white', label: 'Divisa Bianca', primary: 0xffffff, pants: 0x111114, helmet: 0x111114, glove: 0x111114 }
+                }
             }
         };
 
-        const CLUB_IDS = ['cittadella', 'vicenza', 'milano', 'asiago', 'cittadella_pike', 'cus_verona', 'forli', 'fox_legnaro'];
+        const CLUB_IDS = ['cittadella', 'vicenza', 'milano', 'asiago', 'cittadella_pike', 'cus_verona', 'forli', 'fox_legnaro', 'edera_trieste'];
         const LEAGUE_MODES = ['TUTTE', 'SERIE A', 'UISP'];
 
         const ARENA_CATALOG = {
@@ -2588,10 +2633,21 @@
                 capacity: '250 Spettatori',
                 surface: 'Piastrelle Bianche Multisport',
                 roof: 'Archi in Legno Lamellare'
+            },
+            edera_trieste: {
+                id: 'edera_trieste',
+                name: 'PATTINODROMO EDERA',
+                shortTitle: 'Pattinodromo Edera Trieste',
+                location: 'Trieste (TS) • Friuli-Venezia Giulia, Italia',
+                clubBadge: 'Casa: Edera Trieste',
+                desc: 'Capannone basso con copertura reticolare in acciaio, pareti azzurre con finestre a nastro dal telaio verde, reti di protezione scure appese al tetto, pista azzurra con le linee sottili, balaustre bianche con lo zoccolo blu, le bandiere italiana e slovena e una tribunetta in legno con le ringhiere arancioni davanti alla grande vetrata sugli alberi.',
+                capacity: '200 Spettatori',
+                surface: 'Piastrelle SportCourt Azzurre',
+                roof: 'Copertura Reticolare in Acciaio'
             }
         };
 
-        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro'];
+        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste'];
         // Palazzetti presenti nel menu ma non selezionabili (al momento nessuno)
         const DISABLED_ARENAS = new Set();
         const SELECTABLE_ARENA_IDS = ARENA_IDS.filter(id => !DISABLED_ARENAS.has(id));
@@ -2604,7 +2660,8 @@
             cittadella_pike: 'cittadella',
             cus_verona: 'cus_verona',
             forli: 'forli',
-            fox_legnaro: 'fox_legnaro'
+            fox_legnaro: 'fox_legnaro',
+            edera_trieste: 'edera_trieste'
         };
 
         // Catalogo di 12 Esultanze Diverse dei Giocatori al Gol
@@ -3632,7 +3689,8 @@
                 asiago:          'asiago.png',
                 cus_verona:      'cus_verona.png',
                 forli:           'forli.png',
-                fox_legnaro:     'fox_legnaro.png'
+                fox_legnaro:     'fox_legnaro.png',
+                edera_trieste:   'edera_trieste.png'
             };
             const file = fileMap[clubId] || 'vicenza.svg';
             return `<img src="assets/logos/${file}" class="${sizeClass}" alt="Logo ${clubId}" draggable="false">`;
@@ -3649,7 +3707,8 @@
             cittadella_pike: ['assets/jerseys/cittadella_pike_1.png'],
             cus_verona: ['assets/jerseys/cus_verona_1.png', 'assets/jerseys/cus_verona_2.png'],
             forli: ['assets/jerseys/forli_1.png', 'assets/jerseys/forli_2.png'],
-            fox_legnaro: ['assets/jerseys/fox_legnaro_1.png', 'assets/jerseys/fox_legnaro_2.png']
+            fox_legnaro: ['assets/jerseys/fox_legnaro_1.png', 'assets/jerseys/fox_legnaro_2.png'],
+            edera_trieste: ['assets/jerseys/edera_trieste_1.png', 'assets/jerseys/edera_trieste_2.png']
         };
         function getJerseyImageSrc(jerseyClubId, kitIndex) {
             const list = JERSEY_IMAGES[jerseyClubId];
@@ -4358,8 +4417,11 @@
             const n = arenaScoreboards.north;
             if (!n) return;
             n.rotation.y = 0;
-            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro'].includes(matchConfig.arena);
-            if (matchConfig.arena === 'fox_legnaro') {
+            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste'].includes(matchConfig.arena);
+            if (matchConfig.arena === 'edera_trieste') {
+                n.position.set(-10, 4.4, -39.4);
+                n.scale.setScalar(0.4);
+            } else if (matchConfig.arena === 'fox_legnaro') {
                 // piccolo tabellone sul muretto della testata, di fianco al canestro
                 n.position.set(-9.5, 4.6, -39.8);
                 n.scale.setScalar(0.4);
@@ -4569,7 +4631,7 @@
                 roughness: 0.55
             });
             const benchBackMat = isAsiago ? new THREE.MeshStandardMaterial({ map: pbr.woodDiffuse, bumpMap: preset.usePhysicalMat ? pbr.woodBump : null, bumpScale: 0.015, color: 0xc8955a, roughness: 0.6 }) : new THREE.MeshStandardMaterial({
-                color: arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
+                color: arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
                 roughness: 0.8
             });
 
@@ -4663,7 +4725,8 @@
             cus_verona: 'src/arenas/cus_verona.js',
             milano: 'src/arenas/milano.js',
             asiago: 'src/arenas/asiago.js',
-            fox_legnaro: 'src/arenas/fox_legnaro.js'
+            fox_legnaro: 'src/arenas/fox_legnaro.js',
+            edera_trieste: 'src/arenas/edera_trieste.js'
         };
         const arenaBuilders = {};
         const arenaModulePromises = {};
@@ -4922,7 +4985,9 @@
             forli: { dir: 'assets/textures/forli/', normal: 'assets/textures/forli/rink_normal.jpg', floorTint: 0xa6a49f, floorTintLow: 0x8a8884, noSideGlass: true },
             asiago: { dir: 'assets/textures/asiago/', normal: 'assets/textures/asiago/rink_normal.jpg', floorTint: 0x8fa3b2, floorTintLow: 0x7d909e },
             // Fox Arena: niente vetro sopra le balaustre, solo le reti di protezione
-            fox_legnaro: { dir: 'assets/textures/fox_legnaro/', normal: 'assets/textures/fox_legnaro/rink_normal.jpg', floorTint: 0xa4a6a8, floorTintLow: 0x96989a, noGlass: true }
+            fox_legnaro: { dir: 'assets/textures/fox_legnaro/', normal: 'assets/textures/fox_legnaro/rink_normal.jpg', floorTint: 0xa4a6a8, floorTintLow: 0x96989a, noGlass: true },
+            // Pattinodromo Edera: vetro solo davanti alla tribuna (costruito nel modulo), reti altrove
+            edera_trieste: { dir: 'assets/textures/edera_trieste/', normal: 'assets/textures/edera_trieste/rink_normal.jpg', floorTint: 0xa2aeb5, floorTintLow: 0x919da4, noGlass: true }
         };
 
         // Balaustre: ogni striscia rappresenta 18,5 m di pannelli pubblicitari
@@ -5258,7 +5323,7 @@
                             { jacket: 0xf8fafc, shirt: 0xdc2626, isJersey: true }
                         ]))));
 
-            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro') return;   // pubblico costruito dall'architettura del palazzetto
+            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste') return;   // pubblico costruito dall'architettura del palazzetto
 
             // Spalti laterali dietro il tavolo cronometristi (con spazio sull'angolo destro per la casetta bar a Cittadella)
             for (let row = 0; row < 4; row++) {
@@ -5478,7 +5543,7 @@
 
         const pngLogoCache = {};
         // Club senza logo disegnato a mano: sul tabellone si usa il PNG
-        const PNG_LOGO_CLUBS = new Set(['cus_verona', 'forli', 'fox_legnaro']);
+        const PNG_LOGO_CLUBS = new Set(['cus_verona', 'forli', 'fox_legnaro', 'edera_trieste']);
         function drawClubPngLogo(ctx, clubId, cx, cy, size) {
             let img = pngLogoCache[clubId];
             if (!img) {
@@ -7128,12 +7193,13 @@
             const baseClubId = (clubCfg && clubCfg.jerseyClubId) || clubId;
 
             const primaryColor = (baseClubId === 'cittadella' || baseClubId === 'cittadella_pike') ? 0xdc2626
+                : baseClubId === 'edera_trieste' ? 0x1d7a3a
                 : baseClubId === 'fox_legnaro' ? 0x111114
                 : baseClubId === 'cus_verona' ? 0x14206a
                 : baseClubId === 'forli' ? 0x16244f
                 : (baseClubId === 'milano' ? 0x0f2557
                 : (baseClubId === 'asiago' ? 0xf97316 : 0x09090b));
-            const secondaryColor = baseClubId === 'fox_legnaro' ? 0xd01f26 : baseClubId === 'cus_verona' ? 0xf5c400 : baseClubId === 'forli' ? 0x3d8bd1 : baseClubId === 'cittadella' ? 0x172554
+            const secondaryColor = baseClubId === 'edera_trieste' ? 0xd7262e : baseClubId === 'fox_legnaro' ? 0xd01f26 : baseClubId === 'cus_verona' ? 0xf5c400 : baseClubId === 'forli' ? 0x3d8bd1 : baseClubId === 'cittadella' ? 0x172554
                 : (baseClubId === 'milano' ? 0xdc2626
                 : (baseClubId === 'asiago' ? 0x09090b : 0xdc2626));
 
@@ -8312,7 +8378,7 @@
         }
 
         // --- HUD BROADCAST: SIGLE, VISIBILITÀ, FRECCIA, CONO DI TIRO, ETICHETTA TIRO, AVVISI ---
-        const CLUB_ABBR = { cittadella: 'CIT', vicenza: 'VIC', milano: 'MIL', asiago: 'ASI', cittadella_pike: 'PIK', cus_verona: 'CUS', forli: 'FOR', fox_legnaro: 'FOX' };
+        const CLUB_ABBR = { cittadella: 'CIT', vicenza: 'VIC', milano: 'MIL', asiago: 'ASI', cittadella_pike: 'PIK', cus_verona: 'CUS', forli: 'FOR', fox_legnaro: 'FOX', edera_trieste: 'EDE' };
         let hudStateKey = '';
         let hudToastTimer = null;
         let playerChevron = null;
@@ -10566,7 +10632,8 @@
             cittadella_pike: { off: 72, def: 70, goa: 71 },
             cus_verona:      { off: 71, def: 72, goa: 69 },
             forli:           { off: 70, def: 71, goa: 74 },
-            fox_legnaro:     { off: 72, def: 69, goa: 73 }
+            fox_legnaro:     { off: 72, def: 69, goa: 73 },
+            edera_trieste:   { off: 67, def: 68, goa: 76 }
         };
 
         function _animateCrest(el) {
@@ -11080,7 +11147,8 @@
             asiago:          { photo: 'asiago.jpg',     focus: '34% 30%', primary: '#f26b11', secondary: '#0b0b0f' },
             cus_verona:      { photo: 'cus_verona.jpg', focus: '40% 30%', primary: '#17246e', secondary: '#c99a00' },
             forli:           { photo: 'forli.jpg',      focus: '62% 35%', primary: '#1b2d5c', secondary: '#3d8bd1' },
-            fox_legnaro:     { photo: 'fox_legnaro.jpg', focus: '55% 35%', primary: '#d01f26', secondary: '#0b0b0f' }
+            fox_legnaro:     { photo: 'fox_legnaro.jpg', focus: '55% 35%', primary: '#d01f26', secondary: '#0b0b0f' },
+            edera_trieste:   { photo: 'edera_trieste.jpg', focus: '48% 30%', primary: '#d7262e', secondary: '#1d7a3a' }
         };
         const ROSTER_ROLE_LABELS = { C: 'Centro', LW: 'Ala sinistra', RW: 'Ala destra', D: 'Difensore', G: 'Portiere' };
         let rosterShowIdx = -1;
