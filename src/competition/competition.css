@@ -206,12 +206,90 @@
 .cp-so-kicks i.m { background: #b91c1c; border-color: #b91c1c; }
 .cp-so-row .wrap { display: flex; align-items: center; gap: 10px; justify-content: flex-end; }
 
+/* ---------- schermi piccoli: niente scroll, tutto a pagine o a riquadri con le frecce ---------- */
+.cp-screen { overflow: hidden; }
+.cp-saves-list, .cp-team-grid, .cp-table-wrap, .cp-results, .cp-bracket { overflow: hidden; }
+.cp-panel { min-height: 0; }
+.cp-panel > [data-pager] { flex: 1 1 auto; min-height: 0; }
+.cp-hub.is-compact .cp-panel-title:not(:has(.cp-tabs)) { display: none; }
+.cp-arrow.is-small { width: 40px; height: 40px; font-size: 16px; }
+
+/* selettore dei riquadri dell'hub (vedi setupHubSwitcher) */
+.cp-switch { display: flex; align-items: center; justify-content: center; gap: 14px; flex: none; }
+.cp-switch-label { min-width: 180px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.cp-switch-label b { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 16px; text-transform: uppercase; letter-spacing: .02em; }
+.cp-switch-label span { display: flex; gap: 6px; }
+.cp-switch-label i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.25); }
+.cp-switch-label i.on { width: 20px; border-radius: 4px; background: var(--bx-gold, #f6b511); }
+.cp-hub.is-compact { display: flex; flex-direction: column; gap: 0; }
+.cp-hub.is-compact .cp-col { display: contents; }
+.cp-hub.is-compact .cp-panel { display: none !important; }
+.cp-hub.is-compact .cp-panel.is-current { display: flex !important; flex-direction: column; flex: 1 1 auto; min-height: 0; }
+.cp-hub.is-compact .cp-panel.is-current > .cp-next { flex: 1; justify-content: center; }
+/* tabellone compatto: un turno per pagina */
+.cp-hub.is-compact .cp-bracket { display: flex; padding: 10px; }
+.cp-hub.is-compact .cp-round { flex: 0 0 100%; }
+.cp-hub.is-compact .cp-round-body { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-content: center; }
+.cp-hub.is-compact .cp-round:last-child .cp-round-body { grid-template-columns: minmax(0, 1fr); max-width: 360px; margin: 0 auto; width: 100%; }
+
 @media (max-width: 900px) {
-    .cp-hub, .cp-team-layout { grid-template-columns: 1fr; overflow: auto; }
     .cp-car-row { gap: 10px; }
-    .cp-team-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .cp-screen { overflow: auto; }
     .cp-table .hide-sm { display: none; }
-    .cp-bracket { grid-template-columns: repeat(3, minmax(150px, 1fr)); }
+}
+/* telefono in verticale */
+@media (orientation: portrait) and (max-width: 900px) {
+    .cp-team-layout { grid-template-columns: 1fr; grid-template-rows: minmax(0, 1fr) auto; }
+    .cp-team-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .cp-team-side { flex-direction: row; flex-wrap: wrap; padding: 12px; gap: 6px 14px; }
+    .cp-team-side .crest { width: 72px; height: 72px; }
+    .cp-team-side .name { font-size: 18px; flex: 1 1 140px; text-align: left; }
+    .cp-team-side .arena { display: none; }
+    .cp-ratings b { font-size: 24px; }
+    .cp-head-right { margin-left: 0; }
+    .cp-head-right .cp-pill { font-size: 10px; white-space: normal; }
+    .cp-foot .cp-hint { display: none; }
+}
+/* telefono in orizzontale e finestre basse */
+@media (max-height: 560px) {
+    .cp-screen { padding: 8px 14px; gap: 8px; }
+    .cp-head-logo { height: 34px; padding: 2px 6px; }
+    .cp-title { font-size: 20px; }
+    .cp-kicker { font-size: 10px; }
+    .cp-pill { padding: 3px 10px; font-size: 11px; }
+    .cp-btn { padding: 7px 14px; font-size: 12px; }
+    .cp-foot .cp-hint { display: none; }
+    .cp-panel-title { padding: 7px 12px; font-size: 11px; }
+    /* scelta competizione: disco a sinistra, dati a destra */
+    .cp-carousel { display: grid; grid-template-columns: auto minmax(0, 1fr); grid-template-rows: repeat(4, auto); column-gap: 18px; row-gap: 8px; align-items: center; justify-items: center; padding: 0; }
+    .cp-car-row { grid-row: 1 / span 4; gap: 8px; }
+    .cp-car-disc { width: clamp(96px, 30vh, 160px); }
+    .cp-arrow { width: 36px; height: 36px; font-size: 15px; }
+    .cp-car-label { padding: 6px 10px; }
+    .cp-car-label b { font-size: 18px; }
+    .cp-car-desc { display: none; }
+    .cp-fact { width: 52px; border-width: 2px; }
+    .cp-fact b { font-size: 14px; }
+    .cp-fact small { font-size: 8px; }
+    .cp-saves { min-height: 0; }
+    .cp-save-row { padding: 6px 10px; grid-template-columns: 30px minmax(0, 1fr) auto; }
+    .cp-save-row img { width: 30px; height: 30px; }
+    /* scelta squadra */
+    .cp-team-grid { padding: 8px; gap: 6px; }
+    .cp-team-tile { padding: 6px 8px; }
+    .cp-team-side { padding: 8px; gap: 6px; }
+    .cp-team-side .crest { width: clamp(60px, 22vh, 110px); height: clamp(60px, 22vh, 110px); }
+    .cp-team-side .name { font-size: 16px; }
+    .cp-ratings b { font-size: 22px; }
+    .cp-stars { font-size: 15px; }
+    /* hub */
+    .cp-next { padding: 10px; gap: 8px; }
+    .cp-versus .side img { width: 48px; height: 48px; }
+    .cp-table td { padding: 4px 6px; font-size: 12px; }
+    .cp-table .team img { width: 20px; height: 20px; }
+    .cp-legend { display: none; }
+    .cp-res { padding: 4px 6px; }
+    .cp-dialog { gap: 10px; padding: 14px; }
+    .cp-champ-crest { width: 90px; height: 90px; }
+    .cp-dialog h2 { font-size: 22px; }
 }
 @media (prefers-reduced-motion: reduce) { #comp-root *, .cp-overlay * { animation: none !important; transition: none !important; } }

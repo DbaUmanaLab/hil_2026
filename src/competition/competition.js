@@ -334,10 +334,42 @@
         root.querySelectorAll('.cp-screen').forEach(s => s.classList.toggle('cp-hidden', s.dataset.screen !== name));
         if (name === 'select') renderSelect();
         if (name === 'teams') renderTeams();
-        if (name === 'hub') renderHub();
+        if (name === 'hub') { renderHub(); setupHubSwitcher(); }
         const first = root.querySelector(`[data-screen="${name}"] [data-focus]`);
         if (first) first.focus({ preventScroll: true });
     }
+    // Schermi piccoli: un riquadro dell'hub alla volta, con il selettore ◀ nome ▶ (niente colonna da scorrere)
+    let hubPanelIdx = 1;    // 0 = classifica/tabellone, 1 = prossima partita (si parte da qui)
+    const compactMq = window.matchMedia('(max-width: 900px), (max-height: 560px)');
+    function setupHubSwitcher() {
+        const hub = root && root.querySelector('[data-screen="hub"] .cp-hub');
+        if (!hub) return;
+        const panels = Array.from(hub.querySelectorAll(':scope > .cp-panel, :scope > .cp-col > .cp-panel'));
+        let bar = hub.parentElement.querySelector('.cp-switch');
+        if (!compactMq.matches) {
+            hub.classList.remove('is-compact');
+            panels.forEach(p => p.classList.remove('is-current'));
+            if (bar) bar.remove();
+            return;
+        }
+        hub.classList.add('is-compact');
+        hubPanelIdx = Math.max(0, Math.min(panels.length - 1, hubPanelIdx));
+        if (!bar) {
+            bar = document.createElement('div');
+            bar.className = 'cp-switch';
+            bar.innerHTML = '<button type="button" class="cp-arrow is-small" data-sw="-1" aria-label="Riquadro precedente">&#9664;</button><div class="cp-switch-label"></div><button type="button" class="cp-arrow is-small" data-sw="1" aria-label="Riquadro successivo">&#9654;</button>';
+            hub.insertAdjacentElement('beforebegin', bar);
+            bar.addEventListener('click', e => {
+                const b = e.target.closest('[data-sw]');
+                if (!b) return;
+                hubPanelIdx = (hubPanelIdx + (+b.dataset.sw) + panels.length) % panels.length;
+                setupHubSwitcher();
+            });
+        }
+        panels.forEach((p, i) => p.classList.toggle('is-current', i === hubPanelIdx));
+        bar.querySelector('.cp-switch-label').innerHTML = `<b>${esc(panels[hubPanelIdx].dataset.label || '')}</b><span>${panels.map((p, i) => `<i class="${i === hubPanelIdx ? 'on' : ''}"></i>`).join('')}</span>`;
+    }
+    compactMq.addEventListener('change', () => { if (root && !root.classList.contains('cp-hidden')) setupHubSwitcher(); });
     function hideRoot() { if (root) root.classList.add('cp-hidden'); }
     function toast(msg) {
         const t = document.createElement('div');
@@ -366,7 +398,7 @@
             <div class="cp-carousel">
                 <div class="cp-car-row">
                     <button type="button" class="cp-arrow" data-dir="-1" aria-label="Competizione precedente">&#9664;</button>
-                    <div class="cp-car-disc${c.active ? '' : ' is-locked'}" data-act="pick" role="button" tabindex="0" data-focus aria-label="${esc(c.name)}">
+                    <div class="cp-car-disc${c.active ? '' : ' is-locked'}" data-act="pick" role="button" tabindex="0" data-focus data-keynav-own="x" aria-label="${esc(c.name)}">
                         <img src="${c.logo}" alt="${esc(c.name)}">
                         ${c.active ? '' : '<span class="cp-lock">Prossimamente</span>'}
                     </div>
@@ -384,7 +416,7 @@
             </div>
             <div class="cp-panel cp-saves">
                 <div class="cp-panel-title"><span>Stagioni salvate</span><b>${saves.length}</b></div>
-                <div class="cp-saves-list">${saves.length ? saves.map(s => `
+                <div class="cp-saves-list" data-pager="y">${saves.length ? saves.map(s => `
                     <div class="cp-save-row">
                         <img src="${logo(s.data.user)}" alt="">
                         <div style="min-width:0"><div class="n">${esc(s.name)}</div>
@@ -448,7 +480,7 @@
             <div class="cp-team-layout">
                 <div class="cp-panel" style="display:flex;flex-direction:column;min-height:0">
                     <div class="cp-panel-title"><span>Squadre partecipanti</span><b>${teams.length}</b></div>
-                    <div class="cp-team-grid">${teams.map(id => `
+                    <div class="cp-team-grid" data-pager="y">${teams.map(id => `
                         <button type="button" class="cp-team-tile${id === selectedTeam ? ' is-active' : ''}" data-team="${id}" ${id === selectedTeam ? 'data-focus' : ''}>
                             <img src="${logo(id)}" alt=""><span>${esc(club(id).shortName || club(id).name)}</span>
                         </button>`).join('')}</div>
@@ -542,7 +574,7 @@
     }
     function tableHtml() {
         const rows = standings();
-        return `<div class="cp-table-wrap"><table class="cp-table">
+        return `<div class="cp-table-wrap" data-pager="y" data-pager-items="tbody tr"><table class="cp-table">
             <thead><tr><th>#</th><th class="l">Squadra</th><th>PG</th><th>V</th><th title="Vittorie al supplementare o ai rigori">VS</th><th title="Sconfitte al supplementare o ai rigori">PS</th><th>P</th><th class="hide-sm">GF</th><th class="hide-sm">GS</th><th>DR</th><th>PT</th></tr></thead>
             <tbody>${rows.map((r, i) => `
                 <tr class="${r.id === state.user ? 'is-user ' : ''}${i < PLAYOFF_TEAMS ? 'is-po ' : ''}${i === PLAYOFF_TEAMS - 1 ? 'cut' : ''}">
@@ -557,7 +589,7 @@
     function bracketHtml() {
         if (!state.playoffs) return `<div class="cp-empty" style="margin:auto">Il tabellone dei play-off sarà pronto alla fine della regular season</div>`;
         const po = state.playoffs;
-        return `<div class="cp-bracket">${PO_ROUNDS.map((rd, ri) => {
+        return `<div class="cp-bracket" data-pager="x" data-pager-items=".cp-round">${PO_ROUNDS.map((rd, ri) => {
             const list = po.series[ri];
             const slots = ri === 0 ? 4 : (ri === 1 ? 2 : 1);
             let html = `<div class="cp-round"><h4>${rd.label} • al meglio di ${rd.bestOf}</h4><div class="cp-round-body">`;
@@ -622,20 +654,22 @@
             body: lt.played.map(p => { const s = list[p.si]; const g = s.games.find(x => x.n === p.n); return g ? resultRow(g) : ''; }).join('')
         };
     }
-    function upcomingHtml() {
-        if (state.phase !== 'regular') return '';
+    // partite della giornata in corso (escluse quelle della squadra dell'utente)
+    function upcomingBody() {
+        if (state.phase !== 'regular') return null;
         const r = state.rounds[state.roundIdx];
-        if (!r) return '';
+        if (!r) return null;
         const others = r.fixtures.filter(f => f.home !== state.user && f.away !== state.user);
-        return `<div class="cp-panel" style="display:flex;flex-direction:column;min-height:0;flex:1">
-            <div class="cp-panel-title"><span>Giornata ${state.roundIdx + 1} • altre partite</span></div>
-            <div class="cp-results">${others.map(resultRow).join('')}${r.bye ? `<div class="cp-res-rest">Riposa: ${esc(clubName(r.bye))}</div>` : ''}</div></div>`;
+        return { title: `Giornata ${state.roundIdx + 1}`, body: others.map(resultRow).join('') + (r.bye ? `<div class="cp-res-rest">Riposa: ${esc(clubName(r.bye))}</div>` : '') };
     }
+    let resTab = 'last';   // riquadro risultati: 'last' = ultimo turno giocato, 'next' = giornata in corso
     function renderHub() {
         if (isCup()) { renderCupHub(); return; }
         const el = root.querySelector('[data-screen="hub"]');
         const phaseTxt = state.phase === 'regular' ? 'Regular season' : (state.phase === 'playoff' ? 'Play-off scudetto' : 'Stagione conclusa');
         const lr = lastResultsHtml();
+        const up = upcomingBody();
+        if (!up) resTab = 'last';
         el.innerHTML = `
             <div class="cp-head">
                 <img class="cp-head-logo" src="assets/logos/serie_a.png" alt="">
@@ -646,7 +680,7 @@
                 </div>
             </div>
             <div class="cp-hub">
-                <div class="cp-panel" style="display:flex;flex-direction:column;min-height:0">
+                <div class="cp-panel" data-label="${hubTab === 'table' ? 'Classifica' : 'Play-off'}" style="display:flex;flex-direction:column;min-height:0">
                     <div class="cp-panel-title">
                         <div class="cp-tabs"><button class="cp-tab${hubTab === 'table' ? ' is-active' : ''}" data-tab="table">Classifica</button><button class="cp-tab${hubTab === 'bracket' ? ' is-active' : ''}" data-tab="bracket">Play-off</button></div>
                         <span>${hubTab === 'table' ? 'Regular season' : 'Tabellone'}</span>
@@ -654,12 +688,11 @@
                     ${hubTab === 'table' ? tableHtml() : bracketHtml()}
                 </div>
                 <div class="cp-col">
-                    <div class="cp-panel"><div class="cp-panel-title"><span>Prossima partita</span></div><div class="cp-next">${nextMatchHtml()}</div></div>
-                    <div class="cp-panel" style="display:flex;flex-direction:column;min-height:0;flex:1">
-                        <div class="cp-panel-title"><span>${lr.title}</span></div>
-                        <div class="cp-results">${lr.body}</div>
+                    <div class="cp-panel" data-label="Prossima partita"><div class="cp-panel-title"><span>Prossima partita</span></div><div class="cp-next">${nextMatchHtml()}</div></div>
+                    <div class="cp-panel" data-label="Risultati" style="display:flex;flex-direction:column;min-height:0;flex:1">
+                        <div class="cp-panel-title">${up ? `<div class="cp-tabs"><button class="cp-tab${resTab === 'last' ? ' is-active' : ''}" data-res="last">${esc(lr.title.replace('Risultati • ', ''))}</button><button class="cp-tab${resTab === 'next' ? ' is-active' : ''}" data-res="next">${esc(up.title)}</button></div><span>${resTab === 'next' ? 'Da giocare' : 'Risultati'}</span>` : `<span>${lr.title}</span>`}</div>
+                        <div class="cp-results" data-pager="y">${up && resTab === 'next' ? up.body : lr.body}</div>
                     </div>
-                    ${upcomingHtml()}
                 </div>
             </div>
             <div class="cp-foot">
@@ -668,7 +701,8 @@
                 <span class="cp-spacer"></span>
                 <button class="cp-btn" data-act="save">Salva</button>
             </div>`;
-        el.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { hubTab = b.dataset.tab; renderHub(); });
+        el.querySelectorAll('[data-res]').forEach(b => b.onclick = () => { resTab = b.dataset.res; renderHub(); setupHubSwitcher(); const t = el.querySelector(`[data-res="${resTab}"]`); if (t) t.focus({ preventScroll: true }); });
+        el.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { hubTab = b.dataset.tab; renderHub(); setupHubSwitcher(); const t = el.querySelector(`[data-tab="${hubTab}"]`); if (t) t.focus({ preventScroll: true }); });
         el.querySelector('[data-act="exit"]').onclick = exitToMenu;
         el.querySelector('[data-act="save"]').onclick = () => saveCurrent(false);
         const on = (act, fn) => { const b = el.querySelector(`[data-act="${act}"]`); if (b) b.onclick = fn; };
@@ -681,7 +715,7 @@
     function cupBracketHtml() {
         const cup = state.cup;
         const slotsPerRound = [4, 2, 1];
-        return `<div class="cp-bracket cp-cup-bracket">${CUP_ROUNDS.map((rd, ri) => {
+        return `<div class="cp-bracket cp-cup-bracket" data-pager="x" data-pager-items=".cp-round">${CUP_ROUNDS.map((rd, ri) => {
             const games = cup.rounds[ri];
             let html = `<div class="cp-round"><h4>${rd.label}</h4><div class="cp-round-body">`;
             for (let k = 0; k < slotsPerRound[ri]; k++) {
@@ -738,15 +772,15 @@
                 </div>
             </div>
             <div class="cp-hub">
-                <div class="cp-panel" style="display:flex;flex-direction:column;min-height:0">
+                <div class="cp-panel" data-label="Tabellone" style="display:flex;flex-direction:column;min-height:0">
                     <div class="cp-panel-title"><span>Tabellone</span><b>${state.cup.teams.length} squadre</b></div>
                     ${cupBracketHtml()}
                 </div>
                 <div class="cp-col">
-                    <div class="cp-panel"><div class="cp-panel-title"><span>Prossima partita</span></div><div class="cp-next">${cupNextHtml()}</div></div>
-                    <div class="cp-panel" style="display:flex;flex-direction:column;min-height:0;flex:1">
+                    <div class="cp-panel" data-label="Prossima partita"><div class="cp-panel-title"><span>Prossima partita</span></div><div class="cp-next">${cupNextHtml()}</div></div>
+                    <div class="cp-panel" data-label="Risultati" style="display:flex;flex-direction:column;min-height:0;flex:1">
                         <div class="cp-panel-title"><span>${lt ? 'Risultati • ' + cupRoundLabel(lt.round) : 'Risultati'}</span></div>
-                        <div class="cp-results">${res}</div>
+                        <div class="cp-results" data-pager="y">${res}</div>
                     </div>
                 </div>
             </div>

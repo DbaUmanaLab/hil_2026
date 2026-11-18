@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="src/ui/uikit.css">
+    <link rel="stylesheet" href="src/competition/competition.css" data-comp-css>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <!-- Phaser 3 — gestore game loop, scene e input -->
@@ -666,7 +668,7 @@
         .pz-num { text-align: center; }
         .pz-num span { display: block; background: #f1f3f6; color: var(--bx-ink); font-weight: 700; font-style: italic; font-size: 26px; padding: 0 12px; border-radius: 3px; white-space: nowrap; }
         .pz-num small { display: block; margin-top: 3px; font-size: 11px; letter-spacing: .16em; color: #cbd5e1; white-space: nowrap; }
-        .pz-nav { display: flex; flex-direction: column; padding: 8px; gap: 2px; overflow-y: auto; }
+        .pz-nav { display: flex; flex-direction: column; padding: 8px; gap: 2px; overflow: hidden; min-height: 0; }
         .pz-item { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; padding: 9px 12px; border-radius: 8px; text-align: left; font-size: 16px; font-weight: 600; letter-spacing: .1em; text-transform: uppercase; color: #dbe3ee; background: transparent; border: 0; transition: background .18s, color .18s, transform .18s; animation: bxUp .4s both; }
         .pz-item:nth-child(1) { animation-delay: .08s; } .pz-item:nth-child(2) { animation-delay: .12s; } .pz-item:nth-child(3) { animation-delay: .16s; } .pz-item:nth-child(4) { animation-delay: .2s; }
         .pz-item:nth-child(5) { animation-delay: .24s; } .pz-item:nth-child(6) { animation-delay: .28s; } .pz-item:nth-child(7) { animation-delay: .32s; } .pz-item:nth-child(8) { animation-delay: .36s; }
@@ -684,15 +686,19 @@
         .pz-item.is-primary:hover, .pz-item.is-primary.is-focus { background: #ffd34d; color: var(--bx-ink); }
         .pz-item.is-danger { margin-top: 6px; color: #fca5a5; }
         .pz-item.is-danger .pz-ico { color: #f87171; }
-        .pz-content { width: min(560px, 100%); max-height: 100%; overflow-y: auto; background: linear-gradient(180deg, rgba(12,18,34,.93), rgba(7,11,22,.93)); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.55); padding: 18px 20px 20px; animation: pzContent .4s cubic-bezier(.2,.9,.2,1) both; scrollbar-width: thin; }
+        .pz-content { position: relative; display: flex; flex-direction: column; width: min(560px, 100%); max-height: 100%; overflow: hidden; background: linear-gradient(180deg, rgba(12,18,34,.93), rgba(7,11,22,.93)); border: 1px solid rgba(255,255,255,.1); border-radius: 16px; box-shadow: 0 30px 80px rgba(0,0,0,.55); padding: 18px 20px 20px; animation: pzContent .4s cubic-bezier(.2,.9,.2,1) both; scrollbar-width: thin; }
         .pz-content.hidden { display: none; }
         @keyframes pzContent { from { opacity: 0; transform: translateX(-18px) scale(.98); } to { opacity: 1; transform: none; } }
         .pz-page.hidden { display: none; }
+        /* pagine senza scroll: le liste lunghe vanno a pagine con le frecce (src/ui/uikit.js) */
+        .pz-page:not(.hidden) { display: flex; flex-direction: column; min-height: 0; flex: 1 1 auto; }
+        #pz-lines, #pz-keys, #pz-gfx, #pz-cams, #pz-stats { min-height: 0; flex: 0 1 auto; }
+        .pz-page h3 { padding-right: 40px; }
         .pz-page h3 { display: flex; align-items: center; gap: 10px; font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 22px; text-transform: uppercase; letter-spacing: .03em; }
         .pz-page h3::before { content: ''; width: 6px; height: 22px; background: var(--pz-gold); transform: skewX(-14deg); }
         .pz-sub { margin: 4px 0 14px; font-size: 13px; letter-spacing: .06em; color: #94a3b8; }
         .pz-back { display: none; margin-bottom: 10px; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; color: var(--pz-gold); }
-        .pz-close { float: right; width: 32px; height: 32px; border-radius: 50%; color: #94a3b8; background: rgba(255,255,255,.06); font-size: 16px; }
+        .pz-close { position: absolute; top: 14px; right: 14px; z-index: 3; width: 32px; height: 32px; border-radius: 50%; color: #94a3b8; background: rgba(255,255,255,.06); font-size: 16px; }
         .pz-close:hover { color: #fff; background: rgba(255,255,255,.14); }
         /* linee */
         .pz-lines { display: grid; gap: 10px; }
@@ -793,9 +799,25 @@
             .pz-vignette { background: rgba(4,8,18,.55); }
         }
         @media (max-height: 560px) {
-            .pz-title { font-size: 28px; margin-bottom: 6px; }
-            .pz-item { padding: 6px 12px; font-size: 14px; }
-            .pz-ico { width: 26px; height: 26px; }
+            .pz-layout { inset: 3vh 0; }
+            .pz-bars::before, .pz-bars::after { height: 3vh; }
+            .pz-title { font-size: 26px; margin-bottom: 4px; }
+            .pz-head { padding: 8px 12px; }
+            .pz-kicker { display: none; }
+            .pz-logo { width: 28px; height: 28px; }
+            .pz-num span { font-size: 20px; }
+            .pz-item { padding: 4px 10px; font-size: 13px; }
+            .pz-ico { width: 22px; height: 22px; }
+            .pz-ico svg { width: 14px; height: 14px; }
+            .pz-item.is-primary { margin-bottom: 2px; }
+            .pz-item.is-danger { margin-top: 2px; }
+            .pz-content { padding: 12px 16px 12px; }
+            .pz-page h3 { font-size: 18px; }
+            .pz-sub { margin: 2px 0 8px; font-size: 12px; }
+        }
+        @media (max-height: 420px) {
+            .pz-score { display: none; }
+            .pz-item { padding: 3px 10px; }
         }
         @media (prefers-reduced-motion: reduce) { #pause-menu * { animation: none !important; transition: none !important; } }
 
@@ -1433,12 +1455,12 @@
     </div>
 
     <!-- SCHERMATA PRE-PARTITA A 3 STEP (Step 1: Squadre & Leghe | Step 2: Maglie 3D | Step 3: Palazzetto 3D) -->
-    <div id="start-screen" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-start sm:items-center justify-center pointer-events-auto z-50 p-2 sm:p-5 overflow-y-auto transition-colors duration-300">
-        <div id="prematch-modal-box" class="w-full max-w-5xl rounded-2xl overflow-hidden border-2 border-slate-600 shadow-[0_0_50px_rgba(0,0,0,0.85)] my-auto glass-obsidian">
+    <div id="start-screen" class="hidden fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-start sm:items-center justify-center pointer-events-auto z-50 p-2 sm:p-5 overflow-hidden transition-colors duration-300">
+        <div id="prematch-modal-box" data-fit="0" class="w-full max-w-5xl rounded-2xl overflow-hidden border-2 border-slate-600 shadow-[0_0_50px_rgba(0,0,0,0.85)] my-auto glass-obsidian">
             
             <!-- Intestazione Elegante con Tabs Rapidi -->
             <div class="flex items-stretch border-b-2 border-black shrink-0">
-                <button type="button" id="back-to-splash-btn" title="Torna alla schermata iniziale" class="w-16 sm:w-24 bg-gradient-to-b from-amber-500 to-amber-700 hover:from-amber-400 hover:to-amber-600 flex flex-col items-center justify-center p-2 border-r-2 border-black shrink-0 transition cursor-pointer">
+                <button type="button" id="back-to-splash-btn" data-keyback title="Torna alla schermata iniziale" class="w-16 sm:w-24 bg-gradient-to-b from-amber-500 to-amber-700 hover:from-amber-400 hover:to-amber-600 flex flex-col items-center justify-center p-2 border-r-2 border-black shrink-0 transition cursor-pointer">
                     <span class="w-9 h-9 sm:w-12 sm:h-12 rounded-full bg-white flex items-center justify-center shadow-[0_2px_6px_rgba(0,0,0,0.55)]"><img src="assets/logos/game%20badge.png" alt="HIL 2026 - Hockey in line" class="w-[88%] h-[88%] object-contain" draggable="false"></span>
                     <span class="text-[9px] font-black uppercase tracking-tighter text-slate-950 mt-0.5">◀ TITOLO</span>
                 </button>
@@ -1597,7 +1619,7 @@
                         </button>
                         <span class="hidden sm:inline text-white/60">◀ ▶ per cambiare squadra • 🎮 scegli quale controllare</span>
                     </div>
-                    <button type="button" id="to-step2-btn" class="bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs sm:text-sm font-black uppercase tracking-wider px-5 py-2 rounded-lg border-2 border-amber-200 shadow-lg transition">
+                    <button type="button" id="to-step2-btn" data-focus class="bg-amber-400 hover:bg-amber-300 text-slate-950 text-xs sm:text-sm font-black uppercase tracking-wider px-5 py-2 rounded-lg border-2 border-amber-200 shadow-lg transition">
                         Maglie ▶
                     </button>
                 </div>
@@ -1649,9 +1671,9 @@
                         <div id="ks-clash" class="ks-clash hidden">⚠ Divise troppo simili</div>
                     </div>
                     <div class="ks-foot">
-                        <button type="button" id="back-to-step1-btn" class="ks-btn">◀ Squadre</button>
+                        <button type="button" id="back-to-step1-btn" data-keyback class="ks-btn">◀ Squadre</button>
                         <span class="ks-hint">Scegli la divisa con le frecce o con le miniature</span>
-                        <button type="button" id="to-step3-btn" class="ks-btn is-primary">Avanti: Palazzetto ▶</button>
+                        <button type="button" id="to-step3-btn" data-focus class="ks-btn is-primary">Avanti: Palazzetto ▶</button>
                     </div>
                 </div>
             </div>
@@ -1664,7 +1686,7 @@
                         <div class="as-title">PALAZZETTO</div>
                         <div class="as-sub">Scegli dove si gioca la partita</div>
                     </div>
-                    <div class="as-list" role="listbox" aria-label="Palazzetti">
+                    <div class="as-list" role="listbox" aria-label="Palazzetti" data-pager="auto">
                         <button type="button" data-arena="cittadella" class="arena-pill-btn as-card" role="option">
                             <span class="as-thumb"><img src="assets/arenas/thumbs/cittadella.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">1</span></span>
                             <span class="min-w-0">
@@ -1747,7 +1769,7 @@
                         <p id="step3-arena-desc" class="as-desc"></p>
                     </div>
                     <div class="as-foot">
-                        <button type="button" id="back-to-step2-btn" class="as-btn">◀ Divise</button>
+                        <button type="button" id="back-to-step2-btn" data-keyback class="as-btn">◀ Divise</button>
                         <button type="button" id="start-btn" class="as-btn is-go">Scendi in pista ▶</button>
                     </div>
                 </section>
@@ -1840,8 +1862,8 @@
     </div>
 
     <!-- SCHERMATA STATISTICHE FINE PERIODO / FINE PARTITA -->
-    <div id="match-stats-modal" class="hidden sx fixed inset-0 flex items-center justify-center p-3 sm:p-6 pointer-events-auto z-[58] overflow-y-auto">
-        <div class="sx-card">
+    <div id="match-stats-modal" class="hidden sx fixed inset-0 flex items-center justify-center p-3 sm:p-6 pointer-events-auto z-[58] overflow-hidden">
+        <div class="sx-card" data-fit="0">
             <div class="sx-head">
                 <span id="stats-modal-badge">FINE 1° PERIODO</span>
                 <h2 id="stats-modal-title">Riepilogo</h2>
@@ -1873,7 +1895,7 @@
             </div>
             <div class="sx-scorers">
                 <h3>Marcatori</h3>
-                <div id="stats-scorers-list" class="max-h-40 overflow-y-auto space-y-1.5"></div>
+                <div id="stats-scorers-list" class="max-h-40 space-y-1.5" data-pager="y"></div>
                 <div id="stats-referees" class="sx-refs"></div>
             </div>
             <div id="stats-modal-actions" class="sx-actions"></div>
@@ -2170,13 +2192,13 @@
                 <div class="pz-page hidden" data-page="lines">
                     <h3>Cambio linea</h3>
                     <p class="pz-sub">Scegli la linea da mandare in pista: il cambio avviene al volo alla ripresa del gioco.</p>
-                    <div id="pz-lines" class="pz-lines"></div>
+                    <div id="pz-lines" class="pz-lines" data-pager="y"></div>
                 </div>
 
                 <div class="pz-page hidden" data-page="controls">
                     <h3>Comandi</h3>
                     <p class="pz-sub">Clicca un tasto e premi quello nuovo. Le impostazioni restano salvate in questo browser.</p>
-                    <div id="pz-keys" class="pz-keys"></div>
+                    <div id="pz-keys" class="pz-keys" data-pager="y"></div>
                     <div class="pz-row-actions">
                         <span id="pz-keys-note" class="pz-note">Esc mette sempre in pausa.</span>
                         <button type="button" id="pz-keys-reset" class="pz-btn">Ripristina predefiniti</button>
@@ -2208,19 +2230,19 @@
                 <div class="pz-page hidden" data-page="graphics">
                     <h3>Livello grafica</h3>
                     <p id="pz-gfx-sub" class="pz-sub">Il cambio ricostruisce il palazzetto e può richiedere qualche istante.</p>
-                    <div id="pz-gfx" class="pz-cards"></div>
+                    <div id="pz-gfx" class="pz-cards" data-pager="y"></div>
                 </div>
 
                 <div class="pz-page hidden" data-page="camera">
                     <h3>Telecamera</h3>
                     <p class="pz-sub">Inquadratura di gioco. In partita puoi anche cambiarla al volo con il tasto <b id="pz-cam-key">V</b>.</p>
-                    <div id="pz-cams" class="pz-cards"></div>
+                    <div id="pz-cams" class="pz-cards" data-pager="y"></div>
                 </div>
 
                 <div class="pz-page hidden" data-page="stats">
                     <h3>Statistiche di gioco</h3>
                     <p id="pz-stats-sub" class="pz-sub">1° periodo</p>
-                    <div id="pz-stats" class="pz-stats"></div>
+                    <div id="pz-stats" class="pz-stats" data-pager="y"></div>
                 </div>
 
                 <div class="pz-page hidden" data-page="quit">
@@ -10659,14 +10681,14 @@
             });
 
             if (stepNum === 1) {
-                startScreen.className = 'fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-start sm:items-center justify-center pointer-events-auto z-50 p-2 sm:p-5 overflow-y-auto transition-colors duration-300';
+                startScreen.className = 'fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-start sm:items-center justify-center pointer-events-auto z-50 p-2 sm:p-5 overflow-hidden transition-colors duration-300';
                 prematchModalBox.className = 'w-full max-w-6xl rounded-2xl overflow-hidden border-2 border-slate-600 shadow-[0_0_50px_rgba(0,0,0,0.85)] my-auto glass-obsidian';
                 step1.classList.remove('hidden');
                 badge.textContent = 'Step 1 di 3';
                 sub.textContent = 'Selezione Squadre e Leghe';
                 renderStep1Teams();
             } else if (stepNum === 2) {
-                startScreen.className = 'fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-start sm:items-center justify-center pointer-events-auto z-50 p-2 sm:p-5 overflow-y-auto transition-colors duration-300';
+                startScreen.className = 'fixed inset-0 bg-slate-950/85 backdrop-blur-md flex items-start sm:items-center justify-center pointer-events-auto z-50 p-2 sm:p-5 overflow-hidden transition-colors duration-300';
                 prematchModalBox.className = 'w-full max-w-6xl rounded-2xl overflow-hidden border-2 border-slate-600 shadow-[0_0_50px_rgba(0,0,0,0.85)] my-auto glass-obsidian';
                 step2.classList.remove('hidden');
                 badge.textContent = 'Step 2 di 3';
@@ -12889,6 +12911,8 @@
 
     <!-- Modalità Competizione (Serie A / Coppa Italia): usa i globali dello script principale -->
     <script src="src/competition/competition.js"></script>
+    <!-- Impaginazione con frecce, adattamento allo schermo e navigazione da tastiera -->
+    <script src="src/ui/uikit.js"></script>
     <script src="src/data/funFacts.js"></script>
     <script>
         // Finto caricamento di 10 secondi con un fun fact e un'immagine scelti a caso.

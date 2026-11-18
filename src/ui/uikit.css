@@ -1,0 +1,26 @@
+/* --- src/ui/uikit.css: impaginazione con frecce e selezione da tastiera --- */
+.uk-paged { overflow: hidden !important; scrollbar-width: none; }
+.uk-paged::-webkit-scrollbar { display: none; }
+
+.uk-pager { display: flex; align-items: center; justify-content: center; gap: 10px; flex: none; padding: 6px 0 2px;
+    font-family: 'Oswald', 'Arial Narrow', sans-serif; color: #cbd5e1; }
+.uk-pager.is-off { display: none; }
+.uk-pg-label { min-width: 56px; text-align: center; font-size: 12px; font-weight: 600; letter-spacing: .18em; font-variant-numeric: tabular-nums; }
+.uk-pg-btn { width: 34px; height: 30px; border-radius: 8px; display: grid; place-items: center; cursor: pointer;
+    color: #fff; font-size: 13px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.22);
+    transition: background .15s, border-color .15s, transform .1s; }
+.uk-pg-btn:hover:not(:disabled) { background: rgba(255,255,255,.18); border-color: rgba(255,255,255,.5); }
+.uk-pg-btn:active:not(:disabled) { transform: scale(.92); }
+.uk-pg-btn:disabled { opacity: .3; cursor: default; }
+
+/* selezione da tastiera: anello dorato ben visibile su qualunque sfondo */
+.uk-focus, .uk-focus:focus, .uk-focus:focus-visible {
+    outline: 3px solid #f6b511 !important;
+    outline-offset: 3px !important;
+    box-shadow: 0 0 0 6px rgba(246,181,17,.25), 0 0 24px rgba(246,181,17,.35) !important;
+    position: relative; z-index: 2;
+}
+input[type="range"].uk-focus { outline-offset: 6px !important; }
+@media (prefers-reduced-motion: no-preference) {
+    .uk-focus { transition: outline-color .15s, box-shadow .15s; }
+}
