@@ -7556,7 +7556,7 @@
             const t = clock.elapsedTime;
             benchStaff.forEach(st => {
                 if (st.isProp) return;
-                const isCelebrating = (gameState === 'goal_celebration' && st.team === replayGoalSide);
+                const isCelebrating = ((gameState === 'goal_celebration' || gameState === 'postgame') && st.team === replayGoalSide);
                 if (isCelebrating) {
                     const wave = Math.sin(t * 12 + st.phase) * 0.25;
                     st.mesh.position.y = 0.12 + Math.abs(Math.sin(t * 10 + st.phase)) * 0.14;
@@ -8551,7 +8551,7 @@
         function syncGameAudio(dt) {
             const ga = window.gameAudio;
             if (!ga || !ga.setMusicTrack) return;
-            const statsOpen = !document.getElementById('match-stats-modal').classList.contains('hidden');
+            const statsOpen = !document.getElementById('match-stats-modal').classList.contains('hidden') || (window.Ceremony && window.Ceremony.isOverlayOpen());
             // colonna sonora MP3: titoli, scelte di squadre/maglie/palazzetto, caricamenti e riprese cinematiche;
             // in silenzio durante l'azione (ingaggio, gioco, esultanza con il suo stacchetto)
             const cinematic = gamePaused || statsOpen || gameState === 'menu' || gameState === 'lineup_loading' || gameState === 'logo_intro'
@@ -9312,9 +9312,8 @@
             goalCooldown = false;
             if (overtimeGoldenGoal) {            // golden goal: la partita è finita
                 overtimeGoldenGoal = false;
-                gameState = 'match_over';
                 if (window.gameAudio) window.gameAudio.playPeriodBuzzer();
-                openMatchStatsModal(true);
+                window.Ceremony.startPostMatch();
                 return;
             }
             startFaceoff();
@@ -10765,6 +10764,10 @@
             } else if (gameState === 'replay') {
                 updateReplay(dt);
                 updateCrowd(dt);
+            } else if (gameState === 'period_break') {
+                window.Ceremony.updatePeriodBreak(dt);
+            } else if (gameState === 'postgame') {
+                window.Ceremony.updatePostMatch(dt);
             } else if (gameState === 'lineup_loading') {
                 // La schermata roster è opaca e copre tutto: niente rendering 3D, solo il timer
                 updateLineupLoadingScreen(dt);
@@ -11553,19 +11556,19 @@
             // competizione in parità: supplementare a golden goal, poi rigori (niente pareggi)
             if (isFinal && isCompetitionMatch() && scoreHome === scoreGuest) {
                 if (currentPeriod === TOTAL_PERIODS) {
-                    gameState = 'period_break';
-                    openMatchStatsModal(false);
+                    window.Ceremony.startPeriodBreak();       // pausa in pista, poi supplementare
                     return;
                 }
                 gameState = 'match_over';
                 window.Competition.runShootout(result => {
                     matchShootout = result;
-                    openMatchStatsModal(true);
+                    window.Ceremony.startPostMatch();
                 });
                 return;
             }
-            gameState = isFinal ? 'match_over' : 'period_break';
-            openMatchStatsModal(isFinal);
+            // pausa tra i periodi e festa finale restano in pista (src/game/Ceremony.js)
+            if (isFinal) window.Ceremony.startPostMatch();
+            else window.Ceremony.startPeriodBreak();
         }
 
         // Esito della partita appena conclusa: 'REG' tempi regolamentari, 'OT' supplementare, 'SO' rigori
@@ -11621,7 +11624,8 @@
             updateStatRow(matchStats.homeSaves, matchStats.guestSaves, 'stat-saves-home', 'stat-saves-guest', 'bar-saves-home', 'bar-saves-guest');
 
             const refNames = referees.map(r => r.fullName).filter(Boolean);
-            document.getElementById('stats-referees').innerHTML = refNames.length ? `<b>Arbitri</b> ${refNames.join(' • ')}` : '';
+            const mvpLine = isFinal && window.Ceremony ? window.Ceremony.mvpHtml() : '';
+            document.getElementById('stats-referees').innerHTML = (mvpLine ? mvpLine + '<br>' : '') + (refNames.length ? `<b>Arbitri</b> ${refNames.join(' • ')}` : '');
             const scorersListEl = document.getElementById('stats-scorers-list');
             if (!matchStats.scorers.length) {
                 scorersListEl.innerHTML = '<div class="sx-empty">Nessuna rete segnata finora.</div>';
@@ -11686,6 +11690,7 @@
         }
 
         function launchMatchFromCurrentConfig() {
+            if (window.Ceremony) { window.Ceremony.reset(); window.Ceremony.clearMvp(); }
             scoreHome = 0;
             scoreGuest = 0;
             currentPeriod = 1;
@@ -13035,6 +13040,8 @@
 
     <!-- Modalità Competizione (Serie A / Coppa Italia): usa i globali dello script principale -->
     <script src="src/competition/competition.js"></script>
+    <!-- Fine periodo e festa di fine partita in pista -->
+    <script src="src/game/Ceremony.js"></script>
     <!-- Hockey Manager: sponsor, logica della carriera e interfaccia -->
     <script src="src/data/sponsors.js"></script>
     <script src="src/manager/manager-core.js"></script>

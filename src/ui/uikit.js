@@ -181,6 +181,8 @@
     const LAYERS = [
         { sel: '.cp-overlay' },
         { sel: '#match-stats-modal' },
+        { sel: '#pg-overlay' },
+        { sel: '#pb-panel' },
         { sel: '#pz-content', when: () => typeof gamePaused !== 'undefined' && gamePaused && typeof pausePage !== 'undefined' && !!pausePage, ownEsc: true },
         { sel: '#comp-root', ownEsc: true },
         { sel: '#mgr-root', ownEsc: true },
