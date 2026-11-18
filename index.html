@@ -2643,11 +2643,49 @@
                 kits: {
                     white: { id: 'white', label: 'Divisa Bianca', primary: 0xffffff, pants: 0x0b0b0f, helmet: 0x0b0b0f, glove: 0x0b0b0f }
                 }
+            },
+            // FDB Villeneuve (Les Fous du Bitume, Villeneuve-la-Garenne • Ligue Élite francese): roster 2026/27.
+            // Niente statistiche. Doppio n° 9 nel roster (Gauze e E. Clisson): a Clisson il 91 PROVVISORIO.
+            // Numeri di Langlois, Faucherand e Mahieu non confermati a Villeneuve. 4 difensori puri per 3 posti:
+            // Langlois e Allo (ibridi) giocano in attacco, Mahieu adattato ala in terza linea.
+            // Gioca al PalaHockey di Cittadella. Una sola divisa.
+            villeneuve: {
+                id: 'villeneuve',
+                league: 'LIGUE ELITE',
+                jerseyClubId: 'villeneuve',
+                name: 'FDB VILLENEUVE',
+                shortName: 'VILLENEUVE',
+                goalie: { num: "41", name: "BRABEC", first: "Daniel" },
+                backupGoalies: [],
+                lines: [
+                    [
+                        { role: "C", num: "9", name: "GAUZE", first: "Alex", g: 0, a: 0, pts: 0 },
+                        { role: "LW", num: "5", name: "GABILLET", first: "Karl", g: 0, a: 0, pts: 0 },
+                        { role: "RW", num: "79", name: "ALLO", first: "Louis", g: 0, a: 0, pts: 0 },
+                        { role: "D", num: "29", name: "LE BOHELLEC", first: "Léon", g: 0, a: 0, pts: 0 }
+                    ],
+                    [
+                        { role: "C", num: "10", name: "CLISSON", first: "Julien", g: 0, a: 0, pts: 0 },
+                        { role: "LW", num: "77", name: "NAUD", first: "Alexandre", g: 0, a: 0, pts: 0 },
+                        { role: "RW", num: "70", name: "LANGLOIS", first: "Maxime", g: 0, a: 0, pts: 0 },
+                        { role: "D", num: "4", name: "GRÉGOIRE", first: "Clément", g: 0, a: 0, pts: 0 }
+                    ],
+                    [
+                        { role: "C", num: "7", name: "CUZIN", first: "Léo", g: 0, a: 0, pts: 0 },
+                        { role: "LW", num: "91", name: "CLISSON", first: "Edouard", g: 0, a: 0, pts: 0 },
+                        { role: "RW", num: "19", name: "MAHIEU", first: "Mattéo", g: 0, a: 0, pts: 0 },
+                        { role: "D", num: "3", name: "FAUCHERAND", first: "Théo", g: 0, a: 0, pts: 0 }
+                    ]
+                ],
+                reserves: [],
+                kits: {
+                    sky: { id: 'sky', label: 'Divisa Azzurra', primary: 0x38b6e8, pants: 0x0b0b0f, helmet: 0x0b0b0f, glove: 0x0b0b0f }
+                }
             }
         };
 
-        const CLUB_IDS = ['cittadella', 'vicenza', 'milano', 'asiago', 'cittadella_pike', 'cus_verona', 'forli', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'asiago_blackout'];
-        const LEAGUE_MODES = ['TUTTE', 'SERIE A', 'SERIE B', 'UISP'];
+        const CLUB_IDS = ['cittadella', 'vicenza', 'milano', 'asiago', 'cittadella_pike', 'cus_verona', 'forli', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'asiago_blackout', 'villeneuve'];
+        const LEAGUE_MODES = ['TUTTE', 'SERIE A', 'SERIE B', 'UISP', 'LIGUE ELITE'];
 
         const ARENA_CATALOG = {
             cittadella: {
@@ -2655,7 +2693,7 @@
                 name: 'PALAHOCKEY DI CITTADELLA',
                 shortTitle: 'PalaHockey Cittadella',
                 location: 'Cittadella (PD) • Veneto, Italia',
-                clubBadge: 'Casa: Cittadella HP • Pike • Asiago',
+                clubBadge: 'Casa: Cittadella HP • Pike • Asiago • Villeneuve',
                 desc: 'Struttura geodetica con arconi in legno lamellare, condotto centrale dell\'aria, striscioni PROMEC / DIprint.it / StudioMarcon, casetta bar in legno, pista regolamentare azzurra e tribuna tifo caldo.',
                 capacity: '850 Spettatori',
                 surface: 'Piastrelle SportCourt Azzurre',
@@ -2767,7 +2805,8 @@
             fox_legnaro: 'fox_legnaro',
             edera_trieste: 'edera_trieste',
             kraken_camaiore: 'kraken_camaiore',
-            asiago_blackout: 'asiago'
+            asiago_blackout: 'asiago',
+            villeneuve: 'cittadella'
         };
 
         // Catalogo di 12 Esultanze Diverse dei Giocatori al Gol
@@ -3809,7 +3848,8 @@
                 fox_legnaro:     'fox_legnaro.png',
                 edera_trieste:   'edera_trieste.png',
                 kraken_camaiore: 'kraken_camaiore.png',
-                asiago_blackout: 'asiago_blackout.png'
+                asiago_blackout: 'asiago_blackout.png',
+                villeneuve:      'villeneuve.png'
             };
             const file = fileMap[clubId] || 'vicenza.svg';
             return `<img src="assets/logos/${file}" class="${sizeClass}" alt="Logo ${clubId}" draggable="false">`;
@@ -3829,7 +3869,8 @@
             fox_legnaro: ['assets/jerseys/fox_legnaro_1.png', 'assets/jerseys/fox_legnaro_2.png'],
             edera_trieste: ['assets/jerseys/edera_trieste_1.png', 'assets/jerseys/edera_trieste_2.png'],
             kraken_camaiore: ['assets/jerseys/kraken_camaiore.png'],
-            asiago_blackout: ['assets/jerseys/asiago_blackout.png']
+            asiago_blackout: ['assets/jerseys/asiago_blackout.png'],
+            villeneuve: ['assets/jerseys/villeneuve.png']
         };
         function getJerseyImageSrc(jerseyClubId, kitIndex) {
             const list = JERSEY_IMAGES[jerseyClubId];
@@ -5670,7 +5711,7 @@
 
         const pngLogoCache = {};
         // Club senza logo disegnato a mano: sul tabellone si usa il PNG
-        const PNG_LOGO_CLUBS = new Set(['cus_verona', 'forli', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'asiago_blackout']);
+        const PNG_LOGO_CLUBS = new Set(['cus_verona', 'forli', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'asiago_blackout', 'villeneuve']);
         function drawClubPngLogo(ctx, clubId, cx, cy, size) {
             let img = pngLogoCache[clubId];
             if (!img) {
@@ -7322,13 +7363,14 @@
             const primaryColor = (baseClubId === 'cittadella' || baseClubId === 'cittadella_pike') ? 0xdc2626
                 : baseClubId === 'kraken_camaiore' ? 0x1a1f5c
                 : baseClubId === 'asiago_blackout' ? 0x0b0b0f
+                : baseClubId === 'villeneuve' ? 0x38b6e8
                 : baseClubId === 'edera_trieste' ? 0x1d7a3a
                 : baseClubId === 'fox_legnaro' ? 0x111114
                 : baseClubId === 'cus_verona' ? 0x14206a
                 : baseClubId === 'forli' ? 0x16244f
                 : (baseClubId === 'milano' ? 0x0f2557
                 : (baseClubId === 'asiago' ? 0xf97316 : 0x09090b));
-            const secondaryColor = baseClubId === 'asiago_blackout' ? 0x3fa9f5 : baseClubId === 'kraken_camaiore' ? 0x78bee4 : baseClubId === 'edera_trieste' ? 0xd7262e : baseClubId === 'fox_legnaro' ? 0xd01f26 : baseClubId === 'cus_verona' ? 0xf5c400 : baseClubId === 'forli' ? 0x3d8bd1 : baseClubId === 'cittadella' ? 0x172554
+            const secondaryColor = baseClubId === 'villeneuve' ? 0x0b0b0f : baseClubId === 'asiago_blackout' ? 0x3fa9f5 : baseClubId === 'kraken_camaiore' ? 0x78bee4 : baseClubId === 'edera_trieste' ? 0xd7262e : baseClubId === 'fox_legnaro' ? 0xd01f26 : baseClubId === 'cus_verona' ? 0xf5c400 : baseClubId === 'forli' ? 0x3d8bd1 : baseClubId === 'cittadella' ? 0x172554
                 : (baseClubId === 'milano' ? 0xdc2626
                 : (baseClubId === 'asiago' ? 0x09090b : 0xdc2626));
 
@@ -8513,7 +8555,7 @@
         }
 
         // --- HUD BROADCAST: SIGLE, VISIBILITÀ, FRECCIA, CONO DI TIRO, ETICHETTA TIRO, AVVISI ---
-        const CLUB_ABBR = { cittadella: 'CIT', vicenza: 'VIC', milano: 'MIL', asiago: 'ASI', cittadella_pike: 'PIK', cus_verona: 'CUS', forli: 'FOR', fox_legnaro: 'FOX', edera_trieste: 'EDE', kraken_camaiore: 'KRA', asiago_blackout: 'BKO' };
+        const CLUB_ABBR = { cittadella: 'CIT', vicenza: 'VIC', milano: 'MIL', asiago: 'ASI', cittadella_pike: 'PIK', cus_verona: 'CUS', forli: 'FOR', fox_legnaro: 'FOX', edera_trieste: 'EDE', kraken_camaiore: 'KRA', asiago_blackout: 'BKO', villeneuve: 'VIL' };
         let hudStateKey = '';
         let hudToastTimer = null;
         let playerChevron = null;
@@ -10764,7 +10806,8 @@
             if (filterVal === 'UISP') return 'Lega UISP • Italia';
             if (filterVal === 'SERIE A') return 'Serie A • FISR';
             if (filterVal === 'SERIE B') return 'Serie B • FISR';
-            return clubLeague === 'UISP' ? 'Tutte (UISP)' : (clubLeague === 'SERIE B' ? 'Tutte (Serie B)' : 'Tutte (Serie A)');
+            if (filterVal === 'LIGUE ELITE') return 'Ligue Élite • Francia';
+            return clubLeague === 'UISP' ? 'Tutte (UISP)' : (clubLeague === 'SERIE B' ? 'Tutte (Serie B)' : (clubLeague === 'LIGUE ELITE' ? 'Tutte (Ligue Élite)' : 'Tutte (Serie A)'));
         }
 
         // Rating statici per club (OFF, DEF, GOA)
@@ -10779,7 +10822,8 @@
             fox_legnaro:     { off: 72, def: 69, goa: 73 },
             edera_trieste:   { off: 67, def: 68, goa: 76 },
             kraken_camaiore: { off: 70, def: 66, goa: 68 },
-            asiago_blackout: { off: 64, def: 61, goa: 66 }
+            asiago_blackout: { off: 64, def: 61, goa: 66 },
+            villeneuve:      { off: 80, def: 77, goa: 79 }
         };
 
         function _animateCrest(el) {
@@ -11312,7 +11356,8 @@
             fox_legnaro:     { photo: 'fox_legnaro.jpg', focus: '55% 35%', primary: '#d01f26', secondary: '#0b0b0f' },
             edera_trieste:   { photo: 'edera_trieste.jpg', focus: '48% 30%', primary: '#d7262e', secondary: '#1d7a3a' },
             kraken_camaiore: { photo: 'kraken_camaiore.jpg', focus: '40% 30%', primary: '#1a1f5c', secondary: '#78bee4' },
-            asiago_blackout: { photo: 'asiago_blackout.jpg', focus: '45% 30%', primary: '#0b0b0f', secondary: '#3fa9f5' }
+            asiago_blackout: { photo: 'asiago_blackout.jpg', focus: '45% 30%', primary: '#0b0b0f', secondary: '#3fa9f5' },
+            villeneuve:      { photo: 'villeneuve.jpg', focus: '50% 30%', primary: '#1c8fc4', secondary: '#0b0b0f' }
         };
         const ROSTER_ROLE_LABELS = { C: 'Centro', LW: 'Ala sinistra', RW: 'Ala destra', D: 'Difensore', G: 'Portiere' };
         let rosterShowIdx = -1;
@@ -11367,7 +11412,7 @@
             rosterShowIdx = idx;
             const theme = ROSTER_THEMES[club.id] || ROSTER_THEMES.cittadella;
             const isHome = idx === 0;
-            const league = club.league + ' • ' + (club.league === 'UISP' ? 'Lega UISP' : 'FISR');
+            const league = club.league === 'LIGUE ELITE' ? 'LIGUE ÉLITE • FFRS' : club.league + ' • ' + (club.league === 'UISP' ? 'Lega UISP' : 'FISR');
 
             // Foto: dissolvenza incrociata tra i due livelli
             const front = document.getElementById(rosterPhotoFront === 'a' ? 'rs-photo-a' : 'rs-photo-b');

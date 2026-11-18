@@ -42,6 +42,12 @@
             id: 'coppa_italia', name: 'Coppa Italia', short: 'Coppa Italia', logo: 'assets/logos/coppa_italia.png', active: true,
             desc: 'Tabellone a eliminazione diretta in gara secca: quarti, semifinali e finale 1°-2° posto.',
             facts: () => [[String(CUP_TEAMS), 'Squadre'], ['3', 'Turni'], ['Secca', 'Gara']]
+        },
+        {
+            // campionato francese: si sblocca quando in configurazione ci sono abbastanza squadre della lega
+            id: 'ligue_elite', name: 'Ligue Élite (Francia)', short: 'Ligue Élite', logo: 'assets/logos/ligue_elite_france.png', active: false,
+            desc: 'Il massimo campionato francese di roller hockey (FFRS). Per ora c\'è solo FDB Villeneuve: si giocherà quando arriveranno le altre squadre francesi.',
+            facts: () => [[String(CLUB_IDS.filter(id => club(id) && club(id).league === 'LIGUE ELITE').length), 'Squadre'], ['FFRS', 'Federazione'], ['Francia', 'Paese']]
         }
     ];
     let compIdx = 0;
