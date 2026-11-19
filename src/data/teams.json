@@ -5,6 +5,7 @@
       "id": "SERIE A",
       "name": "Serie A",
       "federation": "FISR",
+      "country": "IT",
       "badge": "Serie A • FISR",
       "rosterLabel": "SERIE A • FISR"
     },
@@ -12,6 +13,7 @@
       "id": "SERIE B",
       "name": "Serie B",
       "federation": "FISR",
+      "country": "IT",
       "badge": "Serie B • FISR",
       "rosterLabel": "SERIE B • FISR"
     },
@@ -19,6 +21,7 @@
       "id": "UISP",
       "name": "UISP",
       "federation": "Lega UISP",
+      "country": "IT",
       "badge": "Lega UISP • Italia",
       "rosterLabel": "UISP • Lega UISP"
     },
@@ -26,6 +29,7 @@
       "id": "LIGUE ELITE",
       "name": "Ligue Élite",
       "federation": "FFRS",
+      "country": "FR",
       "badge": "Ligue Élite • Francia",
       "rosterLabel": "LIGUE ÉLITE • FFRS"
     },
@@ -33,6 +37,7 @@
       "id": "RFEP",
       "name": "Liga Élite RFEP",
       "federation": "RFEP",
+      "country": "ES",
       "badge": "Liga Élite • Spagna",
       "rosterLabel": "LIGA ÉLITE • RFEP"
     }

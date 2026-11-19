@@ -32,8 +32,9 @@
     const T = {
         leagues: data.leagues || [],
         ids: [], rosters: {}, ratings: {}, homeArenas: {}, logos: {}, jerseys: {},
-        pngLogoClubs: new Set(), abbr: {}, coaches: {}, rosterThemes: {}, staffColors: {}
+        pngLogoClubs: new Set(), abbr: {}, coaches: {}, rosterThemes: {}, staffColors: {}, countries: {}
     };
+    const leagueCountry = id => ((data.leagues || []).find(l => l.id === id) || {}).country || 'IT';
     data.teams.forEach(t => {
         const kits = {};
         Object.keys(t.kits || {}).forEach(k => {
@@ -41,8 +42,11 @@
             kits[k] = { id: k, label: v.label, primary: hex(v.primary), pants: hex(v.pants), helmet: hex(v.helmet), glove: hex(v.glove) };
         });
         T.ids.push(t.id);
+        // nazione della squadra: campo "country" della squadra o, in mancanza, quello della lega
+        const country = (t.country || leagueCountry(t.league)).toUpperCase();
+        T.countries[t.id] = country;
         T.rosters[t.id] = {
-            id: t.id, league: t.league, jerseyClubId: t.jerseyClubId || t.id, name: t.name, shortName: t.shortName || t.name,
+            id: t.id, league: t.league, country, jerseyClubId: t.jerseyClubId || t.id, name: t.name, shortName: t.shortName || t.name,
             goalie: t.goalie, backupGoalies: t.backupGoalies || [], lines: t.lines, reserves: t.reserves || [], kits
         };
         T.ratings[t.id] = Object.assign({ off: 70, def: 70, goa: 70 }, t.ratings);

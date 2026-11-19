@@ -2468,6 +2468,8 @@
 
     <!-- Squadre e leghe: src/data/teams.json (deve precedere lo script principale) -->
     <script src="src/data/teams-loader.js"></script>
+    <script src="src/ui/Flags.js"></script>
+    <script src="src/game/People.js"></script>
     <script>
         // --- SQUADRE E LEGHE: dati in src/data/teams.json, caricati da src/data/teams-loader.js (TEAM_DATA) ---
         const CLUB_ROSTERS = TEAM_DATA.rosters;
@@ -3969,8 +3971,12 @@
         // sommare a baseY dell'animazione del pubblico.
         const CROWD_CHILD_RATIO = 0.1;
         const CROWD_SEAT_HIP_Y = 0.36;
+        // Ogni arena la chiama per ciascun tifoso: qui si decide anche l'aspetto (uomo/donna, capelli,
+        // barba, tifo per casa/ospiti, maglia, felpa, bandierina) tramite src/game/People.js.
         function maybeMakeCrowdChild(root, headGroup, seated) {
-            if (Math.random() >= CROWD_CHILD_RATIO) return 0;
+            const isChild = Math.random() < CROWD_CHILD_RATIO;
+            if (window.HIL_PEOPLE) window.HIL_PEOPLE.decorateCrowdMember(root, headGroup, isChild);
+            if (!isChild) return 0;
             const s = 0.62 + Math.random() * 0.1;
             root.scale.setScalar(s);
             if (headGroup) headGroup.scale.setScalar(1.2);
@@ -6855,6 +6861,9 @@
                 hipGroup,
                 bodyPivot,
                 headGroup,
+                headMesh: head,
+                torsoMesh: torso,
+                shortsMesh: shorts,
                 leftLegPivot: leftLeg.legPivot,
                 leftKneePivot: leftLeg.kneePivot,
                 rightLegPivot: rightLeg.legPivot,
@@ -6889,6 +6898,8 @@
             };
 
             skaterObj.contactShadow = finalizeSkaterShadows(root, isGoalie);
+            // altezza, corporatura, barba/baffi e nazionalità del giocatore (src/game/People.js)
+            if (!isRef && window.HIL_PEOPLE) window.HIL_PEOPLE.applySkaterLook(skaterObj);
 
             if (!isRef) {
                 setSkaterHockeyReadyPose(skaterObj, 0, 0);
@@ -8372,9 +8383,9 @@
 
             introBothArena.textContent = `Saluto al Pubblico • ${arenaInfo.shortTitle}`;
             introBothHomeLogo.innerHTML = getClubLogoSVG(homeClub.id, 'w-12 h-12 sm:w-14 sm:h-14');
-            introBothHomeName.textContent = homeClub.name;
+            setTeamNameWithFlag(introBothHomeName, homeClub.id, homeClub.name);
             introBothGuestLogo.innerHTML = getClubLogoSVG(guestClub.id, 'w-12 h-12 sm:w-14 sm:h-14');
-            introBothGuestName.textContent = guestClub.name;
+            setTeamNameWithFlag(introBothGuestName, guestClub.id, guestClub.name);
             introBothCard.style.setProperty('--home', getMatchTeamColors().home);
             introBothCard.style.setProperty('--guest', getMatchTeamColors().guest);
 
@@ -8441,7 +8452,7 @@
                 introSingleCard.style.setProperty('--team', getMatchTeamColors().guest);
                 introSingleCard.style.setProperty('--team2', getMatchTeamColors().guest2);
                 restartAnim(introSingleCard);
-                introSingleName.textContent = guestClub.name;
+                setTeamNameWithFlag(introSingleName, guestClub.id, guestClub.name);
             } else if (mode === 'home') {
                 introSingleCard.classList.remove('hidden');
                 introBothCard.classList.add('hidden');
@@ -8451,7 +8462,7 @@
                 introSingleCard.style.setProperty('--team', getMatchTeamColors().home);
                 introSingleCard.style.setProperty('--team2', getMatchTeamColors().home2);
                 restartAnim(introSingleCard);
-                introSingleName.textContent = homeClub.name;
+                setTeamNameWithFlag(introSingleName, homeClub.id, homeClub.name);
             } else {
                 introSingleCard.classList.add('hidden');
                 introBothCard.classList.remove('hidden');
@@ -8609,7 +8620,8 @@
             wrap.style.setProperty('--team-on', lumOf(accent) < 150 ? '#ffffff' : '#0b1226');
             document.getElementById('goal-logo').src = logoSrcOf(club.id);
             goalTeamText.textContent = club.name;
-            document.getElementById('goal-scorer').textContent = `#${num} ${name}`;
+            const scorerSk = skaters.find(s => s.team === team && String(s.jerseyNum) === String(num) && !s.isRef);
+            document.getElementById('goal-scorer').innerHTML = `${scorerSk ? skaterFlagHTML(scorerSk) + ' ' : ''}#${rosterEsc(num)} ${rosterEsc(name)}`;
             document.getElementById('goal-celeb').textContent = currentGoalCelebration ? currentGoalCelebration.name : '';
             document.getElementById('goal-abbr-home').textContent = CLUB_ABBR[matchConfig.homeClub] || 'CASA';
             document.getElementById('goal-abbr-guest').textContent = CLUB_ABBR[matchConfig.guestClub] || 'OSP';
@@ -8804,7 +8816,8 @@
             document.getElementById('spot-num').textContent = sk.jerseyNum;
             document.getElementById('spot-kicker').textContent = (sk.team === 'home' ? 'Squadra di casa' : 'Squadra ospite') + ' • Giocatore chiave' + (sk.pts ? ` • ${sk.goals} G ${sk.pts - sk.goals} A` : '');
             document.getElementById('spot-name').innerHTML = (sk.firstName ? `<small class="spot-first">${rosterEsc(sk.firstName)}</small>` : '') + rosterEsc(sk.playerName);
-            document.getElementById('spot-team').innerHTML = `${club ? club.name : ''} • <b>${ROSTER_ROLE_LABELS[sk.role] || sk.role}</b>`;
+            const nat = sk.nationality || clubCountry(sk.clubId);
+            document.getElementById('spot-team').innerHTML = `${skaterFlagHTML(sk, '1.05em')} ${window.HIL_FLAGS ? HIL_FLAGS.name(nat) + ' • ' : ''}${club ? club.name : ''} • <b>${ROSTER_ROLE_LABELS[sk.role] || sk.role}</b>`;
             card.classList.remove('hidden', 'is-in');
             void card.offsetWidth;
             card.classList.add('is-in');
@@ -9037,7 +9050,7 @@
             // grafica TV in basso, come negli intermezzi
             const club = CLUB_ROSTERS[g.clubId];
             document.getElementById('cut-tag').innerHTML = '<b></b>PARATA';
-            document.getElementById('cut-title').textContent = `#${g.jerseyNum} ${skaterFullName(g)}`;
+            document.getElementById('cut-title').innerHTML = skaterTitleHTML(g);
             document.getElementById('cut-sub').textContent = `Blocca il disco • ${club ? club.name : ''} • Ingaggio in zona`;
             document.getElementById('cut-overlay').classList.remove('hidden');
             restartAnim(document.getElementById('cut-l3'));
@@ -9344,7 +9357,7 @@
             }
             const club = CLUB_ROSTERS[offender.clubId];
             document.getElementById('cut-tag').innerHTML = '<b></b>' + (kind === 'expulsion' ? 'ESPULSIONE' : 'PENALITÀ');
-            document.getElementById('cut-title').textContent = `#${offender.jerseyNum} ${skaterFullName(offender)}`;
+            document.getElementById('cut-title').innerHTML = skaterTitleHTML(offender);
             document.getElementById('cut-sub').textContent = `${type} • ${PENALTY_ROLE_TXT[kind]} • ${club ? club.name : ''}`;
             document.getElementById('cut-overlay').classList.remove('hidden');
             restartAnim(document.getElementById('cut-l3'));
@@ -9683,7 +9696,9 @@
             if (prev && prev.scorer) positionPlayersForFaceoff();
             if (sh.onStart) sh.onStart();
             document.getElementById('cut-tag').innerHTML = '<b></b>' + (sh.tag || "PRIMA DELL'INGAGGIO");
-            document.getElementById('cut-title').textContent = sh.title;
+            const shotSk = sh.goalie || sh.scorer;
+            if (shotSk) document.getElementById('cut-title').innerHTML = skaterTitleHTML(shotSk);
+            else document.getElementById('cut-title').textContent = sh.title;
             document.getElementById('cut-sub').textContent = sh.sub;
             restartAnim(document.getElementById('cut-l3'));
             const fade = document.getElementById('cut-fade');
@@ -11383,6 +11398,7 @@
                     fan.leftArmPivot.rotation.x = wave2 * 0.25 * intensity;
                     fan.rightArmPivot.rotation.x = -wave * 0.25 * intensity;
                     fan.headGroup.rotation.z = wave * 0.12 * intensity;
+                    if (fan.mesh.userData.flagPivot) window.HIL_PEOPLE.updateCrowdFlag(fan, time, true);
                 });
             } else {
                 crowdMembers.forEach(fan => {
@@ -11411,6 +11427,7 @@
                     fan.rightArmPivot.rotation.x = fan.standing ? -0.12 : -0.35;
                     fan.headGroup.rotation.y = Math.sin(time * 0.9 + fan.phase) * 0.18;
                     fan.headGroup.rotation.z = 0;
+                    if (fan.mesh.userData.flagPivot) window.HIL_PEOPLE.updateCrowdFlag(fan, time, false);
                 });
             }
         }
@@ -11642,8 +11659,8 @@
             }
 
             // --- Nomi ---
-            document.getElementById('step1-home-name').textContent = homeClub.name;
-            document.getElementById('step1-guest-name').textContent = guestClub.name;
+            setTeamNameWithFlag(document.getElementById('step1-home-name'), homeClub.id, homeClub.name);
+            setTeamNameWithFlag(document.getElementById('step1-guest-name'), guestClub.id, guestClub.name);
             fitTeamNameToBox(document.getElementById('step1-home-name'));
             fitTeamNameToBox(document.getElementById('step1-guest-name'));
 
@@ -12139,16 +12156,43 @@
         function playerFullName(first, last) { return first ? `${first} ${last}` : last; }
         function skaterFullName(sk) { return sk ? playerFullName(sk.firstName, sk.playerName) : ''; }
 
+        // --- BANDIERE (src/ui/Flags.js) ---
+        // nazione della squadra; la bandiera compare accanto ai nomi solo se le due squadre sono di stati diversi
+        function clubCountry(clubId) { return (TEAM_DATA.countries && TEAM_DATA.countries[clubId]) || 'IT'; }
+        function isInternationalMatch() { return clubCountry(matchConfig.homeClub) !== clubCountry(matchConfig.guestClub); }
+        function teamFlagHTML(clubId, size) {
+            return window.HIL_FLAGS && isInternationalMatch() ? HIL_FLAGS.html(clubCountry(clubId), 'hil-team-flag', size) + ' ' : '';
+        }
+        function setTeamNameWithFlag(el, clubId, name) {
+            if (el) el.innerHTML = teamFlagHTML(clubId) + rosterEsc(name);
+        }
+        // nazionalità di un giocatore (campo "nat" in teams.json, altrimenti la nazione della squadra)
+        function playerNat(clubId, pl) {
+            if (pl && pl.nat) return String(pl.nat).toUpperCase();
+            return window.HIL_PEOPLE ? HIL_PEOPLE.playerTraits(clubId, pl, false).nat : clubCountry(clubId);
+        }
+        function playerFlagHTML(clubId, pl, size) {
+            return window.HIL_FLAGS ? HIL_FLAGS.html(playerNat(clubId, pl), 'hil-player-flag', size) : '';
+        }
+        function skaterFlagHTML(sk, size) {
+            if (!sk || sk.isRef || !window.HIL_FLAGS) return '';
+            return HIL_FLAGS.html(sk.nationality || clubCountry(sk.clubId), 'hil-player-flag', size);
+        }
+        // "#21 Edoardo LAGO" con la bandiera della nazionalità davanti
+        function skaterTitleHTML(sk) {
+            return sk ? `${skaterFlagHTML(sk)} #${rosterEsc(sk.jerseyNum)} ${rosterEsc(skaterFullName(sk))}` : '';
+        }
+
         function renderRosterRowsHTML(club) {
-            const groups = [[{ role: 'G', num: club.goalie.num, name: club.goalie.name, first: club.goalie.first, line: 'Titolare', gold: true }]];
+            const groups = [[{ role: 'G', num: club.goalie.num, name: club.goalie.name, first: club.goalie.first, line: 'Titolare', gold: true, src: club.goalie }]];
             club.lines.forEach((line, li) => {
-                groups.push(line.map(pl => ({ role: pl.role, num: pl.num, name: pl.name, first: pl.first, line: 'Linea ' + (li + 1), gold: li === 0 })));
+                groups.push(line.map(pl => ({ role: pl.role, num: pl.num, name: pl.name, first: pl.first, line: 'Linea ' + (li + 1), gold: li === 0, src: pl })));
             });
             let i = 0;
             return groups.map((g, gi) => (gi > 0 ? '<div class="rs-gap"></div>' : '') + g.map(pl => `
                 <div class="rs-row${pl.gold ? ' is-gold' : ''}" role="listitem" style="--i:${i++}">
                     <span class="rs-num">#${rosterEsc(pl.num)}</span>
-                    <span class="rs-name">${pl.first ? `<span class="rs-first">${rosterEsc(pl.first)}</span> ` : ''}${rosterEsc(pl.name)}</span>
+                    <span class="rs-name">${playerFlagHTML(club.id, pl.src)} ${pl.first ? `<span class="rs-first">${rosterEsc(pl.first)}</span> ` : ''}${rosterEsc(pl.name)}</span>
                     <span class="rs-role">${ROSTER_ROLE_LABELS[pl.role] || pl.role}</span>
                     <span class="rs-line">${pl.line}</span>
                 </div>`).join('')).join('') + renderRosterExtrasHTML(club, i);
@@ -12156,7 +12200,7 @@
 
         // Riserve e portieri di riserva: una riga compatta in fondo all'elenco
         function renderRosterExtrasHTML(club, startIdx) {
-            const fmt = list => list.map(pl => `#${rosterEsc(pl.num)} ${rosterEsc(playerFullName(pl.first, pl.name))}`).join(' · ');
+            const fmt = list => list.map(pl => `#${rosterEsc(pl.num)} ${playerFlagHTML(club.id, pl)} ${rosterEsc(playerFullName(pl.first, pl.name))}`).join(' · ');
             const parts = [];
             if (club.backupGoalies && club.backupGoalies.length) parts.push(`<b>Portieri di riserva</b> ${fmt(club.backupGoalies)}`);
             if (club.reserves && club.reserves.length) parts.push(`<b>Riserve</b> ${fmt(club.reserves)}`);
@@ -12202,7 +12246,7 @@
                 const logo = document.getElementById('rs-team-logo');
                 logo.src = logoSrc;
                 logo.alt = 'Logo ' + club.name;
-                document.getElementById('rs-team-name').textContent = club.name;
+                setTeamNameWithFlag(document.getElementById('rs-team-name'), club.id, club.name);
                 fitTeamNameToBox(document.getElementById('rs-team-name'));
                 document.getElementById('rs-league').textContent = league;
                 document.getElementById('rs-sub').textContent = club.name + ' • ' + (isHome ? 'Squadra di casa' : 'Squadra ospite');
@@ -12336,11 +12380,11 @@
             sxEl.style.setProperty('--guest', sxCol.guest);
             sxEl.style.setProperty('--guest-bar', sxCol.guestBar);
             document.getElementById('stats-home-logo').innerHTML = getClubLogoSVG(homeClub.id, 'w-12 h-12');
-            document.getElementById('stats-home-name').textContent = homeClub.name;
+            setTeamNameWithFlag(document.getElementById('stats-home-name'), homeClub.id, homeClub.name);
             document.getElementById('stats-home-score').textContent = scoreHome;
 
             document.getElementById('stats-guest-logo').innerHTML = getClubLogoSVG(guestClub.id, 'w-12 h-12');
-            document.getElementById('stats-guest-name').textContent = guestClub.name;
+            setTeamNameWithFlag(document.getElementById('stats-guest-name'), guestClub.id, guestClub.name);
             document.getElementById('stats-guest-score').textContent = scoreGuest;
 
             const homeTotalShots = Math.max(scoreHome, matchStats.homeShots);
@@ -12961,7 +13005,7 @@
                     const c = sk.mesh.position.clone();
                     const a0 = Math.random() * Math.PI * 2, dir = rnd();
                     const club = CLUB_ROSTERS[sk.clubId];
-                    return { name: `#${sk.jerseyNum} ${skaterFullName(sk)}`, sub: club ? club.name : '', dur: 8,
+                    return { name: `#${sk.jerseyNum} ${skaterFullName(sk)}`, skater: sk, sub: club ? club.name : '', dur: 8,
                         cam: k => { const a = a0 + dir * k * 1.2; return [V(c.x + Math.sin(a) * 2.7, 1.55, c.z + Math.cos(a) * 2.7), V(c.x, 1.15, c.z)]; } };
                 }
                 case 'crowd': case 'scoreboard': case 'bench': case 'timekeepers': {
@@ -12991,7 +13035,8 @@
             c.shot = shot;
             c.t = 0;
             c.fading = false;
-            document.getElementById('pz-shot-name').textContent = shot.name;
+            if (shot.skater) document.getElementById('pz-shot-name').innerHTML = skaterTitleHTML(shot.skater);
+            else document.getElementById('pz-shot-name').textContent = shot.name;
             document.getElementById('pz-shot-sub').textContent = shot.sub ? '• ' + shot.sub : '';
             const lbl = document.querySelector('#pause-menu .pz-shot');
             if (lbl) restartAnim(lbl);

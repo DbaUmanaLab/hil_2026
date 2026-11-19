@@ -32,14 +32,34 @@ il file non si può leggere.
 | `lines` | 3 linee da 4 giocatori, nell'ordine C, LW, RW, D: `{ "role", "num", "name", "first", "g", "a", "pts" }` |
 | `reserves` | riserve: `{ "num", "name", "first" }` |
 | `kits` | divise: `{ "label", "primary", "pants", "helmet", "glove" }`, colori come `"#rrggbb"` |
+| `country` | facoltativo: nazione della squadra (codice ISO a 2 lettere, es. `"FR"`). Se manca vale quella della lega |
+
+### Campi facoltativi dei giocatori
+
+Ogni giocatore (`goalie`, `backupGoalies`, `lines`, `reserves`) può avere anche:
+
+| Campo | Cosa contiene |
+|---|---|
+| `nat` | nazionalità, codice ISO a 2 lettere (`"IT"`, `"FR"`, `"ES"`, `"CH"`, `"CZ"`, `"US"`, ...). Se manca vale la nazione della squadra. La bandiera compare nel roster e quando il giocatore è inquadrato |
+| `height` | altezza in cm (es. `184`) |
+| `weight` | peso in kg (es. `82`) |
+| `facialHair` | `"none"`, `"beard"` (barba), `"mustache"` (baffi) oppure `"full"` (barba e baffi) |
+
+Se `height`, `weight` o `facialHair` mancano vengono generati dal nome del giocatore: restano
+gli stessi a ogni partita. Esempio:
+`{ "role": "C", "num": "21", "name": "LAGO", "first": "Edoardo", "nat": "IT", "height": 183, "weight": 80, "facialHair": "beard", "g": 1, "a": 0, "pts": 1 }`
+
+Le bandiere disponibili sono in `src/ui/Flags.js`.
 
 Le linee devono essere 3 con 4 giocatori ciascuna: se mancano giocatori di movimento, uno può
 comparire in due linee (come Edoardo Rigoni negli Asiago Black-Out).
 
 ## Aggiungere una lega
 
-Aggiungi un elemento in `leagues`: `id` (es. `"SERIE C"`), `name`, `federation`, `badge`
-(scritta del menu, es. `"Serie C • FISR"`) e `rosterLabel` (scritta della schermata roster).
+Aggiungi un elemento in `leagues`: `id` (es. `"SERIE C"`), `name`, `federation`, `country`
+(codice ISO della nazione, es. `"IT"`), `badge` (scritta del menu, es. `"Serie C • FISR"`) e
+`rosterLabel` (scritta della schermata roster). Quando si affrontano squadre di nazioni diverse
+le bandiere compaiono accanto ai nomi delle squadre.
 Comparirà da sola nel filtro delle leghe delle amichevoli.
 
 ## Controllo veloce
