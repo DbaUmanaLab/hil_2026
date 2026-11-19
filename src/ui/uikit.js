@@ -184,6 +184,7 @@
         { sel: '#pg-overlay' },
         { sel: '#pb-panel' },
         { sel: '#pz-content', when: () => typeof gamePaused !== 'undefined' && gamePaused && typeof pausePage !== 'undefined' && !!pausePage, ownEsc: true },
+        { sel: '#pause-menu.is-settings', ownEsc: true },   // opzioni dal menu principale: Esc lo gestisce index.html (pagina → elenco → menu)
         { sel: '#comp-root', ownEsc: true },
         { sel: '#mgr-root', ownEsc: true },
         { sel: '#start-screen' }

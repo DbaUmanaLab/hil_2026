@@ -1355,9 +1355,129 @@
             #funfact-loader *, #funfact-loader { animation: none !important; transition: none !important; }
             #funfact-loader .ff-photo, #funfact-loader .ff-title, #funfact-loader .ff-fact, #funfact-loader .ff-num { opacity: 1; }
         }
+
+        /* ═══ DISCLAIMER INIZIALE (prima della schermata dei modi di gioco), impaginato come una schermata
+           "termini" da console: fondo grigio, riquadro con barra del titolo, pannello scuro col logo a destra ═══ */
+        #disclaimer-screen { position: fixed; inset: 0; z-index: 100; display: flex; align-items: center; justify-content: center; padding: 20px 16px; overflow: hidden;
+            background: radial-gradient(ellipse 90% 80% at 50% 45%, #d2d2d2 0%, #bdbdbd 55%, #a9a9a9 100%); color: #2b2b2b;
+            font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif; transition: opacity .6s ease; }
+        #disclaimer-screen.is-out { opacity: 0; pointer-events: none; }
+        #disclaimer-screen.hidden { display: none; }
+        .dc-wrap { width: min(900px, 100%); display: flex; flex-direction: column; gap: 10px; animation: dcIn .6s cubic-bezier(.2,.9,.2,1) both; }
+        .dc-brand { height: clamp(30px, 5vh, 42px); width: auto; align-self: flex-start; }
+        .dc-card { display: grid; grid-template-columns: 1fr 35%; min-height: clamp(260px, 48vh, 340px); border-radius: 4px; overflow: hidden;
+            box-shadow: 0 0 0 1px rgba(0,0,0,.35), 0 18px 40px rgba(0,0,0,.28); }
+        .dc-main { display: flex; flex-direction: column; background: linear-gradient(180deg, #d9d9d9 0%, #cdcdcd 100%); }
+        .dc-head { background: linear-gradient(180deg, #3a3a3a 0%, #262626 100%); color: #fff; font-size: clamp(18px, 2.8vh, 24px); font-weight: 500; padding: 14px 18px; letter-spacing: .01em; }
+        .dc-body { flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 16px 18px 18px; font-size: clamp(13px, 1.8vh, 15px); line-height: 1.5; }
+        .dc-body p { margin: 0; }
+        .dc-item { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; color: #4a4a4a; font-size: clamp(12px, 1.7vh, 14px); }
+        .dc-item b { color: #222; font-weight: 600; }
+        .dc-check { width: 30px; height: 30px; border: 2px solid #e8742a; border-radius: 3px; background: rgba(255,255,255,.25); display: grid; place-items: center; color: #e8742a; }
+        .dc-check svg { width: 18px; height: 18px; opacity: 0; transform: scale(.4); transition: opacity .25s, transform .25s cubic-bezier(.2,1.6,.4,1); }
+        .dc-item.is-ok .dc-check svg { opacity: 1; transform: none; }
+        .dc-next { position: relative; margin-top: auto; align-self: flex-start; overflow: hidden; padding: 6px 16px; border-radius: 2px; font-size: clamp(15px, 2.3vh, 19px); font-weight: 700; letter-spacing: .04em;
+            color: #fff; background: rgba(232,116,42,.38); text-shadow: 0 1px 1px rgba(0,0,0,.25); }
+        .dc-next i { position: absolute; inset: 0; background: #e8742a; transform-origin: left; transform: scaleX(0); animation: dcFill 5s linear both; z-index: 0; }
+        .dc-next span { position: relative; z-index: 1; }
+        .dc-side { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; padding: 20px; text-align: center; color: #e6e6e6;
+            background: radial-gradient(ellipse 70% 55% at 50% 38%, #5a5a5a 0%, #333 45%, #1c1c1c 100%); border-left: 1px solid rgba(0,0,0,.5); }
+        .dc-side img { width: min(170px, 80%); height: auto; border-radius: 50%; background: #fff; box-shadow: 0 10px 28px rgba(0,0,0,.55); }   /* nel PNG il bianco del badge è trasparente */
+        .dc-side p { margin: 0; font-size: clamp(14px, 2.1vh, 17px); line-height: 1.3; }
+        .dc-side p b { display: block; color: #fff; font-weight: 600; }
+        .dc-legend { display: flex; flex-wrap: wrap; gap: 6px 22px; padding: 2px 4px; font-size: 12px; color: #6b6b6b; }
+        .dc-legend span { display: inline-flex; align-items: center; gap: 7px; }
+        .dc-legend i { width: 16px; height: 16px; border-radius: 50%; border: 1.5px solid currentColor; display: grid; place-items: center; font-style: normal; font-size: 9px; font-weight: 700; }
+        .dc-legend .c1 { color: #5d7fb8; } .dc-legend .c2 { color: #c0566a; } .dc-legend .c3 { color: #3f9a8c; }
+        .dc-legend em { font-style: normal; color: #6b6b6b; }
+        @keyframes dcIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+        @keyframes dcFill { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+        @media (max-width: 640px) {
+            .dc-card { grid-template-columns: 1fr; }
+            .dc-side { order: -1; flex-direction: row; gap: 14px; padding: 12px 16px; border-left: 0; border-bottom: 1px solid rgba(0,0,0,.5); text-align: left; }
+            .dc-side img { width: 64px; }
+        }
+        @media (prefers-reduced-motion: reduce) { #disclaimer-screen, #disclaimer-screen * { animation: none !important; transition: none !important; } .dc-next i { transform: scaleX(1); } }
+
+        /* ═══ OPZIONI dal menu principale: stesso pannello della pausa, senza la regia e le voci di partita ═══ */
+        .splash-opt-btn { height: 38px; padding: 0 14px 0 10px; border-radius: 999px; display: inline-flex; align-items: center; gap: 7px; color: #f6b511; background: rgba(10,14,26,.6); border: 1.5px solid rgba(246,181,17,.55);
+            font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; transition: background .2s, transform .2s; flex: 0 0 auto; }
+        .splash-opt-btn:hover { background: rgba(10,14,26,.85); transform: scale(1.04); }
+        .splash-opt-btn kbd { font: inherit; font-size: 10px; color: #94a3b8; border: 1px solid rgba(148,163,184,.45); border-radius: 4px; padding: 0 5px; }
+        #pause-menu.is-settings { z-index: 75; background-color: #050913; background-image: linear-gradient(90deg, rgba(5,9,19,.94) 0%, rgba(5,9,19,.78) 34%, rgba(5,9,19,.38) 62%, rgba(5,9,19,.55) 100%), linear-gradient(180deg, rgba(5,9,19,.35) 0%, transparent 30%, transparent 70%, rgba(5,9,19,.7) 100%), url('assets/backgrounds/options_screen.jpg'); background-size: cover; background-position: center 30%; animation: pzSettingsBg 18s ease-in-out infinite alternate; }
+        @keyframes pzSettingsBg { from { background-position: center 30%; } to { background-position: 60% 45%; } }
+        @media (prefers-reduced-motion: reduce) { #pause-menu.is-settings { animation: none; } }
+        #pause-menu.is-settings .pz-vignette, #pause-menu.is-settings .pz-bars, #pause-menu.is-settings #pz-fade,
+        #pause-menu.is-settings .pz-shot, #pause-menu.is-settings .pz-score, #pause-menu.is-settings .is-match-only { display: none !important; }
+        #pause-menu:not(.is-settings) .is-settings-only { display: none !important; }
     </style>
 </head>
 <body>
+
+    <!-- DISCLAIMER: prima schermata, almeno 5 secondi (e finché la pagina non ha finito di caricare) -->
+    <div id="disclaimer-screen" role="dialog" aria-modal="true" aria-labelledby="dc-title">
+        <div class="dc-wrap">
+            <img class="dc-brand" src="assets/logos/game%20extended.png" alt="HIL 2026 - Hockey in line">
+            <div class="dc-card">
+                <div class="dc-main">
+                    <div id="dc-title" class="dc-head">Prima di iniziare</div>
+                    <div class="dc-body">
+                        <p>Grazie per aver scelto HIL 2026. Prima di scendere in pista, ti chiediamo di leggere queste due righe.</p>
+                        <div class="dc-item"><span class="dc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+                            <span><b>HIL 2026 è una produzione amatoriale</b>, realizzata per passione per l'hockey in line.</span></div>
+                        <div class="dc-item"><span class="dc-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span>
+                            <span><b>Loghi, maglie, nomi e marchi</b> delle squadre, delle leghe e delle competizioni sono di proprietà delle rispettive società e organizzazioni.</span></div>
+                        <div class="dc-next" aria-hidden="true"><i></i><span>AVANTI ›</span></div>
+                    </div>
+                </div>
+                <div class="dc-side">
+                    <img src="assets/logos/game%20badge.png" alt="">
+                    <p>L'hockey in line<b>fatto con passione</b></p>
+                </div>
+            </div>
+            <div class="dc-legend">
+                <span class="c1"><i>i</i><em>Produzione amatoriale</em></span>
+                <span class="c2"><i>©</i><em>Marchi dei rispettivi proprietari</em></span>
+                <span class="c3"><i>▶</i><em id="dc-wait">Avvio tra 5 s</em></span>
+            </div>
+        </div>
+    </div>
+    <script>
+        // Disclaimer: resta a schermo almeno 5 secondi; se la pagina sta ancora caricando aspetta la fine del
+        // caricamento. Il conto parte dal primo fotogramma disegnato: gli script pesanti (librerie nell'head,
+        // script principale) bloccano il rendering, e prima il tempo scorreva quando l'avviso non era ancora visibile.
+        (function () {
+            const MIN_MS = 5000;
+            let loaded = document.readyState === 'complete', timeUp = false;
+            window.disclaimerOpen = true;
+            const close = () => {
+                if (!loaded || !timeUp || !window.disclaimerOpen) return;
+                window.disclaimerOpen = false;
+                const el = document.getElementById('disclaimer-screen');
+                if (!el) return;
+                el.classList.add('is-out');
+                setTimeout(() => el.classList.add('hidden'), 650);
+            };
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                // barra di avanzamento sincronizzata con il conto
+                const fill = document.querySelector('#disclaimer-screen .dc-next i');
+                if (fill) { fill.style.animation = 'none'; void fill.offsetWidth; fill.style.animation = ''; }
+                // le due voci si spuntano durante l'attesa, il conto alla rovescia scende fino all'avvio
+                document.querySelectorAll('#disclaimer-screen .dc-item').forEach((it, i) => setTimeout(() => it.classList.add('is-ok'), 1200 + i * 1500));
+                const wait = document.getElementById('dc-wait'), tStart = Date.now();
+                const tickId = setInterval(() => {
+                    const left = Math.ceil((MIN_MS - (Date.now() - tStart)) / 1000);
+                    if (left > 0) { if (wait) wait.textContent = 'Avvio tra ' + left + ' s'; } else clearInterval(tickId);
+                }, 200);
+                setTimeout(() => {
+                    timeUp = true;
+                    if (!loaded) { const w = document.getElementById('dc-wait'); if (w) w.textContent = 'Caricamento…'; }
+                    close();
+                }, MIN_MS);
+            }));
+            window.addEventListener('load', () => { loaded = true; close(); });
+        })();
+    </script>
 
     <!-- SCHERMATA INIZIALE — STILE EA / NHL TILE MENU -->
     <div id="title-splash-screen" class="fixed inset-0 flex flex-col pointer-events-auto z-[60] overflow-hidden" style="background:#060b14;">
@@ -1376,6 +1496,10 @@
                 <button type="button" id="splash-music-btn" class="splash-music-btn" aria-label="Musica on/off" title="Musica">
                     <svg id="splash-music-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                     <svg id="splash-music-off" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M3 3l18 18"/></svg>
+                </button>
+                <button type="button" id="splash-options-btn" class="splash-opt-btn" aria-label="Opzioni" title="Opzioni (O)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                    <span class="hidden sm:inline">Opzioni</span><kbd class="hidden sm:inline">O</kbd>
                 </button>
                 <div id="device-profile-badge" class="hidden sm:inline-block text-[10px] font-black text-emerald-300 bg-slate-900/90 px-2.5 py-0.5 rounded-full border border-emerald-500/40">
                     Serie A &amp; UISP • 5 vs 5
@@ -2188,8 +2312,8 @@
         <div class="pz-layout">
             <aside class="pz-panel">
                 <header class="pz-head">
-                    <div class="pz-kicker"><b></b>Partita in pausa</div>
-                    <div class="pz-title">Pausa</div>
+                    <div class="pz-kicker"><b></b><span id="pz-kicker-txt">Partita in pausa</span></div>
+                    <div id="pz-title" class="pz-title">Pausa</div>
                     <div class="pz-score">
                         <div id="pz-team-home" class="pz-team home"><span id="pz-home-logo" class="pz-logo"></span><span id="pz-home-abbr">CIT</span><span class="pz-you">TU</span></div>
                         <div class="pz-num"><span id="pz-score">0 - 0</span><small id="pz-clock">1° P • 20:00</small></div>
@@ -2197,11 +2321,11 @@
                     </div>
                 </header>
                 <nav id="pz-nav" class="pz-nav">
-                    <button type="button" class="pz-item is-primary" data-pz="resume">
+                    <button type="button" class="pz-item is-match-only is-primary" data-pz="resume">
                         <span class="pz-ico"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg></span>
                         <span>Riprendi</span><kbd id="pz-resume-key">Esc</kbd>
                     </button>
-                    <button type="button" class="pz-item" data-pz="lines">
+                    <button type="button" class="pz-item is-match-only" data-pz="lines">
                         <span class="pz-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13l-3-3M20 16H7l3 3"/></svg></span>
                         <span>Cambio linea</span><span id="pz-val-lines" class="pz-val">L1</span>
                     </button>
@@ -2221,11 +2345,15 @@
                         <span class="pz-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2.5" y="7" width="13" height="10" rx="2"/><path d="M15.5 11l6-3.5v9l-6-3.5"/></svg></span>
                         <span>Telecamera</span><span id="pz-val-cam" class="pz-val">Broadcast</span>
                     </button>
-                    <button type="button" class="pz-item" data-pz="stats">
+                    <button type="button" class="pz-item is-match-only" data-pz="stats">
                         <span class="pz-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M5 20V12M10 20V6M15 20v-9M20 20V4"/></svg></span>
                         <span>Statistiche</span>
                     </button>
-                    <button type="button" class="pz-item is-danger" data-pz="quit">
+                    <button type="button" class="pz-item is-settings-only" data-pz="exit-settings" data-keyback>
+                        <span class="pz-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg></span>
+                        <span>Torna al menu</span><kbd>Esc</kbd>
+                    </button>
+                    <button type="button" class="pz-item is-match-only is-danger" data-pz="quit">
                         <span class="pz-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/></svg></span>
                         <span>Menu principale</span>
                     </button>
@@ -2234,7 +2362,7 @@
 
             <section id="pz-content" class="pz-content hidden">
                 <button type="button" class="pz-close" data-pz-close aria-label="Chiudi">✕</button>
-                <button type="button" class="pz-back" data-pz-close>◀ Indietro</button>
+                <button type="button" class="pz-back" data-pz-close data-keyback>◀ Indietro</button>
 
                 <div class="pz-page hidden" data-page="lines">
                     <h3>Cambio linea</h3>
@@ -2540,6 +2668,49 @@
             // squadra controllata dall'utente ('home' o 'guest'), ricordata nel browser
             userTeam: (() => { try { return localStorage.getItem('hil_user_team') === 'guest' ? 'guest' : 'home'; } catch (e) { return 'home'; } })()
         };
+        // --- SUONI DEI MENU ---
+        // frecce = tic acuto ('move'); pulsanti che portano a un'altra sezione = colpo pieno ('confirm');
+        // indietro/chiudi = colpo che scende ('back'); gli altri pulsanti = clic medio ('select').
+        const UI_SND_ARROW = '[data-dir], [data-pg], .uk-pg-btn, .cycle-team-btn, .cycle-league-btn, .cycle-kit-btn, .nhl-arrow-btn, '
+            + '.as-arrow, .ks-arrow, .cp-arrow, .cp-mini-arrow, #prev-arena-btn, #next-arena-btn, #replay-prev-btn, #replay-next-btn';
+        const UI_SND_BACK = '[data-keyback], [data-pz-close], [data-act="back"], #replay-exit-btn, #stats-menu-btn';
+        const UI_SND_NAV = '#splash-options-btn, .splash-tile, [data-splash-action], .is-primary, .is-go, [data-goto-step], .step-tab-btn, .cp-tab, .mg-nav-btn, '
+            + '.pz-item, [data-pz], #pz-quit-confirm, #to-step2-btn, #to-step3-btn, #start-btn, #start-next-period-btn, '
+            + '#stats-rematch-btn, #stats-comp-btn, [id^="skip-"], .bx-skip, [data-act="start"], [data-act="pick"], [data-act="pick-btn"]';
+        function uiSoundKind(el) {
+            if (el.matches(UI_SND_ARROW)) return 'move';
+            if (el.matches(UI_SND_BACK)) return 'back';
+            if (el.matches(UI_SND_NAV)) return 'confirm';
+            // pulsanti con sole frecce come testo (◀ ▶ ‹ › ▲ ▼ ...)
+            const txt = (el.textContent || '').replace(/\s+/g, '');
+            if (txt && /^[◀▶◁▷‹›«»<>←→▲▼↑↓⟨⟩❮❯]+$/.test(txt)) return 'move';
+            return 'select';
+        }
+        // i suoni valgono nei menu (anche pausa e statistiche), non durante l'azione
+        function inMenuForUiSound() {
+            if (typeof gameState === 'undefined') return true;
+            if (typeof gamePaused !== 'undefined' && gamePaused) return true;
+            if (gameState === 'menu') return true;
+            const st = document.getElementById('match-stats-modal');
+            return !!(st && !st.classList.contains('hidden')) || !!(window.Ceremony && window.Ceremony.isOverlayOpen && window.Ceremony.isOverlayOpen());
+        }
+        function playUiSoundFor(kind) {
+            const ga = window.gameAudio;
+            if (ga && ga.playUiSound) ga.playUiSound(kind);
+        }
+        document.addEventListener('click', e => {
+            const b = e.target.closest && e.target.closest('button, [role="button"], .splash-tile, a[href]');
+            if (!b || b.disabled || !inMenuForUiSound()) return;
+            playUiSoundFor(uiSoundKind(b));
+        }, true);
+        // frecce da tastiera nei menu: registrato prima di src/ui/uikit.js, che ferma la propagazione dei tasti
+        window.addEventListener('keydown', e => {
+            if (!/^Arrow/.test(e.key) || e.altKey || e.ctrlKey || e.metaKey) return;
+            if (typeof keyRebindAction !== 'undefined' && keyRebindAction) return;
+            if (e.target && e.target.matches && e.target.matches('input[type="text"], input[type="number"], textarea')) return;
+            if (!window.disclaimerOpen && inMenuForUiSound()) playUiSoundFor('move');
+        }, true);
+
         function getUserTeam() { return matchConfig.userTeam === 'guest' ? 'guest' : 'home'; }
         function getCpuTeam() { return getUserTeam() === 'home' ? 'guest' : 'home'; }
         function setUserTeam(team) {
@@ -11637,6 +11808,7 @@
 
             uiLayer.classList.add('hidden');
             const el = document.getElementById('pause-menu');
+            el.classList.remove('is-settings');
             el.classList.remove('hidden');
             restartAnim(el);
             renderPauseHeader();
@@ -11694,6 +11866,7 @@
         // --- PAGINE ---
         function openPausePage(page) {
             if (page === 'resume') { resumeGame(); return; }
+            if (page === 'exit-settings') { closeSettingsScreen(); return; }
             pausePage = page;
             keyRebindAction = null;
             const content = document.getElementById('pz-content');
@@ -11721,6 +11894,40 @@
             if (pm) pm.classList.remove('has-page');
             document.querySelectorAll('#pz-nav .pz-item').forEach(b => b.classList.remove('is-open'));
         }
+        // --- OPZIONI DAL MENU PRINCIPALE: stesso pannello della pausa, solo le pagine valide fuori partita ---
+        let settingsOpen = false;
+        function openSettingsScreen() {
+            if (settingsOpen || gamePaused) return;
+            settingsOpen = true;
+            keyRebindAction = null;
+            const el = document.getElementById('pause-menu');
+            el.classList.add('is-settings');
+            el.classList.remove('hidden');
+            restartAnim(el);
+            document.getElementById('pz-kicker-txt').textContent = 'Impostazioni';
+            document.getElementById('pz-title').textContent = 'Opzioni';
+            document.getElementById('pz-val-cam').textContent = cameraModeLabel(cameraMode);
+            updateGraphicsQualityUI();
+            closePausePage();
+            const first = el.querySelector('#pz-nav .pz-item:not(.is-match-only)');
+            if (first) try { first.focus({ preventScroll: true }); } catch (e) {}
+        }
+        function closeSettingsScreen() {
+            if (!settingsOpen) return;
+            keyRebindAction = null;
+            closePausePage();
+            const el = document.getElementById('pause-menu');
+            el.classList.add('hidden');
+            el.classList.remove('is-settings');
+            document.getElementById('pz-kicker-txt').textContent = 'Partita in pausa';
+            document.getElementById('pz-title').textContent = 'Pausa';
+            settingsOpen = false;
+            if (window.refreshAudioToggles) window.refreshAudioToggles();
+            const b = document.getElementById('splash-options-btn');
+            if (b && !titleSplashScreen.classList.contains('hidden')) try { b.focus({ preventScroll: true }); } catch (e) {}
+        }
+        window.openSettingsScreen = openSettingsScreen;
+
         function setPauseFocus(idx) {
             const items = Array.from(document.querySelectorAll('#pz-nav .pz-item'));
             if (!items.length) return;
@@ -12330,7 +12537,16 @@
             });
 
             window.addEventListener('keydown', (e) => {
+                // disclaimer iniziale: nessun tasto passa al menu sottostante
+                if (window.disclaimerOpen) { e.preventDefault(); return; }
+                // opzioni dal menu principale (frecce, Invio ed Esc li gestisce src/ui/uikit.js)
+                if (settingsOpen) {
+                    if (keyRebindAction) { e.preventDefault(); applyKeyRebind(eventKeyCode(e)); return; }
+                    if (e.key === 'Escape') { e.preventDefault(); playUiSoundFor('back'); if (pausePage) closePausePage(); else closeSettingsScreen(); }
+                    return;
+                }
                 if (!titleSplashScreen.classList.contains('hidden')) {
+                    if (e.key === 'o' || e.key === 'O') { e.preventDefault(); openSettingsScreen(); return; }
                     // Tile menu: naviga con frecce sinistra/destra (o su/giù)
                     const tiles = Array.from(document.querySelectorAll('#splash-menu .splash-tile:not(.is-disabled)'));
                     const activeIdx = tiles.findIndex(el => el.classList.contains('active'));
@@ -12570,14 +12786,13 @@
             const bindToggle = (id, fn) => { const b = document.getElementById(id); if (b) b.addEventListener('click', e => { e.stopPropagation(); fn(); refreshAudioToggles(); }); };
             bindToggle('music-toggle-btn', () => window.gameAudio && window.gameAudio.setMusicEnabled(!window.gameAudio.musicEnabled));
             bindToggle('splash-music-btn', () => window.gameAudio && window.gameAudio.setMusicEnabled(!window.gameAudio.musicEnabled));
+            const optBtn = document.getElementById('splash-options-btn');
+            if (optBtn) optBtn.addEventListener('click', e => { e.stopPropagation(); openSettingsScreen(); });
             bindToggle('sfx-toggle-btn', () => window.gameAudio && window.gameAudio.setSfxEnabled(!window.gameAudio.sfxEnabled));
             window.refreshAudioToggles = refreshAudioToggles;
             setTimeout(refreshAudioToggles, 0);
             window.addEventListener('load', refreshAudioToggles);
-            document.addEventListener('click', e => {
-                const b = e.target.closest && e.target.closest('button, [role="button"], .splash-tile');
-                if (b && window.gameAudio && (gameState !== 'playing' || gamePaused)) window.gameAudio.playUiClick();
-            }, true);
+            // suoni dei clic nei menu: vedi uiSoundKind (in cima allo script)
 
             const joyEl = document.getElementById('mobile-joystick');
             const knobEl = document.getElementById('joystick-knob');

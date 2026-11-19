@@ -4,8 +4,9 @@
  * Audio del gioco basato SOLO sui file dell'utente:
  *   - musica:  assets/audio/track_*.mp3        (playlist per contesto: menu, competizione, partita)
  *   - effetti: assets/audio effects/*.mp3       (pubblico, esultanza al gol, colpo del disco, fischietto)
- * Nessun suono sintetizzato: gli eventi senza un file dedicato riusano il file più vicino
- * (es. balaustra = colpo del disco più grave) oppure restano muti (clic UI, pattini, annunci).
+ * In partita nessun suono sintetizzato: gli eventi senza un file dedicato riusano il file più vicino
+ * (es. balaustra = colpo del disco più grave) oppure restano muti (pattini, annunci).
+ * Unica eccezione i suoni dei menu (playUiSound), brevi e sintetizzati.
  *
  * Phaser gestisce l'unlock del AudioContext su mobile (tap-to-unlock).
  */
@@ -33,7 +34,7 @@ export class AudioManager {
         this.masterVolume = 0.82;
 
         /** Colonna sonora */
-        this._bgVolume = 0.42;           // sottofondo: sotto la voce degli effetti
+        this._bgVolume = 0.26;           // sottofondo: basso, per sentire bene i suoni dei menu e gli effetti
         this._bgWant = false;
         this._bgContext = 'menu';
         this._bgEl = null;
@@ -430,8 +431,71 @@ export class AudioManager {
         this._whenReady(() => this._crowdSwell(0.55 + gain * 0.4, 1.4));
     }
 
-    /** Clic dell'interfaccia: nessun file dedicato */
-    playUiClick() {}
+    /** Compatibilità: clic generico dell'interfaccia */
+    playUiClick() { this.playUiSound('select'); }
+
+    /**
+     * Suoni dei menu, sintetizzati (brevissimi, passano dal volume effetti):
+     *  - 'move'    frecce e spostamento del fuoco da tastiera: tic acuto e leggero
+     *  - 'select'  pulsanti che cambiano un valore restando nella schermata: clic medio
+     *  - 'confirm' pulsanti che portano a un'altra sezione: colpo pieno e grave
+     *  - 'back'    tornare indietro / chiudere: colpo grave che scende
+     */
+    playUiSound(kind = 'select') {
+        if (!this._ready || !this._ctx || !this.sfxEnabled) return;
+        const now = this._ctx.currentTime;
+        // un solo suono per gesto (es. clic su un elemento dentro una tessera)
+        if (this._uiLastT && now - this._uiLastT < 0.035) return;
+        this._uiLastT = now;
+        const ctx = this._ctx, out = this._sfxGain;
+        const tone = (type, f0, f1, dur, gain, delay = 0, lp = 0) => {
+            const t = now + delay;
+            const o = ctx.createOscillator(), g = ctx.createGain();
+            o.type = type;
+            o.frequency.setValueAtTime(f0, t);
+            o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+            g.gain.setValueAtTime(0.0001, t);
+            g.gain.exponentialRampToValueAtTime(gain, t + 0.004);
+            g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+            o.connect(g);
+            if (lp) { const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = lp; g.connect(f); f.connect(out); }
+            else g.connect(out);
+            o.start(t); o.stop(t + dur + 0.02);
+        };
+        const tick = (gain, freq, dur = 0.02) => {
+            // transiente di rumore filtrato: dà il "clic" fisico al suono
+            if (!this._uiNoise) {
+                const b = ctx.createBuffer(1, Math.floor(ctx.sampleRate * 0.05), ctx.sampleRate);
+                const d = b.getChannelData(0);
+                for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / d.length);
+                this._uiNoise = b;
+            }
+            const s = ctx.createBufferSource(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+            s.buffer = this._uiNoise;
+            f.type = 'bandpass'; f.frequency.value = freq; f.Q.value = 1.2;
+            g.gain.setValueAtTime(gain, now);
+            g.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+            s.connect(f); f.connect(g); g.connect(out);
+            s.start(now); s.stop(now + dur + 0.01);
+        };
+        if (kind === 'move') {
+            tone('triangle', 2100, 2600, 0.045, 0.16);
+            tick(0.05, 5000, 0.012);
+        } else if (kind === 'confirm') {
+            tone('sine', 150, 62, 0.22, 0.55);                 // tonfo grave
+            tone('triangle', 520, 300, 0.12, 0.22, 0, 2400);   // corpo
+            tone('triangle', 784, 784, 0.16, 0.12, 0.05, 3000); // piccola conferma tonale
+            tick(0.22, 1400, 0.04);
+        } else if (kind === 'back') {
+            tone('sine', 130, 58, 0.2, 0.5);
+            tone('triangle', 440, 330, 0.09, 0.16, 0, 2000);
+            tone('triangle', 330, 247, 0.12, 0.12, 0.06, 2000);
+            tick(0.18, 1100, 0.035);
+        } else {
+            tone('triangle', 1150, 980, 0.06, 0.2);
+            tick(0.1, 2600, 0.02);
+        }
+    }
 
     /** Carica: impatto sordo (colpo del disco molto grave e filtrato) */
     playBodycheck() {
