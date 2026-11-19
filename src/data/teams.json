@@ -3192,6 +3192,231 @@
           "glove": "#1c54c4"
         }
       }
+    },
+    {
+      "id": "time42",
+      "league": "SERIE B",
+      "name": "TIME 4.2 BERGAMO",
+      "shortName": "TIME 4.2",
+      "abbr": "TIM",
+      "note": "Nomi e statistiche dal roster ufficiale. Numeri di maglia e ruoli NON presenti nel roster: assegnati provvisoriamente (7 e 12 dalla foto), da sostituire con quelli veri. Boni nella terza linea per completarla: nel roster non ha presenze.",
+      "jerseyClubId": "time42",
+      "homeArena": "time42",
+      "logo": "time42.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/time42.png"
+      ],
+      "ratings": {
+        "off": 57,
+        "def": 60,
+        "goa": 64
+      },
+      "colors": {
+        "primary": "#141416",
+        "secondary": "#f6c400",
+        "staffJacket": "#141416",
+        "coachJacket": "#f6c400"
+      },
+      "rosterScreen": {
+        "photo": "time42.jpg",
+        "focus": "50% 40%"
+      },
+      "coach": {
+        "first": "Gregorio",
+        "last": "Boccoli",
+        "role": "Allenatore-giocatore",
+        "note": "Staff con Sergio Salto (anche lui in campo)"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "MELI",
+        "first": "Adriano"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "DE FEUDIS",
+          "first": "Alessia"
+        }
+      ],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "7",
+            "name": "SPOTTI",
+            "first": "Andrei",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          },
+          {
+            "role": "LW",
+            "num": "12",
+            "name": "TETTAMANTI",
+            "first": "Fabio",
+            "g": 0,
+            "a": 2,
+            "pts": 2
+          },
+          {
+            "role": "RW",
+            "num": "9",
+            "name": "PAUL",
+            "first": "Jonathan Taylor",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "BOCCOLI",
+            "first": "Gregorio",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "FRANZINI",
+            "first": "Luca",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "MASTINU",
+            "first": "Enrico",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "21",
+            "name": "SALTO",
+            "first": "Sergio",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "BERTEI BALDINI",
+            "first": "Michele",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "14",
+            "name": "DE FEUDIS",
+            "first": "Francesca",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "19",
+            "name": "NAVARRO",
+            "first": "Matias German",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "23",
+            "name": "ROTONDO",
+            "first": "Marco",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "3",
+            "name": "BONI",
+            "first": "Rahul",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "8",
+          "name": "CAPELLI",
+          "first": "Giorgio"
+        },
+        {
+          "num": "10",
+          "name": "COCCO",
+          "first": "Carlo Davide"
+        },
+        {
+          "num": "13",
+          "name": "COLOMBI",
+          "first": "Alex"
+        },
+        {
+          "num": "15",
+          "name": "CUCCHI",
+          "first": "Ettore"
+        },
+        {
+          "num": "16",
+          "name": "GIORGINI",
+          "first": "Daria"
+        },
+        {
+          "num": "18",
+          "name": "LEO",
+          "first": "Emanuela"
+        },
+        {
+          "num": "20",
+          "name": "MAZZOLENI",
+          "first": "Mattia"
+        },
+        {
+          "num": "22",
+          "name": "NESSI",
+          "first": "Eva"
+        },
+        {
+          "num": "24",
+          "name": "RAMORINO",
+          "first": "Alessandro"
+        },
+        {
+          "num": "27",
+          "name": "TODESCHINI",
+          "first": "Lorenzo"
+        }
+      ],
+      "kits": {
+        "black": {
+          "label": "Divisa Nero-Gialla",
+          "primary": "#141416",
+          "pants": "#141416",
+          "helmet": "#141416",
+          "glove": "#f6c400"
+        }
+      }
     }
   ]
 }

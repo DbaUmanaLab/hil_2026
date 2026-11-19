@@ -1798,6 +1798,14 @@
                                 <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="empoli"></span><span class="as-home-chip hidden" data-home-chip="empoli">Casa</span></span>
                             </span>
                         </button>
+                        <button type="button" data-arena="time42" class="arena-pill-btn as-card" role="option">
+                            <span class="as-thumb"><img src="assets/arenas/thumbs/time42.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">15</span></span>
+                            <span class="min-w-0">
+                                <span class="as-card-name block">2Skate Arena</span>
+                                <span class="as-card-loc block">Bergamo (BG) • Lombardia</span>
+                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="time42"></span><span class="as-home-chip hidden" data-home-chip="time42">Casa</span></span>
+                            </span>
+                        </button>
                     </div>
                     <div class="as-details">
                         <div class="as-stats">
@@ -2464,10 +2472,21 @@
                 capacity: '150 Spettatori (In piedi)',
                 surface: 'Resina Chiara',
                 roof: 'Tensostruttura a Botte su Archi in Legno Lamellare'
+            },
+            time42: {
+                id: 'time42',
+                name: '2SKATE ARENA',
+                shortTitle: '2Skate Arena',
+                location: 'Bergamo (BG) • Lombardia, Italia',
+                clubBadge: 'Casa: Time 4.2',
+                desc: 'Capannone moderno con travi curve in legno lamellare chiaro, soffitto in pannelli OSB con riquadri fonoassorbenti e lampade tonde a sospensione. Vetrate continue dai telai neri sui lati lunghi affacciate sugli alberi, colonne bianche e puntoni in legno, testate in pannelli grigi con lo striscione TIME 4.2. Pavimento in cemento lucidato, balaustre bianche con la fascia gialla e il corridoio del pubblico con il corrimano blu.',
+                capacity: '200 Spettatori (In piedi)',
+                surface: 'Cemento Lucidato',
+                roof: 'Travi Curve in Legno Lamellare e Pannelli OSB'
             }
         };
 
-        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli'];
+        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42'];
         // Palazzetti presenti nel menu ma non selezionabili (al momento nessuno)
         const DISABLED_ARENAS = new Set();
         const SELECTABLE_ARENA_IDS = ARENA_IDS.filter(id => !DISABLED_ARENAS.has(id));
@@ -4218,8 +4237,12 @@
             const n = arenaScoreboards.north;
             if (!n) return;
             n.rotation.y = 0;
-            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli'].includes(matchConfig.arena);
-            if (matchConfig.arena === 'empoli') {
+            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42'].includes(matchConfig.arena);
+            if (matchConfig.arena === 'time42') {
+                // tabellone sulla testata nord, sopra gli striscioni
+                n.position.set(0, 8.6, -40.6);
+                n.scale.setScalar(0.4);
+            } else if (matchConfig.arena === 'empoli') {
                 // tabellone LOCALI/OSPITI appeso in alto alla testata verde
                 n.position.set(0, 9.4, -41.4);
                 n.scale.setScalar(0.42);
@@ -4452,7 +4475,7 @@
                 roughness: 0.55
             });
             const benchBackMat = isAsiago ? new THREE.MeshStandardMaterial({ map: pbr.woodDiffuse, bumpMap: preset.usePhysicalMat ? pbr.woodBump : null, bumpScale: 0.015, color: 0xc8955a, roughness: 0.6 }) : new THREE.MeshStandardMaterial({
-                color: arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
+                color: arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
                 roughness: 0.8
             });
 
@@ -4553,7 +4576,8 @@
             roma: 'src/arenas/roma.js',
             treviso: 'src/arenas/treviso.js',
             novi: 'src/arenas/novi.js',
-            empoli: 'src/arenas/empoli.js'
+            empoli: 'src/arenas/empoli.js',
+            time42: 'src/arenas/time42.js'
         };
         const arenaBuilders = {};
         const arenaModulePromises = {};
@@ -4826,7 +4850,9 @@
             // Pattinodromo G. Parodi: SportCourt verde acqua, rete nera (nel modulo) al posto del vetro
             novi: { dir: 'assets/textures/novi/', normal: 'assets/textures/novi/rink_normal.jpg', floorTint: 0xb4bcbb, floorTintLow: 0xa4acab, noGlass: true },
             // Palaramini: resina chiara, pannelli trasparenti sopra le balaustre (telaio metallico nel modulo)
-            empoli: { dir: 'assets/textures/empoli/', normal: 'assets/textures/empoli/rink_normal.jpg', floorTint: 0xa6a49e, floorTintLow: 0x9a9893 }
+            empoli: { dir: 'assets/textures/empoli/', normal: 'assets/textures/empoli/rink_normal.jpg', floorTint: 0xa6a49e, floorTintLow: 0x9a9893 },
+            // 2Skate Arena: cemento lucidato, niente vetro sopra le balaustre (rete bianca in fondo, nel modulo)
+            time42: { dir: 'assets/textures/time42/', normal: 'assets/textures/time42/rink_normal.jpg', floorTint: 0xb4b6b8, floorTintLow: 0xa6a8aa, noGlass: true }
         };
 
         // Balaustre: ogni striscia rappresenta 18,5 m di pannelli pubblicitari
@@ -5162,7 +5188,7 @@
                             { jacket: 0xf8fafc, shirt: 0xdc2626, isJersey: true }
                         ]))));
 
-            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli') return;   // pubblico costruito dall'architettura del palazzetto
+            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42') return;   // pubblico costruito dall'architettura del palazzetto
 
             // Spalti laterali dietro il tavolo cronometristi (con spazio sull'angolo destro per la casetta bar a Cittadella)
             for (let row = 0; row < 4; row++) {

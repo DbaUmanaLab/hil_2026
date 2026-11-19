@@ -111,15 +111,31 @@ export class AudioManager {
         if (this._ctx.state === 'running') {
             this._onUnlock();
         } else {
-            const unlock = () => {
+            // l'utente ha già interagito prima del 'load' (es. tasto o clic sulla schermata iniziale):
+            // il browser consente già di avviare l'audio, senza aspettare un nuovo gesto
+            if (navigator.userActivation && navigator.userActivation.hasBeenActive) {
+                this._ctx.resume().then(() => { if (this._ctx.state === 'running') this._onUnlock(); }).catch(() => {});
+            }
+            this._onUserGesture(() => {
                 if (this._ctx.state === 'suspended') this._ctx.resume();
                 this._onUnlock();
-                document.removeEventListener('pointerdown', unlock);
-                document.removeEventListener('keydown', unlock);
-            };
-            document.addEventListener('pointerdown', unlock, { once: true });
-            document.addEventListener('keydown', unlock, { once: true });
+            });
         }
+    }
+
+    /**
+     * Esegue fn al primo gesto dell'utente. Ascolta sulla window in cattura e anche keyup/click:
+     * la navigazione da tastiera dei menu (src/ui/uikit.js) ferma i keydown di frecce/Invio/Esc con
+     * stopImmediatePropagation, quindi un semplice keydown su document non arrivava mai e con la
+     * tastiera la musica non partiva. Il keyup cade comunque nell'attivazione transitoria del keydown.
+     */
+    _onUserGesture(fn) {
+        const EVENTS = ['pointerdown', 'keydown', 'keyup', 'touchend', 'click'];
+        const handler = () => {
+            EVENTS.forEach(ev => window.removeEventListener(ev, handler, true));
+            fn();
+        };
+        EVENTS.forEach(ev => window.addEventListener(ev, handler, true));
     }
 
     _onUnlock() {
@@ -254,9 +270,7 @@ export class AudioManager {
     _bgPlay() {
         const p = this._bgEl.play();
         if (p && p.catch) p.catch(() => {
-            const retry = () => { if (this._bgWant && this._bgEl.paused) this._bgPlay(); };
-            document.addEventListener('pointerdown', retry, { once: true });
-            document.addEventListener('keydown', retry, { once: true });
+            this._onUserGesture(() => { if (this._bgWant && this._bgEl.paused) this._bgPlay(); });
         });
     }
 
