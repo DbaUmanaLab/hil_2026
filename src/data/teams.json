@@ -454,7 +454,7 @@
       },
       "rosterScreen": {
         "photo": "milano.jpg",
-        "focus": "50% 22%"
+        "focus": "50% 30%"
       },
       "coach": {
         "first": "Matteo",
@@ -3429,6 +3429,195 @@
           "glove": "#f6c400"
         }
       }
+    },
+    {
+      "id": "ferrara",
+      "league": "SERIE B",
+      "name": "FERRARA WARRIORS",
+      "shortName": "FERRARA",
+      "abbr": "FER",
+      "note": "Nomi e statistiche dal roster ufficiale (3 partite, 16 giocatori e 1 portiere). Numeri di maglia e ruoli NON presenti nel roster: assegnati provvisoriamente, da sostituire con quelli veri. Gonzalo Adrian Rosselot Penice è allenatore-giocatore; nello staff anche Luca Guandalini e Michele Aleardi.",
+      "jerseyClubId": "ferrara",
+      "homeArena": "ferrara",
+      "logo": "ferrara.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/ferrara.png"
+      ],
+      "ratings": {
+        "off": 61,
+        "def": 60,
+        "goa": 67
+      },
+      "colors": {
+        "primary": "#1d3f9a",
+        "secondary": "#f08a1c",
+        "staffJacket": "#1d3f9a",
+        "coachJacket": "#1d3f9a"
+      },
+      "rosterScreen": {
+        "photo": "ferrara.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": {
+        "first": "Gonzalo Adrian",
+        "last": "Rosselot Penice",
+        "role": "Allenatore-giocatore",
+        "note": "Staff: Luca Guandalini e Michele Aleardi"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "LAZZARI",
+        "first": "Luca"
+      },
+      "backupGoalies": [],
+      "reserves": [
+        {
+          "num": "13",
+          "name": "MONTELEONE",
+          "first": "Federico"
+        },
+        {
+          "num": "18",
+          "name": "OLIVIERI",
+          "first": "Claudio"
+        },
+        {
+          "num": "10",
+          "name": "ROSSELOT PENICE",
+          "first": "Gonzalo Adrian"
+        },
+        {
+          "num": "22",
+          "name": "TARIN MARTINEZ",
+          "first": "David"
+        }
+      ],
+      "kits": {
+        "grey": {
+          "label": "Divisa Grigio-Blu",
+          "primary": "#b9bec6",
+          "pants": "#18181c",
+          "helmet": "#1f45a8",
+          "glove": "#111114"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "SASSOLI",
+            "first": "Alessandro",
+            "g": 3,
+            "a": 1,
+            "pts": 4
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "LAURIOLA",
+            "first": "Francesco",
+            "g": 2,
+            "a": 2,
+            "pts": 4
+          },
+          {
+            "role": "RW",
+            "num": "21",
+            "name": "MAINETTI",
+            "first": "Natan",
+            "g": 2,
+            "a": 1,
+            "pts": 3
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "ALEARDI",
+            "first": "Giacomo",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "19",
+            "name": "MANZOLI",
+            "first": "Gianluca",
+            "g": 2,
+            "a": 0,
+            "pts": 2
+          },
+          {
+            "role": "LW",
+            "num": "23",
+            "name": "MOLLICA",
+            "first": "Pierluigi",
+            "g": 0,
+            "a": 2,
+            "pts": 2
+          },
+          {
+            "role": "RW",
+            "num": "27",
+            "name": "LANZA",
+            "first": "Flavio",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "MAESTRI",
+            "first": "Luca",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "14",
+            "name": "TONNERRE",
+            "first": "Matthieu",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "8",
+            "name": "APOLLONIO",
+            "first": "Simone",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "71",
+            "name": "GUANDALINI",
+            "first": "Luca",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "MALAGUTTI",
+            "first": "Francesco",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
     },
     {
       "id": "molina",

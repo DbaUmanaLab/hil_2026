@@ -1957,6 +1957,14 @@
                                 <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="molina"></span><span class="as-home-chip hidden" data-home-chip="molina">Casa</span></span>
                             </span>
                         </button>
+                        <button type="button" data-arena="ferrara" class="arena-pill-btn as-card" role="option">
+                            <span class="as-thumb"><img src="assets/arenas/thumbs/ferrara.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">17</span></span>
+                            <span class="min-w-0">
+                                <span class="as-card-name block">Pattinodromo Giorgio Burani</span>
+                                <span class="as-card-loc block">Ferrara (FE) • Emilia-Romagna</span>
+                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="ferrara"></span><span class="as-home-chip hidden" data-home-chip="ferrara">Casa</span></span>
+                            </span>
+                        </button>
                     </div>
                     <div class="as-details">
                         <div class="as-stats">
@@ -2653,10 +2661,21 @@
                 capacity: '400 Spettatori',
                 surface: 'Resina Azzurra Multisport',
                 roof: 'Capriate in Acciaio e Lamiera con Lucernari'
+            },
+            ferrara: {
+                id: 'ferrara',
+                name: 'PATTINODROMO GIORGIO BURANI',
+                shortTitle: 'Pattinodromo Giorgio Burani',
+                location: 'Ferrara (FE) • Emilia-Romagna, Italia',
+                clubBadge: 'Casa: Ferrara Warriors',
+                desc: 'Tensostruttura con archi reticolari grigio scuro che scendono fino a terra, telo bianco-azzurro con i cavi di controvento incrociati e drappi bianchi appesi sotto la volta, lampade a campana su lunghi cavi. Testate con la fascia verde e la rete bianca dietro le porte, tribuna a gradoni dietro la ringhiera con lo striscione rosa Ferrara Sport Festival, striscioni degli sponsor. Pista SportCourt azzurra a piastrelle con la riga centrale rossa, balaustre bianche con lo zoccolo giallo.',
+                capacity: 'Tribuna a Gradoni',
+                surface: 'SportCourt Azzurro a Piastrelle',
+                roof: 'Tensostruttura con Archi Reticolari'
             }
         };
 
-        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina'];
+        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara'];
         // Palazzetti presenti nel menu ma non selezionabili (al momento nessuno)
         const DISABLED_ARENAS = new Set();
         const SELECTABLE_ARENA_IDS = ARENA_IDS.filter(id => !DISABLED_ARENAS.has(id));
@@ -4466,8 +4485,13 @@
             const n = arenaScoreboards.north;
             if (!n) return;
             n.rotation.y = 0;
-            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina'].includes(matchConfig.arena);
-            if (matchConfig.arena === 'molina') {
+            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara'].includes(matchConfig.arena);
+            if (matchConfig.arena === 'ferrara') {
+                // piccolo tabellone sulla parete sopra la tribuna, tra gli striscioni
+                n.position.set(-27.3, 4.3, -3);
+                n.rotation.y = Math.PI / 2;
+                n.scale.setScalar(0.36);
+            } else if (matchConfig.arena === 'molina') {
                 // tabellone sulla testata nord, tra gli striscioni del club
                 n.position.set(0, 9.6, -43.6);
                 n.scale.setScalar(0.42);
@@ -4710,7 +4734,7 @@
                 roughness: 0.55
             });
             const benchBackMat = isAsiago ? new THREE.MeshStandardMaterial({ map: pbr.woodDiffuse, bumpMap: preset.usePhysicalMat ? pbr.woodBump : null, bumpScale: 0.015, color: 0xc8955a, roughness: 0.6 }) : new THREE.MeshStandardMaterial({
-                color: arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
+                color: arenaId === 'ferrara' ? 0x1d3f9a : arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
                 roughness: 0.8
             });
 
@@ -4814,7 +4838,8 @@
             novi: 'src/arenas/novi.js',
             empoli: 'src/arenas/empoli.js',
             time42: 'src/arenas/time42.js',
-            molina: 'src/arenas/molina.js'
+            molina: 'src/arenas/molina.js',
+            ferrara: 'src/arenas/ferrara.js'
         };
         const arenaBuilders = {};
         const arenaModulePromises = {};
@@ -5097,7 +5122,9 @@
             // 2Skate Arena: cemento lucidato, niente vetro sopra le balaustre (rete bianca in fondo, nel modulo)
             time42: { dir: 'assets/textures/time42/', normal: 'assets/textures/time42/rink_normal.jpg', floorTint: 0xb4b6b8, floorTintLow: 0xa6a8aa, noGlass: true },
             // Polideportivo Carlos García: resina azzurra multisport, nessun vetro (reti bianche dietro le porte, nel modulo)
-            molina: { dir: 'assets/textures/molina/', normal: 'assets/textures/molina/rink_normal.jpg', floorTint: 0xb2b8bc, floorTintLow: 0xa4aaae, noGlass: true }
+            molina: { dir: 'assets/textures/molina/', normal: 'assets/textures/molina/rink_normal.jpg', floorTint: 0xb2b8bc, floorTintLow: 0xa4aaae, noGlass: true },
+            // Pattinodromo Giorgio Burani: SportCourt azzurro, niente vetro (ringhiera e reti bianche nel modulo)
+            ferrara: { dir: 'assets/textures/ferrara/', normal: 'assets/textures/ferrara/rink_normal.jpg', floorTint: 0x9ea6aa, floorTintLow: 0x939b9f, noGlass: true }
         };
 
         // Balaustre: ogni striscia rappresenta 18,5 m di pannelli pubblicitari
@@ -5433,7 +5460,7 @@
                             { jacket: 0xf8fafc, shirt: 0xdc2626, isJersey: true }
                         ]))));
 
-            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina') return;   // pubblico costruito dall'architettura del palazzetto
+            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina' || arenaId === 'ferrara') return;   // pubblico costruito dall'architettura del palazzetto
 
             // Spalti laterali dietro il tavolo cronometristi (con spazio sull'angolo destro per la casetta bar a Cittadella)
             for (let row = 0; row < 4; row++) {
