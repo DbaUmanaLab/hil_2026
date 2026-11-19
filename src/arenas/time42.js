@@ -216,9 +216,10 @@
         const blueMat = new THREE.MeshStandardMaterial({ color: 0x1d4fb8, roughness: 0.4, metalness: 0.3 });
         const railX = -rinkWidth / 2 - 0.13;
         const zr = rinkLength / 2 - cornerRadius;
-        targetGroup.add(new THREE.Mesh(mergeBeamGeometry([[V(railX, 1.24, -zr), V(railX, 1.24, zr), 0.08]]), blueMat));
+        // interrotto davanti alle porte delle panche puniti (z = ±5)
+        targetGroup.add(new THREE.Mesh(mergeBeamGeometry([[-zr, -5.7], [-4.3, 4.3], [5.7, zr]].map(([a, b]) => [V(railX, 1.24, a), V(railX, 1.24, b), 0.08])), blueMat));
         const posts = [];
-        for (let z = -zr; z <= zr + 0.01; z += 2.5) posts.push([V(railX, 1.1, z), V(railX, 1.24, z), 0.06]);
+        for (let z = -zr; z <= zr + 0.01; z += 2.5) if (Math.abs(Math.abs(z) - 5) > 0.8) posts.push([V(railX, 1.1, z), V(railX, 1.24, z), 0.06]);
         targetGroup.add(new THREE.Mesh(mergeBeamGeometry(posts), steelMat));
         const concMat = new THREE.MeshStandardMaterial({ color: 0xc9cbcc, roughness: 0.8 });
         const benchWood = new THREE.MeshStandardMaterial({ map: loadFileTexture(CIT_TEX + 'glulam.jpg', { wrap: true }), color: 0xd9a868, roughness: 0.6 });
@@ -265,7 +266,7 @@
         };
         const keep = preset.crowdKeepRatio;
         for (let z = -26; z <= 26; z += 0.75) {
-            if (Math.abs(z) < 4.5) continue;                     // tavolo cronometristi
+            if (Math.abs(z) < 7.6) continue;   // tavolo cronometristi e panche puniti                     // tavolo cronometristi
             if (Math.random() < keep * 0.4) fan(-19.6 + (Math.random() - 0.5) * 0.3, 0, z + (Math.random() - 0.5) * 0.2);
             if (Math.random() < keep * 0.22) fan(-22.6 + (Math.random() - 0.5) * 0.2, 0.45, z);
         }

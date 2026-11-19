@@ -177,7 +177,8 @@
         perim.push(perim[0].clone());
         const perimCurve = new THREE.CatmullRomCurve3(perim, false, 'catmullrom', 0.05);
         // davanti alle panchine la balaustra è bassa e senza pannelli: lì niente telaio
-        const inBench = q => q.x > rinkWidth / 2 - 0.5 && Math.abs(q.z) > 3.4 && Math.abs(q.z) < 15.6;
+        const inBench = q => (q.x > rinkWidth / 2 - 0.5 && Math.abs(q.z) > 3.4 && Math.abs(q.z) < 15.6) ||
+            (q.x < -rinkWidth / 2 + 0.5 && Math.abs(Math.abs(q.z) - 5) < 0.75);   // porte delle panche puniti
         const nSeg = Math.round(perimCurve.getLength() / 0.5);
         const railBeams = [];
         let prev = perimCurve.getPointAt(0);
@@ -269,7 +270,7 @@
         const keep = preset.crowdKeepRatio;
         // con rotation.y = 0 il tifoso guarda verso +x (la pista); al centro c'è il tavolo cronometristi
         for (let z = -24; z <= 24; z += 0.75) {
-            if (Math.abs(z) < 4.5) continue;
+            if (Math.abs(z) < 7.6) continue;   // tavolo cronometristi e panche puniti
             if (Math.random() < keep * 0.45) fan(-19.6 + (Math.random() - 0.5) * 0.3, 0, z + (Math.random() - 0.5) * 0.2, 0);
             if (Math.random() < keep * 0.18) fan(-20.6 + (Math.random() - 0.5) * 0.3, 0, z, 0);
         }

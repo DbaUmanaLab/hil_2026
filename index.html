@@ -903,6 +903,22 @@
             --home: #c8102e; --guest: #d11f2a;
         }
         .sb-strength { font-family: 'Oswald', sans-serif; font-weight: 600; font-size: clamp(11px, 1.6vh, 14px); letter-spacing: .12em; color: #fff; background: rgba(18,22,30,.88); padding: 2px 16px; border-radius: 4px 4px 0 0; }
+        #hud-scorebug .sb-strength.is-pp-home { background: var(--home); }
+        #hud-scorebug .sb-strength.is-pp-guest { background: var(--guest); }
+        #hud-pen { display: flex; flex-direction: column; align-items: center; gap: 3px; margin-bottom: 4px; }
+        .pen-chip { position: relative; overflow: hidden; display: flex; align-items: center; gap: 8px; min-width: 250px; padding: 3px 10px 5px 0; border-radius: 3px;
+            font-family: 'Oswald', sans-serif; font-size: clamp(11px, 1.5vh, 13px); letter-spacing: .06em; text-transform: uppercase; color: #fff; background: rgba(12,16,24,.9); box-shadow: 0 4px 14px rgba(0,0,0,.35); }
+        .pen-chip b { align-self: stretch; display: grid; place-items: center; padding: 0 8px; margin: -3px 0 -5px; background: var(--c); font-weight: 700; }
+        .pen-chip .n { flex: 1; white-space: nowrap; }
+        .pen-chip .k { color: #fbbf24; font-weight: 600; }
+        .pen-chip .t { font-weight: 700; font-variant-numeric: tabular-nums; min-width: 3.2em; text-align: right; }
+        .pen-chip i { position: absolute; left: 0; bottom: 0; height: 3px; background: #fbbf24; }
+        .pen-chip.is-wait { opacity: .65; }
+        .pen-chip.is-back { background: #065f46; animation: penBack .5s ease-in-out infinite alternate; }
+        .pen-chip.is-back .n { color: #a7f3d0; }
+        @keyframes penBack { from { box-shadow: 0 0 0 0 rgba(52,211,153,.0); } to { box-shadow: 0 0 0 3px rgba(52,211,153,.7); } }
+        .gx-sit { align-self: flex-start; margin-top: 3px; padding: 1px 8px; border-radius: 3px; font-size: clamp(11px, 1.7vh, 15px); letter-spacing: .12em; text-transform: uppercase; color: #0b1226; background: #fbbf24; font-weight: 700; }
+        .gx-sit:empty { display: none; }
         .sb-row { display: flex; align-items: stretch; height: clamp(36px, 5.6vh, 52px); box-shadow: 0 6px 24px rgba(0,0,0,.45); border-radius: 4px; overflow: hidden; }
         .sb-team { display: flex; align-items: center; gap: clamp(6px, .8vw, 12px); padding: 0 clamp(8px, 1vw, 16px); color: #fff; min-width: clamp(120px, 15vw, 210px); }
         .sb-home { background: linear-gradient(90deg, color-mix(in srgb, var(--home) 70%, #000) 0%, var(--home) 100%); background-color: var(--home); justify-content: space-between; }
@@ -2102,6 +2118,7 @@
 
         <!-- ═══ TABELLONE BROADCAST — in basso al centro ═══ -->
         <div id="hud-scorebug" class="hidden">
+            <div id="hud-pen"></div>
             <div class="sb-strength"><span id="hud-strength">4 VS 4</span></div>
             <div class="sb-row">
                 <div class="sb-team sb-home">
@@ -2229,6 +2246,7 @@
                         <div id="goal-team-text" class="gx-team">Cittadella HP</div>
                         <div id="goal-scorer" class="gx-scorer">#21 LAGO</div>
                         <div id="goal-celeb" class="gx-celeb"></div>
+                        <div id="goal-sit" class="gx-sit"></div>
                     </div>
                 </div>
             </div>
@@ -2745,6 +2763,13 @@
             guestSaves: 0,
             scorers: []
         };
+
+        // Falli e penalità (logica nella sezione FALLI E PENALITÀ)
+        let penalties = [];                 // { team, skater, type, kind, remaining, total }
+        let penaltyCall = null;
+        let penaltyDoors = {};              // { home|guest: { pivot, sign, open, z } }
+        let penaltySeq = 0;
+        let penaltyHudFlash = null;
 
         // Possesso Disco e Targhetta 3D
         let currentPuckCarrier = null;
@@ -4488,6 +4513,7 @@
 
             arenaSwayItems = [];
             arenaCeilingHide = null;
+            penaltyDoors = {};
             const fileArena = ARENA_FILE_TEX[arenaId] || null;
             const rinkTex = fileArena ? loadFileTexture(fileArena.dir + 'rink_color.jpg') : createRegulationRinkTexture(arenaId);
             rinkTex.anisotropy = preset.anisotropy;
@@ -4571,6 +4597,7 @@
                 { z: 0, len: 20.0, mat: centerBoardMat },
                 { z: 19.25, len: 18.5, mat: cleanBoardMat }
             ].forEach((sec, si) => {
+                if (si === 1) { buildPenaltyBoxBoards(sec, leftX, boardHeight, boardThick, glassH, glassMat, fileArena, preset); return; }
                 const citMat = fileArena && fileBoardMat(fileArena, ['boards_a.jpg', 'boards_center.jpg', 'boards_b.jpg'][si], sec.len, 0);
                 const b = new THREE.Mesh(new THREE.BoxGeometry(boardThick, boardHeight, sec.len), citMat || sec.mat);
                 b.position.set(leftX, boardHeight / 2, sec.z);
@@ -4732,6 +4759,7 @@
                 const builder = arenaBuilders[archId];
                 if (builder) builder(builtGroup);
                 buildTimekeepersTable(builtGroup);
+                buildPenaltyBoxes(builtGroup);
                 buildArenaCrowd(builtGroup, arenaId);
                 applyScoreboardLayout();
             };
@@ -7549,7 +7577,7 @@
         }
 
         function placeBenchSkatersImmediate() {
-            const homeBench = skaters.filter(s => s.team === 'home' && !s.isGoalie && !s.onIce);
+            const homeBench = skaters.filter(s => s.team === 'home' && !s.isGoalie && !s.onIce && !s.penaltyBox && !s.waitInBox && !s.expelled);
             homeBench.forEach((s, idx) => {
                 s.benchSlot = idx;
                 const pos = getBenchSeatPosition('home', idx);
@@ -7564,7 +7592,7 @@
                 setSkaterBenchPose(s, false);
             });
 
-            const guestBench = skaters.filter(s => s.team === 'guest' && !s.isGoalie && !s.onIce);
+            const guestBench = skaters.filter(s => s.team === 'guest' && !s.isGoalie && !s.onIce && !s.penaltyBox && !s.waitInBox && !s.expelled);
             guestBench.forEach((s, idx) => {
                 s.benchSlot = idx;
                 const pos = getBenchSeatPosition('guest', idx);
@@ -7723,8 +7751,11 @@
             if (newLineIdx === cur || newLineIdx < 0 || newLineIdx > 2) return;
             if (window.gameAudio) window.gameAudio.playLineChange();
             const isUser = teamSide === getUserTeam();
-            const outgoing = skaters.filter(s => s.team === teamSide && !s.isGoalie && s.lineIndex === cur);
-            const incoming = skaters.filter(s => s.team === teamSide && !s.isGoalie && s.lineIndex === newLineIdx);
+            // con le penalità la linea può scendere in tre (o in due) e un compagno di un'altra linea può coprire un ruolo
+            const lineup = pickLineup(teamSide, newLineIdx);
+            const outgoing = skaters.filter(s => s.team === teamSide && !s.isGoalie && s.onIce && !lineup.includes(s) && s.lineChangeState !== 'exiting');
+            const incoming = lineup.filter(s => !s.onIce);
+            outgoing.forEach(s => { s.enterFrom = null; s.fillRole = null; });
             const bench = BENCH_LAYOUT[teamSide];
 
             // gli uscenti occupano i posti lasciati liberi da chi entra (prima finivano tutti sugli slot 0-4,
@@ -7773,7 +7804,7 @@
 
             if (teamSide === 'home') activeHomeLine = newLineIdx; else activeGuestLine = newLineIdx;
             if (isUser) {
-                const newCenter = incoming.find(s => s.role === 'C') || incoming[0];
+                const newCenter = lineup.find(s => (s.fillRole || s.role) === 'C') || incoming[0] || lineup[0];
                 setControlledPlayer(newCenter);
                 showHudToast(`LINEA ${newLineIdx + 1} IN PISTA`);
             }
@@ -8649,8 +8680,8 @@
         // Tabellone e pulsante pausa visibili solo nelle fasi di gioco
         function syncBroadcastHud() {
             const cutEl = document.getElementById('cut-overlay');
-            if (cutEl && gameState !== 'cutaway' && gameState !== 'goalie_freeze' && !cutEl.classList.contains('hidden')) { cutEl.classList.add('hidden'); cutaway = null; }
-            const inPlay = gameState === 'cutaway' || gameState === 'faceoff' || gameState === 'playing' || gameState === 'goal_celebration' || gameState === 'goalie_freeze';
+            if (cutEl && gameState !== 'cutaway' && gameState !== 'goalie_freeze' && gameState !== 'penalty_call' && !cutEl.classList.contains('hidden')) { cutEl.classList.add('hidden'); cutaway = null; }
+            const inPlay = gameState === 'cutaway' || gameState === 'faceoff' || gameState === 'playing' || gameState === 'goal_celebration' || gameState === 'goalie_freeze' || gameState === 'penalty_call';
             const key = inPlay ? 'play' : 'off';
             if (key === hudStateKey) return;
             hudStateKey = key;
@@ -8882,12 +8913,16 @@
                 G: [0, -goalOffsetZ + 0.65]
             };
 
+            // chi ha finito la penalità durante il gioco fermo rientra adesso; poi le formazioni secondo le forze in campo
+            skaters.forEach(k => { if (k.waitInBox) k.waitInBox = false; k.enterFrom = null; });
+            const lineupHome = pickLineup('home', activeHomeLine), lineupGuest = pickLineup('guest', activeGuestLine);
             skaters.forEach(s => {
                 s.velocity.set(0, 0, 0);
                 s.shootAnim = 0;
                 s.stunTimer = 0;
                 s.lineChangeState = 'none';
                 s.mesh.rotation.x = 0;
+                if (s.penaltyBox || s.expelled) { s.onIce = false; return; }
 
                 if (s.isGoalie) {
                     const [gx, gz] = s.team === 'home' ? roleCoordsHome.G : roleCoordsGuest.G;
@@ -8898,17 +8933,18 @@
                     return;
                 }
 
-                const isActive = (s.team === 'home' && s.lineIndex === activeHomeLine) ||
-                                 (s.team === 'guest' && s.lineIndex === activeGuestLine);
+                const isActive = lineupHome.includes(s) || lineupGuest.includes(s);
                 s.onIce = isActive;
+                if (!isActive) s.fillRole = null;
 
                 if (isActive) {
-                    let coords = s.team === 'home' ? roleCoordsHome[s.role] : roleCoordsGuest[s.role];
+                    const role = s.fillRole || s.role;
+                    let coords = s.team === 'home' ? roleCoordsHome[role] : roleCoordsGuest[role];
                     if (!isCenterFaceoff()) {
                         // ingaggio di zona: lo schieramento si sposta attorno al punto, dentro la pista
                         const fx = faceoffSpot.x, fz = faceoffSpot.z, sd = s.team === 'home' ? 1 : -1;
                         const lim = rinkLength / 2 - 4.5;
-                        const rel = { C: [fx, fz + sd * 1.35], LW: [fx - 4.2, fz + sd * 3.0], RW: [fx + 4.2, fz + sd * 3.0], D: [fx * 0.15, fz + sd * 7.5] }[s.role] || [fx, fz + sd * 3];
+                        const rel = { C: [fx, fz + sd * 1.35], LW: [fx - 4.2, fz + sd * 3.0], RW: [fx + 4.2, fz + sd * 3.0], D: [fx * 0.15, fz + sd * 7.5] }[role] || [fx, fz + sd * 3];
                         coords = [Math.max(-15.5, Math.min(15.5, rel[0])), Math.max(-lim, Math.min(lim, rel[1]))];
                     }
                     s.mesh.position.set(coords[0], 0, coords[1]);
@@ -8919,7 +8955,10 @@
             });
 
             placeBenchSkatersImmediate();
-            const userCenter = skaters.find(s => s.team === getUserTeam() && s.onIce && s.role === 'C');
+            placePenaltyBoxSkaters();
+            updatePenaltyHud();
+            const userCenter = skaters.find(s => s.team === getUserTeam() && s.onIce && (s.fillRole || s.role) === 'C')
+                || skaters.find(s => s.team === getUserTeam() && s.onIce && !s.isGoalie);
             if (userCenter) setControlledPlayer(userCenter);
         }
 
@@ -9049,6 +9088,420 @@
                 faceoffSpot = f.spot;
             }
             startFaceoffNow();
+        }
+
+        // =====================================================================
+        // FALLI E PENALITÀ — carica, ostruzione, trattenuta, colpo di bastone (tutti col pulsante di contrasto).
+        // Penalità minore (2') o espulsione (il giocatore non rientra, squadra in inferiorità per 5').
+        // Le panche puniti stanno sul lato dei cronometristi, opposto alle panchine.
+        // =====================================================================
+        const PENALTY_MINOR_SECS = 120, PENALTY_EXPULSION_SECS = 300;   // secondi del cronometro di gara
+        const PENALTY_SEAT_X = -19.92;      // seduta nella panca puniti (specchio delle panchine)
+        const PENALTY_DOOR_X = -18.12;      // porta nella balaustra
+        const PENALTY_DOOR_HALF = 0.6;
+        const penaltyBoxZ = team => team === 'home' ? 5 : -5;      // davanti alla metà di ciascuna squadra
+        const ROLE_ORDER = ['C', 'D', 'LW', 'RW'];
+        const PENALTY_ROLE_TXT = { minor: '2 minuti', expulsion: 'Espulso • 5 minuti di inferiorità' };
+
+        // penalità in corso della squadra: corrono al massimo due alla volta, le altre aspettano
+        function teamPenalties(team) { return penalties.filter(p => p.team === team); }
+        function runningPenalties(team) { return teamPenalties(team).slice(0, 2); }
+        function allowedSkaters(team) { return 4 - Math.min(2, teamPenalties(team).length); }
+        function skaterAvailable(s) { return !s.isGoalie && !s.penaltyBox && !s.waitInBox && !s.expelled; }
+        const fmtPenTime = sec => `${Math.floor(Math.max(0, sec) / 60)}:${String(Math.max(0, sec) % 60).padStart(2, '0')}`;
+        function gameClockStr() { return `${String(Math.floor(gameTime / 60)).padStart(2, '0')}:${String(gameTime % 60).padStart(2, '0')}`; }
+
+        // Chi scende in pista per una linea: tanti quanti ne consente la penalità (prima C e D, poi le ali);
+        // se manca qualcuno (in panca puniti o espulso) lo sostituisce un compagno di un'altra linea.
+        function pickLineup(team, lineIdx) {
+            const allowed = allowedSkaters(team);
+            const pool = skaters.filter(s => s.team === team && skaterAvailable(s));
+            const pick = pool.filter(s => s.lineIndex === lineIdx)
+                .sort((a, b) => ROLE_ORDER.indexOf(a.role) - ROLE_ORDER.indexOf(b.role)).slice(0, allowed);
+            pick.forEach(s => { s.fillRole = null; });
+            if (pick.length < allowed) {
+                const stam = getLineStamina(team);
+                const others = pool.filter(s => !pick.includes(s)).sort((a, b) => (stam[b.lineIndex] || 0) - (stam[a.lineIndex] || 0));
+                const missing = ROLE_ORDER.filter(r => !pick.some(k => (k.fillRole || k.role) === r));
+                while (pick.length < allowed && others.length) {
+                    const r = missing.shift();
+                    let i = r ? others.findIndex(k => k.role === r) : -1;
+                    if (i < 0) i = 0;
+                    const sub = others.splice(i, 1)[0];
+                    sub.fillRole = r && sub.role !== r ? r : null;
+                    pick.push(sub);
+                }
+            }
+            // senza centro (in panca puniti o espulso) un'ala va all'ingaggio al suo posto
+            if (pick.length && !pick.some(k => (k.fillRole || k.role) === 'C')) {
+                const w = pick.find(k => k.role === 'LW' && !k.fillRole) || pick.find(k => k.role === 'RW' && !k.fillRole) || pick[0];
+                w.fillRole = 'C';
+            }
+            return pick;
+        }
+
+        // ---------- panche puniti
+        function penaltySeatPos(s) {
+            return new THREE.Vector3(PENALTY_SEAT_X, 0, penaltyBoxZ(s.team) + (s.boxSeat ? 0.55 : -0.55));
+        }
+        function holdPenaltyBoxSkater(s) {
+            s.mesh.visible = !s.expelled;
+            if (s.expelled) return;
+            s.mesh.position.copy(penaltySeatPos(s));
+            s.mesh.rotation.set(0, 0, 0);
+            s.rotationY = -Math.PI / 2;                      // guarda la pista
+            s.mesh.rotation.y = s.rotationY;
+            setSkaterBenchPose(s, false);
+        }
+        function placePenaltyBoxSkaters() {
+            skaters.forEach(s => { if (s.penaltyBox || s.waitInBox || s.expelled) holdPenaltyBoxSkater(s); });
+        }
+
+        // Balaustra centrale del lato cronometristi divisa in tre pezzi più due porte (una per panca puniti).
+        // La texture di ogni pezzo riprende esattamente il tratto della balaustra intera che sostituisce.
+        function buildPenaltyBoxBoards(sec, leftX, boardHeight, boardThick, glassH, glassMat, fileArena, preset) {
+            const Z0 = sec.z - sec.len / 2, Z1 = sec.z + sec.len / 2;
+            const pieceMat = (z0, z1) => {
+                const len = z1 - z0;
+                if (fileArena) return fileBoardMat(fileArena, 'boards_center.jpg', len, (Z1 - z1) / 18.5);
+                const m = sec.mat.clone();
+                if (m.map) {
+                    m.map = m.map.clone();
+                    m.map.repeat.set(len / sec.len, 1);
+                    m.map.offset.set((Z1 - z1) / sec.len, 0);
+                    m.map.needsUpdate = true;
+                }
+                return m;
+            };
+            const doors = [['home', penaltyBoxZ('home')], ['guest', penaltyBoxZ('guest')]].sort((a, b) => a[1] - b[1]);
+            const cuts = [];
+            let z = Z0;
+            doors.forEach(([, dz]) => { cuts.push([z, dz - PENALTY_DOOR_HALF]); z = dz + PENALTY_DOOR_HALF; });
+            cuts.push([z, Z1]);
+            const hideGlass = fileArena && (fileArena.glassBoards || fileArena.noSideGlass || fileArena.noGlass);
+            cuts.forEach(([z0, z1]) => {
+                const b = new THREE.Mesh(new THREE.BoxGeometry(boardThick, boardHeight, z1 - z0), pieceMat(z0, z1));
+                b.position.set(leftX, boardHeight / 2, (z0 + z1) / 2);
+                b.castShadow = preset.shadows;
+                b.receiveShadow = preset.shadows;
+                arenaGroup.add(b);
+                const g = new THREE.Mesh(new THREE.BoxGeometry(0.06, glassH, z1 - z0), glassMat);
+                g.visible = !hideGlass;
+                g.position.set(leftX, boardHeight + glassH / 2, (z0 + z1) / 2);
+                arenaGroup.add(g);
+            });
+            doors.forEach(([team, dz]) => {
+                // cerniera dal lato del tavolo cronometristi, la porta si apre verso la panca
+                const hingeZ = dz > 0 ? dz - PENALTY_DOOR_HALF : dz + PENALTY_DOOR_HALF;
+                const ext = dz > 0 ? 1 : -1;
+                const pivot = new THREE.Group();
+                pivot.position.set(leftX, 0, hingeZ);
+                const door = new THREE.Mesh(new THREE.BoxGeometry(boardThick, boardHeight, PENALTY_DOOR_HALF * 2), pieceMat(dz - PENALTY_DOOR_HALF, dz + PENALTY_DOOR_HALF));
+                door.position.set(0, boardHeight / 2, ext * PENALTY_DOOR_HALF);
+                pivot.add(door);
+                arenaGroup.add(pivot);
+                penaltyDoors[team] = { pivot, sign: -ext, open: 0, z: dz };
+            });
+        }
+
+        function buildPenaltyBoxes(targetGroup) {
+            const floorMat = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 });
+            const seatMat = new THREE.MeshStandardMaterial({ color: 0xb45309, roughness: 0.55 });
+            const backMat = new THREE.MeshStandardMaterial({ color: 0x111827, roughness: 0.7 });
+            const glass = new THREE.MeshStandardMaterial({ color: 0xe0f2fe, transparent: true, opacity: 0.2, roughness: 0.1, side: THREE.DoubleSide, depthWrite: false });
+            const frameMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.5, roughness: 0.4 });
+            ['home', 'guest'].forEach(team => {
+                const cz = penaltyBoxZ(team);
+                const grp = new THREE.Group();
+                const floor = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.12, 2.6), floorMat);
+                floor.position.set(-19.45, 0.06, cz);
+                const seat = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.1, 2.3), seatMat);
+                seat.position.set(-20.28, 0.52, cz);
+                const back = new THREE.Mesh(new THREE.BoxGeometry(0.1, 1.15, 2.6), backMat);
+                back.position.set(-20.65, 0.58, cz);
+                const backGlass = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.0, 2.6), glass);
+                backGlass.position.set(-20.65, 1.65, cz);
+                grp.add(floor, seat, back, backGlass);
+                [-1.3, 1.3].forEach(dz => {
+                    const side = new THREE.Mesh(new THREE.BoxGeometry(2.4, 2.15, 0.05), glass);
+                    side.position.set(-19.45, 1.08, cz + dz);
+                    const post = new THREE.Mesh(new THREE.BoxGeometry(0.06, 2.15, 0.06), frameMat);
+                    post.position.set(-20.65, 1.08, cz + dz);
+                    grp.add(side, post);
+                });
+                // cartello sopra la panca: PANCA PUNITI + sigla della squadra
+                const c = document.createElement('canvas');
+                c.width = 512; c.height = 128;
+                const x = c.getContext('2d');
+                const club = CLUB_ROSTERS[team === 'home' ? matchConfig.homeClub : matchConfig.guestClub];
+                const col = (ROSTER_THEMES[club && club.id] || ROSTER_THEMES.cittadella).primary;
+                x.fillStyle = '#0b1226'; x.fillRect(0, 0, 512, 128);
+                x.fillStyle = col; x.fillRect(0, 0, 18, 128); x.fillRect(494, 0, 18, 128);
+                x.fillStyle = '#facc15'; x.font = '900 46px Arial, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+                x.fillText('PANCA PUNITI', 256, 50);
+                x.fillStyle = '#e2e8f0'; x.font = 'bold 30px Arial, sans-serif';
+                x.fillText(CLUB_ABBR[club && club.id] || (team === 'home' ? 'CASA' : 'OSPITI'), 256, 98);
+                const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.55), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c) }));
+                sign.position.set(-20.6, 2.45, cz);
+                sign.rotation.y = Math.PI / 2;
+                grp.add(sign);
+                targetGroup.add(grp);
+            });
+        }
+
+        // le porte si aprono quando qualcuno ci passa davanti
+        function updatePenaltyDoors(dt) {
+            Object.entries(penaltyDoors).forEach(([team, d]) => {
+                const near = skaters.some(k => !k.isGoalie && k.mesh.visible && Math.abs(k.mesh.position.z - d.z) < 1.25 &&
+                    k.mesh.position.x > -19.6 && k.mesh.position.x < -16.3 && (k.penaltyBox || k.lineChangeState === 'entering' || (penaltyCall && penaltyCall.s === k)));
+                d.open += ((near ? 1 : 0) - d.open) * Math.min(1, dt * 6);
+                d.pivot.rotation.y = d.sign * d.open * 1.75;
+            });
+        }
+
+        // ---------- valutazione del fallo: l'arbitro non fischia sempre
+        // kind 'body' = contatto col corpo, 'stick' = colpo col bastone al portatore del disco
+        function evaluateFoul(checker, victim, kind, checkerSpeed, victimHadPuck, aiFactor) {
+            if (gameState !== 'playing' || penaltyCall || !checker || !victim) return false;
+            let type = null, p = 0, ejectP = 0;
+            if (kind === 'stick') {
+                type = 'Colpo di bastone'; p = 0.35; ejectP = 0.05;
+            } else if (!victimHadPuck) {
+                type = 'Ostruzione'; p = 0.55;
+            } else {
+                const fc = new THREE.Vector3(-Math.sin(checker.rotationY), 0, -Math.cos(checker.rotationY));
+                const fv = new THREE.Vector3(-Math.sin(victim.rotationY), 0, -Math.cos(victim.rotationY));
+                const fromBehind = fc.dot(fv) > 0.55;                // stesso verso: colpito alle spalle
+                if (checkerSpeed > 8 || fromBehind) {
+                    type = 'Carica';
+                    p = Math.min(0.85, 0.3 + Math.max(0, checkerSpeed - 8) * 0.06 + (fromBehind ? 0.3 : 0));
+                    ejectP = fromBehind && checkerSpeed > 10 ? 0.35 : 0.04;
+                } else if (victim.velocity.length() > checkerSpeed + 2) {
+                    type = 'Trattenuta'; p = 0.45;
+                }
+            }
+            if (!type || Math.random() >= p * (aiFactor || 1)) return false;
+            return callPenalty(checker, type, Math.random() < ejectP ? 'expulsion' : 'minor');
+        }
+
+        // ---------- chiamata: fischio, il colpevole va in panca puniti seguito dalla telecamera
+        function callPenalty(offender, type, kind) {
+            if (gameState !== 'playing' || penaltyCall) return false;
+            const team = offender.team;
+            const total = kind === 'expulsion' ? PENALTY_EXPULSION_SECS : PENALTY_MINOR_SECS;
+            penalties.push({ id: ++penaltySeq, team, skater: offender, type, kind, remaining: total, total });
+            if (!matchStats.penalties) matchStats.penalties = [];
+            matchStats.penalties.push({ team, num: offender.jerseyNum, name: skaterFullName(offender), type, kind, period: currentPeriod, timeStr: gameClockStr(), mins: kind === 'expulsion' ? 5 : 2 });
+            offender.boxSeat = skaters.filter(k => k !== offender && k.team === team && (k.penaltyBox || k.waitInBox)).length % 2;
+            offender.penaltyBox = true;
+            offender.onIce = false;
+            offender.isHuman = false;
+            offender.stunTimer = 0;
+            offender.lineChangeState = 'none';
+            offender.mesh.rotation.x = 0;
+            if (player === offender) {
+                const mate = skaters.find(k => k.team === team && k.onIce && !k.isGoalie);
+                if (mate) setControlledPlayer(mate);
+            }
+            currentPuckCarrier = null;
+            carrierHoldTimer = 0;
+            shotCharging = false;
+            shotChargePower = 0;
+            shotPowerWrap.classList.add('hidden');
+            const ownZ = team === 'home' ? 1 : -1;            // l'ingaggio va nella zona di difesa di chi ha commesso fallo
+            const side = Math.abs(puck.position.x) > 0.3 ? Math.sign(puck.position.x) : (Math.random() < 0.5 ? -1 : 1);
+            penaltyCall = { s: offender, team, type, kind, t: 0, stage: 'whistle', sitT: 0, spot: { x: side * FACEOFF_DOT_X, z: ownZ * FACEOFF_DOT_Z } };
+            gameState = 'penalty_call';
+            if (window.gameAudio) {
+                window.gameAudio.playWhistle();
+                if (window.gameAudio.playCrowdOoh) window.gameAudio.playCrowdOoh(team === 'guest' ? 0.75 : 0.45);
+            }
+            const club = CLUB_ROSTERS[offender.clubId];
+            document.getElementById('cut-tag').innerHTML = '<b></b>' + (kind === 'expulsion' ? 'ESPULSIONE' : 'PENALITÀ');
+            document.getElementById('cut-title').textContent = `#${offender.jerseyNum} ${skaterFullName(offender)}`;
+            document.getElementById('cut-sub').textContent = `${type} • ${PENALTY_ROLE_TXT[kind]} • ${club ? club.name : ''}`;
+            document.getElementById('cut-overlay').classList.remove('hidden');
+            restartAnim(document.getElementById('cut-l3'));
+            updatePenaltyHud();
+            return true;
+        }
+
+        // muove un giocatore verso (tx, tz): true se arrivato
+        function steerSkaterTo(s, tx, tz, speed, dt, strideRate, strideAmp) {
+            const dx = tx - s.mesh.position.x, dz = tz - s.mesh.position.z, d = Math.hypot(dx, dz);
+            if (d < 0.08) return true;
+            const step = Math.min(d, speed * dt);
+            s.mesh.position.x += dx / d * step;
+            s.mesh.position.z += dz / d * step;
+            s.mesh.position.y = 0;
+            let dr = Math.atan2(-dx, -dz) - s.rotationY;
+            while (dr > Math.PI) dr -= Math.PI * 2;
+            while (dr < -Math.PI) dr += Math.PI * 2;
+            s.rotationY += Math.sign(dr) * Math.min(Math.abs(dr), dt * 9);
+            s.mesh.rotation.y = s.rotationY;
+            s.walkCycle += dt * strideRate;
+            setSkaterHockeyReadyPose(s, Math.sin(s.walkCycle) * strideAmp, 0);
+            return step >= d - 1e-4;
+        }
+
+        // gli altri giocatori rallentano fino a fermarsi (gioco fermo)
+        function glideOthersToStop(except, dt) {
+            const t = clock.elapsedTime;
+            skaters.forEach(k => {
+                if (k === except || k.isGoalie || !k.onIce) return;
+                k.velocity.multiplyScalar(Math.pow(0.12, dt));
+                k.mesh.position.addScaledVector(k.velocity, dt);
+                constrainToCurvedRink(k.mesh.position, k.velocity, 0.72, 0.35);
+                k.mesh.rotation.z *= 0.85;
+                k.mesh.rotation.x = 0;
+                k.mesh.position.y = 0;
+                setSkaterHockeyReadyPose(k, Math.min(0.3, k.velocity.length() * 0.05) * Math.sin(t * 9 + k.walkCycle), 0);
+            });
+        }
+
+        function updatePenaltyCall(dt) {
+            const c = penaltyCall;
+            if (!c) return;
+            c.t += dt;
+            const s = c.s, bz = penaltyBoxZ(s.team), seat = penaltySeatPos(s);
+            glideOthersToStop(s, dt);
+            puckPhysics.velocity.multiplyScalar(Math.pow(0.05, dt));
+            puck.position.addScaledVector(puckPhysics.velocity, dt);
+            // l'arbitro più vicino alza il braccio
+            const ref = referees.slice().sort((a, b) => a.mesh.position.distanceTo(s.mesh.position) - b.mesh.position.distanceTo(s.mesh.position))[0];
+            if (ref) { ref.rightArmPivot.rotation.set(2.75, 0, -0.1); ref.rightElbowPivot.rotation.set(0.1, 0, 0); }
+
+            if (c.stage === 'whistle') {
+                s.velocity.multiplyScalar(Math.pow(0.1, dt));
+                s.mesh.position.addScaledVector(s.velocity, dt);
+                setSkaterHockeyReadyPose(s, 0, 0);
+                if (c.t > 0.8) c.stage = 'skate';
+            } else if (c.stage === 'skate') {
+                if (steerSkaterTo(s, PENALTY_DOOR_X + 0.9, bz, 8.5, dt, 12, 0.5)) c.stage = 'door';
+            } else if (c.stage === 'door') {
+                if (steerSkaterTo(s, PENALTY_DOOR_X - 0.95, bz, 3.4, dt, 9, 0.28)) c.stage = 'seat';
+            } else if (c.stage === 'seat') {
+                if (steerSkaterTo(s, seat.x, seat.z, 2.6, dt, 9, 0.25)) { c.stage = 'sit'; holdPenaltyBoxSkater(s); }
+            } else if (c.stage === 'sit') {
+                c.sitT += dt;
+                setSkaterBenchPose(s, false);
+                s.bodyPivot.rotation.x = 0.25;                   // testa bassa
+                if (c.sitT > 1.4) { finishPenaltyCall(); return; }
+            }
+            // telecamera: segue il giocatore lungo la pista, poi lo inquadra seduto dietro il vetro
+            const P = s.mesh.position, zs = bz > 0 ? 1 : -1;
+            const far = c.stage === 'whistle' || c.stage === 'skate';
+            const camTarget = far
+                ? new THREE.Vector3(Math.min(P.x + 4.6, 14), 2.7, P.z + 3.4 * zs)
+                : new THREE.Vector3(-15.3, 1.85, bz + 2.7 * zs);
+            camera.position.lerp(camTarget, far ? 0.06 : 0.05);
+            camera.lookAt(P.x, 1.05, P.z);
+            if (c.t > 10) finishPenaltyCall();                     // rete di sicurezza
+        }
+
+        function finishPenaltyCall() {
+            const c = penaltyCall;
+            penaltyCall = null;
+            document.getElementById('cut-overlay').classList.add('hidden');
+            if (c) {
+                if (c.kind === 'expulsion') {
+                    // espulso: lascia la panca e non torna più in partita
+                    c.s.penaltyBox = false;
+                    c.s.expelled = true;
+                    c.s.mesh.visible = false;
+                } else {
+                    holdPenaltyBoxSkater(c.s);
+                }
+                faceoffSpot = c.spot;
+            }
+            updatePenaltyHud();
+            startFaceoffNow();
+        }
+
+        // ---------- tempo delle penalità (scorre solo col cronometro di gara)
+        function tickPenalties() {
+            ['home', 'guest'].forEach(team => {
+                runningPenalties(team).forEach(pn => {
+                    pn.remaining -= 1;
+                    if (pn.remaining <= 0) releasePenalty(pn, 'time');
+                });
+            });
+            updatePenaltyHud();
+        }
+
+        // fine della penalità (tempo scaduto o gol in superiorità): il giocatore rientra dalla sua porta,
+        // dopo un'espulsione entra invece un compagno dalla panchina
+        function releasePenalty(pn, reason) {
+            if (!penalties.includes(pn)) return;
+            penalties = penalties.filter(x => x !== pn);
+            const team = pn.team, s = pn.skater;
+            if (pn.kind !== 'expulsion') s.penaltyBox = false;
+            const inPlay = gameState === 'playing';
+            const onCount = skaters.filter(k => k.team === team && k.onIce && !k.isGoalie && k.lineChangeState !== 'exiting').length;
+            if (inPlay && onCount < allowedSkaters(team)) {
+                if (pn.kind !== 'expulsion') {
+                    s.onIce = true;
+                    s.lineChangeState = 'entering';
+                    s.enterFrom = 'box';
+                    s.returnFlash = 3.0;
+                    s.mesh.visible = true;
+                    const missing = ROLE_ORDER.find(r => !skaters.some(k => k.team === team && k.onIce && !k.isGoalie && (k.fillRole || k.role) === r));
+                    s.fillRole = missing && missing !== s.role ? missing : null;
+                } else {
+                    const missing = ROLE_ORDER.find(r => !skaters.some(k => k.team === team && k.onIce && !k.isGoalie && (k.fillRole || k.role) === r));
+                    const bench = skaters.filter(k => k.team === team && skaterAvailable(k) && !k.onIce && k.lineChangeState !== 'exiting');
+                    const sub = bench.find(k => k.role === missing) || bench[0];
+                    if (sub) {
+                        sub.onIce = true;
+                        sub.fillRole = missing && sub.role !== missing ? missing : null;
+                        sub.lineChangeState = 'entering';
+                        sub.enterFrom = null;
+                        sub.exitStage = null;
+                        sub.returnFlash = 3.0;
+                        sub.mesh.position.set(18.55, 0, BENCH_LAYOUT[team].doorZ);
+                        setSkaterHockeyReadyPose(sub, 0, 0);
+                    }
+                }
+            } else if (pn.kind !== 'expulsion') {
+                s.waitInBox = true;                                 // rientra al prossimo ingaggio
+            }
+            const club = CLUB_ROSTERS[team === 'home' ? matchConfig.homeClub : matchConfig.guestClub];
+            const abbr = CLUB_ABBR[club && club.id] || '';
+            const back = allowedSkaters(team);
+            showHudToast(pn.kind === 'expulsion'
+                ? `${abbr} TORNA IN ${back} • FINE INFERIORITÀ`
+                : `RIENTRA #${s.jerseyNum} ${s.playerName} • ${abbr} IN ${back}${reason === 'goal' ? ' (GOL IN POWER PLAY)' : ''}`);
+            penaltyHudFlash = { team, until: performance.now() + 2600 };
+            updatePenaltyHud();
+        }
+
+        // ---------- HUD: forze in campo, power play e tempo che resta delle penalità
+        function updatePenaltyHud() {
+            const strEl = document.getElementById('hud-strength');
+            const wrap = document.getElementById('hud-pen');
+            if (!strEl || !wrap) return;
+            const h = allowedSkaters('home'), g = allowedSkaters('guest');
+            const abbrOf = team => CLUB_ABBR[team === 'home' ? matchConfig.homeClub : matchConfig.guestClub] || (team === 'home' ? 'CASA' : 'OSP');
+            const strip = strEl.parentElement;
+            strip.classList.remove('is-pp-home', 'is-pp-guest');
+            if (h !== g) {
+                const pp = h > g ? 'home' : 'guest', pk = pp === 'home' ? 'guest' : 'home';
+                const left = Math.min(...runningPenalties(pk).map(x => x.remaining));
+                strEl.textContent = `POWER PLAY ${abbrOf(pp)} • ${h} VS ${g} • ${fmtPenTime(left)}`;
+                strip.classList.add(pp === 'home' ? 'is-pp-home' : 'is-pp-guest');
+            } else {
+                strEl.textContent = `${h} VS ${g}`;
+            }
+            const col = getMatchTeamColors();
+            const flash = penaltyHudFlash && performance.now() < penaltyHudFlash.until ? penaltyHudFlash : null;
+            wrap.innerHTML = penalties.map((pn, i) => {
+                const running = runningPenalties(pn.team).includes(pn);
+                const pct = Math.max(0, Math.min(100, pn.remaining / pn.total * 100));
+                return `<div class="pen-chip${running ? '' : ' is-wait'}" style="--c:${pn.team === 'home' ? col.home : col.guestBar}">
+                    <b>${abbrOf(pn.team)}</b><span class="n">#${rosterEsc(pn.skater.jerseyNum)} ${rosterEsc(pn.skater.playerName)}</span>
+                    <span class="k">${pn.kind === 'expulsion' ? 'ESP' : pn.type}</span><span class="t">${running ? fmtPenTime(pn.remaining) : 'in attesa'}</span>
+                    <i style="width:${pct}%"></i></div>`;
+            }).join('') + (flash ? `<div class="pen-chip is-back" style="--c:${flash.team === 'home' ? col.home : col.guestBar}"><b>${abbrOf(flash.team)}</b><span class="n">RIENTRO</span><span class="t">${allowedSkaters(flash.team)} in pista</span></div>` : '');
         }
 
         // --- INTERMEZZI DI REGIA PRIMA DI OGNI INGAGGIO ---
@@ -9329,8 +9782,8 @@
             replayBuffer = [];
             if (window.gameAudio) window.gameAudio.playFaceoffDrop();
 
-            const homeC = skaters.find(s => s.team === 'home' && s.onIce && s.role === 'C');
-            const guestC = skaters.find(s => s.team === 'guest' && s.onIce && s.role === 'C');
+            const homeC = skaters.find(s => s.team === 'home' && s.onIce && (s.fillRole || s.role) === 'C');
+            const guestC = skaters.find(s => s.team === 'guest' && s.onIce && (s.fillRole || s.role) === 'C');
             if (homeC) homeC.shootAnim = 0.85;
             if (guestC) guestC.shootAnim = 0.85;
 
@@ -9865,6 +10318,7 @@
                     aiFlatDist(s.mesh.position, c.mesh.position) < 1.25 && s.velocity.length() > 6) {
                     s.hitCooldown = 3.5;
                     if (Math.random() < tune.hitChance) {
+                        const hitSpeed = s.velocity.length();
                         const fwd = new THREE.Vector3(-Math.sin(s.rotationY), 0, -Math.cos(s.rotationY));
                         c.stunTimer = 1.1;
                         c.velocity.copy(fwd).multiplyScalar(6);
@@ -9875,6 +10329,7 @@
                         carrierHoldTimer = 0;
                         if (window.gameAudio) window.gameAudio.playBodycheck();
                         spawnSparkParticles(c.mesh.position, 0xfacc15, 10, 4.5, false);
+                        evaluateFoul(s, c, 'body', hitSpeed, true, 0.45);     // la CPU commette meno falli
                         return;
                     }
                 }
@@ -9890,6 +10345,7 @@
                         s.shootAnim = 0.6;
                         if (window.gameAudio) window.gameAudio.playPuckHit(0.3);
                         spawnSparkParticles(puck.position, 0xffffff, 5, 2.5, false);
+                        if (aiFlatDist(s.mesh.position, c.mesh.position) < 2.2) evaluateFoul(s, c, 'stick', 0, true, 0.15);
                     }
                 }
             });
@@ -9931,6 +10387,7 @@
                 skaters.forEach(s => {
                     s.mesh.rotation.z = 0;
                     s.leanZ = 0;
+                    if (s.penaltyBox || s.waitInBox || s.expelled) { holdPenaltyBoxSkater(s); return; }
                     if (!s.isGoalie && !s.onIce) {
                         const seatPos = getBenchSeatPosition(s.team, s.benchSlot);
                         s.mesh.position.copy(seatPos);
@@ -10002,6 +10459,7 @@
             }
 
             skaters.forEach(s => {
+                if (s.penaltyBox || s.waitInBox || s.expelled) { holdPenaltyBoxSkater(s); return; }
                 if (!s.isGoalie && !s.onIce) {
                     const seatPos = getBenchSeatPosition(s.team, s.benchSlot);
                     if (s.lineChangeState === 'exiting') {
@@ -10015,6 +10473,17 @@
                     return;
                 }
 
+                if (s.returnFlash > 0) s.returnFlash = Math.max(0, s.returnFlash - dt);
+                if (s.lineChangeState === 'entering' && s.enterFrom === 'box') {
+                    // rientro dalla panca puniti: alla porta, poi in pista
+                    const bz = penaltyBoxZ(s.team);
+                    const inBox = s.mesh.position.x < PENALTY_DOOR_X - 0.4;
+                    const arrived = inBox && Math.abs(s.mesh.position.z - bz) > 0.12
+                        ? (steerSkaterTo(s, PENALTY_DOOR_X - 0.6, bz, 3.2, dt, 9, 0.25), false)
+                        : steerSkaterTo(s, -16.4, bz, 6.5, dt, 11, 0.45);
+                    if (arrived) { s.lineChangeState = 'none'; s.enterFrom = null; s.velocity.set(4, 0, 0); }
+                    return;
+                }
                 if (s.lineChangeState === 'entering') {
                     // entra dalla porta della panchina fino a x = 14,5; superata quella soglia (anche di colpo,
                     // per un calo di fps o una spinta) torna libero: prima poteva restare "entering" per sempre
@@ -10534,13 +11003,17 @@
             if (!player || gameState !== 'playing') return;
             if (window.gameAudio) window.gameAudio.playBodycheck();
             const forward = new THREE.Vector3(-Math.sin(player.rotationY), 0, -Math.cos(player.rotationY));
+            const checkerSpeed = player.velocity.length();          // velocità prima della spinta: conta per la carica
+            const carrierBefore = carrierHoldTimer > 0 ? currentPuckCarrier : null;
             player.velocity.addScaledVector(forward, 11.5);
             player.shootAnim = 0.65;
 
+            const hit = [];
             skaters.forEach(opp => {
                 if (opp.team !== player.team && opp.onIce && !opp.isGoalie && opp.stunTimer <= 0) {
                     const dist = player.mesh.position.distanceTo(opp.mesh.position);
                     if (dist < 1.95) {
+                        hit.push({ opp, dist, hadPuck: carrierBefore === opp });
                         opp.stunTimer = 2.0;
                         opp.velocity.copy(forward).multiplyScalar(8.5);
                         spawnSparkParticles(opp.mesh.position, 0xfacc15, 10, 4.5, false);
@@ -10550,6 +11023,27 @@
                     }
                 }
             });
+            if (hit.length) {
+                hit.sort((a, b) => a.dist - b.dist);
+                evaluateFoul(player, hit[0].opp, 'body', checkerSpeed, hit[0].hadPuck, 1);
+                return;
+            }
+            // nessun contatto col corpo: col portatore del disco a portata di bastone il contrasto diventa un colpo di bastone
+            const c = carrierBefore;
+            if (c && c.team !== player.team && !c.isGoalie && c.onIce) {
+                const to = new THREE.Vector3(c.mesh.position.x - player.mesh.position.x, 0, c.mesh.position.z - player.mesh.position.z);
+                const d = to.length();
+                if (d < 2.7 && to.normalize().dot(forward) > 0.3) {
+                    if (Math.random() < 0.55) {                       // disco rubato o spostato
+                        puckPhysics.velocity.set((Math.random() - 0.5) * 7, 0.4, (Math.random() - 0.5) * 7);
+                        puckReleaseCooldown = 0.18;
+                        currentPuckCarrier = null;
+                        carrierHoldTimer = 0;
+                        spawnSparkParticles(puck.position, 0xffffff, 6, 2.5, false);
+                    }
+                    evaluateFoul(player, c, 'stick', checkerSpeed, true, 1);
+                }
+            }
         }
 
         // --- FISICA DISCO E RILEVAMENTO GOL ---
@@ -10715,6 +11209,9 @@
             const mins = Math.floor(gameTime / 60).toString().padStart(2, '0');
             const secs = (gameTime % 60).toString().padStart(2, '0');
             if (currentPeriod > TOTAL_PERIODS) overtimeGoldenGoal = true;
+            // situazione numerica: PP = gol in superiorità, PK = gol in inferiorità
+            const otherTeam = scoringTeam === 'home' ? 'guest' : 'home';
+            const sit = allowedSkaters(scoringTeam) > allowedSkaters(otherTeam) ? 'PP' : (allowedSkaters(scoringTeam) < allowedSkaters(otherTeam) ? 'PK' : '');
 
             if (scoringTeam === 'home') {
                 scoreHome++;
@@ -10726,7 +11223,8 @@
                     team: 'home',
                     clubName: homeClub.name,
                     num: scorerNum,
-                    name: scorerName
+                    name: scorerName,
+                    sit
                 });
             } else {
                 scoreGuest++;
@@ -10738,7 +11236,8 @@
                     team: 'guest',
                     clubName: guestClub.name,
                     num: scorerNum,
-                    name: scorerName
+                    name: scorerName,
+                    sit
                 });
             }
 
@@ -10750,6 +11249,14 @@
             updatePuckCarrierUI(0);
             updateScoreboardVisuals();
             renderGoalBanner(scoringTeam, scorerNum, scorerName);
+            const sitEl = document.getElementById('goal-sit');
+            if (sitEl) sitEl.textContent = sit === 'PP' ? 'PP • In superiorità numerica' : (sit === 'PK' ? 'PK • In inferiorità numerica' : '');
+            if (sit) document.getElementById('replay-sub').textContent += ` • ${sit}`;
+            // gol in power play: finisce la penalità minore più vicina alla scadenza
+            if (sit === 'PP') {
+                const minor = runningPenalties(otherTeam).filter(x => x.kind === 'minor').sort((a, b) => a.remaining - b.remaining)[0];
+                if (minor) releasePenalty(minor, 'goal');
+            }
             goalMessage.classList.remove('hidden');
             replayGoalSide = scoringTeam;
         }
@@ -10936,6 +11443,7 @@
                     timerAccumulator -= 0.15;
                     if (gameTime > 0) {
                         gameTime = Math.max(0, gameTime - 1);
+                        if (penalties.length) tickPenalties();
                         updateScoreboardVisuals();
                         if (gameTime === 0) {
                             handleEndOfPeriod();
@@ -10953,6 +11461,11 @@
                 updateCrowd(dt);
                 recordReplayFrame();
                 updateCamera();
+            } else if (gameState === 'penalty_call') {
+                updateReferees(dt);
+                updatePenaltyCall(dt);
+                updateBenchStaff(dt);
+                updateCrowd(dt);
             } else if (gameState === 'goalie_freeze') {
                 updateGoalieFreeze(dt);
                 updateReferees(dt);
@@ -10987,6 +11500,7 @@
             }
 
             updateDynamicArenaLights(dt);
+            updatePenaltyDoors(dt);
             renderer.render(scene, camera);
         }
 
@@ -11815,7 +12329,7 @@
             } else {
                 scorersListEl.innerHTML = matchStats.scorers.map(sc => `
                     <div class="sx-scorer" style="--c:${sc.team === 'home' ? sxCol.home : sxCol.guestBar}">
-                        <span class="t">${sc.period > TOTAL_PERIODS ? 'OT' : sc.period + '° P'} • ${sc.timeStr}</span>
+                        <span class="t">${sc.period > TOTAL_PERIODS ? 'OT' : sc.period + '° P'} • ${sc.timeStr}${sc.sit ? ' • ' + sc.sit : ''}</span>
                         <span class="n">#${sc.num} ${sc.name}</span>
                         <span class="c">${sc.clubName}</span>
                     </div>
@@ -11887,8 +12401,12 @@
                 guestSaves: 0,
                 homeFaceoffs: 0,
                 guestFaceoffs: 0,
-                scorers: []
+                scorers: [],
+                penalties: []
             };
+            penalties = [];
+            penaltyCall = null;
+            penaltyHudFlash = null;
             pendingScorerShot = null;
             currentPuckCarrier = null;
             carrierHoldTimer = 0;
@@ -11912,7 +12430,7 @@
         // statistiche e ritorno al menu principale.
         // =====================================================================
         let gamePaused = false;
-        const PAUSABLE_STATES = new Set(['playing', 'faceoff', 'cutaway', 'goal_celebration', 'goalie_freeze']);
+        const PAUSABLE_STATES = new Set(['playing', 'faceoff', 'cutaway', 'goal_celebration', 'goalie_freeze', 'penalty_call']);
         let pausePage = null;
         let pauseCine = null;
         let pauseFocusIdx = 0;
@@ -12015,7 +12533,7 @@
                 applyCutCamera(sh, cutaway.t / (sh.duration || CUT_SHOT_DURATION));
                 return;
             }
-            if (gameState === 'goalie_freeze') return;   // il primo piano del portiere riprende da solo
+            if (gameState === 'goalie_freeze' || gameState === 'penalty_call') return;   // la regia riprende da sola
             if (gameState === 'faceoff') {
                 camera.position.copy(faceoffCameraPos());
                 camera.lookAt(faceoffSpot.x, 0.7, faceoffSpot.z);
@@ -12316,12 +12834,14 @@
             const col = getMatchTeamColors();
             const hShots = Math.max(scoreHome, matchStats.homeShots), gShots = Math.max(scoreGuest, matchStats.guestShots);
             const pct = (g, s) => s ? Math.round(g / s * 100) : 0;
+            const pimOf = team => (matchStats.penalties || []).filter(x => x.team === team).reduce((a, x) => a + x.mins, 0);
             const rows = [
                 ['Gol', scoreHome, scoreGuest],
                 ['Tiri in porta', hShots, gShots],
                 ['Parate', matchStats.homeSaves, matchStats.guestSaves],
                 ['Ingaggi vinti', matchStats.homeFaceoffs || 0, matchStats.guestFaceoffs || 0],
-                ['Realizzazione %', pct(scoreHome, hShots), pct(scoreGuest, gShots)]
+                ['Realizzazione %', pct(scoreHome, hShots), pct(scoreGuest, gShots)],
+                ['Minuti di penalità', pimOf('home'), pimOf('guest')]
             ];
             const row = ([label, h, g]) => {
                 const tot = h + g, hp = tot ? Math.round(h / tot * 100) : 50;
@@ -12330,7 +12850,7 @@
             };
             const scorers = matchStats.scorers.length
                 ? matchStats.scorers.map(sc => `<div class="pz-scorer" style="--c:${sc.team === 'home' ? col.home : col.guestBar}">
-                        <span class="t">${sc.period > TOTAL_PERIODS ? 'OT' : sc.period + '° P'} • ${sc.timeStr}</span><span class="n">#${rosterEsc(sc.num)} ${rosterEsc(sc.name)}</span><span class="c">${rosterEsc(sc.clubName)}</span></div>`).join('')
+                        <span class="t">${sc.period > TOTAL_PERIODS ? 'OT' : sc.period + '° P'} • ${sc.timeStr}${sc.sit ? ' • ' + sc.sit : ''}</span><span class="n">#${rosterEsc(sc.num)} ${rosterEsc(sc.name)}</span><span class="c">${rosterEsc(sc.clubName)}</span></div>`).join('')
                 : '<div class="pz-empty">Nessuna rete segnata finora.</div>';
             document.getElementById('pz-stats').innerHTML = `
                 <div class="pz-stat-head">
@@ -12775,7 +13295,7 @@
 
             if (skipTourBtn) skipTourBtn.addEventListener('click', () => { if (gameState === 'arena_tour') finishArenaTour(); });
             const skipCutBtn = document.getElementById('skip-cut-btn');
-            if (skipCutBtn) skipCutBtn.addEventListener('click', () => { if (gameState === 'cutaway') finishCutaway(); else if (gameState === 'goalie_freeze') finishGoalieFreeze(); });
+            if (skipCutBtn) skipCutBtn.addEventListener('click', () => { if (gameState === 'cutaway') finishCutaway(); else if (gameState === 'goalie_freeze') finishGoalieFreeze(); else if (gameState === 'penalty_call') finishPenaltyCall(); });
             const skipLogoIntroBtn = document.getElementById('skip-logo-intro-btn');
             if (skipLogoIntroBtn) skipLogoIntroBtn.addEventListener('click', () => { if (gameState === 'logo_intro') finishLogoIntro(); });
             if (skipIntroBtn) skipIntroBtn.addEventListener('click', () => { if (gameState === 'intro') finishIntro(); });
