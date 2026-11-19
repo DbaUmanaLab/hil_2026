@@ -85,11 +85,11 @@ for sgn in (-1, 1):
     rect('red', -RW / 2 + 1.4, sgn * 31 - 0.05, RW / 2 - 1.4, sgn * 31 + 0.05)
     arc('red', 0, sgn * 31, 1.8, 180 if sgn > 0 else 0, 360 if sgn > 0 else 180, 0.07)
     for x in (-8.5, 8.5):
-        ring('red', x, sgn * 22, 4.5, 0.07)
-        dot('red', x, sgn * 22, 0.3)
+        ring('red', x, sgn * 21, 4.5, 0.07)
+        dot('red', x, sgn * 21, 0.3)
         for dz in (-0.6, 0.6):
-            rect('red', x - 1.2, sgn * 22 + dz - 0.03, x - 0.4, sgn * 22 + dz + 0.03)
-            rect('red', x + 0.4, sgn * 22 + dz - 0.03, x + 1.2, sgn * 22 + dz + 0.03)
+            rect('red', x - 1.2, sgn * 21 + dz - 0.03, x - 0.4, sgn * 21 + dz + 0.03)
+            rect('red', x + 0.4, sgn * 21 + dz - 0.03, x + 1.2, sgn * 21 + dz + 0.03)
         dot('red', x, sgn * 7, 0.3)
 # cerchi scuri del pattinaggio artistico (sbiaditi, irregolari), come nelle foto
 for _ in range(26):

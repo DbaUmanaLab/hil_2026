@@ -88,8 +88,8 @@ for sgn in (-1, 1):
     rect('red', -RW / 2 + 1.4, sgn * 31 - 0.04, RW / 2 - 1.4, sgn * 31 + 0.04)
     arc('red', 0, sgn * 31, 1.8, 180 if sgn > 0 else 0, 360 if sgn > 0 else 180, 0.05)
     for x in (-8.5, 8.5):
-        ring('red', x, sgn * 22, 4.5, 0.05)
-        dot('red', x, sgn * 22, 0.25)
+        ring('red', x, sgn * 21, 4.5, 0.05)
+        dot('red', x, sgn * 21, 0.25)
         dot('red', x, sgn * 7, 0.2)
 # pattinaggio artistico: grandi cerchi bianchi e file di puntini
 for z in (-18, 18):
