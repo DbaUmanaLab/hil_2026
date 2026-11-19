@@ -64,6 +64,12 @@
             id: 'ligue_elite', name: 'Ligue Élite (Francia)', short: 'Ligue Élite', logo: 'assets/logos/ligue_elite_france.png', active: false,
             desc: 'Il massimo campionato francese di roller hockey (FFRS). Per ora c\'è solo FDB Villeneuve: si giocherà quando arriveranno le altre squadre francesi.',
             facts: () => [[String(CLUB_IDS.filter(id => club(id) && club(id).league === 'LIGUE ELITE').length), 'Squadre'], ['FFRS', 'Federazione'], ['Francia', 'Paese']]
+        },
+        {
+            // campionato spagnolo: non ancora giocabile, per ora c'è solo il Molina Sport ACEGC
+            id: 'liga_rfep', name: 'Liga Élite RFEP (Spagna)', short: 'Liga Élite', logo: 'assets/logos/rfep.png', active: false,
+            desc: 'Il massimo campionato spagnolo di hockey in linea (Real Federación Española de Patinaje). Per ora c\'è solo il Molina Sport ACEGC di Las Palmas de Gran Canaria: si giocherà quando arriveranno le altre squadre spagnole.',
+            facts: () => [[String(CLUB_IDS.filter(id => club(id) && club(id).league === 'RFEP').length), 'Squadre'], ['RFEP', 'Federazione'], ['Spagna', 'Paese']]
         }
     ];
     let compIdx = 0;

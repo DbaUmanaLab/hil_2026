@@ -28,6 +28,13 @@
       "federation": "FFRS",
       "badge": "Ligue Élite • Francia",
       "rosterLabel": "LIGUE ÉLITE • FFRS"
+    },
+    {
+      "id": "RFEP",
+      "name": "Liga Élite RFEP",
+      "federation": "RFEP",
+      "badge": "Liga Élite • Spagna",
+      "rosterLabel": "LIGA ÉLITE • RFEP"
     }
   ],
   "teams": [
@@ -3415,6 +3422,196 @@
           "pants": "#141416",
           "helmet": "#141416",
           "glove": "#f6c400"
+        }
+      }
+    },
+    {
+      "id": "molina",
+      "league": "RFEP",
+      "name": "MOLINA SPORT ACEGC",
+      "shortName": "MOLINA SPORT",
+      "abbr": "MOL",
+      "note": "Nomi e statistiche dal roster ufficiale (5 partite). Numeri di maglia e ruoli NON presenti nel roster: assegnati provvisoriamente (92 e 24 dalla foto delle maglie), da sostituire con quelli veri. Oscar Sierra Garzo è allenatore-giocatore; il secondo nome dello staff (…Alejandro) è tagliato nell'immagine.",
+      "jerseyClubId": "molina",
+      "homeArena": "molina",
+      "logo": "molina.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/molina.png"
+      ],
+      "ratings": {
+        "off": 84,
+        "def": 79,
+        "goa": 86
+      },
+      "colors": {
+        "primary": "#f5c814",
+        "secondary": "#1f4fb5",
+        "staffJacket": "#1f4fb5",
+        "coachJacket": "#f5c814"
+      },
+      "rosterScreen": {
+        "photo": "molina.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": {
+        "first": "Oscar",
+        "last": "Sierra Garzo",
+        "role": "Allenatore-giocatore",
+        "note": "In campo anche nella seconda linea"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "TORDERA CASTRO",
+        "first": "Javier"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "GONZALEZ GONZALEZ",
+          "first": "David"
+        }
+      ],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "92",
+            "name": "MOONEY",
+            "first": "Kevin",
+            "g": 11,
+            "a": 7,
+            "pts": 18
+          },
+          {
+            "role": "LW",
+            "num": "24",
+            "name": "ANDRYSEK",
+            "first": "Jan",
+            "g": 7,
+            "a": 10,
+            "pts": 17
+          },
+          {
+            "role": "RW",
+            "num": "17",
+            "name": "PEREZ MORERA",
+            "first": "Alex",
+            "g": 5,
+            "a": 4,
+            "pts": 9
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "SIHVONEN",
+            "first": "Anton Simo Petteri",
+            "g": 4,
+            "a": 4,
+            "pts": 8
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "SIERRA GARZO",
+            "first": "Oscar",
+            "g": 6,
+            "a": 2,
+            "pts": 8
+          },
+          {
+            "role": "LW",
+            "num": "22",
+            "name": "DIEZ FERNÁNDEZ",
+            "first": "Mario",
+            "g": 2,
+            "a": 4,
+            "pts": 6
+          },
+          {
+            "role": "RW",
+            "num": "11",
+            "name": "GRÀCIA ALVÁREZ",
+            "first": "Guillermo",
+            "g": 1,
+            "a": 2,
+            "pts": 3
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "SANDOVAL VERA",
+            "first": "Hugo",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "19",
+            "name": "GONZALEZ NAVAS",
+            "first": "Unai",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          },
+          {
+            "role": "LW",
+            "num": "8",
+            "name": "BAÑOS QUIROGA",
+            "first": "Andres",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "21",
+            "name": "RODRÍGUEZ HERNÁNDEZ",
+            "first": "Giovanni",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "3",
+            "name": "FERNANDEZ BETANCOR",
+            "first": "Marco Luis",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "6",
+          "name": "ZASADNY",
+          "first": "Pawel"
+        },
+        {
+          "num": "14",
+          "name": "SANTANA BLANCO",
+          "first": "Hugo"
+        },
+        {
+          "num": "27",
+          "name": "BRIGANTY RUIZ",
+          "first": "Fernando"
+        }
+      ],
+      "kits": {
+        "yellow": {
+          "label": "Divisa Giallo-Blu",
+          "primary": "#f5c814",
+          "pants": "#1f4fb5",
+          "helmet": "#f59e0b",
+          "glove": "#f59e0b"
         }
       }
     }

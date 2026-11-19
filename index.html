@@ -1949,6 +1949,14 @@
                                 <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="time42"></span><span class="as-home-chip hidden" data-home-chip="time42">Casa</span></span>
                             </span>
                         </button>
+                        <button type="button" data-arena="molina" class="arena-pill-btn as-card" role="option">
+                            <span class="as-thumb"><img src="assets/arenas/thumbs/molina.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">16</span></span>
+                            <span class="min-w-0">
+                                <span class="as-card-name block">Polideportivo Carlos García</span>
+                                <span class="as-card-loc block">Las Palmas de Gran Canaria • Spagna</span>
+                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="molina"></span><span class="as-home-chip hidden" data-home-chip="molina">Casa</span></span>
+                            </span>
+                        </button>
                     </div>
                     <div class="as-details">
                         <div class="as-stats">
@@ -2632,10 +2640,21 @@
                 capacity: '200 Spettatori (In piedi)',
                 surface: 'Cemento Lucidato',
                 roof: 'Travi Curve in Legno Lamellare e Pannelli OSB'
+            },
+            molina: {
+                id: 'molina',
+                name: 'POLIDEPORTIVO CARLOS GARCÍA',
+                shortTitle: 'Polideportivo Carlos García',
+                location: 'Las Palmas de Gran Canaria • Isole Canarie, Spagna',
+                clubBadge: 'Casa: Molina Sport ACEGC',
+                desc: 'Palazzetto con capriate reticolari in acciaio blu e tetto in lamiera con le file di lucernari, proiettori a campana appesi. Pareti color pesca con la fascia arancio, tribuna con le sedute blu e la galleria con la ringhiera, striscioni e gagliardetti dei club sulle testate, canestri sollevati sotto il tetto. Pista in resina azzurra multisport, balaustre bianche con lo zoccolo arancio.',
+                capacity: '400 Spettatori',
+                surface: 'Resina Azzurra Multisport',
+                roof: 'Capriate in Acciaio e Lamiera con Lucernari'
             }
         };
 
-        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42'];
+        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina'];
         // Palazzetti presenti nel menu ma non selezionabili (al momento nessuno)
         const DISABLED_ARENAS = new Set();
         const SELECTABLE_ARENA_IDS = ARENA_IDS.filter(id => !DISABLED_ARENAS.has(id));
@@ -4441,8 +4460,12 @@
             const n = arenaScoreboards.north;
             if (!n) return;
             n.rotation.y = 0;
-            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42'].includes(matchConfig.arena);
-            if (matchConfig.arena === 'time42') {
+            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina'].includes(matchConfig.arena);
+            if (matchConfig.arena === 'molina') {
+                // tabellone sulla testata nord, tra gli striscioni del club
+                n.position.set(0, 9.6, -43.6);
+                n.scale.setScalar(0.42);
+            } else if (matchConfig.arena === 'time42') {
                 // tabellone sulla testata nord, sopra gli striscioni
                 n.position.set(0, 8.6, -40.6);
                 n.scale.setScalar(0.4);
@@ -4681,7 +4704,7 @@
                 roughness: 0.55
             });
             const benchBackMat = isAsiago ? new THREE.MeshStandardMaterial({ map: pbr.woodDiffuse, bumpMap: preset.usePhysicalMat ? pbr.woodBump : null, bumpScale: 0.015, color: 0xc8955a, roughness: 0.6 }) : new THREE.MeshStandardMaterial({
-                color: arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
+                color: arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
                 roughness: 0.8
             });
 
@@ -4784,7 +4807,8 @@
             treviso: 'src/arenas/treviso.js',
             novi: 'src/arenas/novi.js',
             empoli: 'src/arenas/empoli.js',
-            time42: 'src/arenas/time42.js'
+            time42: 'src/arenas/time42.js',
+            molina: 'src/arenas/molina.js'
         };
         const arenaBuilders = {};
         const arenaModulePromises = {};
@@ -5065,7 +5089,9 @@
             // Palaramini: resina chiara, pannelli trasparenti sopra le balaustre (telaio metallico nel modulo)
             empoli: { dir: 'assets/textures/empoli/', normal: 'assets/textures/empoli/rink_normal.jpg', floorTint: 0xa6a49e, floorTintLow: 0x9a9893 },
             // 2Skate Arena: cemento lucidato, niente vetro sopra le balaustre (rete bianca in fondo, nel modulo)
-            time42: { dir: 'assets/textures/time42/', normal: 'assets/textures/time42/rink_normal.jpg', floorTint: 0xb4b6b8, floorTintLow: 0xa6a8aa, noGlass: true }
+            time42: { dir: 'assets/textures/time42/', normal: 'assets/textures/time42/rink_normal.jpg', floorTint: 0xb4b6b8, floorTintLow: 0xa6a8aa, noGlass: true },
+            // Polideportivo Carlos García: resina azzurra multisport, nessun vetro (reti bianche dietro le porte, nel modulo)
+            molina: { dir: 'assets/textures/molina/', normal: 'assets/textures/molina/rink_normal.jpg', floorTint: 0xb2b8bc, floorTintLow: 0xa4aaae, noGlass: true }
         };
 
         // Balaustre: ogni striscia rappresenta 18,5 m di pannelli pubblicitari
@@ -5401,7 +5427,7 @@
                             { jacket: 0xf8fafc, shirt: 0xdc2626, isJersey: true }
                         ]))));
 
-            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42') return;   // pubblico costruito dall'architettura del palazzetto
+            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina') return;   // pubblico costruito dall'architettura del palazzetto
 
             // Spalti laterali dietro il tavolo cronometristi (con spazio sull'angolo destro per la casetta bar a Cittadella)
             for (let row = 0; row < 4; row++) {
@@ -11578,9 +11604,22 @@
             el.style.fontSize = '';
             el.style.whiteSpace = 'nowrap';
             const avail = el.clientWidth;
-            if (!avail) return;
+            if (!avail) {
+                // schermata ancora nascosta (caricamento): riprova appena è visibile, intanto il testo può andare a capo
+                el.style.whiteSpace = '';
+                el._fitTries = (el._fitTries || 0) + 1;
+                if (el._fitTries < 120) requestAnimationFrame(() => fitTeamNameToBox(el));
+                return;
+            }
+            el._fitTries = 0;
+            // la colonna visibile può essere più stretta del contenitore del nome: conta il primo antenato che ritaglia
+            let clip = el.parentElement;
+            while (clip && getComputedStyle(clip).overflowX === 'visible') clip = clip.parentElement;
+            const visW = clip ? clip.getBoundingClientRect().width - 28 : avail;
+            const limit = Math.min(avail, visW);
+            const textW = () => { const r = document.createRange(); r.selectNodeContents(el); return r.getBoundingClientRect().width; };
             let size = parseFloat(getComputedStyle(el).fontSize);
-            for (let i = 0; i < 12 && el.scrollWidth > avail && size > 12; i++) {
+            for (let i = 0; i < 14 && Math.max(el.scrollWidth > avail ? el.scrollWidth : 0, textW()) > limit && size > 12; i++) {
                 size *= 0.93;
                 el.style.fontSize = size + 'px';
             }
@@ -12386,6 +12425,31 @@
             document.getElementById('match-stats-modal').classList.remove('hidden');
         }
 
+        // Partita rapida: squadre, divise e palazzetto sempre a caso. Le divise sono scelte in modo che i
+        // colori principali delle due squadre siano il più possibile diversi.
+        function randomizeQuickMatchConfig() {
+            const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+            const ids = CLUB_IDS.filter(id => CLUB_ROSTERS[id]);
+            const home = pick(ids);
+            const guest = pick(ids.filter(id => id !== home));
+            const rgb = n => [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+            const dist = (a, b) => { const x = rgb(a), y = rgb(b); return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]); };
+            const hKits = Object.keys(CLUB_ROSTERS[home].kits), gKits = Object.keys(CLUB_ROSTERS[guest].kits);
+            let best = null;
+            hKits.forEach(hk => gKits.forEach(gk => {
+                const d = dist(CLUB_ROSTERS[home].kits[hk].primary, CLUB_ROSTERS[guest].kits[gk].primary) + Math.random() * 30;
+                if (!best || d > best.d) best = { d, hk, gk };
+            }));
+            matchConfig.homeLeagueFilter = 'TUTTE';
+            matchConfig.guestLeagueFilter = 'TUTTE';
+            matchConfig.homeClub = home;
+            matchConfig.guestClub = guest;
+            matchConfig.homeKit = best.hk;
+            matchConfig.guestKit = best.gk;
+            matchConfig.arena = pick(SELECTABLE_ARENA_IDS);
+            preloadArenaModule(matchConfig.arena);
+        }
+
         function launchMatchFromCurrentConfig() {
             if (window.Ceremony) { window.Ceremony.reset(); window.Ceremony.clearMvp(); }
             scoreHome = 0;
@@ -13103,6 +13167,7 @@
                     titleSplashScreen.classList.add('hidden');
                     const proceed = () => {
                         if (action === 'quick') {
+                            randomizeQuickMatchConfig();
                             launchMatchFromCurrentConfig();
                         } else if (action === 'competition' && window.Competition) {
                             window.Competition.open();
