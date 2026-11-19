@@ -8934,13 +8934,15 @@
                 if (Math.hypot(puck.position.x - tip.x, puck.position.z - tip.z) < 1.3) return 0;   // disco conteso
             }
             if (lastScoringSkater && lastScoringSkater.team === g.team && !lastScoringSkater.isGoalie) return 0;   // passaggio di un compagno
+            // velocità all'arrivo: i tiri normali della CPU arrivano a 20-28 m/s, quelli caricati al massimo oltre 32
             let p;
-            if (speed <= 8) p = 0.95;
-            else if (speed >= 26) p = 0;
-            else p = 0.95 * Math.pow(1 - (speed - 8) / 18, 1.4);
-            if (lateral > 0.45) p *= 0.5;                  // disco di lato: preso col bastone o col gambale, lontano dal corpo
-            if (puck.position.y > 0.7) p *= 0.8;           // alto: presa col guantone più difficile
-            if (g.velocity.length() > 3.5) p *= 0.6;       // portiere in spostamento rapido
+            if (speed <= 14) p = 0.95;
+            else if (speed <= 30) p = 0.95 - (speed - 14) / 16 * 0.6;    // da 0,95 a 0,35
+            else if (speed < 38) p = 0.35 * (38 - speed) / 8;           // tiri molto forti: quasi sempre respinti
+            else p = 0;
+            if (lateral > 0.5) p *= 0.75;                  // disco di lato: preso col bastone o col gambale, lontano dal corpo
+            if (puck.position.y > 0.75) p *= 0.85;         // alto: presa col guantone più difficile
+            if (g.velocity.length() > 5) p *= 0.8;         // portiere in spostamento rapido
             return p;
         }
 
