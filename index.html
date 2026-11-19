@@ -3871,11 +3871,16 @@
             'assets/players/player_face_2.jpg',
             'assets/players/player_face_3.jpg'
         ];
-        const photoFaceMaterials = [];
+        const photoFaceMaterials = {};
+        // Todd, il cronometrista centrale del PalaHockey di Cittadella: volto con barba e baffi (tools/generate_todd_face.py)
+        const TODD_FACE_FILE = 'assets/players/todd_face.jpg';
 
         function getPhotoFaceMaterial(index) {
             const i = ((index % PHOTO_FACE_FILES.length) + PHOTO_FACE_FILES.length) % PHOTO_FACE_FILES.length;
-            if (photoFaceMaterials[i]) return photoFaceMaterials[i];
+            return getFaceMaterialFromFile(PHOTO_FACE_FILES[i]);
+        }
+        function getFaceMaterialFromFile(file) {
+            if (photoFaceMaterials[file]) return photoFaceMaterials[file];
 
             const canvas = document.createElement('canvas');
             canvas.width = 1024;
@@ -3904,9 +3909,9 @@
                 ctx.drawImage(img, x0, 0, faceW, H);
                 tex.needsUpdate = true;
             };
-            img.src = PHOTO_FACE_FILES[i];
+            img.src = file;
 
-            photoFaceMaterials[i] = mat;
+            photoFaceMaterials[file] = mat;
             return mat;
         }
 
@@ -4775,8 +4780,10 @@
         function preloadArenaModule(arenaId) { loadArenaModule(arenaId).catch(() => {}); }
 
         // --- TAVOLO CRONOMETRISTI SUL LATO OPPOSTO ALLE PANCHINE CON 3 CRONOMETRISTI E LAPTOP ---
+        let timekeeperTodd = null;   // { mesh, headGroup, member } solo al PalaHockey di Cittadella
         function buildTimekeepersTable(targetGroup) {
             const pbr = getPhotorealisticPBRMaps();
+            timekeeperTodd = null;
             const tkGroup = new THREE.Group();
             // al Pattinodromo di Forlì il tavolo sta sul lato delle panchine, nello spazio tra le due
             const tkOnBenchSide = matchConfig.arena === 'forli';
@@ -4932,7 +4939,9 @@
 
                 const headGroup = new THREE.Group();
                 headGroup.position.set(0, 0.68, 0);
-                const head = new THREE.Mesh(new THREE.SphereGeometry(0.145, 16, 16), getRealisticFaceMaterial(idx));
+                // volti fotografici come il pubblico, uno diverso per ciascuno; a Cittadella al centro siede Todd
+                const isTodd = idx === 1 && matchConfig.arena === 'cittadella';
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.145, 16, 16), isTodd ? getFaceMaterialFromFile(TODD_FACE_FILE) : getPhotoFaceMaterial(idx + 1));
                 const hairCap = new THREE.Mesh(
                     new THREE.SphereGeometry(0.153, 14, 12, 0, Math.PI * 2, 0, Math.PI * 0.56),
                     hairMat
@@ -4959,7 +4968,7 @@
                 const rightArmPivot = buildTypingArm(0.22);
                 tkGroup.add(official);
 
-                crowdMembers.push({
+                const member = {
                     mesh: official,
                     bodyPivot,
                     headGroup,
@@ -4969,7 +4978,9 @@
                     phase: idx * 1.4,
                     standing: false,
                     isTimekeeper: true
-                });
+                };
+                crowdMembers.push(member);
+                if (isTodd) timekeeperTodd = { mesh: official, headGroup, member };
             });
 
             targetGroup.add(tkGroup);
@@ -8491,6 +8502,7 @@
         }
 
         function finishIntro() {
+            if (timekeeperTodd) timekeeperTodd.member.waving = false;
             introOverlay.classList.add('hidden');
             document.getElementById('spot-card').classList.add('hidden');
             playerSpotlight = null;
@@ -8711,6 +8723,8 @@
                 setSkaterHockeyReadyPose(ref, 0, 0);
                 list.push(ref);
             });
+            // al PalaHockey di Cittadella chiude le presentazioni Todd, il cronometrista
+            if (matchConfig.arena === 'cittadella' && timekeeperTodd) list.push({ isTodd: true, ...timekeeperTodd });
             if (!list.length) { finishIntro(); return; }
             introLineupData.forEach(it => setSkaterHockeyReadyPose(it.skater, 0, 0));
             introSingleCard.classList.add('hidden');
@@ -8722,6 +8736,8 @@
         }
 
         function showSpotlightCard(sk) {
+            if (timekeeperTodd) timekeeperTodd.member.waving = !!sk.isTodd;
+            if (sk.isTodd) { showToddSpotlightCard(); return; }
             if (sk.isRef) { showRefereeSpotlightCard(sk); return; }
             if (sk.isCoach) { showCoachSpotlightCard(sk); return; }
             const club = CLUB_ROSTERS[sk.clubId];
@@ -8755,6 +8771,21 @@
             if (window.gameAudio && window.gameAudio.playCrowdOoh) window.gameAudio.playCrowdOoh();
         }
 
+        function showToddSpotlightCard() {
+            const card = document.getElementById('spot-card');
+            card.style.setProperty('--team', '#7f1d1d');
+            document.getElementById('spot-logo').src = logoSrcOf('cittadella');
+            // icona cronometro
+            document.getElementById('spot-num').innerHTML = '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V9.5M10 2.5h4M12 2.5V6M18.5 6.5l1.5-1.5"/></svg>';
+            document.getElementById('spot-kicker').textContent = 'Ufficiali di gara • Tavolo cronometristi';
+            document.getElementById('spot-name').innerHTML = 'TODD';
+            document.getElementById('spot-team').innerHTML = 'PalaHockey Cittadella • <b>Cronometrista</b>';
+            card.classList.remove('hidden', 'is-in');
+            void card.offsetWidth;
+            card.classList.add('is-in');
+            if (window.gameAudio && window.gameAudio.playCrowdOoh) window.gameAudio.playCrowdOoh(0.8);
+        }
+
         function showRefereeSpotlightCard(ref) {
             const card = document.getElementById('spot-card');
             const parts = (ref.fullName || 'Arbitro').split(' ');
@@ -8779,7 +8810,17 @@
             sp.t += dt;
             const sk = sp.list[sp.idx];
             const k = Math.min(1, sp.t / SPOTLIGHT_DURATION);
-            if (sk.isCoach) {
+            if (sk.isTodd) {
+                // dalla pista, appena sopra la balaustra: primo piano di Todd al tavolo che saluta
+                const head = new THREE.Vector3();
+                sk.headGroup.getWorldPosition(head);
+                const toRink = new THREE.Vector3(-head.x, 0, 0).normalize();   // il tavolo guarda verso il centro pista
+                const camTarget = head.clone().addScaledVector(toRink, 2.5 - k * 0.6);
+                camTarget.z += 0.9 - k * 0.5;
+                camTarget.y = head.y + 0.42 - k * 0.1;
+                camera.position.lerp(camTarget, sp.t < 0.8 ? 0.07 : 0.12);
+                camera.lookAt(head.x, head.y - 0.12, head.z);
+            } else if (sk.isCoach) {
                 // camera bassa dal lato pista, davanti alla panchina: l'allenatore saluta il pubblico
                 const p = sk.mesh.position;
                 const dz = sk.team === 'home' ? 1 : -1;
@@ -10621,7 +10662,16 @@
                 const intensity = Math.min(1, crowdCheerTimer * 1.4);
 
                 crowdMembers.forEach(fan => {
+                    if (fan.isTimekeeper && fan.waving) {
+                        const w = Math.sin(time * 7.5);
+                        fan.rightArmPivot.rotation.set(0.25 * w, 0, 2.55);
+                        fan.leftArmPivot.rotation.set(0, 0, 0.62);
+                        fan.headGroup.rotation.y = 0.12;
+                        fan.bodyPivot.rotation.z = 0;
+                        return;
+                    }
                     if (fan.isTimekeeper) {
+                        fan.rightArmPivot.rotation.x = 0;
                         const typeWave = Math.sin(time * 14 + fan.phase) * 0.14;
                         fan.leftArmPivot.rotation.z = 0.62 + typeWave;
                         fan.rightArmPivot.rotation.z = 0.62 - typeWave;
@@ -10641,7 +10691,16 @@
                 });
             } else {
                 crowdMembers.forEach(fan => {
+                    if (fan.isTimekeeper && fan.waving) {
+                        const w = Math.sin(time * 7.5);
+                        fan.rightArmPivot.rotation.set(0.25 * w, 0, 2.55);
+                        fan.leftArmPivot.rotation.set(0, 0, 0.62);
+                        fan.headGroup.rotation.y = 0.12;
+                        fan.bodyPivot.rotation.z = 0;
+                        return;
+                    }
                     if (fan.isTimekeeper) {
+                        fan.rightArmPivot.rotation.x = 0;
                         const typeWave = Math.sin(time * 10 + fan.phase) * 0.08;
                         fan.leftArmPivot.rotation.z = 0.58 + typeWave;
                         fan.rightArmPivot.rotation.z = 0.58 - typeWave;
