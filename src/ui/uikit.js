@@ -187,11 +187,15 @@
         { sel: '#pause-menu.is-settings', ownEsc: true },   // opzioni dal menu principale: Esc lo gestisce index.html (pagina → elenco → menu)
         { sel: '#comp-root', ownEsc: true },
         { sel: '#mgr-root', ownEsc: true },
+        // scelta della modalità (tessere + pulsanti della testata): sta sopra #start-screen, che all'avvio è
+        // già aperta sotto di lei; con l'ordine inverso le frecce muovevano il fuoco su pulsanti nascosti
+        { sel: '#title-splash-screen' },
         { sel: '#start-screen' }
     ];
     const FOCUSABLE = 'button, [role="button"], a[href], input, select, [tabindex="0"]';
 
     function activeLayer() {
+        if (window.disclaimerOpen) return null;          // avviso iniziale: nessuna navigazione sotto
         if (typeof keyRebindAction !== 'undefined' && keyRebindAction) return null;
         const ff = document.getElementById('funfact-loader');
         if (ff && !ff.classList.contains('ff-hidden')) return null;
@@ -216,7 +220,7 @@
     }
     function initialFocus(layer, list) {
         const pick = sel => list.find(el => el.matches(sel));
-        return pick('[data-focus]') || pick('.is-primary, .is-go') || list[0];
+        return pick('[data-focus]') || pick('.splash-tile.active') || pick('.is-primary, .is-go') || list[0];
     }
     let ringEl = null;
     function setFocus(el) {

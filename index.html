@@ -1399,6 +1399,15 @@
         }
         @media (prefers-reduced-motion: reduce) { #disclaimer-screen, #disclaimer-screen * { animation: none !important; transition: none !important; } .dc-next i { transform: scaleX(1); } }
 
+        /* ═══ SCELTA DELLA MODALITÀ DA TASTIERA ═══ */
+        .splash-tile.uk-focus, .splash-tile.uk-focus:focus, .splash-tile.uk-focus:focus-visible, .splash-tile:focus-visible { outline: none !important; box-shadow: none !important; }
+        /* bordo dorato disegnato sopra la foto (un'ombra interna finirebbe sotto l'immagine) */
+        .splash-tile.uk-focus::after, .splash-tile:focus-visible::after { content: ''; position: absolute; inset: 0; z-index: 11; pointer-events: none; border: 3px solid #f6b511; box-shadow: inset 0 0 36px rgba(246,181,17,.28); }
+                .splash-keys kbd { font: inherit; font-size: 10px; color: #fde68a; border: 1px solid rgba(246,181,17,.5); border-radius: 4px; padding: 0 5px; margin: 0 1px; background: rgba(0,0,0,.25); }
+        .splash-keys i { display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: rgba(246,181,17,.5); margin: 0 8px; vertical-align: middle; }
+        .splash-keys-touch { display: none; }
+        @media (hover: none) and (pointer: coarse) { .splash-keys-kb { display: none; } .splash-keys-touch { display: inline; } }
+
         /* ═══ OPZIONI dal menu principale: stesso pannello della pausa, senza la regia e le voci di partita ═══ */
         .splash-opt-btn { height: 38px; padding: 0 14px 0 10px; border-radius: 999px; display: inline-flex; align-items: center; gap: 7px; color: #f6b511; background: rgba(10,14,26,.6); border: 1.5px solid rgba(246,181,17,.55);
             font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; transition: background .2s, transform .2s; flex: 0 0 auto; }
@@ -1457,6 +1466,7 @@
                 if (!el) return;
                 el.classList.add('is-out');
                 setTimeout(() => el.classList.add('hidden'), 650);
+                if (window.focusSplashTile) window.focusSplashTile();
             };
             requestAnimationFrame(() => requestAnimationFrame(() => {
                 // barra di avanzamento sincronizzata con il conto
@@ -1568,8 +1578,9 @@
                 </span>
                 F.I.S.R. &amp; UISP
             </div>
-            <div class="text-[11px] font-black uppercase tracking-widest text-amber-300 animate-pulse">
-                Premi un tasto per iniziare
+            <div class="splash-keys text-[11px] font-black uppercase tracking-widest text-amber-300">
+                <span class="splash-keys-kb"><kbd>←</kbd><kbd>→</kbd> Scegli <i></i> <kbd>Invio</kbd> Gioca <i></i> <kbd>O</kbd> Opzioni <i></i> <kbd>M</kbd> Musica</span>
+                <span class="splash-keys-touch animate-pulse">Tocca una modalità per iniziare</span>
             </div>
             <div class="hidden sm:block text-[11px] font-bold tracking-widest uppercase text-slate-400">
                 PalaHockey • PalaFerrarin • Quanta Club • Via Cinque
@@ -12325,6 +12336,25 @@
                 });
             });
 
+            // tessera evidenziata sempre una sola: segue il fuoco (tastiera) e il passaggio del mouse
+            const splashTiles = Array.from(document.querySelectorAll('#splash-menu .splash-tile'));
+            const setSplashActive = t => { if (!t || t.classList.contains('is-disabled')) return; splashTiles.forEach(el => el.classList.toggle('active', el === t)); };
+            splashTiles.forEach(t => {
+                t.addEventListener('focus', () => setSplashActive(t));
+                t.addEventListener('mouseenter', () => setSplashActive(t));
+            });
+            // quando la schermata compare (fine dell'avviso, ritorno dal menu) la tessera evidenziata prende il fuoco:
+            // la prima freccia sposta subito la selezione e Invio la avvia
+            window.focusSplashTile = () => {
+                if (titleSplashScreen.classList.contains('hidden') || window.disclaimerOpen || settingsOpen) return;
+                if (titleSplashScreen.contains(document.activeElement)) return;
+                const t = titleSplashScreen.querySelector('.splash-tile.active:not(.is-disabled)') || titleSplashScreen.querySelector('.splash-tile:not(.is-disabled)');
+                if (t) try { t.focus({ preventScroll: true }); } catch (err) {}
+            };
+            new MutationObserver(() => { if (!titleSplashScreen.classList.contains('hidden')) setTimeout(window.focusSplashTile, 0); })
+                .observe(titleSplashScreen, { attributes: true, attributeFilter: ['class'] });
+            setTimeout(window.focusSplashTile, 0);
+
             // Splash menu NHL 06: ogni voce con data-splash-action
             document.querySelectorAll('[data-splash-action]').forEach(item => {
                 item.addEventListener('click', () => {
@@ -12546,30 +12576,16 @@
                     return;
                 }
                 if (!titleSplashScreen.classList.contains('hidden')) {
-                    if (e.key === 'o' || e.key === 'O') { e.preventDefault(); openSettingsScreen(); return; }
-                    // Tile menu: naviga con frecce sinistra/destra (o su/giù)
-                    const tiles = Array.from(document.querySelectorAll('#splash-menu .splash-tile:not(.is-disabled)'));
-                    const activeIdx = tiles.findIndex(el => el.classList.contains('active'));
-                    const isNav = e.key === 'ArrowRight' || e.key === 'ArrowDown';
-                    const isPrev = e.key === 'ArrowLeft' || e.key === 'ArrowUp';
-                    if (isNav || isPrev) {
+                    // scelta della modalità: frecce, Invio e Spazio li gestisce src/ui/uikit.js (spostano il fuoco tra
+                    // tessere e pulsanti della testata e premono quello selezionato); qui solo le scorciatoie
+                    if ((e.key === 'o' || e.key === 'O') && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); openSettingsScreen(); return; }
+                    if ((e.key === 'm' || e.key === 'M') && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); const mb = document.getElementById('splash-music-btn'); if (mb) mb.click(); return; }
+                    // Invio/Spazio senza nulla selezionato (es. fuoco perso): parte la tessera evidenziata
+                    if ((e.key === 'Enter' || e.code === 'Space') && !titleSplashScreen.contains(document.activeElement)) {
                         e.preventDefault();
-                        const dir = isNav ? 1 : -1;
-                        const next = tiles[(activeIdx + dir + tiles.length) % tiles.length];
-                        tiles.forEach(el => el.classList.remove('active'));
-                        next.classList.add('active');
-                        return;
+                        const t = titleSplashScreen.querySelector('.splash-tile.active:not(.is-disabled)') || titleSplashScreen.querySelector('.splash-tile:not(.is-disabled)');
+                        if (t) t.click();
                     }
-                    if (e.key === 'Enter' || e.code === 'Space') {
-                        e.preventDefault();
-                        const active = tiles[activeIdx] || tiles[0];
-                        if (active) active.click();
-                        return;
-                    }
-                    // qualsiasi altro tasto → Amichevole (tile 1)
-                    titleSplashScreen.classList.add('hidden');
-                    startScreen.classList.remove('hidden');
-                    setPreMatchStep(1);
                     return;
                 }
 
