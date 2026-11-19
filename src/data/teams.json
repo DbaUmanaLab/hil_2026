@@ -2989,6 +2989,209 @@
           "glove": "#141416"
         }
       }
+    },
+    {
+      "id": "empoli",
+      "league": "SERIE B",
+      "name": "FLYING DONKEYS EMPOLI",
+      "shortName": "EMPOLI",
+      "abbr": "EMP",
+      "note": "Nomi e statistiche dal roster ufficiale. Numeri di maglia e ruoli NON presenti nel roster: assegnati provvisoriamente (18 col C e 17 dalle foto delle maglie), da sostituire con quelli veri.",
+      "jerseyClubId": "empoli",
+      "homeArena": "empoli",
+      "logo": "empoli.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/empoli_1.png",
+        "assets/jerseys/empoli_2.png"
+      ],
+      "ratings": {
+        "off": 60,
+        "def": 58,
+        "goa": 63
+      },
+      "colors": {
+        "primary": "#1c54c4",
+        "secondary": "#40a4e8",
+        "staffJacket": "#0f2f7a",
+        "coachJacket": "#1c54c4"
+      },
+      "rosterScreen": {
+        "photo": "empoli.jpg",
+        "focus": "60% 35%"
+      },
+      "coach": {
+        "first": "Stefano",
+        "last": "Carboncini",
+        "role": "Allenatore",
+        "note": "Staff con Paolo Errico"
+      },
+      "goalie": {
+        "num": "27",
+        "name": "BENOZZI",
+        "first": "Giammarco"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "DE SANTI",
+          "first": "Niccolò"
+        }
+      ],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "18",
+            "name": "BASTIANONI",
+            "first": "Giampaolo",
+            "g": 5,
+            "a": 3,
+            "pts": 8
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "CECCHI",
+            "first": "Giorgio",
+            "g": 3,
+            "a": 2,
+            "pts": 5
+          },
+          {
+            "role": "RW",
+            "num": "9",
+            "name": "SIMONELLI",
+            "first": "Luca",
+            "g": 1,
+            "a": 4,
+            "pts": 5
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "GIORGETTI",
+            "first": "Dario",
+            "g": 2,
+            "a": 2,
+            "pts": 4
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "SOLURI",
+            "first": "Leonardo",
+            "g": 2,
+            "a": 0,
+            "pts": 2
+          },
+          {
+            "role": "LW",
+            "num": "21",
+            "name": "ERRICO",
+            "first": "Alessandro",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "23",
+            "name": "MICHI",
+            "first": "Leonardo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "CARBONCINI",
+            "first": "Matteo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "14",
+            "name": "PAZZAGLIA",
+            "first": "Mattia",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "19",
+            "name": "VITI",
+            "first": "Tommaso",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "8",
+            "name": "RODIO",
+            "first": "Matteo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "3",
+            "name": "BERNARDELLI",
+            "first": "Maria Elena",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [
+        {
+          "num": "10",
+          "name": "CHIRICO",
+          "first": "Samuele"
+        },
+        {
+          "num": "22",
+          "name": "BERTINI",
+          "first": "Elia"
+        },
+        {
+          "num": "7",
+          "name": "CRIVELLARI",
+          "first": "Alessio"
+        },
+        {
+          "num": "12",
+          "name": "ZIPPO",
+          "first": "Aurora"
+        }
+      ],
+      "kits": {
+        "blue": {
+          "label": "Divisa Blu",
+          "primary": "#1c54c4",
+          "pants": "#141416",
+          "helmet": "#1c54c4",
+          "glove": "#c81e28"
+        },
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#ffffff",
+          "pants": "#141416",
+          "helmet": "#1c54c4",
+          "glove": "#1c54c4"
+        }
+      }
     }
   ]
 }

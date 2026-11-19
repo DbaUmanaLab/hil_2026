@@ -1790,6 +1790,14 @@
                                 <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="novi"></span><span class="as-home-chip hidden" data-home-chip="novi">Casa</span></span>
                             </span>
                         </button>
+                        <button type="button" data-arena="empoli" class="arena-pill-btn as-card" role="option">
+                            <span class="as-thumb"><img src="assets/arenas/thumbs/empoli.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">14</span></span>
+                            <span class="min-w-0">
+                                <span class="as-card-name block">Palaramini</span>
+                                <span class="as-card-loc block">Empoli (FI) • Toscana</span>
+                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="empoli"></span><span class="as-home-chip hidden" data-home-chip="empoli">Casa</span></span>
+                            </span>
+                        </button>
                     </div>
                     <div class="as-details">
                         <div class="as-stats">
@@ -2445,10 +2453,21 @@
                 capacity: '200 Spettatori (In piedi)',
                 surface: 'Piastrelle SportCourt Verde Acqua',
                 roof: 'Pallone Pressostatico con Rete di Cavi'
+            },
+            empoli: {
+                id: 'empoli',
+                name: 'PALARAMINI',
+                shortTitle: 'Palaramini',
+                location: 'Empoli (FI) • Toscana, Italia',
+                clubBadge: 'Casa: Flying Donkeys Empoli',
+                desc: 'Tensostruttura a botte su archi in legno lamellare color rame che scendono fino a terra, telo crema con arcarecci in legno e proiettori fissati agli archi, testate in telo verde scuro col telaio a riquadri e il tabellone Locali/Ospiti appeso in alto. Pista in resina chiara, balaustre bianche con pannelli trasparenti a telaio metallico, lo striscione della U.I.S.P. e in fondo le rampe dello skatepark.',
+                capacity: '150 Spettatori (In piedi)',
+                surface: 'Resina Chiara',
+                roof: 'Tensostruttura a Botte su Archi in Legno Lamellare'
             }
         };
 
-        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi'];
+        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli'];
         // Palazzetti presenti nel menu ma non selezionabili (al momento nessuno)
         const DISABLED_ARENAS = new Set();
         const SELECTABLE_ARENA_IDS = ARENA_IDS.filter(id => !DISABLED_ARENAS.has(id));
@@ -4199,8 +4218,12 @@
             const n = arenaScoreboards.north;
             if (!n) return;
             n.rotation.y = 0;
-            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi'].includes(matchConfig.arena);
-            if (matchConfig.arena === 'novi') {
+            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli'].includes(matchConfig.arena);
+            if (matchConfig.arena === 'empoli') {
+                // tabellone LOCALI/OSPITI appeso in alto alla testata verde
+                n.position.set(0, 9.4, -41.4);
+                n.scale.setScalar(0.42);
+            } else if (matchConfig.arena === 'novi') {
                 n.position.set(-9.5, 4.2, -37.0);
                 n.scale.setScalar(0.38);
             } else if (matchConfig.arena === 'treviso') {
@@ -4429,7 +4452,7 @@
                 roughness: 0.55
             });
             const benchBackMat = isAsiago ? new THREE.MeshStandardMaterial({ map: pbr.woodDiffuse, bumpMap: preset.usePhysicalMat ? pbr.woodBump : null, bumpScale: 0.015, color: 0xc8955a, roughness: 0.6 }) : new THREE.MeshStandardMaterial({
-                color: arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
+                color: arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
                 roughness: 0.8
             });
 
@@ -4529,7 +4552,8 @@
             villeneuve: 'src/arenas/villeneuve.js',
             roma: 'src/arenas/roma.js',
             treviso: 'src/arenas/treviso.js',
-            novi: 'src/arenas/novi.js'
+            novi: 'src/arenas/novi.js',
+            empoli: 'src/arenas/empoli.js'
         };
         const arenaBuilders = {};
         const arenaModulePromises = {};
@@ -4800,7 +4824,9 @@
             // Pattinodromo delle Acquette: cemento lucidato, niente vetro sopra le balaustre
             treviso: { dir: 'assets/textures/treviso/', normal: 'assets/textures/treviso/rink_normal.jpg', floorTint: 0x969b9f, floorTintLow: 0x8b9094, noGlass: true },
             // Pattinodromo G. Parodi: SportCourt verde acqua, rete nera (nel modulo) al posto del vetro
-            novi: { dir: 'assets/textures/novi/', normal: 'assets/textures/novi/rink_normal.jpg', floorTint: 0xb4bcbb, floorTintLow: 0xa4acab, noGlass: true }
+            novi: { dir: 'assets/textures/novi/', normal: 'assets/textures/novi/rink_normal.jpg', floorTint: 0xb4bcbb, floorTintLow: 0xa4acab, noGlass: true },
+            // Palaramini: resina chiara, pannelli trasparenti sopra le balaustre (telaio metallico nel modulo)
+            empoli: { dir: 'assets/textures/empoli/', normal: 'assets/textures/empoli/rink_normal.jpg', floorTint: 0xa6a49e, floorTintLow: 0x9a9893 }
         };
 
         // Balaustre: ogni striscia rappresenta 18,5 m di pannelli pubblicitari
@@ -5136,7 +5162,7 @@
                             { jacket: 0xf8fafc, shirt: 0xdc2626, isJersey: true }
                         ]))));
 
-            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi') return;   // pubblico costruito dall'architettura del palazzetto
+            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli') return;   // pubblico costruito dall'architettura del palazzetto
 
             // Spalti laterali dietro il tavolo cronometristi (con spazio sull'angolo destro per la casetta bar a Cittadella)
             for (let row = 0; row < 4; row++) {
@@ -7317,6 +7343,11 @@
                 s.benchSlot = idx;
                 const pos = getBenchSeatPosition('home', idx);
                 s.mesh.position.copy(pos);
+                s.lineChangeState = 'none';
+                s.exitStage = null;
+                s.mesh.rotation.x = 0;
+                s.mesh.rotation.z = 0;
+                s.leanZ = 0;
                 s.rotationY = Math.PI / 2;
                 s.mesh.rotation.y = s.rotationY;
                 setSkaterBenchPose(s, false);
@@ -7327,6 +7358,11 @@
                 s.benchSlot = idx;
                 const pos = getBenchSeatPosition('guest', idx);
                 s.mesh.position.copy(pos);
+                s.lineChangeState = 'none';
+                s.exitStage = null;
+                s.mesh.rotation.x = 0;
+                s.mesh.rotation.z = 0;
+                s.leanZ = 0;
                 s.rotationY = Math.PI / 2;
                 s.mesh.rotation.y = s.rotationY;
                 setSkaterBenchPose(s, false);
@@ -7334,6 +7370,143 @@
         }
 
         // --- CAMBIO LINEA AL VOLO (3 LINEE + PANCHINA) ---
+        // geometria delle panchine (vedi costruzione arena): balaustra interna a x = 18, pavimento panchina fino a x ≈ 21
+        const BENCH_LAYOUT = {
+            home: { zStart: 3.5, zEnd: 15.5, doorZ: 8.5 },
+            guest: { zStart: -15.5, zEnd: -3.5, doorZ: -8.5 }
+        };
+        const BENCH_WALK_X = 18.7;   // corsia di camminata sul pavimento della panchina
+        let lineChangeExitCounter = 0;
+
+        // Uscita dal ghiaccio di un giocatore della linea cambiata. Due modi:
+        //  - 'door': si mette in coda davanti alla porta e la attraversa uno alla volta
+        //  - 'vault': pattina alla balaustra davanti al proprio posto e la scavalca
+        function updateExitingSkater(s, dt) {
+            const bench = BENCH_LAYOUT[s.team];
+            const seatPos = getBenchSeatPosition(s.team, s.benchSlot);
+            s.mesh.rotation.x = 0;
+
+            const sitDown = () => {
+                s.mesh.position.copy(seatPos);
+                s.mesh.rotation.z = 0;
+                s.leanZ = 0;
+                s.lineChangeState = 'none';
+                s.exitStage = null;
+                s.rotationY = Math.PI / 2;
+                s.mesh.rotation.y = s.rotationY;
+                setSkaterBenchPose(s, false);
+            };
+
+            // muove verso (tx, tz); ritorna true se arrivato
+            const moveTo = (tx, tz, speed, strideRate, strideAmp) => {
+                const dx = tx - s.mesh.position.x;
+                const dz = tz - s.mesh.position.z;
+                const d = Math.hypot(dx, dz);
+                if (d < 0.08) return true;
+                const step = Math.min(d, speed * dt);
+                s.mesh.position.x += (dx / d) * step;
+                s.mesh.position.z += (dz / d) * step;
+                const desired = Math.atan2(-dx, -dz);
+                let diff = desired - s.rotationY;
+                while (diff > Math.PI) diff -= Math.PI * 2;
+                while (diff < -Math.PI) diff += Math.PI * 2;
+                s.rotationY += Math.sign(diff) * Math.min(Math.abs(diff), dt * 10);
+                s.mesh.rotation.y = s.rotationY;
+                s.walkCycle += dt * strideRate;
+                setSkaterHockeyReadyPose(s, Math.sin(s.walkCycle) * strideAmp, 0);
+                return step >= d - 1e-4;
+            };
+
+            if (s.exitStage === 'approach') {
+                s.mesh.position.y = 0;
+                s.mesh.rotation.z *= 0.85;
+                if (s.exitMode === 'vault') {
+                    if (moveTo(17.15, s.vaultZ, 11, 12, 0.5)) {
+                        s.exitStage = 'vault';
+                        s.exitTimer = 0;
+                    }
+                } else {
+                    // posizione in coda: chi ha davanti ancora sul ghiaccio o sulla porta
+                    const ahead = skaters.filter(o => o !== s && o.team === s.team && o.lineChangeState === 'exiting' &&
+                        o.exitMode === 'door' && o.exitOrder < s.exitOrder &&
+                        (o.exitStage === 'approach' || o.exitStage === 'door')).length;
+                    const qx = 16.75 - ahead * 0.85;
+                    const arrived = moveTo(qx, bench.doorZ, 11, 12, 0.5);
+                    if (arrived && ahead === 0) {
+                        s.exitStage = 'door';
+                    } else if (arrived) {
+                        // in attesa: fermo, rivolto verso la porta
+                        s.rotationY = -Math.PI / 2;
+                        s.mesh.rotation.y = s.rotationY;
+                        setSkaterHockeyReadyPose(s, 0, 0);
+                    }
+                }
+                return;
+            }
+
+            if (s.exitStage === 'door') {
+                s.mesh.position.y = 0;
+                if (moveTo(BENCH_WALK_X, bench.doorZ, 6, 10, 0.35)) {
+                    s.exitStage = 'walk';
+                    s.exitPath = [[BENCH_WALK_X, seatPos.z], [seatPos.x, seatPos.z]];
+                }
+                return;
+            }
+
+            if (s.exitStage === 'vault') {
+                // scavalco: mani sulla balaustra, gambe raccolte e lanciate di lato, atterraggio sul pavimento panchina
+                const VAULT_DUR = 0.62;
+                s.exitTimer += dt;
+                const t = Math.min(1, s.exitTimer / VAULT_DUR);
+                const e = t * t * (3 - 2 * t);
+                s.mesh.position.x = 17.15 + (BENCH_WALK_X + 0.15 - 17.15) * e;
+                s.mesh.position.z += (s.vaultZ - s.mesh.position.z) * Math.min(1, dt * 10);
+                s.mesh.position.y = Math.sin(Math.PI * t) * 0.78 + 0.12 * e;
+                s.rotationY = -Math.PI / 2;
+                s.mesh.rotation.y = s.rotationY;
+                // rollio laterale: il corpo si inclina sopra la balaustra come nello scavalco "di fianco"
+                const side = s.team === 'home' ? 1 : -1;
+                s.mesh.rotation.z = Math.sin(Math.PI * t) * 0.38 * side;
+                const tuck = Math.sin(Math.PI * t);
+                s.hipGroup.position.y = 0.84 - tuck * 0.12;
+                s.bodyPivot.rotation.set(-0.35 - tuck * 0.25, 0, 0);
+                s.leftLegPivot.rotation.set(0.2 + tuck * 1.25, 0, 0.1 + tuck * 0.35);
+                s.leftKneePivot.rotation.set(-0.3 - tuck * 1.2, 0, 0);
+                s.rightLegPivot.rotation.set(0.2 + tuck * 1.1, 0, -0.1 + tuck * 0.25);
+                s.rightKneePivot.rotation.set(-0.3 - tuck * 1.3, 0, 0);
+                // braccia in appoggio sulla balaustra nella prima metà, poi si staccano
+                const plant = t < 0.55 ? 1 : Math.max(0, 1 - (t - 0.55) / 0.45);
+                s.leftArmPivot.rotation.set(0.6 + plant * 0.5, -0.2, 0.3 * plant + 0.1);
+                s.leftElbowPivot.rotation.set(0.2 + (1 - plant) * 0.3, 0, 0);
+                s.rightArmPivot.rotation.set(0.5 + plant * 0.45, 0.2, -0.2);
+                s.rightElbowPivot.rotation.set(0.25 + (1 - plant) * 0.25, 0, 0);
+                updateSkaterStickPose(s);
+                if (t >= 1) {
+                    s.mesh.position.y = 0;
+                    s.mesh.rotation.z = 0;
+                    s.exitStage = 'walk';
+                    s.exitPath = [[seatPos.x, seatPos.z]];
+                }
+                return;
+            }
+
+            if (s.exitStage === 'walk') {
+                // sul pavimento della panchina si cammina coi pattini: passo corto e lento
+                s.mesh.position.y = 0;
+                s.mesh.rotation.z *= 0.8;
+                const path = s.exitPath || [[seatPos.x, seatPos.z]];
+                const [wx, wz] = path[0];
+                if (moveTo(wx, wz, 3.6, 9, 0.28)) {
+                    path.shift();
+                    if (!path.length) sitDown();
+                }
+                return;
+            }
+
+            // stato sconosciuto (es. ripristino da replay): siede direttamente
+            sitDown();
+        }
+
         function requestLineChange(teamSide, newLineIdx) {
             const cur = getActiveLine(teamSide);
             if (newLineIdx === cur || newLineIdx < 0 || newLineIdx > 2) return;
@@ -7341,19 +7514,49 @@
             const isUser = teamSide === getUserTeam();
             const outgoing = skaters.filter(s => s.team === teamSide && !s.isGoalie && s.lineIndex === cur);
             const incoming = skaters.filter(s => s.team === teamSide && !s.isGoalie && s.lineIndex === newLineIdx);
-            const gateZ = teamSide === 'home' ? 7.6 : -9.4;
+            const bench = BENCH_LAYOUT[teamSide];
 
-            outgoing.forEach((s, idx) => {
+            // gli uscenti occupano i posti lasciati liberi da chi entra (prima finivano tutti sugli slot 0-4,
+            // sovrapposti a chi era già seduto); i posti lontani dalla porta vanno a chi scavalca
+            const freeSlots = incoming.map(s => s.benchSlot)
+                .sort((a, b) => Math.abs(getBenchSeatPosition(teamSide, b).z - bench.doorZ) - Math.abs(getBenchSeatPosition(teamSide, a).z - bench.doorZ));
+            // 1 o 2 scavalcano la balaustra: quelli più lontani dalla porta lungo la panchina
+            const nVault = Math.min(outgoing.length, Math.random() < 0.5 ? 1 : 2);
+            const byDoorFar = outgoing.slice().sort((a, b) => Math.abs(b.mesh.position.z - bench.doorZ) - Math.abs(a.mesh.position.z - bench.doorZ));
+            const vaulters = byDoorFar.slice(0, nVault);
+            // gli altri escono dalla porta uno alla volta, il più vicino per primo
+            const doorUsers = byDoorFar.slice(nVault).sort((a, b) =>
+                Math.hypot(a.mesh.position.x - 16.7, a.mesh.position.z - bench.doorZ) -
+                Math.hypot(b.mesh.position.x - 16.7, b.mesh.position.z - bench.doorZ));
+
+            vaulters.concat(doorUsers).forEach((s, idx) => {
                 s.onIce = false;
                 s.isHuman = false;
                 s.lineChangeState = 'exiting';
-                s.benchSlot = idx;
+                s.benchSlot = freeSlots.length > idx ? freeSlots[idx] : idx;
+                s.exitMode = idx < nVault ? 'vault' : 'door';
+                s.exitStage = 'approach';
+                s.exitOrder = ++lineChangeExitCounter;
+                s.exitTimer = 0;
+                s.exitPath = null;
+                if (s.exitMode === 'vault') {
+                    // punto di scavalco davanti al proprio posto, lontano dalla porta e dai divisori
+                    let vz = getBenchSeatPosition(teamSide, s.benchSlot).z;
+                    vz = Math.max(bench.zStart + 0.7, Math.min(bench.zEnd - 0.7, vz));
+                    if (Math.abs(vz - bench.doorZ) < 1.3) vz = bench.doorZ + (vz >= bench.doorZ ? 1.3 : -1.3);
+                    s.vaultZ = vz;
+                }
             });
 
+            // chi entra parte in fila indiana dentro la panchina, allineato alla porta: esce uno alla volta
             incoming.forEach((s, idx) => {
                 s.onIce = true;
                 s.lineChangeState = 'entering';
-                s.mesh.position.set(19.1, 0, gateZ + idx * 0.55);
+                s.exitStage = null;
+                s.mesh.position.set(18.55 + idx * 0.5, 0, bench.doorZ);
+                s.mesh.rotation.x = 0;
+                s.mesh.rotation.z = 0;
+                s.leanZ = 0;
                 setSkaterHockeyReadyPose(s, 0, 0);
             });
 
@@ -9340,6 +9543,8 @@
                     if (!s.isGoalie && !s.onIce) {
                         const seatPos = getBenchSeatPosition(s.team, s.benchSlot);
                         s.mesh.position.copy(seatPos);
+                        s.lineChangeState = 'none';
+                        s.exitStage = null;
                         s.rotationY = Math.PI / 2;
                         s.mesh.rotation.y = s.rotationY;
                         setSkaterBenchPose(s, s.team === replayGoalSide);
@@ -9409,29 +9614,9 @@
                 if (!s.isGoalie && !s.onIce) {
                     const seatPos = getBenchSeatPosition(s.team, s.benchSlot);
                     if (s.lineChangeState === 'exiting') {
-                        const gateZ = s.team === 'home' ? 8.5 : -8.5;
-                        const distGate = Math.hypot(16.8 - s.mesh.position.x, gateZ - s.mesh.position.z);
-                        const target = distGate > 0.6 ? new THREE.Vector3(16.8, 0, gateZ) : seatPos;
-                        const dx = target.x - s.mesh.position.x;
-                        const dz = target.z - s.mesh.position.z;
-                        const d = Math.hypot(dx, dz);
-
-                        if (d > 0.25) {
-                            s.mesh.position.x += (dx / d) * Math.min(d, 13 * dt);
-                            s.mesh.position.z += (dz / d) * Math.min(d, 13 * dt);
-                            s.mesh.position.y = 0;
-                            s.rotationY = Math.atan2(-dx, -dz);
-                            s.mesh.rotation.y = s.rotationY;
-                            s.walkCycle += dt * 12;
-                            const sw = Math.sin(s.walkCycle) * 0.5;
-                            setSkaterHockeyReadyPose(s, sw, 0);
-                        } else {
-                            s.mesh.position.copy(seatPos);
-                            s.lineChangeState = 'none';
-                            s.rotationY = Math.PI / 2;
-                            s.mesh.rotation.y = s.rotationY;
-                            setSkaterBenchPose(s, false);
-                        }
+                        // prima il bersaglio alternava porta/posto appena ci si allontanava di 0,6 dalla porta:
+                        // i giocatori restavano incastrati lì. Ora percorso a tappe (coda alla porta o scavalco)
+                        updateExitingSkater(s, dt);
                     } else {
                         const lookA = Math.atan2(-(puck.position.x - s.mesh.position.x), -(puck.position.z - s.mesh.position.z));
                         s.mesh.rotation.y = lookA * 0.35 + Math.PI / 2;
