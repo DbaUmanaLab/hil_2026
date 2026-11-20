@@ -3124,24 +3124,32 @@
 
         // Misura i tempi fra un fotogramma e l'altro: il loop principale (animate) gira negli stessi
         // fotogrammi, quindi l'intervallo riflette il costo reale del rendering della scena.
+        // Contano anche i fotogrammi lenti: su un dispositivo debole sono la misura giusta, non un'anomalia.
+        // Le pause vere (app in background, schermo spento) si riconoscono da document.hidden / visibilitychange
+        // e rendono la misura inaffidabile (interrupted).
         function measureFrameRate(onProgress) {
             return new Promise(resolve => {
                 const deltas = [];
-                let t0 = null, last = 0, measureStart = 0;
+                let t0 = null, last = 0, measureStart = 0, interrupted = false;
+                const onVisibility = () => { if (document.hidden) interrupted = true; };
+                document.addEventListener('visibilitychange', onVisibility);
                 const step = now => {
                     if (t0 === null) { t0 = last = now; requestAnimationFrame(step); return; }
                     const d = now - last;
                     last = now;
+                    if (document.hidden) interrupted = true;
                     if (!measureStart) {
                         if (now - t0 >= GFX_BENCH_WARMUP_MS) measureStart = now;
                     } else {
-                        if (d > 0 && d < 250 && !document.hidden) deltas.push(d);   // salta le pause (scheda nascosta ecc.)
+                        if (d > 0 && !document.hidden) deltas.push(d);
                         if (onProgress) onProgress(Math.min(1, (now - measureStart) / GFX_BENCH_MEASURE_MS), deltas);
                         if (now - measureStart >= GFX_BENCH_MEASURE_MS) {
+                            document.removeEventListener('visibilitychange', onVisibility);
                             const sum = deltas.reduce((a, b) => a + b, 0);
                             const sorted = deltas.slice().sort((a, b) => a - b);
                             resolve({
                                 samples: deltas.length,
+                                interrupted,
                                 avgFps: deltas.length ? 1000 / (sum / deltas.length) : 0,
                                 p90Ms: sorted.length ? sorted[Math.floor(sorted.length * 0.9)] : 1000
                             });
@@ -3202,7 +3210,9 @@
                     const recent = deltas.slice(-20);
                     if (recent.length) setFps(1000 / (recent.reduce((a, b) => a + b, 0) / recent.length));
                 });
-                if (r.samples < 20) reliable = false;   // troppi pochi fotogrammi (scheda in background): non salvare
+                // app in background durante la misura: non salvare. Pochi fotogrammi per lentezza vanno invece bene:
+                // il livello semplicemente non passa la soglia (con 0 campioni avgFps è 0)
+                if (r.interrupted) reliable = false;
                 results[level] = { fps: Math.round(r.avgFps * 10) / 10, p90: Math.round(r.p90Ms * 10) / 10, n: r.samples };
                 return r;
             };
