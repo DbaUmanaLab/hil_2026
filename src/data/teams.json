@@ -3620,6 +3620,192 @@
       ]
     },
     {
+      "id": "piacenza",
+      "league": "SERIE B",
+      "name": "LEPIS PIACENZA",
+      "shortName": "PIACENZA",
+      "abbr": "LEP",
+      "note": "Nomi e statistiche dal roster ufficiale (1 partita, 14 giocatori e 2 portieri). Numeri di maglia dalla foto solo per Simone Sironi (96) e Cristian Sironi (69); gli altri numeri e tutti i ruoli sono provvisori, da sostituire con quelli veri. Mauro Barone è allenatore-portiere; nello staff anche Juraj Franko e Mauro Milani.",
+      "jerseyClubId": "piacenza",
+      "homeArena": "piacenza",
+      "logo": "piacenza.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/piacenza.png"
+      ],
+      "ratings": {
+        "off": 60,
+        "def": 59,
+        "goa": 62
+      },
+      "colors": {
+        "primary": "#d61a22",
+        "secondary": "#141416",
+        "staffJacket": "#141416",
+        "coachJacket": "#141416"
+      },
+      "rosterScreen": {
+        "photo": "piacenza.jpg",
+        "focus": "62% 30%"
+      },
+      "coach": {
+        "first": "Mauro",
+        "last": "Barone",
+        "role": "Allenatore-portiere",
+        "note": "Staff: Juraj Franko e Mauro Milani"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "BARONE",
+        "first": "Mauro"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "BARONE",
+          "first": "Federico"
+        }
+      ],
+      "reserves": [
+        {
+          "num": "16",
+          "name": "ROSSETTI",
+          "first": "Elia"
+        },
+        {
+          "num": "18",
+          "name": "SPELTA",
+          "first": "Emanuele"
+        }
+      ],
+      "kits": {
+        "black": {
+          "label": "Divisa Nero-Rossa",
+          "primary": "#141416",
+          "pants": "#141416",
+          "helmet": "#141416",
+          "glove": "#141416"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "7",
+            "name": "ASTUTI",
+            "first": "Diego",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          },
+          {
+            "role": "LW",
+            "num": "96",
+            "name": "SIRONI",
+            "first": "Simone",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "69",
+            "name": "SIRONI",
+            "first": "Cristian",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "MILANI",
+            "first": "Mauro",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "CAMPIOTTI PEREIRA",
+            "first": "Leonor",
+            "gender": "F",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "FADINI",
+            "first": "Matteo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "37",
+            "name": "PALOMBI",
+            "first": "Luca",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "VEZZOLI",
+            "first": "Alex",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "SPADONI",
+            "first": "Adriano",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "21",
+            "name": "FRANZONI",
+            "first": "Giulio",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "55",
+            "name": "FUSCO",
+            "first": "Vincenzo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "3",
+            "name": "PIERANI",
+            "first": "Riccardo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "molina",
       "league": "RFEP",
       "name": "MOLINA SPORT ACEGC",

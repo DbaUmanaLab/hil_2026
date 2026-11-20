@@ -56,20 +56,25 @@
         return all.find(p => String(p.num) === String(num) && p.name === name) || all.find(p => p.name === name) || null;
     }
 
-    // Tratti di un giocatore: i campi facoltativi di teams.json (nat, height, weight, facialHair)
+    // Tratti di un giocatore: i campi facoltativi di teams.json (nat, gender, height, weight, facialHair)
     // hanno la precedenza; quelli mancanti sono generati in modo stabile dal nome.
+    const isFemale = g => /^(f|female|donna|femmina)$/i.test(String(g || ''));
     function playerTraits(clubId, info, isGoalie) {
         info = info || {};
         const r = rng(hash(`${clubId}|${info.num || ''}|${info.name || ''}|${info.first || ''}`));
         const country = (TEAM_DATA.countries && TEAM_DATA.countries[clubId]) || 'IT';
-        const height = +info.height || Math.round(167 + (r() + r() + r()) / 3 * 27 + (isGoalie ? 2 : 0));   // 167–196 cm, media ~181
-        const bmi = 21.5 + (r() + r()) / 2 * 5.5;                                                            // 21.5–27
+        const female = isFemale(info.gender);
+        const height = +info.height || Math.round(female
+            ? 156 + (r() + r() + r()) / 3 * 22 + (isGoalie ? 2 : 0)                                         // 156–178 cm
+            : 167 + (r() + r() + r()) / 3 * 27 + (isGoalie ? 2 : 0));                                        // 167–196 cm, media ~181
+        const bmi = (female ? 20 : 21.5) + (r() + r()) / 2 * 5.5;
         const weight = +info.weight || Math.round(bmi * Math.pow(height / 100, 2));
         const fr = r();
-        const facialHair = info.facialHair != null ? normFacialHair(info.facialHair)
+        const facialHair = female ? 'none' : info.facialHair != null ? normFacialHair(info.facialHair)
             : (fr < 0.06 ? 'beard' : fr < 0.11 ? 'mustache' : fr < 0.17 ? 'full' : 'none');               // pochi: ~17%
-        const face = 1 + Math.floor(r() * FACE_COUNT);
-        return { nat: String(info.nat || country).toUpperCase(), height, weight, facialHair, face };
+        const fi = r();
+        const face = female ? FEMALE_FACES[Math.floor(fi * FEMALE_FACES.length)] : 1 + Math.floor(fi * FACE_COUNT);
+        return { nat: String(info.nat || country).toUpperCase(), female, height, weight, facialHair, face };
     }
 
     function traitsOf(clubId, num, name, isGoalie) {
@@ -83,7 +88,7 @@
         sk.traits = t;
         sk.nationality = t.nat;
         // altezza: tutto il modello in scala (piedi a terra, stecca compresa)
-        const h = clamp(t.height / 181, 0.9, 1.1);
+        const h = clamp(t.height / 181, 0.86, 1.1);
         sk.mesh.scale.setScalar(h);
         // peso: busto, braghe e cosce più o meno larghi a parità di altezza
         const bmi = t.weight / Math.pow(t.height / 100, 2);
@@ -99,7 +104,7 @@
         });
         // volto (il portiere ha la maschera: niente barba)
         if (sk.headMesh && typeof getFaceMaterialFromFile === 'function') {
-            const variant = sk.isGoalie || t.facialHair === 'none' ? '' : t.facialHair;
+            const variant = t.female ? 'female' : (sk.isGoalie || t.facialHair === 'none' ? '' : t.facialHair);
             sk.headMesh.material = getFaceMaterialFromFile(faceFile(t.face, variant));
         }
     }
