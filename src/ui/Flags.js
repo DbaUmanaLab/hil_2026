@@ -63,6 +63,18 @@
         AU: { name: 'Australia', svg: () => rect(0, 0, W, H, '#012169') + star(22, 12, 2.4, '#fff') + star(8, 15, 2.6, '#fff')
             + '<g transform="scale(.5)">' + rect(12, 0, 6, H, '#fff') + rect(0, 7, W, 6, '#fff') + rect(13.25, 0, 3.5, H, '#c8102e') + rect(0, 8.25, W, 3.5, '#c8102e') + '</g>' },
         JP: { name: 'Giappone', svg: () => rect(0, 0, W, H, '#ffffff') + '<circle cx="15" cy="10" r="6" fill="#bc002d"/>' },
+        CN: { name: 'Cina', svg: () => rect(0, 0, W, H, '#de2910') + star(5, 5, 3, '#ffde00') + star(10, 2, 1, '#ffde00') + star(12, 4, 1, '#ffde00') + star(12, 7, 1, '#ffde00') + star(10, 9, 1, '#ffde00') },
+        // Taipei Cinese: bandiera usata nelle competizioni sportive (fiore di pruno con sole e anelli, semplificata)
+        TW: { name: 'Taipei Cinese', svg: () => rect(0, 0, W, H, '#ffffff')
+            + [0, 1, 2, 3, 4].map(i => { const a = -Math.PI / 2 + i * 2 * Math.PI / 5; return `<circle cx="${(15 + Math.cos(a) * 3.6).toFixed(2)}" cy="${(8 + Math.sin(a) * 3.6).toFixed(2)}" r="2.6" fill="#ce1126"/>`; }).join('')
+            + '<circle cx="15" cy="8" r="2.6" fill="#002d7f"/><circle cx="15" cy="8" r="1.3" fill="#ffffff"/>'
+            + ['#0081c8', '#000000', '#ee334e'].map((c, i) => `<circle cx="${11.5 + i * 3.5}" cy="15.5" r="1.5" fill="none" stroke="${c}" stroke-width="0.6"/>`).join('')
+            + ['#fcb131', '#00a651'].map((c, i) => `<circle cx="${13.25 + i * 3.5}" cy="16.8" r="1.5" fill="none" stroke="${c}" stroke-width="0.6"/>`).join('') },
+        KR: { name: 'Corea del Sud', svg: () => rect(0, 0, W, H, '#ffffff')
+            + '<path d="M11,10a4,4 0 0 1 8,0a2,2 0 0 1-4,0a2,2 0 0 0-4,0z" fill="#cd2e3a"/><path d="M11,10a2,2 0 0 0 4,0a2,2 0 0 1 4,0a4,4 0 0 1-8,0z" fill="#0047a0"/>'
+            + '<g fill="#000">' + [[5.5, 4.5, -0.59], [24.5, 4.5, 0.59], [5.5, 15.5, 0.59], [24.5, 15.5, -0.59]].map(([x, y, a]) =>
+                `<g transform="translate(${x} ${y}) rotate(${(a * 180 / Math.PI).toFixed(1)})"><rect x="-2.5" y="-1.6" width="5" height="0.7"/><rect x="-2.5" y="-0.35" width="5" height="0.7"/><rect x="-2.5" y="0.9" width="5" height="0.7"/></g>`).join('') + '</g>' },
+        IR: { name: 'Iran', svg: () => horiz(['#239f40', '#ffffff', '#da0000']) + '<circle cx="15" cy="10" r="2.1" fill="none" stroke="#da0000" stroke-width="0.9"/><rect x="14.6" y="7.6" width="0.8" height="4.8" fill="#da0000"/>' },
         SM: { name: 'San Marino', svg: () => horiz(['#ffffff', '#5eb6e4']) },
         AD: { name: 'Andorra', svg: () => vert(['#10069f', '#fedf00', '#d50032']) },
         MC: { name: 'Monaco', svg: () => horiz(['#ce1126', '#ffffff']) },

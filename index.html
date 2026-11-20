@@ -6826,28 +6826,53 @@
             return playerJerseyCache[key];
         }
 
-        // Maglia e maniche dell'arbitro: righe bianche e nere, fascia arancione
-        function getRefereeMaterials() {
-            if (playerJerseyCache.__ref) return playerJerseyCache.__ref;
-            const jc = document.createElement('canvas');
-            jc.width = 1024; jc.height = 512;
-            const j = jc.getContext('2d');
-            j.fillStyle = '#f8fafc'; j.fillRect(0, 0, 1024, 512);
-            j.fillStyle = '#0b0b0d';
-            for (let x = 0; x < 1024; x += 64) j.fillRect(x, 0, 32, 512);
-            j.fillRect(0, 0, 1024, 22);
-            j.fillStyle = '#0b0b0d'; j.fillRect(220, 0, 72, 60);
+        // Divisa degli arbitri: 'italia' (FISR) solo per le gare fra due squadre italiane, 'international'
+        // (World Skate) per tutte le altre. Busto e maniche si ricavano dal PNG come le maglie dei giocatori.
+        const REFEREE_KIT_SRC = { italia: 'assets/jerseys/referee_italia.png', international: 'assets/jerseys/referee_international.png' };
+        function isItalianMatch() {
+            return typeof matchConfig !== 'undefined' && clubCountry(matchConfig.homeClub) === 'IT' && clubCountry(matchConfig.guestClub) === 'IT';
+        }
+        function refereeKit() { return isItalianMatch() ? 'italia' : 'international'; }
+        function getRefereeMaterials(kit = refereeKit()) {
+            const key = '__ref_' + kit;
+            if (playerJerseyCache[key]) return playerJerseyCache[key];
+            const lowQ = getActiveQualityPreset().id === 'low';
+            const fb = { base: [246, 246, 246], accent: [14, 14, 16], accent2: [249, 115, 22] };
+            // busto: prima a righe disegnate, poi il PNG appena caricato
+            const canvas = document.createElement('canvas');
+            canvas.width = lowQ ? 512 : JERSEY_TEX_W; canvas.height = lowQ ? 256 : JERSEY_TEX_H;
+            const big = document.createElement('canvas');
+            big.width = JERSEY_TEX_W; big.height = JERSEY_TEX_H;
+            const bctx = big.getContext('2d');
+            bctx.fillStyle = '#f6f6f6'; bctx.fillRect(0, 0, big.width, big.height);
+            bctx.fillStyle = '#0e0e10';
+            for (let x = 0; x < big.width; x += 64) bctx.fillRect(x, 0, 32, big.height);
+            canvas.getContext('2d').drawImage(big, 0, 0, canvas.width, canvas.height);
+            const jTex = new THREE.CanvasTexture(canvas);
+            jTex.anisotropy = getActiveQualityPreset().anisotropy;
+            // maniche
             const sc = document.createElement('canvas');
             sc.width = 256; sc.height = 512;
-            const k = sc.getContext('2d');
-            k.fillStyle = '#f8fafc'; k.fillRect(0, 0, 256, 512);
-            k.fillStyle = '#0b0b0d';
-            for (let x = 0; x < 256; x += 32) k.fillRect(x, 0, 16, 512);
-            k.fillStyle = '#f97316'; k.fillRect(0, 150, 256, 46);
-            k.fillStyle = '#0b0b0d'; k.fillRect(0, 470, 256, 42);
-            playerJerseyCache.__ref = { jersey: makeFabricMaterial(new THREE.CanvasTexture(jc)), sleeve: makeFabricMaterial(new THREE.CanvasTexture(sc)) };
-            return playerJerseyCache.__ref;
+            const sctx = sc.getContext('2d');
+            sctx.fillStyle = '#f6f6f6'; sctx.fillRect(0, 0, 256, 512);
+            sctx.fillStyle = '#0e0e10';
+            for (let x = 0; x < 256; x += 32) sctx.fillRect(x, 0, 16, 512);
+            const sTex = new THREE.CanvasTexture(sc);
+            analyzeJerseyImage(REFEREE_KIT_SRC[kit]).then(info => {
+                if (!info.ok) return;
+                paintJerseyCanvas(big, info, fb, '', '');
+                canvas.getContext('2d').drawImage(big, 0, 0, canvas.width, canvas.height);
+                jTex.needsUpdate = true;
+                sctx.drawImage(info.sleeve, 0, 0, 128, 512);
+                sctx.save(); sctx.translate(256, 0); sctx.scale(-1, 1);
+                sctx.drawImage(info.sleeve, 0, 0, 128, 512);
+                sctx.restore();
+                sTex.needsUpdate = true;
+            });
+            playerJerseyCache[key] = { jersey: makeFabricMaterial(jTex), sleeve: makeFabricMaterial(sTex) };
+            return playerJerseyCache[key];
         }
+
 
         // Superficie di rivoluzione a sezione ellittica con UV: u=0.25 davanti (-Z), u=0.75 dietro (+Z)
         function buildEllipticLathe(profile, segs, vFrom = 0, vTo = 1, smoothN = 0) {
@@ -8315,9 +8340,61 @@
             'Marco Rigoni', 'Simone Lega', 'Andrea Davoli', 'Davide Marri', 'Matteo Gallo',
             'Fabio Lottaroli', 'Pierpaolo Spada', 'Emanuele Mancina', 'Mauro Scanacapra', 'Luca Zoppelletto'
         ];
+        // Arbitri internazionali World Skate: solo per le gare che non sono fra due squadre italiane
+        const INTERNATIONAL_REFEREES = [
+            ['Mauro García Sala', 'AR'], ['Mariano Fornari', 'AR'], ['Andrew Crowther', 'AU'], ['Robert Love-Dekazos', 'AU'],
+            ['Manuela Lehnhart', 'AT'], ['Andreas Siegl', 'AT'], ['Yandong Yuan', 'CN'], ['Zhihong Wang', 'CN'],
+            ['Yuqin Hu', 'CN'], ['Jia Qi Liu', 'CN'], ['Fei Mo', 'CN'], ['Xiaoliang Wang', 'CN'],
+            ['Chin-Chen Tsao', 'TW'], ['Sheng-Ping Lin', 'TW'], ['Laura Camila Rivas Granados', 'CO'],
+            ['Sung Hyun Tark', 'KR'], ['Hyun Joo Kim', 'KR'], ['Eun Zoo Jung', 'KR'], ['Tomáš Veselý', 'CZ'],
+            ['Yohann Labreux', 'FR'], ['Elise Besson', 'FR'], ['Léo Deleiris', 'FR'], ['Laurent Faure', 'FR'],
+            ['Geraldine Fischesser', 'FR'], ['Laetitia Cole', 'FR'], ['Pierrick Ginet', 'FR'], ['Vincent Khalfi', 'FR'],
+            ['Christian Wolff', 'DE'], ['Nils Pfeffer', 'DE', 'Referee in Chief World Skate'], ['Tina Kirschner', 'DE'],
+            ['Jason Coles', 'GB'], ['Timothy David Francis', 'GB'], ['Carl Grayson', 'GB'],
+            ['Ramin Atighechi', 'IR'], ['Maliheh Khorrambagheri', 'IR'], ['Mojgan Malekan', 'IR'],
+            ['Alfredo Peña Mejia', 'MX'], ['Alba Calero', 'ES'], ['Andreu Roman', 'ES'], ['Isabel Rodriguez Sancosmed', 'ES'],
+            ['Manuel Ott', 'CH']
+        ].map(([name, nat, role]) => ({ name, nat, role: role || '' }));
+
+        // Designazione: gara fra squadre italiane -> arbitri FISR; altrimenti due arbitri internazionali,
+        // preferibilmente di nazioni diverse da quelle delle due squadre (terzietà) e diverse fra loro
         function assignMatchReferees() {
-            const pool = OFFICIAL_REFEREES.slice();
-            referees.forEach(ref => { ref.fullName = pool.splice(Math.floor(Math.random() * pool.length), 1)[0]; });
+            const italian = isItalianMatch();
+            let pool;
+            if (italian) {
+                pool = OFFICIAL_REFEREES.map(name => ({ name, nat: 'IT', role: '' }));
+            } else {
+                const teamNats = [clubCountry(matchConfig.homeClub), clubCountry(matchConfig.guestClub)];
+                const neutral = INTERNATIONAL_REFEREES.filter(r => !teamNats.includes(r.nat));
+                pool = (neutral.length >= referees.length ? neutral : INTERNATIONAL_REFEREES).slice();
+            }
+            const used = [];
+            referees.forEach(ref => {
+                let cands = pool.filter(r => !used.includes(r.nat));
+                if (!cands.length) cands = pool;
+                const pick = cands[Math.floor(Math.random() * cands.length)];
+                pool.splice(pool.indexOf(pick), 1);
+                used.push(pick.nat);
+                ref.fullName = pick.name;
+                ref.refNat = pick.nat;
+                ref.refRole = pick.role;
+                ref.refInternational = !italian;
+                // divisa della gara: sostituisce i materiali di busto e maniche se cambia tipo di gara
+                const want = refereeKit();
+                if (ref.refKit && ref.refKit !== want) {
+                    const from = getRefereeMaterials(ref.refKit), to = getRefereeMaterials(want);
+                    ref.mesh.traverse(o => {
+                        if (!o.isMesh) return;
+                        if (o.material === from.jersey) o.material = to.jersey;
+                        else if (o.material === from.sleeve) o.material = to.sleeve;
+                    });
+                }
+                ref.refKit = want;
+            });
+        }
+        // bandiera della nazione dell'arbitro (solo nelle gare internazionali)
+        function refereeFlagHTML(ref, size) {
+            return window.HIL_FLAGS && ref && ref.refInternational && ref.refNat ? HIL_FLAGS.html(ref.refNat, 'hil-team-flag', size) + ' ' : '';
         }
 
         // Posizioni degli arbitri all'ingaggio: uno lancia il disco, l'altro controlla dal lato opposto
@@ -8328,6 +8405,7 @@
             referees = [];
             [-1, 1].forEach(side => {
                 const ref = createSkater('ref', 'ref', 'ref', 'REF', 0, false, '', '');
+                ref.refKit = refereeKit();   // createSkater ha usato getRefereeMaterials() della gara corrente
                 ref.side = side;
                 ref.mesh.position.set(side * 15.5, 0, side * 6);
                 referees.push(ref);
@@ -9334,7 +9412,9 @@
             document.getElementById('spot-num').innerHTML = '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="14" r="5"/><path d="M13 11l8-4v4l-6 2"/><path d="M4 9V6"/></svg>';
             document.getElementById('spot-kicker').textContent = `Ufficiali di gara • Arbitro ${n} di ${referees.length}`;
             document.getElementById('spot-name').innerHTML = (first ? `<small class="spot-first">${rosterEsc(first)}</small>` : '') + rosterEsc(last.toUpperCase());
-            document.getElementById('spot-team').innerHTML = 'F.I.S.R. • <b>Arbitro</b>';
+            document.getElementById('spot-team').innerHTML = ref.refInternational
+                ? `${refereeFlagHTML(ref, '1.05em')}${window.HIL_FLAGS ? rosterEsc(HIL_FLAGS.name(ref.refNat)) + ' • ' : ''}World Skate • <b>${ref.refRole ? rosterEsc(ref.refRole) : 'Arbitro internazionale'}</b>`
+                : 'F.I.S.R. • <b>Arbitro</b>';
             card.classList.remove('hidden', 'is-in');
             void card.offsetWidth;
             card.classList.add('is-in');
@@ -10088,7 +10168,7 @@
                     if (!ref) return null;
                     const c = V(-2.3, 1.25, 0);
                     const other = referees.find(r => r !== ref);
-                    return { title: ref.fullName || 'Arbitro', sub: 'Arbitro FISR' + (other && other.fullName ? ` • con ${other.fullName}` : ''), orbit: { c, r: 2.1, a0: 0.75, a1: 1.45, y: 1.55 }, ref };
+                    return { title: ref.fullName || 'Arbitro', sub: (ref.refInternational ? `Arbitro internazionale${window.HIL_FLAGS && ref.refNat ? ' • ' + HIL_FLAGS.name(ref.refNat) : ''}` : 'Arbitro FISR') + (other && other.fullName ? ` • con ${other.fullName}` : ''), orbit: { c, r: 2.1, a0: 0.75, a1: 1.45, y: 1.55 }, ref };
                 }
                 case 'goalie': {
                     const team = Math.random() < 0.5 ? 'home' : 'guest';
@@ -12866,7 +12946,7 @@
             updateStatRow(homeTotalShots, guestTotalShots, 'stat-shots-home', 'stat-shots-guest', 'bar-shots-home', 'bar-shots-guest');
             updateStatRow(matchStats.homeSaves, matchStats.guestSaves, 'stat-saves-home', 'stat-saves-guest', 'bar-saves-home', 'bar-saves-guest');
 
-            const refNames = referees.map(r => r.fullName).filter(Boolean);
+            const refNames = referees.filter(r => r.fullName).map(r => refereeFlagHTML(r, '0.95em') + rosterEsc(r.fullName));
             const mvpLine = isFinal && window.Ceremony ? window.Ceremony.mvpHtml() : '';
             document.getElementById('stats-referees').innerHTML = (mvpLine ? mvpLine + '<br>' : '') + (refNames.length ? `<b>Arbitri</b> ${refNames.join(' • ')}` : '');
             const scorersListEl = document.getElementById('stats-scorers-list');
