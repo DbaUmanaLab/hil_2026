@@ -195,7 +195,7 @@
     const FOCUSABLE = 'button, [role="button"], a[href], input, select, [tabindex="0"]';
 
     function activeLayer() {
-        if (window.disclaimerOpen) return null;          // avviso iniziale: nessuna navigazione sotto
+        if (window.disclaimerOpen || window.perfBenchOpen) return null;   // avviso iniziale / test prestazioni: nessuna navigazione sotto
         if (typeof keyRebindAction !== 'undefined' && keyRebindAction) return null;
         const ff = document.getElementById('funfact-loader');
         if (ff && !ff.classList.contains('ff-hidden')) return null;
