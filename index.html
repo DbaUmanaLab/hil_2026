@@ -1975,6 +1975,14 @@
                                 <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="piacenza"></span><span class="as-home-chip hidden" data-home-chip="piacenza">Casa</span></span>
                             </span>
                         </button>
+                        <button type="button" data-arena="kemarin" class="arena-pill-btn as-card" role="option">
+                            <span class="as-thumb"><img src="assets/arenas/thumbs/kemarin.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">19</span></span>
+                            <span class="min-w-0">
+                                <span class="as-card-name block">Pista di Campomarino</span>
+                                <span class="as-card-loc block">Campomarino (CB) • Molise</span>
+                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="kemarin"></span><span class="as-home-chip hidden" data-home-chip="kemarin">Casa</span></span>
+                            </span>
+                        </button>
                     </div>
                     <div class="as-details">
                         <div class="as-stats">
@@ -2693,10 +2701,21 @@
                 capacity: 'Tribuna con Sedute Rosse',
                 surface: 'Resina Terracotta',
                 roof: 'Cupola Geodetica con Telo'
+            },
+            kemarin: {
+                id: 'kemarin',
+                name: 'PISTA DI CAMPOMARINO',
+                shortTitle: 'Pista di Campomarino',
+                location: 'Campomarino (CB) • Molise, Italia',
+                clubBadge: 'Casa: Kemarin Hockey',
+                desc: 'Pista all\'aperto in cemento lisciato a lastre con le righe azzurre, balaustre basse e scure coperte di striscioni, recinzione con il telo frangivento verde e la rete metallica, una grande rete paravento verde sulla testata sud e le torri faro. Tutto attorno la chiesa bianca con i due campanili e la corona di lamelle con la croce, i condomini con i tetti in coppi, gli ulivi e, in lontananza, la cupola blu del palazzetto vicino. Il pubblico guarda in piedi lungo la ringhiera.',
+                capacity: 'Pubblico in Piedi',
+                surface: 'Cemento Lisciato',
+                roof: 'All\'Aperto'
             }
         };
 
-        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara', 'piacenza'];
+        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara', 'piacenza', 'kemarin'];
         // Palazzetti presenti nel menu ma non selezionabili (al momento nessuno)
         const DISABLED_ARENAS = new Set();
         const SELECTABLE_ARENA_IDS = ARENA_IDS.filter(id => !DISABLED_ARENAS.has(id));
@@ -2731,6 +2750,7 @@
         let crowdCheerTimer = 0;
         let arenaGroup = null;
         let arenaDustPoints = null;
+        let currentArenaOutdoor = false;
         let arenaEnvMap = null;
         let vfxParticles = [];
 
@@ -4506,8 +4526,12 @@
             const n = arenaScoreboards.north;
             if (!n) return;
             n.rotation.y = 0;
-            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara', 'piacenza'].includes(matchConfig.arena);
-            if (matchConfig.arena === 'piacenza') {
+            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara', 'piacenza', 'kemarin'].includes(matchConfig.arena);
+            if (matchConfig.arena === 'kemarin') {
+                // tabellone su due pali, davanti alla recinzione nord (la chiesa alle spalle)
+                n.position.set(0, 4.7, -40.0);
+                n.scale.setScalar(0.4);
+            } else if (matchConfig.arena === 'piacenza') {
                 // tabellone appeso nell'abside nord, sopra la rete dietro la porta
                 n.position.set(0, 5.6, -38.6);
                 n.scale.setScalar(0.42);
@@ -4593,6 +4617,13 @@
             arenaCeilingHide = null;
             penaltyDoors = {};
             const fileArena = ARENA_FILE_TEX[arenaId] || null;
+            // piste all'aperto (outdoor): cielo chiaro e foschia leggera al posto del buio del palazzetto;
+            // la volta celeste, gli edifici e il paesaggio li disegna il modulo dell'arena
+            const outdoor = !!(fileArena && fileArena.outdoor);
+            if (scene.background && scene.background.isColor) scene.background.setHex(outdoor ? 0xbcd3e6 : 0x090f1d);
+            if (scene.fog) { scene.fog.color.setHex(outdoor ? 0xcfdce6 : 0x090f1d); scene.fog.density = outdoor ? 0.003 : 0.0055; }
+            currentArenaOutdoor = outdoor;                     // all'aperto niente pulviscolo luminoso sotto i fari
+            if (arenaDustPoints) arenaDustPoints.visible = !outdoor && preset.dustCount > 0;
             const rinkTex = fileArena ? loadFileTexture(fileArena.dir + 'rink_color.jpg') : createRegulationRinkTexture(arenaId);
             rinkTex.anisotropy = preset.anisotropy;
             const floorMat = fileArena
@@ -4602,12 +4633,12 @@
                         normalMap: loadFileTexture(fileArena.normal),
                         normalScale: new THREE.Vector2(0.55, 0.55),
                         color: fileArena.floorTint,
-                        roughness: 0.42,
+                        roughness: fileArena.matte ? 0.86 : 0.42,                // matte: cemento grezzo, senza vernice lucida
                         metalness: 0.0,
-                        clearcoat: 0.32,
+                        clearcoat: fileArena.matte ? 0.0 : 0.32,
                         clearcoatRoughness: 0.26
                     })
-                    : new THREE.MeshStandardMaterial({ map: rinkTex, color: fileArena.floorTintLow, roughness: 0.5, metalness: 0.0 }))
+                    : new THREE.MeshStandardMaterial({ map: rinkTex, color: fileArena.floorTintLow, roughness: fileArena.matte ? 0.9 : 0.5, metalness: 0.0 }))
                 : preset.usePhysicalMat
                 ? new THREE.MeshPhysicalMaterial({
                     map: rinkTex,
@@ -4759,7 +4790,7 @@
                 roughness: 0.55
             });
             const benchBackMat = isAsiago ? new THREE.MeshStandardMaterial({ map: pbr.woodDiffuse, bumpMap: preset.usePhysicalMat ? pbr.woodBump : null, bumpScale: 0.015, color: 0xc8955a, roughness: 0.6 }) : new THREE.MeshStandardMaterial({
-                color: arenaId === 'piacenza' ? 0x141416 : arenaId === 'ferrara' ? 0x1d3f9a : arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
+                color: arenaId === 'kemarin' ? 0x14244a : arenaId === 'piacenza' ? 0x141416 : arenaId === 'ferrara' ? 0x1d3f9a : arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
                 roughness: 0.8
             });
 
@@ -4865,7 +4896,8 @@
             time42: 'src/arenas/time42.js',
             molina: 'src/arenas/molina.js',
             ferrara: 'src/arenas/ferrara.js',
-            piacenza: 'src/arenas/piacenza.js'
+            piacenza: 'src/arenas/piacenza.js',
+            kemarin: 'src/arenas/kemarin.js'
         };
         const arenaBuilders = {};
         const arenaModulePromises = {};
@@ -5152,7 +5184,9 @@
             // Pattinodromo Giorgio Burani: SportCourt azzurro, niente vetro (ringhiera e reti bianche nel modulo)
             ferrara: { dir: 'assets/textures/ferrara/', normal: 'assets/textures/ferrara/rink_normal.jpg', floorTint: 0x9ea6aa, floorTintLow: 0x939b9f, noGlass: true },
             // Pattinodromo B. Metti: resina terracotta, niente vetro (ringhiera della tribuna e reti nere nel modulo)
-            piacenza: { dir: 'assets/textures/piacenza/', normal: 'assets/textures/piacenza/rink_normal.jpg', floorTint: 0x8e8a88, floorTintLow: 0x84807e, noGlass: true }
+            piacenza: { dir: 'assets/textures/piacenza/', normal: 'assets/textures/piacenza/rink_normal.jpg', floorTint: 0x8e8a88, floorTintLow: 0x84807e, noGlass: true },
+            // Pista di Campomarino: ALL'APERTO (cielo e foschia chiari), cemento grezzo opaco, niente vetro (recinzione nel modulo)
+            kemarin: { dir: 'assets/textures/kemarin/', normal: 'assets/textures/kemarin/rink_normal.jpg', floorTint: 0x8c8e90, floorTintLow: 0x86888a, noGlass: true, outdoor: true, matte: true }
         };
 
         // Balaustre: ogni striscia rappresenta 18,5 m di pannelli pubblicitari
@@ -5488,7 +5522,7 @@
                             { jacket: 0xf8fafc, shirt: 0xdc2626, isJersey: true }
                         ]))));
 
-            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina' || arenaId === 'ferrara' || arenaId === 'piacenza') return;   // pubblico costruito dall'architettura del palazzetto
+            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina' || arenaId === 'ferrara' || arenaId === 'piacenza' || arenaId === 'kemarin') return;   // pubblico costruito dall'architettura del palazzetto
 
             // Spalti laterali dietro il tavolo cronometristi (con spazio sull'angolo destro per la casetta bar a Cittadella)
             for (let row = 0; row < 4; row++) {
@@ -5949,6 +5983,7 @@
             }
             if (arenaDustPoints) {
                 arenaDustPoints.rotation.y = Math.sin(t * 0.08) * 0.08;
+                if (currentArenaOutdoor) arenaDustPoints.visible = false;   // anche dopo un cambio di qualità grafica
             }
 
             if (puck && puckShadowMesh) {

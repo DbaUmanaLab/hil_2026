@@ -4286,6 +4286,188 @@
       ]
     },
     {
+      "id": "kemarin",
+      "league": "SERIE B",
+      "name": "KEMARIN HOCKEY",
+      "shortName": "KEMARIN",
+      "abbr": "KEM",
+      "note": "Nomi e statistiche dal roster ufficiale (3 partite, 13 giocatori e 2 portieri). Numeri di maglia e ruoli NON presenti nel roster: assegnati provvisoriamente, da sostituire con quelli veri. Staff tecnico: Simona D'Uva e Savino Mendola.",
+      "jerseyClubId": "kemarin",
+      "homeArena": "kemarin",
+      "logo": "kemarin.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/kemarin.png"
+      ],
+      "ratings": {
+        "off": 63,
+        "def": 58,
+        "goa": 63
+      },
+      "colors": {
+        "primary": "#c99a2e",
+        "secondary": "#14244a",
+        "staffJacket": "#14244a",
+        "coachJacket": "#14244a"
+      },
+      "rosterScreen": {
+        "photo": "kemarin.jpg",
+        "focus": "50% 40%"
+      },
+      "coach": {
+        "first": "Simona",
+        "last": "D'Uva",
+        "role": "Allenatrice",
+        "note": "Staff: Savino Mendola"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "SISTILLI",
+        "first": "Alessandro"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "MACERA",
+          "first": "Andrea"
+        }
+      ],
+      "reserves": [
+        {
+          "num": "13",
+          "name": "VENTRUDO",
+          "first": "Angelo"
+        }
+      ],
+      "kits": {
+        "white": {
+          "label": "Divisa Bianco-Oro",
+          "primary": "#f4f4f2",
+          "pants": "#14244a",
+          "helmet": "#14244a",
+          "glove": "#14244a"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "22",
+            "name": "MENDOLA",
+            "first": "Yoann",
+            "g": 7,
+            "a": 3,
+            "pts": 10
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "MENDOLA",
+            "first": "Emanuel",
+            "g": 4,
+            "a": 4,
+            "pts": 8
+          },
+          {
+            "role": "RW",
+            "num": "21",
+            "name": "DI CANDIA",
+            "first": "Lorenzo",
+            "g": 3,
+            "a": 0,
+            "pts": 3
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "PASTOREK",
+            "first": "Dalibor",
+            "g": 2,
+            "a": 0,
+            "pts": 2
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "19",
+            "name": "STALLA",
+            "first": "Daniel",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "7",
+            "name": "CHISENA",
+            "first": "Ilaria",
+            "gender": "F",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "23",
+            "name": "KRYSTKOWSKI",
+            "first": "Lukasz",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "CARINGELLA",
+            "first": "Raffaele",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "AMEDEI",
+            "first": "Salvatore",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "8",
+            "name": "ASTORE",
+            "first": "Antonio Cristian",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "10",
+            "name": "LANZONE",
+            "first": "Nayra",
+            "gender": "F",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "BITRI",
+            "first": "Giuseppe",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "molina",
       "league": "RFEP",
       "name": "MOLINA SPORT ACEGC",
