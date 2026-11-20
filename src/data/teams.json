@@ -4032,6 +4032,260 @@
       ]
     },
     {
+      "id": "imola",
+      "league": "SERIE B",
+      "name": "IDRA IMOLA",
+      "shortName": "IMOLA",
+      "abbr": "IMO",
+      "note": "Nomi e statistiche dal roster ufficiale (4 partite, 27 giocatori e 2 portieri). Numeri di maglia e ruoli NON presenti nel roster: assegnati provvisoriamente, da sostituire con quelli veri. Samuele Gaddoni è allenatore-giocatore; nello staff anche Noemi Scardovi. Gioca nello stesso palazzetto del Forlì.",
+      "jerseyClubId": "imola",
+      "homeArena": "forli",
+      "logo": "imola.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/imola.png"
+      ],
+      "ratings": {
+        "off": 61,
+        "def": 58,
+        "goa": 65
+      },
+      "colors": {
+        "primary": "#1f3f86",
+        "secondary": "#7cc4ec",
+        "staffJacket": "#1f3f86",
+        "coachJacket": "#1f3f86"
+      },
+      "rosterScreen": {
+        "photo": "imola.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": {
+        "first": "Samuele",
+        "last": "Gaddoni",
+        "role": "Allenatore-giocatore",
+        "note": "Staff: Noemi Scardovi"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "SAMARANAYAKE",
+        "first": "Dishini Nishathma",
+        "gender": "F"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "PRACCHINI",
+          "first": "Matteo"
+        }
+      ],
+      "reserves": [
+        {
+          "num": "13",
+          "name": "MASTROLUCA",
+          "first": "Marco"
+        },
+        {
+          "num": "14",
+          "name": "GADDONI",
+          "first": "Samuele"
+        },
+        {
+          "num": "15",
+          "name": "BABINI",
+          "first": "Lorenzo"
+        },
+        {
+          "num": "16",
+          "name": "BIANCO",
+          "first": "Eleonora",
+          "gender": "F"
+        },
+        {
+          "num": "18",
+          "name": "BIANCO",
+          "first": "Sergio"
+        },
+        {
+          "num": "20",
+          "name": "BIANCOLI",
+          "first": "Giacomo"
+        },
+        {
+          "num": "22",
+          "name": "DANIELI",
+          "first": "Roberto"
+        },
+        {
+          "num": "24",
+          "name": "DONATONE",
+          "first": "Lorenzo"
+        },
+        {
+          "num": "25",
+          "name": "FREGA",
+          "first": "Mirco"
+        },
+        {
+          "num": "26",
+          "name": "GALVANI",
+          "first": "Andrea"
+        },
+        {
+          "num": "27",
+          "name": "LI VIGNI",
+          "first": "Danilo"
+        },
+        {
+          "num": "28",
+          "name": "SERVADEI",
+          "first": "Pietro"
+        },
+        {
+          "num": "29",
+          "name": "TOSCHI",
+          "first": "Luca"
+        },
+        {
+          "num": "31",
+          "name": "VECCHI",
+          "first": "Samuele"
+        },
+        {
+          "num": "33",
+          "name": "ZAPPI",
+          "first": "Mattia"
+        }
+      ],
+      "kits": {
+        "blue": {
+          "label": "Divisa Blu-Azzurra",
+          "primary": "#1f3f86",
+          "pants": "#1f3f86",
+          "helmet": "#1b2f63",
+          "glove": "#1b2f63"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "LAMORATTA",
+            "first": "Davide",
+            "g": 4,
+            "a": 2,
+            "pts": 6
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "GAMBERINI",
+            "first": "Lorenzo",
+            "g": 4,
+            "a": 2,
+            "pts": 6
+          },
+          {
+            "role": "RW",
+            "num": "21",
+            "name": "BOLOGNESI",
+            "first": "Giacomo",
+            "g": 4,
+            "a": 1,
+            "pts": 5
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "FOLLI",
+            "first": "Francesco",
+            "g": 1,
+            "a": 2,
+            "pts": 3
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "DEZOTEUX",
+            "first": "Arthur",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          },
+          {
+            "role": "LW",
+            "num": "19",
+            "name": "POLTRONIERI",
+            "first": "Mattia",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "23",
+            "name": "GONNI",
+            "first": "Alessio",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "SAMARANAYAKE",
+            "first": "Dinuni Thaveesha",
+            "gender": "F",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "ALBONETTI",
+            "first": "Giovanni",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "7",
+            "name": "GONNI",
+            "first": "Greta",
+            "gender": "F",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "8",
+            "name": "ALIU BIDEMI",
+            "first": "David",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "CICOGNANI",
+            "first": "Luca",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "molina",
       "league": "RFEP",
       "name": "MOLINA SPORT ACEGC",

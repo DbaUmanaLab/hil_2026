@@ -1232,6 +1232,8 @@
         .rs-extras { margin-top: .55em; font-size: .5em; line-height: 1.45; letter-spacing: .04em; text-transform: uppercase; color: rgba(255,255,255,.72); }
         .rs-extras b { color: var(--rs-gold); font-weight: 600; margin-right: .35em; }
         .rs-sep { margin: 0 .7em; color: rgba(255,255,255,.3); }
+        .rs-list.is-crowded { font-size: clamp(13px, min(1.85vw, 3.2vh), 34px); }
+        .rs-extras.is-long { font-size: .46em; line-height: 1.4; }
         .rs-anim-in .rs-extras { animation: rsRowIn .55s cubic-bezier(.2,.8,.2,1) both; animation-delay: calc(var(--i) * 45ms + 160ms); }
         .rs-num { text-align: right; }
         .rs-role, .rs-line { font-weight: 500; text-transform: none; }
@@ -12252,12 +12254,17 @@
         }
 
         // Riserve e portieri di riserva: una riga compatta in fondo all'elenco
+        // Rose lunghe (molte riserve): iniziale del nome al posto del nome intero e carattere più piccolo
+        const ROSTER_LONG_EXTRAS = 8;
+        function rosterExtrasCount(club) { return (club.backupGoalies || []).length + (club.reserves || []).length; }
         function renderRosterExtrasHTML(club, startIdx) {
-            const fmt = list => list.map(pl => `#${rosterEsc(pl.num)} ${playerFlagHTML(club.id, pl)} ${rosterEsc(playerFullName(pl.first, pl.name))}`).join(' · ');
+            const long = rosterExtrasCount(club) > ROSTER_LONG_EXTRAS;
+            const nameOf = pl => long && pl.first ? `${pl.first.split(' ')[0][0]}. ${pl.name}` : playerFullName(pl.first, pl.name);
+            const fmt = list => list.map(pl => `#${rosterEsc(pl.num)} ${playerFlagHTML(club.id, pl)} ${rosterEsc(nameOf(pl))}`).join(' · ');
             const parts = [];
             if (club.backupGoalies && club.backupGoalies.length) parts.push(`<b>Portieri di riserva</b> ${fmt(club.backupGoalies)}`);
             if (club.reserves && club.reserves.length) parts.push(`<b>Riserve</b> ${fmt(club.reserves)}`);
-            return parts.length ? `<div class="rs-extras" style="--i:${startIdx}">${parts.join('<span class="rs-sep">|</span>')}</div>` : '';
+            return parts.length ? `<div class="rs-extras${long ? ' is-long' : ''}" style="--i:${startIdx}">${parts.join('<span class="rs-sep">|</span>')}</div>` : '';
         }
 
         function restartRosterAnim(el) {
@@ -12303,7 +12310,9 @@
                 fitTeamNameToBox(document.getElementById('rs-team-name'));
                 document.getElementById('rs-league').textContent = league;
                 document.getElementById('rs-sub').textContent = club.name + ' • ' + (isHome ? 'Squadra di casa' : 'Squadra ospite');
-                document.getElementById('rs-list').innerHTML = renderRosterRowsHTML(club);
+                const rsList = document.getElementById('rs-list');
+                rsList.innerHTML = renderRosterRowsHTML(club);
+                rsList.classList.toggle('is-crowded', rosterExtrasCount(club) > ROSTER_LONG_EXTRAS);
                 restartRosterAnim(screen);
             };
 
