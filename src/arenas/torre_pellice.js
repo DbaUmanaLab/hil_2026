@@ -16,7 +16,7 @@
         const lowQ = preset.id === 'low';
         const T = 'assets/textures/torre_pellice/';
         const XW = -31, XE = 24.5, CX = (XW + XE) / 2, ZN = -44, ZS = 44;
-        const EAVE = 6.4, RIDGE = 9.8;                         // gronda e colmo (colmo lungo z, a x = CX)
+        const EAVE = 13.0, RIDGE = 16.8;                       // gronda e colmo (colmo lungo z, a x = CX): sopra le telecamere di gioco
         const V = (x, y, z) => new THREE.Vector3(x, y, z);
         const roofY = x => EAVE + (RIDGE - EAVE) * (1 - Math.abs(x - CX) / ((XE - XW) / 2));
         const std = (c, r, o) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: r }, o || {}));
@@ -28,6 +28,10 @@
             for (let i = 0; i < uv.count; i++) uv.setXY(i, uv.getX(i) * w / uw, uv.getY(i) * h / uh);
             return new THREE.Mesh(g, mat);
         };
+        // capriate, soffitto e luci: nascosti se una telecamera sale sopra il corrente inferiore
+        const ceilGroup = new THREE.Group();
+        targetGroup.add(ceilGroup);
+        arenaCeilingHide = { group: ceilGroup, y: EAVE - 0.6 };
 
         // ---------- 1. capriate in legno lamellare ogni 6 m + arcarecci
         const lamTex = loadFileTexture(T + 'glulam.jpg', { wrap: true });
@@ -54,9 +58,11 @@
             const x = XW + (XE - XW) * k / 10;
             beams.push([V(x, roofY(x) + 0.12, ZN), V(x, roofY(x) + 0.12, ZS), 0.16]);
         }
+        ceilGroup.add(new THREE.Mesh(mergeBeamGeometry(beams), woodMat));
         // pilastri lungo le pareti lunghe
-        trussZ.forEach(z => [XW + 0.25, XE - 0.25].forEach(x => beams.push([V(x, 0, z), V(x, EAVE, z), 0.4])));
-        targetGroup.add(new THREE.Mesh(mergeBeamGeometry(beams), woodMat));
+        const pillars = [];
+        trussZ.forEach(z => [XW + 0.25, XE - 0.25].forEach(x => pillars.push([V(x, 0, z), V(x, EAVE, z), 0.4])));
+        targetGroup.add(new THREE.Mesh(mergeBeamGeometry(pillars), woodMat));
 
         // ---------- 2. soffitto a pannelli bianchi sulle due falde
         const ceilTex = loadFileTexture(T + 'ceiling.jpg', { wrap: true });
@@ -69,22 +75,24 @@
             g.setAttribute('uv', new THREE.Float32BufferAttribute([0, 0, len / 1.2, 0, 0, L / 1.2, len / 1.2, L / 1.2], 2));
             g.setIndex([0, 2, 1, 1, 2, 3]);
             g.computeVertexNormals();
-            targetGroup.add(new THREE.Mesh(g, ceilMat));
+            ceilGroup.add(new THREE.Mesh(g, ceilMat));
         });
 
         // ---------- 3. pareti in pannelli OSB, fascia di finestre in alto, timpani
         const osbTex = loadFileTexture(T + 'osb.jpg', { wrap: true });
         const osbMat = new THREE.MeshStandardMaterial({ map: osbTex, color: 0xe2cfb2, roughness: 0.85, side: THREE.DoubleSide });
-        const WINY = 4.6;
+        const WINY = 4.6, WTOP = 6.4;                           // fascia di finestre, poi di nuovo OSB fino alla gronda
         const winMat = new THREE.MeshStandardMaterial({ color: 0xdfe8ee, emissive: 0xc8d6e0, emissiveIntensity: 0.55, roughness: 0.3, side: THREE.DoubleSide });
         [[XE, -Math.PI / 2], [XW, Math.PI / 2]].forEach(([x, rot]) => {
             const w = meterPlane(osbMat, ZS - ZN, WINY, 2.44, 1.22);
             w.position.set(x, WINY / 2, 0); w.rotation.y = rot; targetGroup.add(w);
-            plane(winMat, ZS - ZN, EAVE - WINY, x, (WINY + EAVE) / 2, 0, rot);
+            plane(winMat, ZS - ZN, WTOP - WINY, x, (WINY + WTOP) / 2, 0, rot);
+            const u = meterPlane(osbMat, ZS - ZN, EAVE - WTOP, 2.44, 1.22);
+            u.position.set(x, (WTOP + EAVE) / 2, 0); u.rotation.y = rot; targetGroup.add(u);
         });
         const mull = [];
-        for (let z = ZN; z <= ZS + 0.01; z += 2) [XE - 0.05, XW + 0.05].forEach(x => mull.push([V(x, WINY, z), V(x, EAVE, z), 0.08]));
-        [XE - 0.05, XW + 0.05].forEach(x => mull.push([V(x, WINY, ZN), V(x, WINY, ZS), 0.1]));
+        for (let z = ZN; z <= ZS + 0.01; z += 2) [XE - 0.05, XW + 0.05].forEach(x => mull.push([V(x, WINY, z), V(x, WTOP, z), 0.08]));
+        [XE - 0.05, XW + 0.05].forEach(x => mull.push([V(x, WINY, ZN), V(x, WINY, ZS), 0.1], [V(x, WTOP, ZN), V(x, WTOP, ZS), 0.1]));
         targetGroup.add(new THREE.Mesh(mergeBeamGeometry(mull), std(0x5a5f64, 0.5, { metalness: 0.4 })));
         // pareti di testata con il timpano
         [ZN, ZS].forEach(z => {
@@ -154,13 +162,13 @@
         const tubeH = new THREE.InstancedMesh(new THREE.BoxGeometry(0.4, 0.08, 1.7), housing, tubes.length);
         const tmpM = new THREE.Matrix4();
         tubes.forEach((p, i) => { tmpM.makeTranslation(p.x, p.y, p.z); tubeM.setMatrixAt(i, tmpM); tmpM.makeTranslation(p.x, p.y + 0.08, p.z); tubeH.setMatrixAt(i, tmpM); });
-        targetGroup.add(tubeM, tubeH);
+        ceilGroup.add(tubeM, tubeH);
         if (bells.length) {
             const bellM = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.12, 0.32, 0.4, 12, 1, true), std(0x9a9da0, 0.45, { metalness: 0.5, side: THREE.DoubleSide }), bells.length);
             const bulb = new THREE.InstancedMesh(new THREE.CircleGeometry(0.28, 12).rotateX(Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xfff6e0, side: THREE.DoubleSide }), bells.length);
             bells.forEach((p, i) => { tmpM.makeTranslation(p.x, p.y, p.z); bellM.setMatrixAt(i, tmpM); tmpM.makeTranslation(p.x, p.y - 0.19, p.z); bulb.setMatrixAt(i, tmpM); });
-            targetGroup.add(bellM, bulb);
-            targetGroup.add(new THREE.Mesh(mergeBeamGeometry(bells.map(p => [V(p.x, p.y + 0.2, p.z), V(p.x, roofY(p.x), p.z), 0.015])), housing));
+            ceilGroup.add(bellM, bulb);
+            ceilGroup.add(new THREE.Mesh(mergeBeamGeometry(bells.map(p => [V(p.x, p.y + 0.2, p.z), V(p.x, roofY(p.x), p.z), 0.015])), housing));
         }
         if (!lowQ) {
             const glowTex = loadFileTexture(CIT_TEX + 'glow.png');
@@ -169,7 +177,7 @@
                 const spr = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, color: 0xffffff, transparent: true, opacity: 0.45, depthWrite: false, blending: THREE.AdditiveBlending }));
                 spr.scale.set(2.2, 2.2, 1);
                 spr.position.set(p.x, p.y - 0.15, p.z);
-                targetGroup.add(spr);
+                ceilGroup.add(spr);
             });
         }
 
