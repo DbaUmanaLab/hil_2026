@@ -2382,6 +2382,7 @@
     <script src="src/data/teams-loader.js"></script>
     <script src="src/ui/Flags.js"></script>
     <script src="src/game/People.js"></script>
+    <script src="src/game/Warmup.js"></script>
     <script>
         // --- SQUADRE E LEGHE: dati in src/data/teams.json, caricati da src/data/teams-loader.js (TEAM_DATA) ---
         const CLUB_ROSTERS = TEAM_DATA.rosters;
@@ -3307,6 +3308,7 @@
         let introTimer = 0;
         let introPhase = 'guest_enter';
         let saluteTimer = 0;
+        let saluteTapCount = -1;     // battute di stecca già suonate nel saluto
         let introLineupData = [];
 
         // Ingaggio a Centro Pista (Faceoff)
@@ -7356,17 +7358,23 @@
             if (!s) return;
 
             if (s.isGoalie) {
-                s.hipGroup.position.y = 0.78;
-                s.bodyPivot.rotation.set(-0.28, 0, 0);
-                s.leftLegPivot.rotation.set(0.38, 0, 0.22);
-                s.leftKneePivot.rotation.set(-0.68, 0, 0);
-                s.rightLegPivot.rotation.set(0.38, 0, -0.22);
-                s.rightKneePivot.rotation.set(-0.68, 0, 0);
+                // k = 0 in piedi accucciato, k = 1 in farfalla: ginocchia a terra unite davanti, gambali
+                // aperti sul pavimento verso i pali, busto dritto, guanto e bloccatore larghi
+                const k = gameState === 'playing' ? (s.butterfly || 0) : 0;
+                const L = (a, b) => a + (b - a) * k;
+                if (s.legBaseY === undefined) s.legBaseY = s.leftLegPivot.position.y;
+                s.leftLegPivot.position.y = s.rightLegPivot.position.y = L(s.legBaseY, 0.46);
+                s.hipGroup.position.y = L(0.78, 0.44);
+                s.bodyPivot.rotation.set(L(-0.28, -0.08), 0, 0);
+                s.leftLegPivot.rotation.set(L(0.38, 0.3), 0, L(0.22, 0.05));
+                s.leftKneePivot.rotation.set(L(-0.68, -1.6), 0, L(0, -1.35));
+                s.rightLegPivot.rotation.set(L(0.38, 0.3), 0, L(-0.22, -0.05));
+                s.rightKneePivot.rotation.set(L(-0.68, -1.6), 0, L(0, 1.35));
 
-                s.leftArmPivot.rotation.set(0.62, -0.2, 0.35);
-                s.leftElbowPivot.rotation.set(0.55, 0, 0);
-                s.rightArmPivot.rotation.set(0.48, 0.2, -0.25);
-                s.rightElbowPivot.rotation.set(0.45, 0, 0);
+                s.leftArmPivot.rotation.set(L(0.62, 0.8), -0.2, L(0.35, -0.3));
+                s.leftElbowPivot.rotation.set(L(0.55, 0.35), 0, 0);
+                s.rightArmPivot.rotation.set(L(0.48, 0.62), 0.2, L(-0.25, 0.28));
+                s.rightElbowPivot.rotation.set(L(0.45, 0.3), 0, 0);
                 updateSkaterStickPose(s);
                 return;
             }
@@ -8845,6 +8853,9 @@
             camera.position.set(0, 12.2, 31);
             camera.lookAt(0, 5.5, -10);
 
+            // in pista le due squadre si riscaldano passandosi il disco (src/game/Warmup.js)
+            if (window.HIL_WARMUP) window.HIL_WARMUP.start();
+
             if (window.gameAudio) window.gameAudio.startCrowdLoop('ambient');
         }
 
@@ -8881,6 +8892,7 @@
         }
 
         function updateArenaTour(dt) {
+            if (window.HIL_WARMUP) window.HIL_WARMUP.update(dt);
             if (mascotShot) { updateMascotShot(dt); return; }
             tourTimer += dt;
             const duration = ARENA_TOUR_DURATION;
@@ -8907,6 +8919,7 @@
             if (arenaMascot) arenaMascot.waving = false;
             mascotShot = null;
             arenaTourOverlay.classList.add('hidden');
+            if (window.HIL_WARMUP) window.HIL_WARMUP.stop();   // fine riscaldamento: entrano le squadre
             startTeamIntro();
         }
 
@@ -9082,18 +9095,29 @@
             if (allDone && introPhase !== 'salute') {
                 introPhase = 'salute';
                 saluteTimer = 0;
+                saluteTapCount = -1;
                 updateIntroBanner('both');
             }
 
             if (introPhase === 'salute') {
                 saluteTimer += dt;
+                // saluto: tutti battono la lama della stecca sul pavimento a tempo (alzata breve, colpo secco)
+                const SALUTE_BPS = 2.6;
+                const beat = saluteTimer * SALUTE_BPS;
+                if (Math.floor(beat - 0.6) > saluteTapCount) {
+                    saluteTapCount = Math.floor(beat - 0.6);
+                    if (window.gameAudio && window.gameAudio.playStickTap) window.gameAudio.playStickTap();
+                }
                 introLineupData.forEach((item, idx) => {
                     const s = item.skater;
-                    const wave = Math.sin(saluteTimer * 7 + idx * 0.6) * 0.14;
-                    s.rightArmPivot.rotation.set(2.35 - wave, 0.1, -0.18);
-                    s.rightElbowPivot.rotation.set(0.25, 0, 0);
-                    s.leftArmPivot.rotation.set(2.05 + wave * 0.6, -0.1, 0.18);
-                    s.leftElbowPivot.rotation.set(0.25, 0, 0);
+                    setSkaterHockeyReadyPose(s, 0, 0);
+                    // qualcuno un filo in anticipo o in ritardo, come in un saluto vero
+                    const ph = ((beat + ((idx * 37) % 7) * 0.012) % 1 + 1) % 1;
+                    const lift = ph < 0.48 ? Math.sin((ph / 0.48) * Math.PI / 2)
+                        : (ph < 0.6 ? 1 - (ph - 0.48) / 0.12 : 0);
+                    s.rightArmPivot.rotation.x += lift * 0.34;
+                    s.leftArmPivot.rotation.x += lift * 0.16;
+                    s.bodyPivot.rotation.x -= lift * 0.05;
                     updateSkaterStickPose(s);
                 });
                 if (saluteTimer >= 2.6) {
@@ -10960,6 +10984,23 @@
             }
         }
 
+        // Copertura del portiere in farfalla, misurata sullo specchio della porta (3.7 x 1.35 m = 5.0 m²)
+        // con il portiere al centro: gambali |dx| <= 1.6 m fino a 0.62 m d'altezza (1.98 m²), busto
+        // |dx| <= 0.8 m fino a 1.27 m (altri 1.04 m²), guanto e bloccatore |dx| <= 1.4 m fino a 1.02 m
+        // (altri 0.48 m²): 3.5 m², cioè il 70% della porta. Il disco deve attraversare il piano del
+        // portiere andando verso la porta (anche fra un fotogramma e l'altro, per i tiri forti).
+        function goalieButterflyCovers(g, dt) {
+            const gz = g.mesh.position.z;
+            const goalZ = g.team === 'home' ? goalOffsetZ : -goalOffsetZ;
+            const toward = Math.sign(goalZ - gz) || 1;
+            if (puckPhysics.velocity.z * toward <= 0.5) return false;
+            const z1 = puck.position.z, z0 = z1 - puckPhysics.velocity.z * (dt || 0);
+            const crossing = Math.abs(z1 - gz) < 0.45 || (z0 - gz) * (z1 - gz) <= 0;
+            if (!crossing) return false;
+            const dx = Math.abs(puck.position.x - g.mesh.position.x), y = puck.position.y;
+            return (dx <= 1.6 && y <= 0.62) || (dx <= 0.8 && y <= 1.27) || (dx <= 1.4 && y <= 1.02);
+        }
+
         function updateSkaters(dt) {
             if (autoSwitchCooldown > 0) autoSwitchCooldown = Math.max(0, autoSwitchCooldown - dt);
             if (gameState === 'playing') {
@@ -11197,6 +11238,18 @@
                     const distFromGoal = Math.abs(puck.position.z - homeGoalZ);
                     const challengeDepth = distFromGoal < 14 ? Math.max(0.42, 0.88 - distFromGoal * 0.032) : 0.42;
                     let targetZ = homeGoalZ + outDir * challengeDepth;
+
+                    // azione ravvicinata (avversario col disco o disco in arrivo vicino alla porta): farfalla.
+                    // Si scende in fretta e ci si rialza più piano.
+                    const oppCarrier = currentPuckCarrier && currentPuckCarrier !== s && currentPuckCarrier.team !== s.team && carrierHoldTimer > 0;
+                    const incoming = s.team === 'home' ? puckPhysics.velocity.z > 2.5 : puckPhysics.velocity.z < -2.5;
+                    const closeAction = gameState === 'playing' && currentPuckCarrier !== s
+                        && outDir * (puck.position.z - homeGoalZ) > -0.2 && distFromGoal < 6.5 && Math.abs(puck.position.x) < 4.2
+                        && (oppCarrier || incoming);
+                    const bfTarget = closeAction ? 1 : 0;
+                    s.butterfly = s.butterfly || 0;
+                    s.butterfly += (bfTarget - s.butterfly) * Math.min(1, dt * (bfTarget > s.butterfly ? 12 : 4));
+                    if (s.butterfly > 0.5) targetZ = homeGoalZ + outDir * Math.min(challengeDepth, 0.5);   // resta sulla linea
                     // disco libero e lento davanti alla porta, nessun avversario vicino: il portiere esce a coprirlo
                     if (gameState === 'playing' && puckPhysics.velocity.length() < 4 && puck.position.y < 0.4 &&
                         distFromGoal < 3.4 && Math.abs(puck.position.x) < 2.8 && outDir * (puck.position.z - homeGoalZ) > 0 &&
@@ -11208,7 +11261,7 @@
                     const dx = s.goalieTargetX - s.mesh.position.x;
                     const dz = targetZ - s.mesh.position.z;
                     const lateralGain = isOpponent ? 4.4 : 5.6;
-                    const maxGoalieSpd = isOpponent ? 5.1 : 6.4;
+                    const maxGoalieSpd = (isOpponent ? 5.1 : 6.4) * (1 - 0.5 * (s.butterfly || 0));   // in ginocchio scivola più piano
                     s.velocity.set(dx * lateralGain, 0, dz * 5.0);
                     if (s.velocity.length() > maxGoalieSpd) s.velocity.setLength(maxGoalieSpd);
 
@@ -11407,7 +11460,9 @@
                 if (s.isGoalie) {
                     const puckSpeed = puckPhysics.velocity.length();
                     const maxSaveHeight = puckSpeed > 22 ? 0.76 : 0.94;
-                    if (s.saveCooldown <= 0 && (distBody < 0.62 || distPuck < 0.52) && puck.position.y < maxSaveHeight && puckReleaseCooldown <= 0) {
+                    const bodyHit = (distBody < 0.62 || distPuck < 0.52) && puck.position.y < maxSaveHeight;
+                    const butterflyHit = (s.butterfly || 0) > 0.6 && goalieButterflyCovers(s, dt);
+                    if (s.saveCooldown <= 0 && (bodyHit || butterflyHit) && puckReleaseCooldown <= 0) {
                         if (s.team === 'home') matchStats.homeSaves++;
                         else matchStats.guestSaves++;
                         if (window.gameAudio) window.gameAudio.playSave();
@@ -13241,6 +13296,7 @@
             if (window.gameAudio) window.gameAudio.setCrowdIntensity(0.42, 1.0);
         }
         function quitToMainMenu() {
+            if (window.HIL_WARMUP) window.HIL_WARMUP.stop();
             keyRebindAction = null;
             gamePaused = false;
             pauseCine = null;

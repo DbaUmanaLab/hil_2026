@@ -790,7 +790,8 @@
     // Chiamata per ogni tifoso subito dopo maybeMakeCrowdChild(): headGroup è figlio di bodyPivot,
     // la testa è il primo figlio di headGroup e la calotta dei capelli il secondo; il busto è il primo
     // mesh di bodyPivot e le braccia sono i gruppi di bodyPivot (quello con z > 0 è il destro).
-    // opts (facoltativo): { female: true/false (forza il sesso), gear: false (niente maglia/felpa/bandierina) }
+    // opts (facoltativo): { female: true/false (forza il sesso), gear: false (niente maglia/felpa/bandierina),
+    //                      shoes: false (niente scarpe, per chi mette i pattini) }
     function decorateCrowdMember(root, headGroup, isChild, opts = {}) {
         const bodyPivot = headGroup && headGroup.parent;
         if (!bodyPivot || typeof matchConfig === 'undefined') return;
@@ -805,7 +806,7 @@
         arms.forEach(a => replaceSphereHand(a, a.position.z > 0 ? 1 : -1, 'relaxed', '+x'));
         // corpo modellato al posto dei cilindri (collo del colore delle mani)
         const handMesh = arms.length && arms[0].children.find(c => c.userData && c.userData.isHand);
-        upgradeBody(root, bodyPivot, arms, { female, front: '+x', skinMat: handMesh ? handMesh.material : null, random: r });
+        upgradeBody(root, bodyPivot, arms, { female, front: '+x', skinMat: handMesh ? handMesh.material : null, random: r, shoes: opts.shoes });
 
         // volto
         if (head && typeof getFaceMaterialFromFile === 'function') {
@@ -884,7 +885,10 @@
 
     // ---------- persona in piedi (bar, operatori, gente nei corridoi): stessa costruzione del pubblico
     // dei palazzetti, poi mani, volto, capelli e corpo modellati. Guarda verso +X locale.
-    // opts: { female, top: colore maglia, pants, apron: colore grembiule, cap: colore cappellino, skin }
+    // opts: { female, top: colore maglia, pants, apron: colore grembiule, cap: colore cappellino, skin,
+    //         shortSleeves, shorts: colore dei pantaloncini (gambe scoperte), socks: colore dei calzettoni,
+    //         skates (pattini in linea: chi li usa va alzato di SKATE_LIFT), stick (bastone tenuto davanti),
+    //         crestClub: stemma della squadra sul petto }
     function makePerson(opts = {}) {
         const root = new THREE.Group();
         const top = new THREE.MeshStandardMaterial({ color: opts.top != null ? opts.top : 0x334155, roughness: 0.7 });
@@ -922,7 +926,7 @@
             return ap;
         };
         const leftArmPivot = arm(-0.24), rightArmPivot = arm(0.24);
-        decorateCrowdMember(root, headGroup, false, { female: opts.female, gear: false });
+        decorateCrowdMember(root, headGroup, false, { female: opts.female, gear: false, shoes: opts.skates ? false : undefined });
         // grembiule: telo sul davanti di busto e cosce, con il laccio in vita
         if (opts.apron != null) {
             const ts = torso.userData.torsoShape;
@@ -950,8 +954,79 @@
             visor.rotation.z = -0.12;
             headGroup.add(crown, visor);
         }
-        return { mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: 0, phase: Math.random() * Math.PI * 2, standing: true };
+        const out = { mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: 0, phase: Math.random() * Math.PI * 2, standing: true };
+
+        // maniche corte: il braccio diventa pelle, la manica copre spalla e metà del braccio
+        if (opts.shortSleeves) {
+            [leftArmPivot, rightArmPivot].forEach(ap => {
+                const arm = ap.children.find(c => c.isMesh && !c.userData.isHand && c.material === top);
+                if (arm) arm.material = skinM;
+                const sleeve = new THREE.Mesh(geo('shortSleeve', () => new THREE.CylinderGeometry(0.079, 0.071, 0.22, 14, 1, true)), top);
+                sleeve.position.y = -0.075;
+                ap.add(sleeve);
+            });
+        }
+        // pantaloncini e calzettoni: le gambe diventano pelle, sopra i due tubi di stoffa
+        const legs = root.children.filter(c => c.isMesh && c.material === pantsM);
+        if (opts.shorts != null) {
+            const shortsM = colorMat(opts.shorts, 0.75, THREE.DoubleSide);
+            const socksM = colorMat(opts.socks != null ? opts.socks : opts.shorts, 0.8);
+            legs.forEach(leg => {
+                leg.material = skinM;
+                const sh = new THREE.Mesh(geo('shortsLeg', () => new THREE.CylinderGeometry(0.106, 0.112, 0.3, 14, 1, true)), shortsM);
+                sh.position.set(leg.position.x, 0.67, leg.position.z);
+                const so = new THREE.Mesh(geo('sockLeg', () => new THREE.CylinderGeometry(0.068, 0.05, 0.4, 12, 1, true)), socksM);
+                so.position.set(leg.position.x, 0.25, leg.position.z);
+                root.add(sh, so);
+            });
+            const seat = new THREE.Mesh(geo('shortsSeat', () => new THREE.CylinderGeometry(0.2, 0.205, 0.12, 16)), shortsM);
+            seat.position.y = 0.8;
+            root.add(seat);
+        }
+        // pattini in linea: scarpetta, telaio e quattro ruote sotto ogni gamba (le ruote toccano y = -SKATE_LIFT)
+        if (opts.skates) {
+            const spots = legs.map(l => [l.position.x, l.position.z]);
+            const key = 'skates_' + spots.map(p => p.map(mm).join(',')).join(';');
+            const bootG = geo(key + '_boot', () => mergeParts(spots.flatMap(([x, z]) => {
+                const boot = new THREE.BoxGeometry(0.27, 0.15, 0.11); boot.translate(x + 0.03, -SKATE_LIFT + 0.17, z);
+                const toe = new THREE.SphereGeometry(0.056, 10, 6); toe.scale(1.2, 0.75, 1); toe.translate(x + 0.15, -SKATE_LIFT + 0.13, z);
+                const frame = new THREE.BoxGeometry(0.3, 0.035, 0.03); frame.translate(x + 0.03, -SKATE_LIFT + 0.075, z);
+                return [boot, toe, frame];
+            })));
+            const wheelG = geo(key + '_wheels', () => mergeParts(spots.flatMap(([x, z]) => [-0.1, -0.033, 0.033, 0.1].map(dx => {
+                const w = new THREE.CylinderGeometry(0.036, 0.036, 0.022, 12); w.rotateX(Math.PI / 2); w.translate(x + 0.03 + dx, -SKATE_LIFT + 0.036, z);
+                return w;
+            }))));
+            root.add(new THREE.Mesh(bootG, colorMat(0x141416, 0.45)), new THREE.Mesh(wheelG, colorMat(0xf5c518, 0.35)));
+        }
+        // bastone: tenuto con le due mani davanti, lama a terra davanti e a destra; ruota sul suo perno
+        // (stickGroup.rotation.y = colpo laterale), stickBlade è il punto della lama dove sta il disco
+        if (opts.stick) {
+            leftArmPivot.rotation.z = 0.5; rightArmPivot.rotation.z = 0.62;
+            const stick = new THREE.Group();
+            stick.rotation.order = 'YXZ';
+            stick.position.set(0.32, 0.86, 0.1);
+            const tilt = new THREE.Group();
+            tilt.rotation.z = 0.68;                    // l'asta scende in avanti
+            stick.add(tilt);
+            const shaftLen = 1.18;
+            const shaft = new THREE.Mesh(geo('wuShaft', () => new THREE.BoxGeometry(0.03, shaftLen, 0.042)), colorMat(0x1f2937, 0.4));
+            shaft.position.y = -shaftLen / 2 + 0.12;
+            const blade = new THREE.Mesh(geo('wuBlade', () => new THREE.BoxGeometry(0.3, 0.075, 0.018)), colorMat(0x111111, 0.5));
+            blade.rotation.z = -0.68;                  // lama piatta sul pavimento
+            blade.position.set(0.1, -shaftLen + 0.12, 0);
+            const tip = new THREE.Object3D();
+            tip.position.set(0.14, -shaftLen + 0.09, 0.04);
+            tilt.add(shaft, blade, tip);
+            root.add(stick);
+            out.stickGroup = stick;
+            out.stickBlade = tip;
+        }
+        if (opts.crestClub) addChestCrest(bodyPivot, opts.crestClub, { t: 0.62, size: 0.1 });
+        out.lift = opts.skates ? SKATE_LIFT : 0;
+        return out;
     }
+    const SKATE_LIFT = 0.1;
 
     // Animazione della bandierina: il braccio la tiene alta e l'asta resta quasi verticale
     function updateCrowdFlag(fan, time, cheering) {
@@ -967,5 +1042,5 @@
         fp.userData.cloth.rotation.x = sway * 0.25;
     }
 
-    window.HIL_PEOPLE = { playerTraits, traitsOf, findPlayerInfo, applySkaterLook, decorateCrowdMember, updateCrowdFlag, makeHand, makeHeadGeometry, upgradeBody, addChestCrest, makePerson };
+    window.HIL_PEOPLE = { playerTraits, traitsOf, findPlayerInfo, applySkaterLook, decorateCrowdMember, updateCrowdFlag, makeHand, makeHeadGeometry, upgradeBody, addChestCrest, makePerson, SKATE_LIFT };
 })();
