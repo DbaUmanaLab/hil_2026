@@ -1007,70 +1007,20 @@
             #hud-toast { top: calc(env(safe-area-inset-top, 0px) + 64px); }
         }
 
-        /* --- STEP 3: SCELTA PALAZZETTO (elenco broadcast a sinistra, 3D a destra) --- */
+        /* --- STEP 3: SCELTA PALAZZETTO (stile della scelta squadre, anteprima 3D a tutto schermo) --- */
         .as-stage:not(.hidden) { display: flex; }
         .as-stage { position: relative; font-family: 'Oswald', 'Arial Narrow', Impact, sans-serif; color: #fff; }
-        .as-panel {
-            position: relative; flex: 0 0 clamp(330px, 36vw, 620px); min-width: 0; display: flex; flex-direction: column;
-            pointer-events: auto; overflow: hidden;
-            background:
-                radial-gradient(ellipse 90% 50% at 30% 20%, rgba(37,99,235,.30) 0%, transparent 70%),
-                linear-gradient(180deg, #0d2a6e 0%, #0c2461 45%, #061640 100%);
-            box-shadow: 12px 0 40px rgba(0,0,0,.45);
-        }
-        .as-panel::before {
-            content: ''; position: absolute; inset: 0; pointer-events: none; opacity: .07;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140' viewBox='0 0 140 140'%3E%3Cg fill='none' stroke='white' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M30 14l4.7 9.5 10.5 1.5-7.6 7.4 1.8 10.4L30 37.9l-9.4 4.9 1.8-10.4-7.6-7.4 10.5-1.5z'/%3E%3Cpath d='M86 78l20 34h10M118 78l-20 34H88'/%3E%3Ccircle cx='108' cy='30' r='5'/%3E%3C/g%3E%3C/svg%3E");
-            background-size: 140px 140px;
-        }
-        .as-head { position: relative; padding: clamp(10px, 2.4vh, 28px) clamp(16px, 2vw, 30px) clamp(6px, 1.2vh, 14px); }
-        .as-title { font-family: 'Montserrat', 'Arial Black', sans-serif; font-weight: 900; color: #f6b511; font-size: clamp(26px, min(3.6vw, 6.4vh), 62px); line-height: .92; letter-spacing: .01em; text-shadow: 0 3px 0 rgba(0,0,0,.25); }
-        .as-sub { margin-top: .45em; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; font-size: clamp(10px, 1.6vh, 14px); color: #bfdbfe; }
-        .as-list { position: relative; display: flex; flex-direction: column; gap: clamp(5px, 1vh, 10px); padding: 0 clamp(12px, 1.6vw, 26px); overflow-y: auto; min-height: 0; flex: 0 1 auto; scrollbar-width: thin; }
-        .as-card {
-            position: relative; display: grid; grid-template-columns: clamp(84px, 7.6vw, 128px) minmax(0, 1fr); gap: clamp(10px, 1vw, 16px); align-items: center;
-            text-align: left; padding: clamp(5px, .8vh, 8px); border-radius: 12px; border: 2px solid rgba(255,255,255,.08);
-            background: rgba(2,8,28,.35); transition: background .25s, border-color .25s, transform .25s; cursor: pointer;
-        }
-        .as-card:hover { background: rgba(255,255,255,.07); transform: translateX(3px); }
-        .as-card.is-disabled { opacity: .45; filter: grayscale(.85); cursor: not-allowed; }
-        .as-card.is-disabled:hover { background: rgba(2,8,28,.35); transform: none; }
-        .as-off-chip { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: #e2e8f0; background: rgba(255,255,255,.14); border: 1px solid rgba(255,255,255,.3); padding: 3px 7px; border-radius: 999px; white-space: nowrap; }
-        .as-card.is-selected { border-color: #f6b511; background: linear-gradient(90deg, rgba(246,181,17,.22), rgba(246,181,17,.05)); box-shadow: 0 0 24px rgba(246,181,17,.22); }
-        .as-card.is-selected::after { content: ''; position: absolute; right: -2px; top: 50%; width: 0; height: 0; transform: translate(100%, -50%); border: 10px solid transparent; border-left-color: #f6b511; }
-        .as-thumb { position: relative; aspect-ratio: 16 / 10; border-radius: 8px; overflow: hidden; background: #0b1736; }
-        .as-thumb img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .5s; }
-        .as-card.is-selected .as-thumb img { transform: scale(1.08); }
-        .as-num { position: absolute; left: 5px; top: 5px; font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 11px; color: #111827; background: #f6b511; border-radius: 6px; padding: 1px 6px; }
-        .as-card-name { font-weight: 600; text-transform: uppercase; font-size: clamp(14px, min(1.35vw, 2.5vh), 23px); line-height: 1.08; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .as-card.is-selected .as-card-name { color: #f6b511; }
-        .as-card-loc { font-weight: 500; font-size: clamp(10px, min(.95vw, 1.75vh), 15px); color: rgba(255,255,255,.72); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
-        .as-card-meta { display: flex; align-items: center; gap: 6px; margin-top: 5px; min-height: 22px; }
-        .as-mini-logo { width: clamp(18px, 2.4vh, 24px); height: clamp(18px, 2.4vh, 24px); border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.4); flex: 0 0 auto; }
-        .as-mini-logo img { width: 80%; height: 80%; object-fit: contain; }
-        .as-home-chip { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: #111827; background: #f6b511; padding: 3px 7px; border-radius: 999px; white-space: nowrap; }
-        .as-details { position: relative; margin: clamp(8px, 1.6vh, 16px) clamp(12px, 1.6vw, 26px) 0; padding-top: clamp(8px, 1.4vh, 14px); border-top: 1px solid rgba(255,255,255,.12); }
-        .as-stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-        .as-stat { background: rgba(2,8,28,.45); border: 1px solid rgba(255,255,255,.08); border-radius: 10px; padding: 7px 9px; min-width: 0; }
-        .as-stat-label { font-size: clamp(9px, 1.3vh, 11px); letter-spacing: .16em; text-transform: uppercase; color: rgba(255,255,255,.55); }
-        .as-stat-val { font-weight: 600; font-size: clamp(11px, min(1vw, 1.9vh), 16px); line-height: 1.15; margin-top: 2px; }
-        .as-desc { margin-top: clamp(6px, 1.2vh, 12px); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: clamp(11px, 1.55vh, 13.5px); line-height: 1.5; color: rgba(226,232,240,.82); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .as-foot { position: relative; margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: clamp(8px, 1.6vh, 16px) clamp(12px, 1.6vw, 26px) calc(clamp(8px, 1.6vh, 16px) + env(safe-area-inset-bottom, 0px)); background: rgba(2,8,28,.55); border-top: 1px solid rgba(255,255,255,.08); }
-        .as-btn { display: inline-flex; align-items: center; gap: .5em; font-family: 'Oswald', 'Arial Narrow', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: clamp(12px, 1.8vh, 15px); color: #e2e8f0; padding: .5em 1em; border-radius: 999px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); transition: background .2s, transform .2s; white-space: nowrap; }
-        .as-btn:hover { background: rgba(255,255,255,.14); }
-        .as-btn.is-go { color: #fff; font-size: clamp(14px, 2.2vh, 19px); letter-spacing: .1em; padding: .55em 1.3em; border: 2px solid #fca5a5; background: linear-gradient(180deg, #ef4444, #b91c1c); box-shadow: 0 0 26px rgba(220,38,38,.55); }
-        .as-btn.is-go:hover { transform: scale(1.04); background: linear-gradient(180deg, #f87171, #dc2626); }
-        .as-goldbar { flex: 0 0 clamp(5px, .5vw, 9px); background: linear-gradient(180deg, #ffd34d, #f6b511 40%, #c98a00); box-shadow: 0 0 18px rgba(246,181,17,.45); z-index: 2; }
-        .as-view { position: relative; flex: 1 1 auto; min-width: 0; pointer-events: none; }
-        .as-view-frame { position: absolute; inset: clamp(8px, 1.4vw, 18px); border: 1px solid rgba(255,255,255,.18); border-radius: 14px; pointer-events: none; }
-        .as-view-frame::before, .as-view-frame::after { content: ''; position: absolute; width: 34px; height: 34px; border: 3px solid #f6b511; }
-        .as-view-frame::before { left: -2px; top: -2px; border-right: 0; border-bottom: 0; border-top-left-radius: 14px; }
-        .as-view-frame::after { right: -2px; bottom: -2px; border-left: 0; border-top: 0; border-bottom-right-radius: 14px; }
-        .as-view-vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 75% 70% at 50% 45%, transparent 55%, rgba(2,6,23,.55) 100%), linear-gradient(0deg, rgba(2,6,23,.75) 0%, transparent 34%); }
-        .as-view-fade { position: absolute; inset: 0; pointer-events: none; background: #040b1f; opacity: 0; transition: opacity .35s ease; display: grid; place-items: center; }
+        /* la proiezione 3D è centrata nella parte alta, sopra il riquadro col nome */
+        .as-view { position: absolute; left: 0; right: 0; top: 0; bottom: 38%; pointer-events: none; }
+        .as-view-vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 80% 70% at 50% 40%, transparent 50%, rgba(2,6,23,.55) 100%), linear-gradient(0deg, rgba(8,16,36,.86) 0%, rgba(8,16,36,.55) 30%, transparent 58%); }
+        .as-view-fade { position: absolute; inset: 0; pointer-events: none; background: #040b1f; opacity: 0; transition: opacity .35s ease; display: grid; place-items: center; z-index: 1; }
         .as-view-fade.is-on { opacity: 1; transition-duration: .18s; }
         .as-view-fade span { font-weight: 600; letter-spacing: .3em; text-transform: uppercase; font-size: 13px; color: #93c5fd; }
-        .as-topbar { position: absolute; top: clamp(16px, 2.6vw, 30px); right: clamp(16px, 2.6vw, 30px); display: flex; gap: 8px; align-items: center; pointer-events: auto; }
+        .as-ui { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; pointer-events: none; }
+        .as-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: clamp(10px, 2vh, 18px) clamp(14px, 2vw, 24px); }
+        .as-top .nhl-pick-label { font-size: clamp(10px, 1.1vw, 14px); color: rgba(255,255,255,.75); text-shadow: 0 1px 4px rgba(0,0,0,.8); }
+        .as-top-h { font-family: 'Arial Black', Impact, system-ui, sans-serif; font-weight: 900; font-size: clamp(16px, 2.6vw, 30px); color: #f1f5f9; letter-spacing: .03em; text-shadow: 0 1px 6px rgba(0,0,0,.8); }
+        .as-topbar { display: flex; gap: 8px; align-items: center; pointer-events: auto; }
         .as-live { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; font-size: 11px; padding: 5px 10px; border-radius: 999px; background: rgba(2,8,28,.75); border: 1px solid rgba(255,255,255,.15); }
         .as-live i { width: 8px; height: 8px; border-radius: 50%; background: #ef4444; box-shadow: 0 0 8px #ef4444; animation: asPulse 1.4s ease-in-out infinite; }
         @keyframes asPulse { 50% { opacity: .35; } }
@@ -1078,54 +1028,59 @@
         .as-views .arena-view-btn { font-family: 'Oswald', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: 12px; padding: 5px 12px; border-radius: 999px; color: #cbd5e1; transition: background .2s, color .2s; }
         .as-views .arena-view-btn:hover { color: #fff; }
         .as-views .arena-view-btn.is-active { background: #f6b511; color: #111827; }
-        .as-arrow { position: absolute; top: 46%; transform: translateY(-50%); pointer-events: auto; width: clamp(38px, 3.4vw, 54px); height: clamp(54px, 7vh, 78px); border-radius: 14px; display: grid; place-items: center; font-size: clamp(18px, 2vw, 26px); color: #f6b511; background: rgba(2,8,28,.7); border: 2px solid rgba(246,181,17,.55); backdrop-filter: blur(4px); transition: transform .2s, background .2s; }
-        .as-arrow:hover { background: rgba(2,8,28,.9); transform: translateY(-50%) scale(1.06); }
-        .as-arrow.is-prev { left: clamp(18px, 2.2vw, 32px); }
-        .as-arrow.is-next { right: clamp(18px, 2.2vw, 32px); }
-        .as-lower { position: absolute; left: clamp(22px, 3vw, 44px); right: clamp(22px, 3vw, 44px); bottom: clamp(20px, 3.4vh, 40px); display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; pointer-events: none; }
-        .as-lower-main { display: flex; align-items: center; gap: clamp(10px, 1.2vw, 18px); min-width: 0; flex: 1 1 auto; }
-        .as-hint { flex: 0 0 auto; }
-        .as-lower-logos { display: flex; }
-        .as-lower-logos .as-mini-logo { width: clamp(40px, 3.8vw, 60px); height: clamp(40px, 3.8vw, 60px); border: 3px solid #f6b511; box-shadow: 0 6px 18px rgba(0,0,0,.5); }
-        .as-lower-logos .as-mini-logo + .as-mini-logo { margin-left: -22px; }
-        .as-lower-kicker { font-weight: 600; letter-spacing: .24em; text-transform: uppercase; font-size: clamp(10px, 1.5vh, 13px); color: #f6b511; }
-        .as-lower-name { font-family: 'Montserrat', 'Arial Black', sans-serif; font-weight: 900; text-transform: uppercase; font-size: clamp(20px, min(2.4vw, 5vh), 42px); line-height: .95; text-shadow: 0 3px 0 rgba(0,0,0,.35), 0 8px 26px rgba(0,0,0,.6); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-        .as-lower-loc { margin-top: .3em; font-weight: 500; letter-spacing: .12em; text-transform: uppercase; font-size: clamp(11px, 1.8vh, 16px); color: #bfdbfe; }
-        .as-hint { font-family: system-ui, sans-serif; font-size: 12px; color: rgba(226,232,240,.75); background: rgba(2,8,28,.6); padding: 5px 10px; border-radius: 999px; white-space: nowrap; }
-        .as-anim .as-lower-main { animation: asLowerIn .6s cubic-bezier(.2,.8,.2,1) both; }
-        .as-anim .as-details { animation: asDetailsIn .45s cubic-bezier(.2,.8,.2,1) both; }
-        @keyframes asLowerIn { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: none; } }
-        @keyframes asDetailsIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-        @media (max-height: 760px) and (orientation: landscape) { .as-desc { display: none; } }
-        @media (max-height: 560px) and (orientation: landscape) {
-            .as-sub, .as-details, .as-hint { display: none; }
-            .as-card { grid-template-columns: 84px minmax(0, 1fr); }
-            .as-card-meta { display: none; }
-        }
-        /* Telefono in verticale: 3D sopra, elenco sotto con schede scorrevoli */
-        @media (orientation: portrait) and (max-width: 820px) {
-            .as-stage:not(.hidden) { flex-direction: column-reverse; }
-            .as-panel { flex: 0 0 auto; max-height: 56vh; box-shadow: 0 -10px 30px rgba(0,0,0,.45); }
-            .as-goldbar { flex: 0 0 5px; }
-            .as-view { flex: 1 1 auto; min-height: 30vh; }
-            .as-head { padding-top: 12px; }
-            .as-title { font-size: 28px; }
-            .as-list { flex-direction: row; overflow-x: auto; overflow-y: hidden; padding-bottom: 4px; }
-            .as-card { flex: 0 0 46vw; grid-template-columns: 1fr; gap: 6px; }
-            .as-card.is-selected::after { display: none; }
-            .as-card-name { font-size: 15px; }
-            .as-desc, .as-hint, .as-arrow { display: none; }
-            .as-stat-val { font-size: 12px; }
-            .as-lower-name { font-size: 18px; }
-            .as-lower-kicker, .as-sub { display: none; }
-            .as-lower-loc { font-size: 11px; }
-            .as-lower { bottom: 14px; left: 16px; right: 16px; }
-            .as-panel { max-height: 52vh; }
-            .as-topbar .as-live { display: none; }
-            .as-lower-logos .as-mini-logo { width: 40px; height: 40px; }
+        .as-center { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 1.6vh, 14px); padding: 0 clamp(10px, 2vw, 24px) clamp(10px, 2vh, 18px); }
+        .as-count { font-size: clamp(11px, 1.1vw, 15px) !important; color: rgba(255,255,255,.65) !important; }
+        .as-count b { color: #f6b511; }
+        .as-pick-row { display: flex; align-items: center; justify-content: center; gap: clamp(10px, 1.6vw, 22px); width: 100%; max-width: 980px; }
+        #prematch-step-3 .nhl-arrow-btn { pointer-events: auto; width: clamp(44px, 4.4vw, 60px); height: clamp(44px, 4.4vw, 60px); font-size: clamp(20px, 2vw, 28px); backdrop-filter: blur(4px); background: rgba(0,0,0,.4); }
+        #prematch-step-3 .nhl-arrow-btn:hover { background: rgba(0,0,0,.62); }
+        .as-namebox { flex: 1 1 auto; min-width: 0; max-width: 760px; display: flex; align-items: center; gap: clamp(10px, 1.4vw, 18px); padding: clamp(8px, 1.2vh, 12px) clamp(10px, 1.4vw, 18px); border-radius: 12px; background: rgba(10,18,40,.5) !important; }
+        .as-photo { flex: 0 0 auto; width: clamp(92px, 11vw, 168px); aspect-ratio: 16 / 10; object-fit: cover; border-radius: 8px; border: 2px solid rgba(255,255,255,.55); box-shadow: 0 6px 18px rgba(0,0,0,.45); background: #0b1736; }
+        .as-namebox-txt { min-width: 0; flex: 1 1 auto; text-align: left; }
+        .as-kicker { font-weight: 600; letter-spacing: .22em; text-transform: uppercase; font-size: clamp(10px, 1vw, 13px); color: #f6b511; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        #prematch-step-3 .as-name { text-align: left; color: #f1f5f9; font-size: clamp(18px, min(2.6vw, 4.4vh), 34px); line-height: 1.05; text-transform: uppercase; text-shadow: 0 2px 10px rgba(0,0,0,.5); overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .as-loc-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; min-width: 0; }
+        .as-loc { font-weight: 500; letter-spacing: .1em; text-transform: uppercase; font-size: clamp(10px, 1vw, 14px); color: #bfdbfe; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .as-mini-logo { width: clamp(18px, 2.4vh, 24px); height: clamp(18px, 2.4vh, 24px); border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: 0 1px 3px rgba(0,0,0,.4); flex: 0 0 auto; }
+        .as-mini-logo img { width: 80%; height: 80%; object-fit: contain; }
+        .as-lower-logos { display: flex; flex: 0 0 auto; }
+        .as-lower-logos:empty { display: none; }
+        .as-lower-logos .as-mini-logo { width: clamp(26px, 2.4vw, 34px); height: clamp(26px, 2.4vw, 34px); border: 2px solid #f6b511; }
+        .as-lower-logos .as-mini-logo + .as-mini-logo { margin-left: -10px; }
+        .as-pills { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(8px, 1vw, 14px); }
+        .as-pill { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: clamp(120px, 13vw, 190px); max-width: 240px; padding: 6px 14px; border-radius: 999px; border: 3px solid #4ade80; background: rgba(0,0,0,.45); text-align: center; }
+        .as-pill-val { font-family: 'Arial Black', Impact, system-ui, sans-serif; font-weight: 900; font-size: clamp(11px, 1.1vw, 15px); line-height: 1.1; color: #86efac; }
+        .as-pill-label { font-family: 'Arial Black', Impact, system-ui, sans-serif; font-weight: 900; font-size: 9px; letter-spacing: .1em; text-transform: uppercase; color: rgba(255,255,255,.6); margin-top: 2px; }
+        .as-desc { max-width: 820px; text-align: center; font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; font-size: clamp(11px, 1.55vh, 13.5px); line-height: 1.45; color: rgba(226,232,240,.85); text-shadow: 0 1px 4px rgba(0,0,0,.8); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .as-bar { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px clamp(12px, 1.6vw, 16px) calc(8px + env(safe-area-inset-bottom, 0px)); background: rgba(0,0,0,.3); backdrop-filter: blur(4px); border-top: 1px solid rgba(255,255,255,.2); pointer-events: auto; }
+        .as-bar-left { display: flex; align-items: center; gap: 12px; min-width: 0; }
+        .as-bar-btn { font-family: 'Arial Black', Impact, system-ui, sans-serif; font-weight: 900; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: #fff; background: rgba(255,255,255,.15); border: 1px solid rgba(255,255,255,.3); padding: 7px 12px; border-radius: 8px; transition: background .2s; white-space: nowrap; }
+        .as-bar-btn:hover { background: rgba(255,255,255,.3); }
+        .as-bar-hint { font-family: 'Arial Black', Impact, system-ui, sans-serif; font-weight: 900; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: rgba(255,255,255,.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .as-go { font-family: 'Arial Black', Impact, system-ui, sans-serif; font-weight: 900; font-size: clamp(12px, 1.1vw, 14px); letter-spacing: .08em; text-transform: uppercase; color: #0f172a; background: #fbbf24; border: 2px solid #fde68a; padding: 8px 20px; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,.4); transition: background .2s, transform .2s; white-space: nowrap; }
+        .as-go:hover { background: #fcd34d; transform: scale(1.03); }
+        .as-anim .as-namebox, .as-anim .as-pills { animation: asPickIn .35s cubic-bezier(.2,.8,.2,1) both; }
+        .as-anim.is-back .as-namebox, .as-anim.is-back .as-pills { animation-name: asPickInBack; }
+        .as-anim .as-pills { animation-delay: .06s; }
+        @keyframes asPickIn { from { opacity: 0; transform: translateX(26px); } to { opacity: 1; transform: none; } }
+        @keyframes asPickInBack { from { opacity: 0; transform: translateX(-26px); } to { opacity: 1; transform: none; } }
+        @media (max-height: 700px) and (orientation: landscape) { .as-desc { display: none; } }
+        @media (max-height: 520px) and (orientation: landscape) { .as-pills, .as-live { display: none; } .as-photo { width: 84px; } }
+        @media (max-width: 760px) {
+            .as-bar-hint, .as-live { display: none; }
+            .as-photo { display: none; }
+            .as-namebox-txt { text-align: center; }
+            #prematch-step-3 .as-name { text-align: center; font-size: 18px; }
+            .as-loc-row { justify-content: center; }
+            .as-pill { min-width: 0; flex: 1 1 0; padding: 5px 8px; }
+            .as-pills { flex-wrap: nowrap; width: 100%; }
+            .as-pill-val { font-size: 11px; }
+            .as-desc { display: none; }
             .as-views .arena-view-btn { padding: 4px 9px; font-size: 11px; }
+            .as-top-title { display: none; }
+            .as-top { justify-content: flex-end; }
         }
-        @media (prefers-reduced-motion: reduce) { .as-live i { animation: none; } .as-anim .as-lower-main, .as-anim .as-details { animation-duration: .01ms; } }
+        @media (prefers-reduced-motion: reduce) { .as-live i { animation: none; } .as-anim .as-namebox, .as-anim .as-pills { animation-duration: .01ms; } }
 
         /* --- SCHERMATA ROSTER (stile broadcast: fascia squadra + elenco) --- */
         #prematch-lineup-screen {
@@ -1822,226 +1777,65 @@
                 </div>
             </div>
 
-            <!-- STEP 3: SCELTA PALAZZETTO CON ANTEPRIMA 3D DA CENTRO PISTA -->
+            <!-- STEP 3: SCELTA PALAZZETTO — stile della scelta squadre, con l'anteprima 3D a tutto schermo dietro -->
             <div id="prematch-step-3" class="hidden as-stage flex-1 min-h-0 pointer-events-none">
-                <!-- Pannello elenco palazzetti (stile broadcast) -->
-                <section class="as-panel">
-                    <div class="as-head">
-                        <div class="as-title">PALAZZETTO</div>
-                        <div class="as-sub">Scegli dove si gioca la partita</div>
+                <!-- area della proiezione 3D (la parte alta, sopra il riquadro col nome): la usa syncArenaViewOffset -->
+                <section id="arena-3d-view" class="as-view" aria-hidden="true"></section>
+                <div class="as-view-vignette"></div>
+                <div id="arena-view-fade" class="as-view-fade"><span>Caricamento palazzetto…</span></div>
+
+                <div class="as-ui">
+                    <!-- Titolo in alto a sinistra (come SELECT TEAM) e vista 3D in alto a destra -->
+                    <div class="as-top">
+                        <div class="as-top-title">
+                            <div class="nhl-pick-label">PLAY NOW</div>
+                            <div class="as-top-h">SELECT ARENA</div>
+                        </div>
+                        <div class="as-topbar">
+                            <span class="as-live"><i></i>Anteprima 3D</span>
+                            <div class="as-views">
+                                <button type="button" data-arena-view="overview" class="arena-view-btn">Panoramica</button>
+                                <button type="button" data-arena-view="interior" class="arena-view-btn">Centro pista</button>
+                                <button type="button" data-arena-view="roof" class="arena-view-btn">Tetto</button>
+                            </div>
+                        </div>
                     </div>
-                    <div class="as-list" role="listbox" aria-label="Palazzetti" data-pager="auto">
-                        <button type="button" data-arena="cittadella" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/cittadella.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">1</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">PalaHockey Cittadella</span>
-                                <span class="as-card-loc block">Cittadella (PD) • Veneto</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="cittadella"></span><span class="as-home-chip hidden" data-home-chip="cittadella">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="vicenza" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/vicenza.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">2</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">PalaFerrarin</span>
-                                <span class="as-card-loc block">Vicenza (VI) • Veneto</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="vicenza"></span><span class="as-home-chip hidden" data-home-chip="vicenza">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="milano" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/milano.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">3</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Quanta Club Arena</span>
-                                <span class="as-card-loc block">Milano (MI) • Lombardia</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="milano"></span><span class="as-home-chip hidden" data-home-chip="milano">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="cus_verona" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/cus_verona.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">4</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">PalaHockey CUS Verona</span>
-                                <span class="as-card-loc block">Verona (VR) • Veneto</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="cus_verona"></span><span class="as-home-chip hidden" data-home-chip="cus_verona">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="forli" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/forli.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">5</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Pattinodromo Comunale</span>
-                                <span class="as-card-loc block">Forlì (FC) • Emilia-Romagna</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="forli"></span><span class="as-home-chip hidden" data-home-chip="forli">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="asiago" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/asiago.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">6</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Arena Via Cinque</span>
-                                <span class="as-card-loc block">Asiago (VI) • Veneto</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="asiago"></span><span class="as-home-chip hidden" data-home-chip="asiago">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="fox_legnaro" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/fox_legnaro.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">7</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Fox Arena</span>
-                                <span class="as-card-loc block">Legnaro (PD) • Veneto</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="fox_legnaro"></span><span class="as-home-chip hidden" data-home-chip="fox_legnaro">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="edera_trieste" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/edera_trieste.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">8</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Pattinodromo Edera</span>
-                                <span class="as-card-loc block">Trieste (TS) • Friuli-Venezia Giulia</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="edera_trieste"></span><span class="as-home-chip hidden" data-home-chip="edera_trieste">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="kraken_camaiore" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/kraken_camaiore.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">9</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Pardini Sporting Center</span>
-                                <span class="as-card-loc block">Camaiore (LU) • Toscana</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="kraken_camaiore"></span><span class="as-home-chip hidden" data-home-chip="kraken_camaiore">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="villeneuve" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/villeneuve.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">10</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Gymnase Fernand Schwartz</span>
-                                <span class="as-card-loc block">Villeneuve-la-Garenne • Francia</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="villeneuve"></span><span class="as-home-chip hidden" data-home-chip="villeneuve">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="roma" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/roma.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">11</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Palamunicipio Roma XI</span>
-                                <span class="as-card-loc block">Roma (RM) • Lazio</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="roma"></span><span class="as-home-chip hidden" data-home-chip="roma">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="treviso" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/treviso.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">12</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Pattinodromo delle Acquette</span>
-                                <span class="as-card-loc block">Treviso (TV) • Veneto</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="treviso"></span><span class="as-home-chip hidden" data-home-chip="treviso">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="novi" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/novi.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">13</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Pattinodromo G. Parodi</span>
-                                <span class="as-card-loc block">Novi Ligure (AL) • Piemonte</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="novi"></span><span class="as-home-chip hidden" data-home-chip="novi">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="empoli" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/empoli.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">14</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Palaramini</span>
-                                <span class="as-card-loc block">Empoli (FI) • Toscana</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="empoli"></span><span class="as-home-chip hidden" data-home-chip="empoli">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="time42" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/time42.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">15</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">2Skate Arena</span>
-                                <span class="as-card-loc block">Bergamo (BG) • Lombardia</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="time42"></span><span class="as-home-chip hidden" data-home-chip="time42">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="molina" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/molina.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">16</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Polideportivo Carlos García</span>
-                                <span class="as-card-loc block">Las Palmas de Gran Canaria • Spagna</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="molina"></span><span class="as-home-chip hidden" data-home-chip="molina">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="ferrara" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/ferrara.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">17</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Pattinodromo Giorgio Burani</span>
-                                <span class="as-card-loc block">Ferrara (FE) • Emilia-Romagna</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="ferrara"></span><span class="as-home-chip hidden" data-home-chip="ferrara">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="piacenza" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/piacenza.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">18</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Pattinodromo B. Metti</span>
-                                <span class="as-card-loc block">Piacenza (PC) • Emilia-Romagna</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="piacenza"></span><span class="as-home-chip hidden" data-home-chip="piacenza">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="kemarin" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/kemarin.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">19</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Pista di Campomarino</span>
-                                <span class="as-card-loc block">Campomarino (CB) • Molise</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="kemarin"></span><span class="as-home-chip hidden" data-home-chip="kemarin">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="torre_pellice" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/torre_pellice.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">20</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">Pista del Filatoio</span>
-                                <span class="as-card-loc block">Torre Pellice (TO) • Piemonte</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="torre_pellice"></span><span class="as-home-chip hidden" data-home-chip="torre_pellice">Casa</span></span>
-                            </span>
-                        </button>
-                        <button type="button" data-arena="parma" class="arena-pill-btn as-card" role="option">
-                            <span class="as-thumb"><img src="assets/arenas/thumbs/parma.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">21</span></span>
-                            <span class="min-w-0">
-                                <span class="as-card-name block">PalaGufi</span>
-                                <span class="as-card-loc block">Soragna (PR) • Emilia-Romagna</span>
-                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="parma"></span><span class="as-home-chip hidden" data-home-chip="parma">Casa</span></span>
-                            </span>
-                        </button>
-                    </div>
-                    <div class="as-details">
-                        <div class="as-stats">
-                            <div class="as-stat"><div class="as-stat-label">Capienza</div><div id="step3-arena-cap" class="as-stat-val">850 Spettatori</div></div>
-                            <div class="as-stat"><div class="as-stat-label">Superficie</div><div id="step3-arena-surf" class="as-stat-val text-sky-300">SportCourt</div></div>
-                            <div class="as-stat"><div class="as-stat-label">Copertura</div><div id="step3-arena-roof" class="as-stat-val text-amber-300">Legno lamellare</div></div>
+
+                    <!-- Scelta: frecce ai lati del riquadro col nome, come le squadre -->
+                    <div class="as-center">
+                        <div class="nhl-pick-label as-count">Palazzetto <b id="step3-arena-index">1</b> / <span id="step3-arena-total">1</span></div>
+                        <div class="as-pick-row">
+                            <button type="button" id="prev-arena-btn" class="nhl-arrow-btn" aria-label="Palazzetto precedente">&#9664;</button>
+                            <div class="nhl-team-label-box as-namebox">
+                                <img id="step3-arena-thumb" class="as-photo" src="" alt="" draggable="false">
+                                <div class="as-namebox-txt">
+                                    <div id="step3-arena-selected-pill" class="as-kicker">Impianto di casa</div>
+                                    <div id="step3-arena-name" class="nhl-team-name as-name">PalaHockey Cittadella</div>
+                                    <div class="as-loc-row">
+                                        <div id="step3-arena-logos" class="as-lower-logos"></div>
+                                        <span id="step3-arena-location" class="as-loc">Cittadella (PD) • Veneto, Italia</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" id="next-arena-btn" class="nhl-arrow-btn" aria-label="Palazzetto successivo">&#9654;</button>
+                        </div>
+                        <div class="as-pills">
+                            <div class="as-pill"><span class="as-pill-val" id="step3-arena-cap">—</span><span class="as-pill-label">Capienza</span></div>
+                            <div class="as-pill"><span class="as-pill-val" id="step3-arena-surf">—</span><span class="as-pill-label">Superficie</span></div>
+                            <div class="as-pill"><span class="as-pill-val" id="step3-arena-roof">—</span><span class="as-pill-label">Copertura</span></div>
                         </div>
                         <p id="step3-arena-desc" class="as-desc"></p>
                     </div>
-                    <div class="as-foot">
-                        <button type="button" id="back-to-step2-btn" data-keyback class="as-btn">◀ Divise</button>
-                        <button type="button" id="start-btn" class="as-btn is-go">Scendi in pista ▶</button>
-                    </div>
-                </section>
-                <div class="as-goldbar"></div>
 
-                <!-- Vista 3D del palazzetto selezionato (canvas principale visibile qui dietro) -->
-                <section id="arena-3d-view" class="as-view">
-                    <div class="as-view-vignette"></div>
-                    <div class="as-view-frame"></div>
-                    <div class="as-topbar">
-                        <span class="as-live"><i></i>Anteprima 3D</span>
-                        <div class="as-views">
-                            <button type="button" data-arena-view="overview" class="arena-view-btn">Panoramica</button>
-                            <button type="button" data-arena-view="interior" class="arena-view-btn">Centro pista</button>
-                            <button type="button" data-arena-view="roof" class="arena-view-btn">Tetto</button>
+                    <!-- Barra inferiore, come nello step 1 -->
+                    <div class="as-bar">
+                        <div class="as-bar-left">
+                            <button type="button" id="back-to-step2-btn" data-keyback class="as-bar-btn">◀ Maglie</button>
+                            <span class="as-bar-hint">◀ ▶ per cambiare palazzetto • trascina per ruotare la vista</span>
                         </div>
+                        <button type="button" id="start-btn" data-focus class="as-go">Scendi in pista ▶</button>
                     </div>
-                    <button type="button" id="prev-arena-btn" class="as-arrow is-prev" aria-label="Palazzetto precedente">◀</button>
-                    <button type="button" id="next-arena-btn" class="as-arrow is-next" aria-label="Palazzetto successivo">▶</button>
-                    <div class="as-lower">
-                        <div class="as-lower-main">
-                            <div id="step3-arena-logos" class="as-lower-logos"></div>
-                            <div class="min-w-0">
-                                <div id="step3-arena-selected-pill" class="as-lower-kicker">Impianto di casa</div>
-                                <div id="step3-arena-name" class="as-lower-name">PalaHockey di Cittadella</div>
-                                <div id="step3-arena-location" class="as-lower-loc">Cittadella (PD) • Veneto, Italia</div>
-                            </div>
-                        </div>
-                        <span class="as-hint">Trascina per ruotare la vista</span>
-                    </div>
-                    <div id="arena-view-fade" class="as-view-fade"><span>Caricamento palazzetto…</span></div>
-                </section>
+                </div>
             </div>
         </div>
     </div>
@@ -12045,27 +11839,11 @@
             return `<span class="as-mini-logo" title="${club ? club.name : ''}"><img src="${src}" alt="" draggable="false"></span>`;
         }
 
-        let step3LogosFilled = false;
-        function renderStep3Arena(animate = false) {
+        // dir: +1/-1 se si arriva dalle frecce (verso dell'animazione), 0 altrimenti
+        function renderStep3Arena(animate = false, dir = 1) {
             const info = ARENA_CATALOG[matchConfig.arena];
             const defaultHomeArena = HOME_CLUB_ARENAS[matchConfig.homeClub] || matchConfig.homeClub;
             const isHomeArena = matchConfig.arena === defaultHomeArena;
-
-            if (!step3LogosFilled) {
-                document.querySelectorAll('[data-arena-logos]').forEach(el => {
-                    el.innerHTML = DISABLED_ARENAS.has(el.dataset.arenaLogos)
-                        ? '<span class="as-off-chip">Non disponibile</span>'
-                        : getArenaHomeClubs(el.dataset.arenaLogos).map(arenaMiniLogoHTML).join('');
-                });
-                document.querySelectorAll('.arena-pill-btn').forEach(btn => {
-                    if (!DISABLED_ARENAS.has(btn.dataset.arena)) return;
-                    btn.disabled = true;
-                    btn.classList.add('is-disabled');
-                    btn.setAttribute('aria-disabled', 'true');
-                    btn.title = 'Palazzetto non disponibile';
-                });
-                step3LogosFilled = true;
-            }
 
             const homeClubs = getArenaHomeClubs(matchConfig.arena);
             document.getElementById('step3-arena-logos').innerHTML = homeClubs.map(arenaMiniLogoHTML).join('');
@@ -12078,25 +11856,23 @@
             document.getElementById('step3-arena-cap').textContent = info.capacity;
             document.getElementById('step3-arena-surf').textContent = info.surface;
             document.getElementById('step3-arena-roof').textContent = info.roof;
+            const thumb = document.getElementById('step3-arena-thumb');
+            const thumbSrc = 'assets/arenas/thumbs/' + matchConfig.arena + '.jpg';
+            if (thumb.getAttribute('src') !== thumbSrc) thumb.setAttribute('src', thumbSrc);
+            thumb.alt = info.shortTitle;
+            document.getElementById('step3-arena-index').textContent = SELECTABLE_ARENA_IDS.indexOf(matchConfig.arena) + 1;
+            document.getElementById('step3-arena-total').textContent = SELECTABLE_ARENA_IDS.length;
 
-            document.querySelectorAll('.arena-pill-btn').forEach(btn => {
-                const sel = btn.dataset.arena === matchConfig.arena;
-                btn.classList.toggle('is-selected', sel);
-                btn.setAttribute('aria-selected', sel ? 'true' : 'false');
-                if (sel && animate) btn.scrollIntoView({ block: 'nearest', inline: 'nearest', behavior: 'smooth' });
-            });
-            document.querySelectorAll('[data-home-chip]').forEach(chip => {
-                chip.classList.toggle('hidden', chip.dataset.homeChip !== defaultHomeArena);
-            });
             document.querySelectorAll('.arena-view-btn').forEach(btn => {
                 btn.classList.toggle('is-active', btn.dataset.arenaView === arenaPreviewState.view);
             });
 
             if (animate) {
                 const stage = document.getElementById('prematch-step-3');
-                stage.classList.remove('as-anim');
+                stage.classList.remove('as-anim', 'is-back');
                 void stage.offsetWidth;
                 stage.classList.add('as-anim');
+                if (dir < 0) stage.classList.add('is-back');
             }
         }
 
@@ -12148,10 +11924,11 @@
                 // Orbita ellittica DENTRO il palazzetto (sotto il tetto): larga lungo la pista,
                 // stretta sui lati per non entrare nelle tribune
                 const ov = arenaPreviewState.yaw;
-                const ovH = 6.5 + (Math.max(0.12, Math.min(1.1, arenaPreviewState.pitch)) - 0.12) * 6;
+                // (anteprima a tutto schermo: orbita un po' più larga e più alta, per vedere tutta la pista)
+                const ovH = 7.6 + (Math.max(0.12, Math.min(1.1, arenaPreviewState.pitch)) - 0.12) * 6;
                 const ovK = 1 - Math.pow(0.92, dt * 60);
-                camera.position.lerp(new THREE.Vector3(Math.sin(ov) * 13, ovH, Math.cos(ov) * 27), ovK);
-                camera.lookAt(0, 0.8, 0);
+                camera.position.lerp(new THREE.Vector3(Math.sin(ov) * 15.5, ovH, Math.cos(ov) * 30), ovK);
+                camera.lookAt(0, 2.0, 0);
                 return;
             } else if (arenaPreviewState.view === 'roof') {
                 dist = 24;
@@ -12170,11 +11947,11 @@
         // Cambio palazzetto con dissolvenza: la ricostruzione dell'arena avviene "al buio",
         // poi la camera rientra in volo verso la nuova inquadratura.
         let arenaSwitchTimer = null;
-        function selectArena(arenaId) {
+        function selectArena(arenaId, dir = 1) {
             if (!ARENA_CATALOG[arenaId] || DISABLED_ARENAS.has(arenaId) || matchConfig.arena === arenaId) return;
             matchConfig.arena = arenaId;
             preloadArenaModule(arenaId);
-            renderStep3Arena(true);
+            renderStep3Arena(true, dir);
             const fade = document.getElementById('arena-view-fade');
             const inStep3 = currentPreMatchStep === 3 && fade;
             if (inStep3) fade.classList.add('is-on');
@@ -13513,15 +13290,11 @@
             const nextArenaBtn = document.getElementById('next-arena-btn');
             if (prevArenaBtn) prevArenaBtn.addEventListener('click', () => {
                 const idx = (SELECTABLE_ARENA_IDS.indexOf(matchConfig.arena) - 1 + SELECTABLE_ARENA_IDS.length) % SELECTABLE_ARENA_IDS.length;
-                selectArena(SELECTABLE_ARENA_IDS[idx]);
+                selectArena(SELECTABLE_ARENA_IDS[idx], -1);
             });
             if (nextArenaBtn) nextArenaBtn.addEventListener('click', () => {
                 const idx = (SELECTABLE_ARENA_IDS.indexOf(matchConfig.arena) + 1) % SELECTABLE_ARENA_IDS.length;
-                selectArena(SELECTABLE_ARENA_IDS[idx]);
-            });
-
-            document.querySelectorAll('.arena-pill-btn').forEach(btn => {
-                btn.addEventListener('click', () => selectArena(btn.dataset.arena));
+                selectArena(SELECTABLE_ARENA_IDS[idx], 1);
             });
 
             document.querySelectorAll('.arena-view-btn').forEach(btn => {
