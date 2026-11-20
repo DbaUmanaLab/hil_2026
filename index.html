@@ -5269,7 +5269,7 @@
                     armPivot.rotation.z = 0.58;
                     const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.055, 0.42, 8), jacketMat);
                     sleeve.position.y = -0.21;
-                    const hand = new THREE.Mesh(new THREE.SphereGeometry(0.052, 8, 8), handMat);
+                    const hand = window.HIL_PEOPLE.makeHand(handMat, sideZ, 'typing', '+x');
                     hand.position.y = -0.44;
                     armPivot.add(sleeve, hand);
                     bodyPivot.add(armPivot);
@@ -7036,8 +7036,8 @@
 
                 let handAnchor;
                 if (isRef) {
-                    handAnchor = new THREE.Mesh(new THREE.SphereGeometry(0.048, 12, 10), skinMat);
-                    handAnchor.scale.set(0.9, 1.1, 0.8);
+                    handAnchor = window.HIL_PEOPLE.makeHand(skinMat, sideX, 'relaxed', '-z');
+                    handAnchor.scale.setScalar(0.92);
                     handAnchor.position.set(0, -0.28, -0.005);
                     elbowPivot.add(handAnchor);
                 } else {
@@ -7631,7 +7631,7 @@
                 armPivot.position.set(sideX, 0.56, 0);
                 const upper = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.062, 0.44, 10), jacketMat);
                 upper.position.y = -0.22;
-                const hand = new THREE.Mesh(new THREE.SphereGeometry(0.052, 8, 8), skinMat);
+                const hand = window.HIL_PEOPLE.makeHand(skinMat, sideX, 'relaxed', '-z');
                 hand.position.y = -0.45;
                 armPivot.add(upper, hand);
                 bodyPivot.add(armPivot);

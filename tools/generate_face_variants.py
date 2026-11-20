@@ -126,8 +126,8 @@ def female_variant(base, f):
     # 1. mascella più stretta: sotto la bocca le colonne si avvicinano al centro
     ys, xs = np.mgrid[0:H, 0:W].astype(np.float32)
     yn, xn = ys / H, xs / W
-    t = np.clip((yn - (f['eye'] + 0.08)) / (f['chin'] - f['eye']), 0, 1)
-    k = 1 + 0.16 * t ** 1.4                          # campiono più lontano dal centro = viso più stretto
+    t = np.clip((yn - (f['eye'] + 0.02)) / (f['chin'] - f['eye']), 0, 1)
+    k = 1 + 0.27 * t ** 1.25                         # campiono più lontano dal centro = viso più stretto
     near = np.exp(-((xn - 0.5) / (f['jaw'] * 1.6)) ** 4)   # solo sul viso, non sulle orecchie
     src_x = 0.5 + (xn - 0.5) * (1 + (k - 1) * near)
     sx = np.clip(src_x * W, 0, W - 1)
@@ -166,6 +166,36 @@ def female_variant(base, f):
         layer.putalpha(m)
         big.alpha_composite(layer)
 
+    # 2b. sopracciglia: quelle folte maschili spariscono sotto la pelle (presa poco più su, sulla fronte)
+    #     e al loro posto se ne disegnano di sottili e arcuate
+    ey = f['eye']
+    brow = Image.new('L', (WW, HH), 0)
+    bd = ImageDraw.Draw(brow)
+    for ex in f['eyes']:
+        bd.ellipse([*P(ex - 0.09, ey - 0.09), *P(ex + 0.09, ey - 0.02)], fill=255)
+    bd.ellipse([*P(0.43, ey - 0.1), *P(0.57, ey - 0.01)], fill=230)       # glabella: via le rughe della fronte aggrottata
+    brow = brow.filter(ImageFilter.GaussianBlur(5 * S))
+    forehead = big.crop((0, 0, WW, HH)).transform((WW, HH), Image.AFFINE, (1, 0, 0, 0, 1, -0.06 * HH))
+    forehead = forehead.filter(ImageFilter.GaussianBlur(6 * S))
+    big.paste(forehead, (0, 0), brow)
+    for i, ex in enumerate(f['eyes']):
+        out = 1 if i == 1 else -1                     # verso la tempia
+        pts = []
+        for j in range(13):
+            u = j / 12                                 # 0 = vicino al naso, 1 = verso la tempia
+            x = ex + out * (-0.05 + u * 0.115)
+            y = ey - 0.043 - 0.012 * math.sin(math.pi * min(1, u * 1.35)) + 0.006 * u
+            pts.append(P(x, y))
+        m = Image.new('L', (WW, HH), 0)
+        md = ImageDraw.Draw(m)
+        for j in range(len(pts) - 1):
+            w = int((4.2 - 2.6 * j / (len(pts) - 1)) * S)   # più spesso all'attacco, sottile in coda
+            md.line([pts[j], pts[j + 1]], fill=165, width=max(1, w))
+        m = m.filter(ImageFilter.GaussianBlur(1.3 * S))
+        layer = Image.new('RGBA', (WW, HH), (58, 40, 30, 0))
+        layer.putalpha(m)
+        big.alpha_composite(layer)
+
     my, mw = f['mouth'], f['mw']
     # 3. fard sugli zigomi
     paint((214, 96, 104), [('ellipse', (f['eyes'][0] - 0.09, f['eye'] + 0.07, f['eyes'][0] + 0.03, f['eye'] + 0.15)),
@@ -176,6 +206,19 @@ def female_variant(base, f):
         out = 1 if i == 1 else -1
         paint((20, 12, 12), [('ellipse', (ex - 0.045, f['eye'] - 0.016, ex + 0.045, f['eye'] - 0.004)),
                              ('ellipse', (min(ex, ex + out * 0.06), f['eye'] - 0.02, max(ex, ex + out * 0.06), f['eye'] - 0.01))], 1.2, 210)
+        # ciglia: piccoli tratti sopra la palpebra, più lunghi verso l'esterno
+        lash = Image.new('L', (WW, HH), 0)
+        ld = ImageDraw.Draw(lash)
+        for j in range(4):
+            u = 0.45 + j / 6                           # solo nella metà esterna dell'occhio
+            x = ex + out * (-0.035 + u * 0.075)
+            y = f['eye'] - 0.014 - 0.004 * math.sin(math.pi * u)
+            ln = 0.004 + 0.007 * u
+            ld.line([P(x, y), P(x + out * ln * 0.8, y - ln)], fill=170, width=max(1, int(0.8 * S)))
+        lash = lash.filter(ImageFilter.GaussianBlur(0.7 * S))
+        layer = Image.new('RGBA', (WW, HH), (16, 10, 10, 0))
+        layer.putalpha(lash)
+        big.alpha_composite(layer)
     # 5. rossetto: labbra un po' più piene
     paint((176, 34, 58), [('ellipse', (0.5 - mw * 0.95, my - 0.022, 0.5 + mw * 0.95, my + 0.006)),
                           ('ellipse', (0.5 - mw * 0.85, my - 0.004, 0.5 + mw * 0.85, my + 0.03))], 2.2, 175)

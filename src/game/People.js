@@ -113,7 +113,7 @@
     // PUBBLICO
     // =====================================================================
     const GUEST_FAN_RATIO = 0.1;
-    const FEMALE_RATIO = 0.42;
+    const FEMALE_RATIO = 0.5;
     const HAIR_COLORS = [
         [0x15100d, 20], [0x2a1d14, 30], [0x4a3020, 18], [0x7a5532, 10],
         [0xc9a464, 9], [0x8e3b1c, 5], [0x8d8d8d, 6], [0xd8d6d0, 2]
@@ -128,6 +128,124 @@
     }
     const geoCache = {};
     function geo(key, make) { return geoCache[key] || (geoCache[key] = make()); }
+
+    // =====================================================================
+    // MANI CON LE DITA (pubblico, cronometristi, staff in panchina, arbitri)
+    // Palmo, quattro dita in due falangi e pollice sono fusi in una sola geometria condivisa:
+    // una mano resta un solo mesh (stesse draw call della vecchia sfera). Con la grafica Bassa
+    // le dita sono di un pezzo e con meno poligoni.
+    // Sistema locale: dita verso -Y, pollice in avanti (+X), dorso verso l'esterno (+Z * side),
+    // l'origine è il centro della vecchia sfera (0.44 sotto la spalla).
+    // =====================================================================
+    function mergeParts(parts) {
+        let nv = 0, ni = 0;
+        parts.forEach(p => { nv += p.attributes.position.count; ni += p.index.count; });
+        const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), idx = new Uint16Array(ni);
+        let vo = 0, io = 0;
+        parts.forEach(p => {
+            pos.set(p.attributes.position.array, vo * 3);
+            nor.set(p.attributes.normal.array, vo * 3);
+            const src = p.index.array;
+            for (let i = 0; i < src.length; i++) idx[io + i] = src[i] + vo;
+            vo += p.attributes.position.count;
+            io += src.length;
+            p.dispose();
+        });
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        g.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
+        g.setIndex(new THREE.BufferAttribute(idx, 1));
+        g.computeBoundingSphere();
+        return g;
+    }
+
+    // pose: dita piegate (prima e seconda falange) e pollice
+    const HAND_POSES = {
+        relaxed: { c1: 0.22, c2: 0.38, thumbFwd: 0.55, thumbIn: 0.35 },
+        fist:    { c1: 1.35, c2: 1.55, thumbFwd: 1.05, thumbIn: 1.0 },    // impugna l'asta della bandierina
+        typing:  { c1: 0.45, c2: 0.55, thumbFwd: 0.7,  thumbIn: 0.5 }
+    };
+    // index, medio, anulare, mignolo: posizione lungo X, lunghezza, raggio
+    const FINGERS = [[0.027, 0.05, 0.0095], [0.009, 0.056, 0.0098], [-0.009, 0.052, 0.0094], [-0.026, 0.041, 0.0086]];
+
+    function handGeometry(side, pose, front, low) {
+        const key = ['hand', side, pose, front, low ? 'lo' : 'hi'].join('_');
+        return geo(key, () => {
+            const P = HAND_POSES[pose] || HAND_POSES.relaxed;
+            const parts = [];
+            const M = new THREE.Matrix4(), T = new THREE.Matrix4();
+            const capsule = (r, len) => low
+                ? new THREE.CapsuleGeometry(r, len, 1, 4)
+                : new THREE.CapsuleGeometry(r, len, 2, 6);
+            // segmento che parte da "base" e scende lungo -Y ruotato di rx (piega verso il palmo) e rz
+            const segment = (r, len, base, rx, rz) => {
+                const g = capsule(r, len);
+                g.translate(0, -len / 2, 0);
+                M.makeTranslation(base.x, base.y, base.z)
+                    .multiply(T.makeRotationZ(rz))
+                    .multiply(new THREE.Matrix4().makeRotationX(rx));
+                g.applyMatrix4(M);
+                parts.push(g);
+                // punta del segmento, per attaccarci il successivo
+                return new THREE.Vector3(0, -len, 0).applyMatrix4(M);
+            };
+            const curl = c => side * c;     // il palmo guarda verso il corpo (-Z * side)
+
+            // palmo: ellissoide schiacciato, appena più largo verso le nocche
+            const palm = low ? new THREE.SphereGeometry(1, 8, 6) : new THREE.SphereGeometry(1, 12, 9);
+            palm.scale(0.042, 0.047, 0.019);
+            palm.translate(0, -0.015, -side * 0.002);
+            parts.push(palm);
+
+            FINGERS.forEach(([fx, len, r]) => {
+                const base = new THREE.Vector3(fx, -0.052, -side * 0.002);
+                const spread = fx * 1.4;                 // le dita si aprono leggermente a ventaglio
+                if (low) {
+                    segment(r, len * 0.95, base, curl((P.c1 + P.c2) * 0.45), spread);
+                } else {
+                    const tip = segment(r, len * 0.55, base, curl(P.c1), spread);
+                    segment(r * 0.92, len * 0.45, tip, curl(P.c1 + P.c2), spread);
+                }
+            });
+
+            // pollice: parte dal lato anteriore del palmo, verso il basso-avanti e un po' verso il palmo
+            const tBase = new THREE.Vector3(0.033, -0.005, -side * 0.009);
+            if (low) {
+                segment(0.0108, 0.042, tBase, curl(P.thumbIn), P.thumbFwd);
+            } else {
+                const tTip = segment(0.0112, 0.024, tBase, curl(P.thumbIn * 0.6), P.thumbFwd);
+                segment(0.0102, 0.022, tTip, curl(P.thumbIn), P.thumbFwd * 0.55);
+            }
+
+            const g = mergeParts(parts);
+            // personaggi che guardano verso -Z (staff in panchina, arbitri): +X -> -Z, +Z -> +X
+            if (front === '-z') g.rotateY(Math.PI / 2);
+            return g;
+        });
+    }
+
+    // side: +1 / -1 = lato del corpo (verso +Z per chi guarda +X, verso +X per chi guarda -Z)
+    // pose: 'relaxed' | 'fist' | 'typing'; front: '+x' (pubblico, cronometristi) | '-z' (staff, arbitri)
+    function makeHand(mat, side, pose = 'relaxed', front = '+x') {
+        const low = typeof getActiveQualityPreset === 'function' && getActiveQualityPreset().id === 'low';
+        const m = new THREE.Mesh(handGeometry(side < 0 ? -1 : 1, pose, front, low), mat);
+        m.userData.isHand = true;
+        return m;
+    }
+
+    // Sostituisce la sfera della mano di un braccio con una mano con le dita (stessa posizione e materiale)
+    function replaceSphereHand(armPivot, side, pose, front) {
+        const old = armPivot.children.find(c => c.isMesh && (c.userData.isHand || (c.geometry && c.geometry.type === 'SphereGeometry')));
+        if (!old) return null;
+        const hand = makeHand(old.material, side, pose, front);
+        hand.position.copy(old.position);
+        hand.castShadow = old.castShadow;
+        hand.receiveShadow = old.receiveShadow;
+        armPivot.add(hand);
+        armPivot.remove(old);
+        if (!old.userData.isHand) old.geometry.dispose();   // le geometrie delle mani nuove sono condivise
+        return hand;
+    }
 
     // ---------- materiali dei tifosi di una squadra (maglia, felpa, bandierina), in cache per club
     const gearCache = {};
@@ -223,8 +341,8 @@
     // ---------- capelli
     function addLongHair(headGroup, hairMat, style, r) {
         const R = 0.15;
-        // fronte libera: davanti = +X (θ = π/2 sul cilindro)
-        const gap = 0.95, start = Math.PI / 2 + gap, len = Math.PI * 2 - gap * 2;
+        // fronte libera: davanti = +X (θ = π/2 sul cilindro); le ciocche laterali incorniciano il viso
+        const gap = 0.78, start = Math.PI / 2 + gap, len = Math.PI * 2 - gap * 2;
         if (style === 'ponytail') {
             const tail = new THREE.Mesh(geo('pony', () => new THREE.SphereGeometry(0.07, 10, 8)), hairMat);
             tail.scale.set(0.75, 1.9, 0.75);
@@ -260,7 +378,7 @@
             return;
         }
         hair.material = hairMat;
-        if (female) addLongHair(headGroup, hairMat, pickWeighted([['long', 50], ['ponytail', 25], ['bob', 25]], r()), r());
+        if (female) addLongHair(headGroup, hairMat, pickWeighted([['long', 55], ['ponytail', 15], ['bob', 30]], r()), r());
     }
 
     // ---------- abbigliamento
@@ -298,6 +416,17 @@
         pivot.add(stick, cloth);
         pivot.userData.cloth = cloth;
         arm.add(pivot);
+        // la mano destra stringe l'asta: il pugno segue la bandierina (che resta verticale mentre il braccio
+        // oscilla), girato di 90° perché l'asta attraversi le dita chiuse, pollice in su
+        const old = arm.children.find(c => c.isMesh && (c.userData.isHand || (c.geometry && c.geometry.type === 'SphereGeometry')));
+        if (old) {
+            const fist = makeHand(old.material, 1, 'fist', '+x');
+            fist.rotation.z = Math.PI / 2;
+            fist.position.set(-0.058, 0, 0.02);
+            pivot.add(fist);
+            arm.remove(old);
+            if (!old.userData.isHand) old.geometry.dispose();
+        }
         return pivot;
     }
 
@@ -315,6 +444,7 @@
         const adult = !isChild;
         const female = r() < FEMALE_RATIO;
         root.userData.female = female;
+        arms.forEach(a => replaceSphereHand(a, a.position.z > 0 ? 1 : -1, 'relaxed', '+x'));
 
         // volto
         if (head && typeof getFaceMaterialFromFile === 'function') {
@@ -362,5 +492,5 @@
         fp.userData.cloth.rotation.x = sway * 0.25;
     }
 
-    window.HIL_PEOPLE = { playerTraits, traitsOf, findPlayerInfo, applySkaterLook, decorateCrowdMember, updateCrowdFlag };
+    window.HIL_PEOPLE = { playerTraits, traitsOf, findPlayerInfo, applySkaterLook, decorateCrowdMember, updateCrowdFlag, makeHand };
 })();
