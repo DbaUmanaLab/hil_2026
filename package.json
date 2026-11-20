@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "HIL 2026 - Hockey in line (Serie A FISR & UISP) — Three.js + Phaser 3",
   "scripts": {
-    "start": "npx serve . --listen 8080"
+    "start": "npx serve . --listen 8080",
+    "apk": "node deploy/android/gradle-run.js assembleDebug",
+    "apk:release": "node deploy/android/gradle-run.js assembleRelease",
+    "apk:install": "node deploy/android/gradle-run.js installDebug",
+    "apk:clean": "node deploy/android/gradle-run.js clean"
   }
 }

@@ -1,0 +1,161 @@
+plugins {
+    id 'com.android.application'
+}
+
+// Radice del gioco web (index.html, src/, assets/): due livelli sopra deploy/android
+def webRoot = rootProject.file('../..')
+def webOut = layout.buildDirectory.dir('generated/hilweb')          // diventa la cartella assets/ dell'APK
+def iconOut = layout.buildDirectory.dir('generated/hilres')
+def vendorDir = rootProject.file('vendor')                          // cache delle librerie scaricate
+def offline = (findProperty('hil.offline') ?: 'true').toString().toBoolean()
+
+// Firma della release (facoltativa): deploy/android/keystore.properties
+//   storeFile=../hil2026.jks  storePassword=...  keyAlias=hil2026  keyPassword=...
+def ksFile = rootProject.file('keystore.properties')
+def ks = new Properties()
+if (ksFile.exists()) ksFile.withInputStream { ks.load(it) }
+
+android {
+    namespace 'it.hil2026.game'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId 'it.hil2026.game'
+        minSdk 26
+        targetSdk 35
+        versionCode 1
+        versionName '1.0.0'
+    }
+
+    signingConfigs {
+        if (ksFile.exists()) {
+            release {
+                storeFile rootProject.file(ks['storeFile'])
+                storePassword ks['storePassword']
+                keyAlias ks['keyAlias']
+                keyPassword ks['keyPassword']
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (ksFile.exists()) signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    sourceSets {
+        main {
+            assets.srcDir(webOut.get().asFile)
+            res.srcDir(iconOut.get().asFile)
+        }
+    }
+
+    androidResources {
+        // il pattern di default scarta le cartelle che iniziano con "_": qui servono tutte
+        ignoreAssetsPattern '!.svn:!.git:!.ds_store:!*.scc:!CVS:!thumbs.db:!picasa.ini:!*~'
+        // audio e immagini sono già compressi
+        noCompress 'mp3', 'ogg', 'wav', 'jpg', 'jpeg', 'png', 'webp', 'woff2', 'glb'
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.12.1'
+}
+
+// ---------------------------------------------------------------------------
+// Librerie esterne: scaricate una volta in deploy/android/vendor e poi riusate
+// ---------------------------------------------------------------------------
+def VENDOR_LIBS = [
+    'three.min.js'   : 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
+    'phaser.min.js'  : 'https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js',
+    'tailwind.min.js': 'https://cdn.tailwindcss.com/3.4.17'
+]
+def FONTS_CSS = 'https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Oswald:wght@500;600;700&display=swap'
+
+def httpGet = { String url ->
+    def c = new URL(url).openConnection()
+    c.setRequestProperty('User-Agent', 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Mobile Safari/537.36')
+    c.connectTimeout = 20000
+    c.readTimeout = 60000
+    c.instanceFollowRedirects = true
+    return c.inputStream.bytes
+}
+
+tasks.register('downloadWebVendor') {
+    description = 'Scarica Three.js, Phaser, Tailwind e i font Google per la versione offline'
+    onlyIf { offline }
+    outputs.dir vendorDir
+    doLast {
+        vendorDir.mkdirs()
+        VENDOR_LIBS.each { name, url ->
+            def f = new File(vendorDir, name)
+            if (!f.exists() || f.length() == 0) {
+                logger.lifecycle("HIL: scarico $url")
+                f.bytes = httpGet(url)
+            }
+        }
+        def css = new File(vendorDir, 'fonts.css')
+        if (!css.exists()) {
+            logger.lifecycle('HIL: scarico i font Google')
+            def fontsDir = new File(vendorDir, 'fonts')
+            fontsDir.mkdirs()
+            def text = new String(httpGet(FONTS_CSS), 'UTF-8')
+            int n = 0
+            text = text.replaceAll(/url\((https:\/\/fonts\.gstatic\.com\/[^)]+)\)/) { all, url ->
+                def name = "f${n++}.woff2"
+                new File(fontsDir, name).bytes = httpGet(url)
+                "url(fonts/${name})"
+            }
+            css.setText(text, 'UTF-8')
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Copia del gioco dentro gli asset dell'APK (assets/web/...) a ogni build
+// ---------------------------------------------------------------------------
+tasks.register('syncWebAssets', Sync) {
+    description = 'Copia index.html, src/ e assets/ del gioco negli asset dell\'APK'
+    dependsOn 'downloadWebVendor'
+    filteringCharset = 'UTF-8'   // index.html è UTF-8 (su Windows il default sarebbe cp1252)
+    into webOut.map { it.dir('web') }
+    from(webRoot) {
+        include 'index.html'
+        include 'src/**'
+        include 'assets/**'
+    }
+    if (offline) {
+        from(vendorDir) { into 'vendor' }
+    }
+    // in versione offline i link ai CDN puntano alle copie locali in vendor/
+    filesMatching('index.html') {
+        if (offline) {
+            filter { String line ->
+                line.replace('https://cdn.tailwindcss.com', 'vendor/tailwind.min.js')
+                    .replace('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', 'vendor/three.min.js')
+                    .replace('https://unpkg.com/three@0.128.0/build/three.min.js', 'vendor/three.min.js')
+                    .replace('https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js', 'vendor/phaser.min.js')
+                    .replace(FONTS_CSS, 'vendor/fonts.css')
+                    .replace('https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&amp;family=Oswald:wght@500;600;700&amp;display=swap', 'vendor/fonts.css')
+            }
+        }
+    }
+}
+
+// Icona: il badge del gioco su fondo bianco (icona adattiva, vedi res/mipmap-anydpi-v26)
+tasks.register('syncLauncherIcon', Sync) {
+    from(new File(webRoot, 'assets/logos')) {
+        include 'game badge.png'
+        rename { 'hil_badge.png' }
+    }
+    into iconOut.map { it.dir('drawable-nodpi') }
+}
+
+tasks.named('preBuild') { dependsOn 'syncWebAssets', 'syncLauncherIcon' }

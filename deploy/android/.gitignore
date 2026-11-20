@@ -1,0 +1,14 @@
+.gradle/
+build/
+app/build/
+local.properties
+.idea/
+*.iml
+captures/
+.cxx/
+# librerie e font scaricati per la versione offline
+vendor/
+# firma della release: mai nel repository
+keystore.properties
+*.jks
+*.keystore

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="hil_bg">#050913</color>
+    <color name="hil_icon_bg">#FFFFFF</color>
+
+    <style name="Theme.HIL" parent="android:Theme.Material.NoActionBar.Fullscreen">
+        <item name="android:windowBackground">@color/hil_bg</item>
+        <item name="android:statusBarColor">@color/hil_bg</item>
+        <item name="android:navigationBarColor">@color/hil_bg</item>
+    </style>
+</resources>
