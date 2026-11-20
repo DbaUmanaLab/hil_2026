@@ -40,6 +40,15 @@
       "country": "ES",
       "badge": "Liga Élite • Spagna",
       "rosterLabel": "LIGA ÉLITE • RFEP"
+    },
+    {
+      "id": "SERIE A VINTAGE",
+      "name": "Serie A Vintage",
+      "federation": "Amichevoli",
+      "country": "IT",
+      "badge": "Serie A Vintage • Amichevoli",
+      "rosterLabel": "SERIE A VINTAGE",
+      "note": "Categoria fittizia: le sue squadre giocano solo amichevoli e partite rapide (niente campionati, Coppa Italia e Hockey Manager)."
     }
   ],
   "teams": [
@@ -4869,6 +4878,244 @@
             "num": "6",
             "name": "GODANI",
             "first": "Matteo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
+      "id": "padova",
+      "league": "SERIE A VINTAGE",
+      "name": "GHOSTS PADOVA",
+      "shortName": "GHOSTS",
+      "abbr": "GHO",
+      "note": "Roster con numeri e ruoli forniti dal club (3 portieri, 6 difensori, 17 attaccanti), senza statistiche. Le linee e i ruoli C/LW/RW tra gli attaccanti sono una scelta provvisoria. Il numero 13 risulta sia a Cristian Geronazzo sia a Nicola Dal Sasso. Allenatore non indicato.",
+      "jerseyClubId": "padova",
+      "homeArena": "padova",
+      "logo": "padova.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/padova_1.png",
+        "assets/jerseys/padova_2.png"
+      ],
+      "ratings": {
+        "off": 74,
+        "def": 72,
+        "goa": 73
+      },
+      "colors": {
+        "primary": "#c8102e",
+        "secondary": "#161616",
+        "staffJacket": "#161616",
+        "coachJacket": "#161616"
+      },
+      "rosterScreen": {
+        "photo": "padova.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "1",
+        "name": "BERTOLDI",
+        "first": "Vladimir"
+      },
+      "backupGoalies": [
+        {
+          "num": "25",
+          "name": "SIMIONATO",
+          "first": "Luca"
+        },
+        {
+          "num": "30",
+          "name": "VALLIERI",
+          "first": "Hermann"
+        }
+      ],
+      "reserves": [
+        {
+          "num": "28",
+          "name": "CAMPELLO",
+          "first": "Alberto"
+        },
+        {
+          "num": "44",
+          "name": "BENDORICCHIO",
+          "first": "Mattia"
+        },
+        {
+          "num": "67",
+          "name": "DE BONA",
+          "first": "Giorgio"
+        },
+        {
+          "num": "22",
+          "name": "MANGANELLI",
+          "first": "Edoardo"
+        },
+        {
+          "num": "24",
+          "name": "VISSA",
+          "first": "Dario"
+        },
+        {
+          "num": "33",
+          "name": "CAMBRUZZI",
+          "first": "Pietro"
+        },
+        {
+          "num": "41",
+          "name": "RONCATO",
+          "first": "Niccolò"
+        },
+        {
+          "num": "47",
+          "name": "NESPOLO",
+          "first": "Alessandro"
+        },
+        {
+          "num": "52",
+          "name": "ZEVRAIN",
+          "first": "Giulio"
+        },
+        {
+          "num": "55",
+          "name": "STOKES",
+          "first": "Ryder"
+        },
+        {
+          "num": "69",
+          "name": "SNIEZKNIVSKYI",
+          "first": "Pavlo"
+        }
+      ],
+      "kits": {
+        "black": {
+          "label": "Divisa Nera",
+          "primary": "#161616",
+          "pants": "#161616",
+          "helmet": "#161616",
+          "glove": "#c8102e"
+        },
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#f4f4f2",
+          "pants": "#161616",
+          "helmet": "#161616",
+          "glove": "#c8102e"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "6",
+            "name": "BARBIERATO",
+            "first": "Pietro",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "7",
+            "name": "BIRTIG",
+            "first": "Alessandro",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "8",
+            "name": "MERLI",
+            "first": "Marvin",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "2",
+            "name": "VOULFSON",
+            "first": "Timothy",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "SPERANDIO",
+            "first": "Rudy",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "10",
+            "name": "DE SILVA",
+            "first": "Filippo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "11",
+            "name": "CECCHET",
+            "first": "Enrico",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "SIMIONATO",
+            "first": "Matteo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "12",
+            "name": "GRESPAN",
+            "first": "Ettore",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "13",
+            "name": "DAL SASSO",
+            "first": "Nicola",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "21",
+            "name": "FERRO",
+            "first": "Mikael",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "13",
+            "name": "GERONAZZO",
+            "first": "Cristian",
             "g": 0,
             "a": 0,
             "pts": 0
