@@ -11,8 +11,10 @@ Basta quindi rifare la build per avere nell'APK l'ultima versione del gioco.
 ## Versione offline
 
 Con `hil.offline=true` (default, in `gradle.properties`) la prima build scarica in `vendor/`
-Three.js r128, Phaser 3.60, Tailwind (Play CDN 3.4.17) e i font Google (Montserrat, Oswald),
+Phaser 3.60, Tailwind (Play CDN 3.4.17) e i font Google (Montserrat, Oswald),
 e nella copia di `index.html` dentro l'APK i link ai CDN vengono sostituiti con quelli locali.
+Three.js non passa da `vendor/`: è già nel repository (`src/vendor/three.min.js`, generato con
+`npm run build:three`) e finisce nell'APK insieme al resto di `src/`.
 L'`index.html` del repository non viene toccato. Con `hil.offline=false` l'APK carica le librerie
 dai CDN e serve la rete.
 

@@ -71,9 +71,9 @@ dependencies {
 
 // ---------------------------------------------------------------------------
 // Librerie esterne: scaricate una volta in deploy/android/vendor e poi riusate
+// (Three.js non serve: è già nel repository, in src/vendor/three.min.js)
 // ---------------------------------------------------------------------------
 def VENDOR_LIBS = [
-    'three.min.js'   : 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js',
     'phaser.min.js'  : 'https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js',
     'tailwind.min.js': 'https://cdn.tailwindcss.com/3.4.17'
 ]
@@ -139,8 +139,6 @@ tasks.register('syncWebAssets', Sync) {
         if (offline) {
             filter { String line ->
                 line.replace('https://cdn.tailwindcss.com', 'vendor/tailwind.min.js')
-                    .replace('https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js', 'vendor/three.min.js')
-                    .replace('https://unpkg.com/three@0.128.0/build/three.min.js', 'vendor/three.min.js')
                     .replace('https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js', 'vendor/phaser.min.js')
                     .replace(FONTS_CSS, 'vendor/fonts.css')
                     .replace('https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&amp;family=Oswald:wght@500;600;700&amp;display=swap', 'vendor/fonts.css')

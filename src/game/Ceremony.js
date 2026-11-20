@@ -274,7 +274,7 @@
     function updatePostMatch(dt) {
         if (!pg) return;
         pg.t = (performance.now() - pg.t0) / 1000;
-        const t = clock.elapsedTime;
+        const t = clock.getElapsed();
         const W = pg.winner;
         skaters.forEach(s => {
             s.mesh.rotation.z = 0;

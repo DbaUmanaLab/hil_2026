@@ -42,7 +42,7 @@ export function updateReferees(dt, gs) {
                 ref.rotationY = Math.PI / 2;
                 ref.mesh.rotation.y = ref.rotationY;
                 setSkaterHockeyReadyPose(ref, 0, 0);
-                const signalWave = Math.sin(clock.elapsedTime * 10 + ref.side) * 0.28;
+                const signalWave = Math.sin(clock.getElapsed() * 10 + ref.side) * 0.28;
                 ref.rightArmPivot.rotation.set(1.95 - signalWave, 0, -0.18);
                 ref.rightElbowPivot.rotation.set(0.2, 0, 0);
                 ref.leftArmPivot.rotation.set(0.85, -0.2, 0.15);

@@ -112,7 +112,7 @@ export function applyGraphicsQuality(targetLevel, rebuildSceneAssets = false, ct
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.shadowMap.enabled = preset.shadows;
     if (preset.shadows) {
-        renderer.shadowMap.type = preset.id === 'high' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+        renderer.shadowMap.type = THREE.PCFShadowMap;
     }
     renderer.shadowMap.needsUpdate = true;
     renderer.toneMapping = preset.id === 'low' ? THREE.NoToneMapping : THREE.ACESFilmicToneMapping;
