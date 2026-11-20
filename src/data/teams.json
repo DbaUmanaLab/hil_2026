@@ -4468,6 +4468,221 @@
       ]
     },
     {
+      "id": "torre_pellice",
+      "league": "SERIE B",
+      "name": "OLD STYLE TORRE PELLICE",
+      "shortName": "TORRE PELLICE",
+      "abbr": "OST",
+      "note": "Nomi e statistiche dal roster ufficiale (2 partite, 18 giocatori e 1 portiere). Numeri di maglia e ruoli NON presenti nel roster: assegnati provvisoriamente, da sostituire con quelli veri. Staff tecnico: Enrica Battaglia e Andrea Pons (anche giocatore).",
+      "jerseyClubId": "torre_pellice",
+      "homeArena": "torre_pellice",
+      "logo": "torre_pellice.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/torre_pellice.png"
+      ],
+      "ratings": {
+        "off": 58,
+        "def": 56,
+        "goa": 61
+      },
+      "colors": {
+        "primary": "#ecc01c",
+        "secondary": "#161616",
+        "staffJacket": "#161616",
+        "coachJacket": "#161616"
+      },
+      "rosterScreen": {
+        "photo": "torre_pellice.jpg",
+        "focus": "50% 25%"
+      },
+      "coach": {
+        "first": "Enrica",
+        "last": "Battaglia",
+        "role": "Allenatrice",
+        "note": "Staff: Andrea Pons"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "GIOVENALE",
+        "first": "Gloria",
+        "gender": "F"
+      },
+      "backupGoalies": [],
+      "reserves": [
+        {
+          "num": "13",
+          "name": "BATTAGLINO",
+          "first": "Chiara",
+          "gender": "F"
+        },
+        {
+          "num": "14",
+          "name": "CERINI",
+          "first": "Elisa",
+          "gender": "F"
+        },
+        {
+          "num": "15",
+          "name": "DI GIOVANNI",
+          "first": "Melissa",
+          "gender": "F"
+        },
+        {
+          "num": "16",
+          "name": "DOIMO",
+          "first": "Giulia",
+          "gender": "F"
+        },
+        {
+          "num": "18",
+          "name": "MIEGGE",
+          "first": "Mauro"
+        },
+        {
+          "num": "20",
+          "name": "PONS",
+          "first": "Andrea"
+        }
+      ],
+      "kits": {
+        "yellow": {
+          "label": "Divisa Gialla",
+          "primary": "#ecc01c",
+          "pants": "#161616",
+          "helmet": "#161616",
+          "glove": "#161616"
+        },
+        "black": {
+          "label": "Divisa Nera",
+          "primary": "#1a1a1a",
+          "pants": "#1a1a1a",
+          "helmet": "#161616",
+          "glove": "#161616"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "IMBRIANI",
+            "first": "Davide",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "PRELATO",
+            "first": "Nicolò",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "21",
+            "name": "BENEDETTO",
+            "first": "Simone",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "BOTTO",
+            "first": "Enrico",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "SPOLETTI",
+            "first": "Fabio",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "7",
+            "name": "ORSINA",
+            "first": "Stella",
+            "gender": "F",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "23",
+            "name": "SETTE",
+            "first": "Giorgio",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "D'ALESSANDRO",
+            "first": "Pietro",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "SALETTA",
+            "first": "Jacopo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "8",
+            "name": "CECCANTI",
+            "first": "Beatrice Carlotta",
+            "gender": "F",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "19",
+            "name": "PACIFICO",
+            "first": "Maria",
+            "gender": "F",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "GALLIANO",
+            "first": "Desiree",
+            "gender": "F",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "molina",
       "league": "RFEP",
       "name": "MOLINA SPORT ACEGC",
