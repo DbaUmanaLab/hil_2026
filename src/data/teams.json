@@ -3806,6 +3806,232 @@
       ]
     },
     {
+      "id": "castelli_romani",
+      "league": "SERIE B",
+      "name": "CASTELLI ROMANI",
+      "shortName": "CASTELLI ROMANI",
+      "abbr": "CRO",
+      "note": "Nomi e statistiche dal roster ufficiale (3 partite, 22 giocatori e 2 portieri). Numeri di maglia e ruoli NON presenti nel roster: assegnati provvisoriamente, da sostituire con quelli veri. Lo staff tecnico è tagliato nell'immagine del roster: allenatore non inserito. Gioca nello stesso palazzetto della Mammuth Roma.",
+      "jerseyClubId": "castelli_romani",
+      "homeArena": "roma",
+      "logo": "castelli_romani.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/castelli_romani.png"
+      ],
+      "ratings": {
+        "off": 63,
+        "def": 60,
+        "goa": 63
+      },
+      "colors": {
+        "primary": "#f5d60a",
+        "secondary": "#141416",
+        "staffJacket": "#141416",
+        "coachJacket": "#f5d60a"
+      },
+      "rosterScreen": {
+        "photo": "castelli_romani.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "1",
+        "name": "LECCE",
+        "first": "Massimo"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "MATARRESE",
+          "first": "Claudio"
+        }
+      ],
+      "reserves": [
+        {
+          "num": "12",
+          "name": "FIORIO",
+          "first": "Asia",
+          "gender": "F"
+        },
+        {
+          "num": "13",
+          "name": "CINICOLA",
+          "first": "Vincenzo"
+        },
+        {
+          "num": "14",
+          "name": "ACEVEDO",
+          "first": "Ailen Romina",
+          "gender": "F"
+        },
+        {
+          "num": "15",
+          "name": "AMICI",
+          "first": "Lara",
+          "gender": "F"
+        },
+        {
+          "num": "16",
+          "name": "CALDERONE",
+          "first": "Sebastian Matteo"
+        },
+        {
+          "num": "18",
+          "name": "DOMINIZI",
+          "first": "Federico"
+        },
+        {
+          "num": "20",
+          "name": "LATINI",
+          "first": "Matteo"
+        },
+        {
+          "num": "22",
+          "name": "POLLASTRINI",
+          "first": "Emanuele"
+        },
+        {
+          "num": "24",
+          "name": "SABBATINI",
+          "first": "Simone"
+        },
+        {
+          "num": "26",
+          "name": "WISNIEWSKI",
+          "first": "Ondrej Jan"
+        }
+      ],
+      "kits": {
+        "black": {
+          "label": "Divisa Nero-Gialla",
+          "primary": "#141416",
+          "pants": "#141416",
+          "helmet": "#141416",
+          "glove": "#141416"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "PONTECORVI",
+            "first": "Gabriele",
+            "g": 9,
+            "a": 2,
+            "pts": 11
+          },
+          {
+            "role": "LW",
+            "num": "10",
+            "name": "PONTECORVI",
+            "first": "Simone",
+            "g": 4,
+            "a": 3,
+            "pts": 7
+          },
+          {
+            "role": "RW",
+            "num": "17",
+            "name": "TERELLE",
+            "first": "Matteo",
+            "g": 3,
+            "a": 3,
+            "pts": 6
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "CALABRESE",
+            "first": "Valerio",
+            "g": 1,
+            "a": 2,
+            "pts": 3
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "19",
+            "name": "CEDRONI",
+            "first": "Cristiano",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "7",
+            "name": "BAROCCI",
+            "first": "Letizia",
+            "gender": "F",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "21",
+            "name": "FIANDRA",
+            "first": "Alessandro",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "PICCA",
+            "first": "Gianmarco",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "VIRGILI",
+            "first": "Simone",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "8",
+            "name": "COLONNELLI",
+            "first": "Sara",
+            "gender": "F",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "23",
+            "name": "COLOMBO",
+            "first": "Jacopo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "DI TULLIO",
+            "first": "Sara",
+            "gender": "F",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "molina",
       "league": "RFEP",
       "name": "MOLINA SPORT ACEGC",
