@@ -107,6 +107,10 @@
             const variant = t.female ? 'female' : (sk.isGoalie || t.facialHair === 'none' ? '' : t.facialHair);
             sk.headMesh.material = getFaceMaterialFromFile(faceFile(t.face, variant));
         }
+        // forma della testa: le giocatrici hanno mento, arcate e mascella più delicati
+        if (sk.headMesh && sk.headMesh.userData.headRadius) {
+            sk.headMesh.geometry = makeHeadGeometry(sk.headMesh.userData.headRadius, t.female);
+        }
     }
 
     // =====================================================================
@@ -128,6 +132,358 @@
     }
     const geoCache = {};
     function geo(key, make) { return geoCache[key] || (geoCache[key] = make()); }
+
+    // =====================================================================
+    // TESTE MODELLATE (giocatori, arbitri, pubblico, cronometristi, staff)
+    // Una sfera deformata: naso, arcate sopraccigliari, orbite, zigomi, labbra, mento, mascella
+    // che si stringe verso il collo e nuca. Le UV restano quelle della SphereGeometry, quindi la
+    // foto del volto (centrata su +X, occhi a ~0.41 dell'altezza, bocca a ~0.66) cade sui rilievi.
+    // La griglia è più fitta sul davanti (dove c'è il volto) e rada dietro; la calotta resta
+    // sferica in alto così i capelli (sfere poco più grandi) la coprono come prima.
+    // Geometria condivisa per raggio, sesso e dettaglio.
+    // =====================================================================
+    const G = (x, s) => Math.exp(-(x * x) / (2 * s * s));
+    const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+    const PI = Math.PI;
+
+    function headShape(th, dphi, female) {
+        // th = angolo dall'alto (0..π), dphi = angolo dal centro del volto (-π..π)
+        let r = 1;
+        // naso: dorso che sale dalla radice (fra gli occhi) alla punta, poi rientra sotto le narici
+        const up = smooth(0.43 * PI, 0.565 * PI, th);
+        const down = th > 0.565 * PI ? G(th - 0.565 * PI, 0.028 * PI) : 1;
+        const nose = (0.22 + 0.78 * up) * up * down + (th < 0.565 * PI ? 0.18 * G(th - 0.43 * PI, 0.03 * PI) : 0);
+        r += (female ? 0.105 : 0.125) * nose * G(dphi, 0.075 + 0.045 * up);
+        // arcata sopraccigliare e orbite
+        r += (female ? 0.012 : 0.03) * G(th - 0.365 * PI, 0.035 * PI) * G(dphi, 0.55);
+        r -= 0.032 * G(th - 0.415 * PI, 0.032 * PI) * (G(dphi - 0.66, 0.19) + G(dphi + 0.66, 0.19));
+        // zigomi
+        r += 0.026 * G(th - 0.5 * PI, 0.055 * PI) * (G(dphi - 0.82, 0.28) + G(dphi + 0.82, 0.28));
+        // labbra e mento
+        r += (female ? 0.034 : 0.026) * G(th - 0.66 * PI, 0.03 * PI) * G(dphi, 0.24);
+        r -= 0.018 * G(th - 0.72 * PI, 0.022 * PI) * G(dphi, 0.3);                 // solco sotto il labbro
+        r += (female ? 0.035 : 0.06) * G(th - 0.79 * PI, 0.05 * PI) * G(dphi, 0.36);
+        return r;
+    }
+
+    function headGeometry(radius, female, low) {
+        const key = ['head', Math.round(radius * 1000), female ? 'f' : 'm', low ? 'lo' : 'hi'].join('_');
+        return geo(key, () => {
+            const W = low ? 30 : 44, H = low ? 22 : 32;
+            const pos = [], uv = [], index = [];
+            const v = new THREE.Vector3();
+            for (let iy = 0; iy <= H; iy++) {
+                const th = (iy / H) * PI;
+                for (let ix = 0; ix <= W; ix++) {
+                    // phi denso davanti (phi = π) e rado dietro
+                    const s = (ix / W) * 2 - 1;
+                    const dphi = PI * (0.52 * s + 0.48 * s * s * s);
+                    const phi = PI + dphi;
+                    const nx = -Math.cos(phi) * Math.sin(th), ny = Math.cos(th), nz = Math.sin(phi) * Math.sin(th);
+                    const r = headShape(th, dphi, female);
+                    v.set(nx * r, ny * r, nz * r);
+                    // proporzioni: più stretta che profonda, più lunga verso il mento (la calotta resta com'è)
+                    v.z *= 0.9;
+                    if (ny < 0) v.y *= 1.1;
+                    // mascella e collo: sotto gli zigomi la testa si stringe, soprattutto ai lati e dietro
+                    const t = smooth(-0.3, -0.95, ny);
+                    v.z *= 1 - (female ? 0.2 : 0.14) * t;
+                    if (nx < 0) v.x *= 1 - 0.3 * t * -nx;
+                    else v.x *= 1 - 0.08 * t * smooth(0.5, 1.4, Math.abs(dphi));     // guance verso la mandibola
+                    // nuca un po' sporgente
+                    if (nx < 0 && ny > -0.2) v.x *= 1 + 0.07 * -nx * smooth(-0.2, 0.5, ny);
+                    pos.push(v.x * radius, v.y * radius, v.z * radius);
+                    uv.push(phi / (2 * PI), 1 - iy / H);
+                }
+            }
+            for (let iy = 0; iy < H; iy++) {
+                for (let ix = 0; ix < W; ix++) {
+                    const a = iy * (W + 1) + ix + 1, b = iy * (W + 1) + ix;
+                    const c = (iy + 1) * (W + 1) + ix, d = (iy + 1) * (W + 1) + ix + 1;
+                    if (iy !== 0) index.push(a, b, d);
+                    if (iy !== H - 1) index.push(b, c, d);
+                }
+            }
+            const g = new THREE.BufferGeometry();
+            g.setIndex(index);
+            g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+            g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+            g.computeVertexNormals();
+            // cucitura dietro (prima e ultima colonna coincidono) e poli: normali uguali, niente spigoli
+            const n = g.attributes.normal, tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
+            for (let iy = 0; iy <= H; iy++) {
+                const i0 = iy * (W + 1), i1 = i0 + W;
+                tmp.fromBufferAttribute(n, i0).add(tmp2.fromBufferAttribute(n, i1)).normalize();
+                n.setXYZ(i0, tmp.x, tmp.y, tmp.z); n.setXYZ(i1, tmp.x, tmp.y, tmp.z);
+            }
+            [0, H].forEach(iy => {
+                const ny = iy === 0 ? 1 : -1;
+                for (let ix = 0; ix <= W; ix++) n.setXYZ(iy * (W + 1) + ix, 0, ny, 0);
+            });
+            g.computeBoundingSphere();
+            return g;
+        });
+    }
+
+    // radius: raggio della vecchia sfera; la testa nuova ha la stessa calotta
+    function makeHeadGeometry(radius, female) {
+        const low = typeof getActiveQualityPreset === 'function' && getActiveQualityPreset().id === 'low';
+        return headGeometry(radius, !!female, low);
+    }
+
+    // Sostituisce la geometria sferica di una testa (stesso raggio, stessa foto)
+    function reshapeHead(head, female) {
+        if (!head || !head.geometry || head.geometry.type !== 'SphereGeometry') return;
+        const old = head.geometry;
+        head.geometry = makeHeadGeometry(old.parameters.radius, female);
+        old.dispose();
+    }
+
+    // =====================================================================
+    // CORPI MODELLATI (pubblico, cronometristi, staff in panchina)
+    // I costruttori dei palazzetti fanno busto, maniche e gambe con cilindri dritti. upgradeBody()
+    // ne sostituisce le geometrie con profili anatomici (lathe a sezione ellittica come i giocatori):
+    // bacino, vita, petto, spalle arrotondate; braccia con deltoide, bicipite, gomito, avambraccio
+    // e polso; gambe con coscia, ginocchio, polpaccio e caviglia; collo e scarpe. Gerarchia,
+    // animazioni e materiali (maglie e felpe col logo comprese) restano quelli originali: le UV
+    // seguono la stessa convenzione di CylinderGeometry (u = angolo da +Z verso +X, v dal basso).
+    // Le geometrie sono condivise fra tutte le persone con le stesse misure.
+    // =====================================================================
+    function bodyDetail() {
+        const low = typeof getActiveQualityPreset === 'function' && getActiveQualityPreset().id === 'low';
+        return low ? { seg: 12, sm: 10, low } : { seg: 20, sm: 18, low };
+    }
+
+    // profile: [y, raggio in profondità (asse frontale), raggio in larghezza], dal basso verso l'alto.
+    // front '+x': profondità lungo X (pubblico, cronometristi); '-z': lungo Z (staff in panchina).
+    // closeBottom / closeTop chiudono le estremità con un punto sull'asse.
+    function ellipticLathe(profile, seg, smoothN, front, closeBottom, closeTop) {
+        let pts = profile;
+        if (smoothN > 0) {
+            const c = new THREE.CatmullRomCurve3(profile.map(p => new THREE.Vector3(p[1], p[0], p[2])));
+            pts = c.getPoints(smoothN).map(p => [p.y, Math.max(0, p.x), Math.max(0, p.z)]);
+        }
+        if (closeBottom) pts = [[pts[0][0] - 0.004, 0, 0]].concat(pts);
+        if (closeTop) pts = pts.concat([[pts[pts.length - 1][0] + 0.004, 0, 0]]);
+        const ymin = pts[0][0], ymax = pts[pts.length - 1][0];
+        const pos = [], uv = [], idx = [];
+        // righe dall'alto verso il basso, come CylinderGeometry
+        for (let j = pts.length - 1; j >= 0; j--) {
+            const [y, rd, rw] = pts[j];
+            for (let i = 0; i <= seg; i++) {
+                const u = i / seg, a = u * Math.PI * 2;
+                const s = Math.sin(a), c = Math.cos(a);
+                if (front === '-z') pos.push(rw * s, y, -rd * c);
+                else pos.push(rd * s, y, rw * c);
+                uv.push(u, (y - ymin) / (ymax - ymin || 1));
+            }
+        }
+        const rows = pts.length;
+        for (let j = 0; j < rows - 1; j++) for (let i = 0; i < seg; i++) {
+            const a = j * (seg + 1) + i, b = a + seg + 1, c = b + 1, d = a + 1;
+            idx.push(a, b, d, b, c, d);
+        }
+        const g = new THREE.BufferGeometry();
+        g.setIndex(idx);
+        g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+        g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+        g.computeVertexNormals();
+        // cucitura: prima e ultima colonna con la stessa normale
+        const n = g.attributes.normal, t1 = new THREE.Vector3(), t2 = new THREE.Vector3();
+        for (let j = 0; j < rows; j++) {
+            const i0 = j * (seg + 1), i1 = i0 + seg;
+            t1.fromBufferAttribute(n, i0).add(t2.fromBufferAttribute(n, i1)).normalize();
+            n.setXYZ(i0, t1.x, t1.y, t1.z); n.setXYZ(i1, t1.x, t1.y, t1.z);
+        }
+        g.computeBoundingSphere();
+        return g;
+    }
+
+    const mm = v => Math.round(v * 1000);
+
+    // profilo del busto: [t dal basso (0..1), profondità, larghezza] in multipli del raggio medio
+    function torsoProfile(female) {
+        return female ? [
+                [0.0, 0.74, 0.98], [0.16, 0.74, 0.97], [0.36, 0.66, 0.8], [0.52, 0.74, 0.86],
+                [0.64, 0.86, 0.92], [0.78, 0.76, 0.98], [0.89, 0.66, 0.94], [0.96, 0.44, 0.58], [1.0, 0.26, 0.3]
+            ] : [
+                [0.0, 0.72, 0.93], [0.16, 0.73, 0.93], [0.36, 0.71, 0.88], [0.56, 0.78, 0.97],
+                [0.72, 0.8, 1.04], [0.84, 0.74, 1.08], [0.92, 0.64, 0.98], [0.97, 0.44, 0.6], [1.0, 0.27, 0.32]
+            ];
+    }
+    // profondità e larghezza (in multipli di R) all'altezza t, interpolate linearmente
+    function torsoAt(female, t) {
+        const P = torsoProfile(female);
+        t = clamp(t, 0, 1);
+        for (let i = 1; i < P.length; i++) {
+            if (t <= P[i][0]) {
+                const a = P[i - 1], b = P[i], f = (t - a[0]) / (b[0] - a[0]);
+                return [a[1] + (b[1] - a[1]) * f, a[2] + (b[2] - a[2]) * f];
+            }
+        }
+        return [P[P.length - 1][1], P[P.length - 1][2]];
+    }
+
+    // busto centrato come il cilindro originale (altezza h, raggio medio R)
+    function torsoGeometry(rTop, rBottom, h, female, front) {
+        const D = bodyDetail();
+        const key = ['torso', mm(rTop), mm(rBottom), mm(h), female ? 'f' : 'm', front, D.low ? 'lo' : 'hi'].join('_');
+        return geo(key, () => {
+            const R = (rTop + rBottom) / 2, y = t => -h / 2 + t * h;
+            const P = torsoProfile(female);
+            return ellipticLathe(P.map(([t, d, w]) => [y(t), d * R, w * R]), D.seg, D.sm, front, true, true);
+        });
+    }
+
+    // braccio appeso al perno della spalla (y = 0), lungo len (la manica originale era di len, centrata a -len/2)
+    function armGeometry(r, len, front) {
+        const D = bodyDetail();
+        const key = ['arm', mm(r), mm(len), front, D.low ? 'lo' : 'hi'].join('_');
+        return geo(key, () => {
+            const k = r / 0.062, L = len / 0.42;
+            // [y, raggio] (y verso il basso), la sezione è un filo più stretta in profondità
+            const P = [[-0.425, 0.041], [-0.4, 0.043], [-0.33, 0.05], [-0.27, 0.055], [-0.225, 0.049],
+                [-0.18, 0.053], [-0.11, 0.06], [-0.04, 0.067], [0.0, 0.066], [0.025, 0.052], [0.04, 0.03]];
+            return ellipticLathe(P.map(([y, rr]) => [y * L, rr * k * 0.92, rr * k]), Math.max(10, D.seg - 6), D.sm, front, true, true);
+        });
+    }
+
+    // gamba verticale intera (in piedi), centrata come il cilindro: caviglia in basso, anca in alto
+    function standingLegGeometry(r, h, front) {
+        const D = bodyDetail();
+        const key = ['legS', mm(r), mm(h), front, D.low ? 'lo' : 'hi'].join('_');
+        return geo(key, () => {
+            const k = r / 0.085;
+            const P = [[0.0, 0.043], [0.06, 0.047], [0.2, 0.066], [0.3, 0.064], [0.44, 0.055], [0.5, 0.058],
+                [0.58, 0.072], [0.74, 0.083], [0.9, 0.09], [1.0, 0.088]];
+            return ellipticLathe(P.map(([t, rr]) => [-h / 2 + t * h, rr * k * 0.96, rr * k]), Math.max(10, D.seg - 6), D.sm, front, true, true);
+        });
+    }
+
+    // coscia (seduti): il cilindro originale è ruotato di 90° su Z, quindi -Y locale = ginocchio (avanti)
+    function thighGeometry(r, h, front) {
+        const D = bodyDetail();
+        const key = ['thigh', mm(r), mm(h), front, D.low ? 'lo' : 'hi'].join('_');
+        return geo(key, () => {
+            const k = r / 0.085;
+            const P = [[0.0, 0.062], [0.08, 0.066], [0.3, 0.078], [0.65, 0.088], [0.9, 0.092], [1.0, 0.088]];
+            return ellipticLathe(P.map(([t, rr]) => [-h / 2 + t * h, rr * k, rr * k * 0.95]), Math.max(10, D.seg - 6), D.sm, front, true, true);
+        });
+    }
+
+    // polpaccio (seduti): caviglia in basso, ginocchio in alto
+    function calfGeometry(r, h, front) {
+        const D = bodyDetail();
+        const key = ['calf', mm(r), mm(h), front, D.low ? 'lo' : 'hi'].join('_');
+        return geo(key, () => {
+            const k = r / 0.075;
+            const P = [[0.0, 0.042], [0.08, 0.045], [0.35, 0.062], [0.62, 0.07], [0.85, 0.064], [0.94, 0.066], [1.0, 0.07]];
+            return ellipticLathe(P.map(([t, rr]) => [-h / 2 + t * h, rr * k, rr * k * 0.95]), Math.max(10, D.seg - 6), D.sm, front, true, true);
+        });
+    }
+
+    // scarpa: tomaia arrotondata e suola, punta verso l'asse frontale
+    function shoeGeometry(front) {
+        const D = bodyDetail();
+        return geo('shoe_' + front + (D.low ? '_lo' : '_hi'), () => {
+            const parts = [];
+            const upper = new THREE.SphereGeometry(1, D.low ? 10 : 16, D.low ? 6 : 10, 0, Math.PI * 2, 0, Math.PI * 0.55);
+            upper.scale(0.13, 0.075, 0.056);
+            upper.translate(0.035, 0.0, 0);
+            const sole = new THREE.CylinderGeometry(1, 1, 0.022, D.low ? 10 : 16);
+            sole.scale(0.135, 1, 0.058);
+            sole.translate(0.035, -0.006, 0);
+            parts.push(upper, sole);
+            const g = mergeParts(parts);
+            if (front === '-z') g.rotateY(Math.PI / 2);
+            return g;
+        });
+    }
+
+    function neckGeometry(r) {
+        const D = bodyDetail();
+        return geo('neck_' + mm(r) + (D.low ? '_lo' : '_hi'), () => {
+            const g = new THREE.CylinderGeometry(r * 0.92, r, 0.11, D.low ? 8 : 14, 1, true);
+            return g;
+        });
+    }
+
+    const isCyl = m => m && m.isMesh && m.geometry && m.geometry.type === 'CylinderGeometry';
+    const SHOE_COLORS = [[0x18181b, 45], [0x3f2a1c, 15], [0xf4f4f5, 22], [0x1e3a8a, 8], [0x6b7280, 10]];
+
+    // root: radice della persona; bodyPivot: gruppo del busto; arms: gruppi delle braccia
+    // opts: { female, front: '+x' | '-z', skinMat, shoes: true/false (lo staff ha già le scarpe), r }
+    function upgradeBody(root, bodyPivot, arms, opts = {}) {
+        if (!root || !bodyPivot || root.userData.bodyUpgraded) return;
+        root.userData.bodyUpgraded = true;
+        const front = opts.front || '+x';
+        const swap = (mesh, g) => { const old = mesh.geometry; mesh.geometry = g; if (old.type === 'CylinderGeometry') old.dispose(); };
+
+        // busto
+        const torso = bodyPivot.children.find(isCyl);
+        if (torso) {
+            const p = torso.geometry.parameters;
+            const R = (p.radiusTop + p.radiusBottom) / 2;
+            const tOf = y => (y - torso.position.y) / p.height + 0.5;
+            // fasce (cilindri bassi attorno al busto) e colletti (scatole sul petto) seguono la nuova sagoma
+            bodyPivot.children.forEach(c => {
+                if (c === torso || !c.isMesh) return;
+                const [d, w] = torsoAt(!!opts.female, tOf(c.position.y));
+                if (isCyl(c) && c.geometry.parameters.height < 0.2 && c.geometry.parameters.radiusTop >= R * 0.95) {
+                    const rb = c.geometry.parameters.radiusTop, k = 1.03;
+                    if (front === '-z') c.scale.set(w * R * k / rb, 1, d * R * k / rb);
+                    else c.scale.set(d * R * k / rb, 1, w * R * k / rb);
+                } else if (c.geometry.type === 'BoxGeometry' && front === '+x' && c.position.x > 0.05) {
+                    c.position.x = d * R - c.geometry.parameters.width / 2 + 0.012;
+                }
+            });
+            swap(torso, torsoGeometry(p.radiusTop, p.radiusBottom, p.height, !!opts.female, front));
+            // collo, del colore della pelle, fra il busto e la testa
+            if (opts.skinMat && !bodyDetail().low) {
+                const neck = new THREE.Mesh(neckGeometry(0.052 * (p.radiusTop / 0.2)), opts.skinMat);
+                neck.position.set(0, torso.position.y + p.height / 2 + 0.03, 0);
+                bodyPivot.add(neck);
+            }
+        }
+
+        // braccia: la manica diventa un braccio modellato, la mano scende al polso
+        (arms || []).forEach(a => {
+            const sleeve = a.children.find(isCyl);
+            if (!sleeve) return;
+            const p = sleeve.geometry.parameters;
+            const len = p.height;
+            swap(sleeve, armGeometry(p.radiusTop, len, front));
+            sleeve.position.y = 0;
+        });
+
+        // gambe
+        const r = opts.random || Math.random;
+        const legs = root.children.filter(isCyl);
+        const shoeSpots = [];
+        legs.forEach(leg => {
+            const p = leg.geometry.parameters;
+            const horizontal = Math.abs(Math.abs(leg.rotation.z) - Math.PI / 2) < 0.3;
+            if (horizontal) {
+                swap(leg, thighGeometry(Math.max(p.radiusTop, p.radiusBottom), p.height, front));
+            } else if (p.height >= 0.6) {
+                swap(leg, standingLegGeometry(Math.max(p.radiusTop, p.radiusBottom), p.height, front));
+                shoeSpots.push([leg.position.x, leg.position.y - p.height / 2, leg.position.z]);
+            } else {
+                swap(leg, calfGeometry(Math.max(p.radiusTop, p.radiusBottom), p.height, front));
+                shoeSpots.push([leg.position.x, leg.position.y - p.height / 2, leg.position.z]);
+            }
+        });
+        if (opts.shoes !== false && shoeSpots.length) {
+            // le due scarpe in un solo mesh (una draw call), geometria condivisa fra chi ha le stesse misure
+            const key = 'shoes_' + front + '_' + shoeSpots.map(p => p.map(mm).join(',')).join(';') + (bodyDetail().low ? '_lo' : '_hi');
+            const g = geo(key, () => mergeParts(shoeSpots.map(([x, y, z]) => {
+                const one = shoeGeometry(front).clone();
+                one.translate(x, y + 0.012, z);
+                return one;
+            })));
+            root.add(new THREE.Mesh(g, colorMat(pickWeighted(SHOE_COLORS, r()), 0.55)));
+        }
+    }
 
     // =====================================================================
     // MANI CON LE DITA (pubblico, cronometristi, staff in panchina, arbitri)
@@ -398,7 +754,7 @@
             bodyPivot.add(hood);
             [-0.045, 0.045].forEach(z => {
                 const s = new THREE.Mesh(geo('cord', () => new THREE.CylinderGeometry(0.006, 0.006, 0.14, 5)), hd.string);
-                s.position.set(0.2, 0.45, z);
+                s.position.set(0.165, 0.45, z);
                 bodyPivot.add(s);
             });
         }
@@ -445,6 +801,9 @@
         const female = r() < FEMALE_RATIO;
         root.userData.female = female;
         arms.forEach(a => replaceSphereHand(a, a.position.z > 0 ? 1 : -1, 'relaxed', '+x'));
+        // corpo modellato al posto dei cilindri (collo del colore delle mani)
+        const handMesh = arms.length && arms[0].children.find(c => c.userData && c.userData.isHand);
+        upgradeBody(root, bodyPivot, arms, { female, front: '+x', skinMat: handMesh ? handMesh.material : null, random: r });
 
         // volto
         if (head && typeof getFaceMaterialFromFile === 'function') {
@@ -456,11 +815,12 @@
             }
             head.material = getFaceMaterialFromFile(file);
         }
+        reshapeHead(head, female);
         styleHair(head, hair, headGroup, female, adult, r);
 
         // corporatura: le donne un filo più minute
         if (female && torso) {
-            torso.scale.set(0.9, 0.97, 0.92);
+            torso.scale.set(0.95, 0.98, 0.95);   // la sagoma femminile è già nel profilo del busto
             arms.forEach(a => { a.position.z *= 0.92; });
         }
 
@@ -492,5 +852,5 @@
         fp.userData.cloth.rotation.x = sway * 0.25;
     }
 
-    window.HIL_PEOPLE = { playerTraits, traitsOf, findPlayerInfo, applySkaterLook, decorateCrowdMember, updateCrowdFlag, makeHand };
+    window.HIL_PEOPLE = { playerTraits, traitsOf, findPlayerInfo, applySkaterLook, decorateCrowdMember, updateCrowdFlag, makeHand, makeHeadGeometry, upgradeBody };
 })();
