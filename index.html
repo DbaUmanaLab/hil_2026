@@ -2029,7 +2029,7 @@
                 <button id="skip-tour-btn" class="bx-skip">Salta <i>▶▶</i></button>
             </div>
             <div class="bx-l3">
-                <div class="bx-l3-tag"><b></b>IN DIRETTA DA</div>
+                <div class="bx-l3-tag"><b></b><span id="tour-arena-tag">IN DIRETTA DA</span></div>
                 <div id="tour-arena-title" class="bx-l3-main bx-display">PALAHOCKEY DI CITTADELLA</div>
                 <div id="tour-arena-loc" class="bx-l3-sub">Cittadella (PD) • Veneto, Italia</div>
             </div>
@@ -4489,6 +4489,7 @@
             const preset = getActiveQualityPreset();
 
             arenaSwayItems = [];
+            arenaMascot = null;
             arenaCeilingHide = null;
             penaltyDoors = {};
             const fileArena = ARENA_FILE_TEX[arenaId] || null;
@@ -5012,6 +5013,7 @@
         // =====================================================================
         const CIT_TEX = 'assets/textures/cittadella/';
         let arenaSwayItems = [];
+        let arenaMascot = null;        // mascotte a bordo pista registrata dal modulo dell'arena (es. Rino a Milano): { mesh, headGroup, waving, update(t, dt) }
         let arenaCeilingHide = null;   // { group, y }: soffitto basso nascosto quando la camera sta sopra
         const fileTexCache = {};
 
@@ -5865,6 +5867,7 @@
                 it.obj.rotation.x = Math.sin(t * it.speed + it.phase) * it.amp;
                 it.obj.rotation.z = Math.sin(t * it.speed * 0.7 + it.phase * 1.7) * it.amp * 0.6;
             }
+            if (arenaMascot) arenaMascot.update(t, dt);
             if (arenaDustPoints) {
                 arenaDustPoints.rotation.y = Math.sin(t * 0.08) * 0.08;
                 if (currentArenaOutdoor) arenaDustPoints.visible = false;   // anche dopo un cambio di qualità grafica
@@ -8291,10 +8294,17 @@
         }
 
         // --- PANORAMICA INIZIALE DELL'ARENA SELEZIONATA ---
+        // durata della panoramica; se il palazzetto ha una mascotte segue il suo primo piano
+        const ARENA_TOUR_DURATION = 5.0, MASCOT_SHOT_DURATION = 3.8;
+        let mascotShot = null;   // { t } mentre la camera inquadra la mascotte
+
         function startArenaTour() {
             gameState = 'arena_tour';
             tourTimer = 0;
+            mascotShot = null;
+            if (arenaMascot) arenaMascot.waving = false;
             const arenaInfo = ARENA_CATALOG[matchConfig.arena];
+            document.getElementById('tour-arena-tag').textContent = 'IN DIRETTA DA';
             tourArenaTitle.textContent = arenaInfo.name;
             tourArenaLoc.textContent = arenaInfo.location;
 
@@ -8313,9 +8323,42 @@
             if (window.gameAudio) window.gameAudio.startCrowdLoop('ambient');
         }
 
+        // Primo piano della mascotte a bordo pista (es. Rino alla Quanta Club Arena): stacco su
+        // un campo medio dalla pista, poi la camera si avvicina mentre lei saluta il pubblico.
+        function startMascotShot() {
+            const m = arenaMascot;
+            mascotShot = { t: 0 };
+            m.waving = true;
+            const club = CLUB_ROSTERS[m.clubId];
+            document.getElementById('tour-arena-tag').textContent = 'LA MASCOTTE';
+            tourArenaTitle.textContent = m.name.toUpperCase();
+            tourArenaLoc.textContent = (club ? club.name + ' • ' : '') + ARENA_CATALOG[matchConfig.arena].shortTitle;
+            restartAnim(arenaTourOverlay.querySelector('.bx-l3'));
+            const head = new THREE.Vector3();
+            m.headGroup.getWorldPosition(head);
+            const toRink = new THREE.Vector3(-Math.sign(head.x) || 1, 0, 0);
+            camera.position.set(head.x + toRink.x * 6.5, head.y + 0.9, head.z + 3.2);
+            camera.lookAt(head.x, head.y - 0.2, head.z);
+            if (window.gameAudio && window.gameAudio.playCrowdOoh) window.gameAudio.playCrowdOoh();
+        }
+
+        function updateMascotShot(dt) {
+            const m = arenaMascot;
+            mascotShot.t += dt;
+            const k = Math.min(1, mascotShot.t / MASCOT_SHOT_DURATION);
+            const head = new THREE.Vector3();
+            m.headGroup.getWorldPosition(head);
+            const toRink = -Math.sign(head.x) || 1;
+            const camTarget = new THREE.Vector3(head.x + toRink * (3.4 - k * 0.9), head.y + 0.35 - k * 0.1, head.z + 1.3 - k * 0.6);
+            camera.position.lerp(camTarget, 0.05);
+            camera.lookAt(head.x, head.y - 0.05, head.z);
+            if (mascotShot.t >= MASCOT_SHOT_DURATION) finishArenaTour();
+        }
+
         function updateArenaTour(dt) {
+            if (mascotShot) { updateMascotShot(dt); return; }
             tourTimer += dt;
-            const duration = 5.0;
+            const duration = ARENA_TOUR_DURATION;
             const t = Math.min(1, tourTimer / duration);
 
             const angle = -0.35 + t * 1.15;
@@ -8334,6 +8377,10 @@
         }
 
         function finishArenaTour() {
+            // la mascotte viene sempre inquadrata, anche se la panoramica è stata saltata
+            if (arenaMascot && !mascotShot) { startMascotShot(); return; }
+            if (arenaMascot) arenaMascot.waving = false;
+            mascotShot = null;
             arenaTourOverlay.classList.add('hidden');
             startTeamIntro();
         }

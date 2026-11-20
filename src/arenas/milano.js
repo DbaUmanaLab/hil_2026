@@ -321,6 +321,156 @@
         apron.rotation.x = -Math.PI / 2;
         apron.position.set(CX, -0.01, 0);
         targetGroup.add(apron);
+
+        // ---------- 10. Rino, la mascotte: in piedi a bordo pista dietro la balaustra, lato tribuna
+        buildRinoMascot(targetGroup, preset);
+    }
+
+    // =====================================================================
+    // RINO — costume da rinoceronte grigio con casco da hockey blu (fascia rossa),
+    // maglia arancio HCM con polsini blu/bianchi. Guarda verso la pista (+x locale).
+    // Si registra in arenaMascot: index.html lo inquadra all'inizio di ogni partita.
+    // =====================================================================
+    function buildRinoMascot(targetGroup, preset) {
+        const felt = c => new THREE.MeshStandardMaterial({ color: c, roughness: 0.95 });
+        const greyMat = felt(0x8e8d87);
+        const greyDarkMat = felt(0x6f6e69);
+        const hornMat = new THREE.MeshStandardMaterial({ color: 0xece7da, roughness: 0.7 });
+        const helmetMat = new THREE.MeshStandardMaterial({ color: 0x1f3fc4, roughness: 0.35, metalness: 0.1 });
+        const redMat = new THREE.MeshStandardMaterial({ color: 0xd3262e, roughness: 0.45 });
+        const whiteMat = new THREE.MeshStandardMaterial({ color: 0xf4f5f7, roughness: 0.5 });
+        const darkMat = new THREE.MeshBasicMaterial({ color: 0x1a0d0e });
+        const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1e3fd8, roughness: 0.2, metalness: 0.1 });
+        const pantsMat = felt(0x1b2f7a);
+        const shoeMat = new THREE.MeshStandardMaterial({ color: 0x15171c, roughness: 0.6 });
+        const sleeveMat = new THREE.MeshStandardMaterial({ color: 0xe8541e, roughness: 0.6 });
+
+        // maglia: canvas avvolto sul busto (u = 0.25 → davanti, +x; u = 0.75 → schiena)
+        const cv = document.createElement('canvas');
+        cv.width = 512; cv.height = 256;
+        const g = cv.getContext('2d');
+        g.fillStyle = '#e8541e'; g.fillRect(0, 0, 512, 256);
+        g.fillStyle = '#1f3fc4'; g.fillRect(0, 196, 512, 22);
+        g.fillStyle = '#ffffff'; g.fillRect(0, 188, 512, 8); g.fillRect(0, 218, 512, 8);
+        g.save(); g.translate(128, 104);   // stemma sul petto
+        g.fillStyle = '#ffffff'; g.beginPath(); g.arc(0, 0, 46, 0, Math.PI * 2); g.fill();
+        g.fillStyle = '#1f3fc4'; g.beginPath(); g.arc(0, 0, 40, 0, Math.PI * 2); g.fill();
+        g.fillStyle = '#ffffff'; g.font = 'bold 34px Arial Black, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.fillText('HCM', 0, 2);
+        g.restore();
+        g.fillStyle = '#ffffff'; g.textAlign = 'center'; g.textBaseline = 'middle';
+        g.font = 'bold 40px Arial Black, Arial, sans-serif'; g.fillText('RINO', 384, 48);
+        g.font = 'bold 96px Arial Black, Arial, sans-serif'; g.fillText('00', 384, 126);
+        const jerseyTex = new THREE.CanvasTexture(cv);
+        if (THREE.SRGBColorSpace) jerseyTex.colorSpace = THREE.SRGBColorSpace;
+        const jerseyMat = new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.6 });
+
+        const rino = new THREE.Group();
+        const add = (parent, geo, mat, x, y, z, sx = 1, sy = 1, sz = 1) => {
+            const m = new THREE.Mesh(geo, mat);
+            m.position.set(x, y, z);
+            m.scale.set(sx, sy, sz);
+            if (preset.shadows) m.castShadow = true;
+            parent.add(m);
+            return m;
+        };
+        const sph = (w = 20, h = 14) => new THREE.SphereGeometry(1, w, h);
+
+        // gambe e scarpe
+        [-0.13, 0.13].forEach(z => {
+            add(rino, new THREE.CylinderGeometry(0.12, 0.1, 0.78, 10), pantsMat, 0, 0.47, z);
+            add(rino, sph(12, 8), shoeMat, 0.06, 0.06, z, 0.17, 0.08, 0.1);
+        });
+        add(rino, new THREE.CylinderGeometry(0.27, 0.25, 0.22, 16), pantsMat, 0, 0.88, 0);
+
+        // busto con la maglia (oscilla col bacino)
+        const bodyPivot = new THREE.Group();
+        bodyPivot.position.y = 0.9;
+        rino.add(bodyPivot);
+        add(bodyPivot, new THREE.CylinderGeometry(0.31, 0.28, 0.62, 20), jerseyMat, 0, 0.3, 0);
+        add(bodyPivot, sph(), jerseyMat, 0, 0.6, 0, 0.31, 0.12, 0.31);
+
+        // braccia: maniche arancio, polsino blu/bianco, guantone grigio
+        const mkArm = z => {
+            const p = new THREE.Group();
+            p.position.set(0, 0.55, z);
+            add(p, sph(12, 10), sleeveMat, 0, 0, 0, 0.11, 0.11, 0.11);
+            add(p, new THREE.CylinderGeometry(0.095, 0.08, 0.46, 10), sleeveMat, 0, -0.23, 0);
+            add(p, new THREE.CylinderGeometry(0.083, 0.083, 0.06, 10), whiteMat, 0, -0.43, 0);
+            add(p, new THREE.CylinderGeometry(0.084, 0.084, 0.05, 10), helmetMat, 0, -0.48, 0);
+            add(p, sph(12, 10), greyMat, 0.01, -0.57, 0, 0.09, 0.1, 0.08);
+            bodyPivot.add(p);
+            return p;
+        };
+        const leftArmPivot = mkArm(-0.36), rightArmPivot = mkArm(0.36);
+
+        // testa da rinoceronte con casco
+        const headGroup = new THREE.Group();
+        headGroup.position.y = 0.62;
+        headGroup.scale.setScalar(1.25);   // testone da costume
+        bodyPivot.add(headGroup);
+        add(headGroup, sph(24, 18), greyMat, 0, 0.32, 0, 0.36, 0.34, 0.33);              // cranio
+        add(headGroup, sph(20, 14), greyMat, 0.27, 0.42, 0, 0.27, 0.15, 0.23);           // muso superiore
+        add(headGroup, sph(16, 12), greyMat, 0.18, 0.0, 0, 0.25, 0.13, 0.25);            // mandibola
+        // bocca spalancata con il bordo rosso (lì dentro c'è chi indossa il costume)
+        const mouth = new THREE.Group();
+        mouth.position.set(0.37, 0.15, 0);
+        mouth.rotation.y = Math.PI / 2;
+        headGroup.add(mouth);
+        add(mouth, new THREE.CircleGeometry(0.16, 24), darkMat, 0, 0, -0.012, 1, 0.85, 1);
+        add(mouth, new THREE.TorusGeometry(0.16, 0.045, 10, 28), redMat, 0, 0, 0, 1, 0.85, 0.45);
+        // narici e occhi
+        [-0.06, 0.06].forEach(z => add(headGroup, sph(8, 6), darkMat, 0.535, 0.43, z, 0.018, 0.024, 0.018));
+        [-1, 1].forEach(s => {
+            add(headGroup, sph(14, 10), whiteMat, 0.16, 0.46, s * 0.25, 0.07, 0.075, 0.05);
+            add(headGroup, sph(12, 10), eyeMat, 0.2, 0.46, s * 0.28, 0.045, 0.05, 0.03);
+            add(headGroup, sph(6, 4), whiteMat, 0.215, 0.48, s * 0.305, 0.012, 0.012, 0.008);
+        });
+        // corni: quello grande sul muso e il secondo sulla fronte
+        const horn1 = add(headGroup, new THREE.ConeGeometry(0.085, 0.36, 14), hornMat, 0.45, 0.64, 0);
+        horn1.rotation.z = -0.42;
+        const horn2 = add(headGroup, new THREE.ConeGeometry(0.06, 0.2, 12), hornMat, 0.2, 0.72, 0);
+        horn2.rotation.z = -0.3;
+        // casco blu con la fascia rossa e i riquadri bianchi sui lati
+        add(headGroup, new THREE.SphereGeometry(1, 28, 14, 0, Math.PI * 2, 0, Math.PI * 0.5), helmetMat, -0.07, 0.5, 0, 0.375, 0.245, 0.35);
+        add(headGroup, new THREE.TorusGeometry(1, 0.08, 8, 28, Math.PI), redMat, -0.07, 0.5, 0, 0.375, 0.245, 0.35);
+        add(headGroup, new THREE.TorusGeometry(1, 0.06, 6, 32), helmetMat, -0.07, 0.5, 0, 0.38, 0.355, 0.36).rotation.x = Math.PI / 2;
+        [-1, 1].forEach(s => {
+            const patch = add(headGroup, new THREE.PlaneGeometry(0.1, 0.07), whiteMat, 0.1, 0.58, s * 0.295);
+            patch.rotation.y = s > 0 ? 0.45 : Math.PI - 0.45;
+            // orecchie grigie che spuntano dal casco
+            const ear = add(headGroup, new THREE.ConeGeometry(0.07, 0.2, 10), greyDarkMat, -0.12, 0.74, s * 0.24);
+            ear.rotation.x = s * 0.55;
+        });
+
+        // a bordo pista, tra la balaustra e la tribuna, all'altezza della linea blu
+        rino.scale.setScalar(0.95);
+        rino.position.set(-19.7, 0, 11.5);
+        targetGroup.add(rino);
+
+        let waveBlend = 0;
+        arenaMascot = {
+            name: 'Rino',
+            clubId: 'milano',
+            mesh: rino,
+            headGroup,
+            waving: false,
+            update(t, dt) {
+                waveBlend += ((this.waving ? 1 : 0) - waveBlend) * Math.min(1, dt * 6);
+                const k = waveBlend;
+                const idle = Math.sin(t * 1.6);
+                const hop = Math.abs(Math.sin(t * 5.2));
+                rino.position.y = hop * 0.06 * k;
+                bodyPivot.rotation.x = idle * 0.04 * (1 - k) + Math.sin(t * 5.2) * 0.05 * k;
+                headGroup.rotation.y = Math.sin(t * 0.8) * 0.25 * (1 - k);
+                headGroup.rotation.z = Math.sin(t * 2.6) * 0.1 * k;
+                // a riposo braccia lungo i fianchi; quando saluta il destro (z+) va su e sventola
+                rightArmPivot.rotation.x = -0.12 - k * (2.55 + Math.sin(t * 8) * 0.35);
+                rightArmPivot.rotation.z = 0.05 + idle * 0.05 * (1 - k);
+                leftArmPivot.rotation.x = 0.12 + k * 0.5;
+                leftArmPivot.rotation.z = -idle * 0.05 * (1 - k) + k * 0.45;
+            }
+        };
     }
 
     registerArenaBuilder('milano', buildQuantaClubArchitecture);
