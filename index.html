@@ -522,7 +522,20 @@
             .ks-club { max-width: 60vw; }
             .ks-hint { display: none; }
         }
-        @media (prefers-reduced-motion: reduce) { .ks-jersey { animation: none; transition: none; } }
+        /* loader col badge del gioco mentre la maglia viene scaricata/ritagliata */
+        .ks-loader { position: absolute; left: 50%; top: 50%; z-index: 2; width: clamp(90px, 13vh, 130px); aspect-ratio: 1; display: grid; place-items: center; pointer-events: none; opacity: 0; transform: translate(-50%, -50%) scale(.8); transition: opacity .25s ease, transform .3s cubic-bezier(.2,1.3,.4,1); }
+        .ks-loader::before { content: ''; position: absolute; inset: -9px; border-radius: 50%; background: conic-gradient(from 0deg, transparent 0 45%, rgba(246,181,17,.25) 60%, #f6b511 92%, #fff 100%); -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px)); mask: radial-gradient(farthest-side, transparent calc(100% - 5px), #000 calc(100% - 4px)); animation: ksSpin .9s linear infinite; }
+        .ks-loader::after { content: ''; position: absolute; inset: 0; border-radius: 50%; box-shadow: 0 0 0 0 rgba(246,181,17,.5); animation: ksRipple 1.6s ease-out infinite; }
+        .ks-loader-badge { width: 100%; height: 100%; border-radius: 50%; background: #fff; display: grid; place-items: center; box-shadow: 0 10px 26px rgba(0,0,0,.55); animation: ksBadgeBeat 1.6s ease-in-out infinite; }
+        .ks-loader-badge img { width: 86%; height: 86%; object-fit: contain; }
+        .ks-show.is-loading .ks-loader { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        .ks-show.is-loading .ks-jersey { opacity: 0; }
+        .ks-thumb { position: relative; }
+        .ks-thumb:has(img:not([src]))::after { content: ''; position: absolute; inset: 22%; border-radius: 50%; background: #fff url("assets/logos/game%20badge.png") center / 86% no-repeat; animation: ksBadgeBeat 1.6s ease-in-out infinite; opacity: .85; }
+        @keyframes ksSpin { to { transform: rotate(360deg); } }
+        @keyframes ksBadgeBeat { 0%, 100% { transform: scale(1) rotate(0deg); } 20% { transform: scale(1.07) rotate(-6deg); } 40% { transform: scale(.97) rotate(4deg); } 60% { transform: scale(1.02) rotate(0deg); } }
+        @keyframes ksRipple { 0% { box-shadow: 0 0 0 0 rgba(246,181,17,.45); } 100% { box-shadow: 0 0 0 22px rgba(246,181,17,0); } }
+        @media (prefers-reduced-motion: reduce) { .ks-jersey { animation: none; transition: none; } .ks-loader::after, .ks-loader-badge, .ks-thumb::after { animation: none !important; } .ks-loader::before { animation-duration: 2.4s; } }
 
         /* --- PACCHETTO GRAFICO BROADCAST (sovrimpressioni in partita) --- */
         :root { --bx-gold: #f6b511; --bx-ink: #0b1020; --bx-panel: rgba(10,14,26,.9); }
@@ -1015,7 +1028,10 @@
         .as-view-vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse 80% 70% at 50% 40%, transparent 50%, rgba(2,6,23,.55) 100%), linear-gradient(0deg, rgba(8,16,36,.86) 0%, rgba(8,16,36,.55) 30%, transparent 58%); }
         .as-view-fade { position: absolute; inset: 0; pointer-events: none; background: #040b1f; opacity: 0; transition: opacity .35s ease; display: grid; place-items: center; z-index: 1; }
         .as-view-fade.is-on { opacity: 1; transition-duration: .18s; }
-        .as-view-fade span { font-weight: 600; letter-spacing: .3em; text-transform: uppercase; font-size: 13px; color: #93c5fd; }
+        .as-view-fade .as-fade-inner > span { font-weight: 600; letter-spacing: .3em; text-transform: uppercase; font-size: 13px; color: #93c5fd; }
+        .as-fade-inner { display: flex; flex-direction: column; align-items: center; gap: 26px; }
+        .as-view-fade .ks-loader { position: relative; left: auto; top: auto; transform: scale(.8); }
+        .as-view-fade.is-on .ks-loader { opacity: 1; transform: scale(1); }
         .as-ui { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; pointer-events: none; }
         .as-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: clamp(10px, 2vh, 18px) clamp(14px, 2vw, 24px); }
         .as-top .nhl-pick-label { font-size: clamp(10px, 1.1vw, 14px); color: rgba(255,255,255,.75); text-shadow: 0 1px 4px rgba(0,0,0,.8); }
@@ -1737,10 +1753,11 @@
                                 <div id="step2-home-club" class="ks-club">SQUADRA</div>
                             </div>
                         </div>
-                        <div class="ks-show">
+                        <div class="ks-show is-loading">
                             <div class="ks-spot"></div>
                             <div class="ks-floor"></div>
-                            <img id="kit-img-home" class="ks-jersey" src="assets/jerseys/generic.png" alt="Maglia" draggable="false">
+                            <div class="ks-loader" aria-hidden="true"><span class="ks-loader-badge"><img src="assets/logos/game%20badge.png" alt="" draggable="false"></span></div>
+                            <img id="kit-img-home" class="ks-jersey" alt="Maglia" draggable="false">
                             <button type="button" data-kit-side="home" data-dir="-1" class="cycle-kit-btn ks-arrow is-prev" aria-label="Divisa precedente">◀</button>
                             <button type="button" data-kit-side="home" data-dir="1" class="cycle-kit-btn ks-arrow is-next" aria-label="Divisa successiva">▶</button>
                         </div>
@@ -1756,10 +1773,11 @@
                                 <div id="step2-guest-club" class="ks-club">SQUADRA</div>
                             </div>
                         </div>
-                        <div class="ks-show">
+                        <div class="ks-show is-loading">
                             <div class="ks-spot"></div>
                             <div class="ks-floor"></div>
-                            <img id="kit-img-guest" class="ks-jersey" src="assets/jerseys/generic.png" alt="Maglia" draggable="false">
+                            <div class="ks-loader" aria-hidden="true"><span class="ks-loader-badge"><img src="assets/logos/game%20badge.png" alt="" draggable="false"></span></div>
+                            <img id="kit-img-guest" class="ks-jersey" alt="Maglia" draggable="false">
                             <button type="button" data-kit-side="guest" data-dir="-1" class="cycle-kit-btn ks-arrow is-prev" aria-label="Divisa precedente">◀</button>
                             <button type="button" data-kit-side="guest" data-dir="1" class="cycle-kit-btn ks-arrow is-next" aria-label="Divisa successiva">▶</button>
                         </div>
@@ -1782,7 +1800,7 @@
                 <!-- area della proiezione 3D (la parte alta, sopra il riquadro col nome): la usa syncArenaViewOffset -->
                 <section id="arena-3d-view" class="as-view" aria-hidden="true"></section>
                 <div class="as-view-vignette"></div>
-                <div id="arena-view-fade" class="as-view-fade"><span>Caricamento palazzetto…</span></div>
+                <div id="arena-view-fade" class="as-view-fade"><div class="as-fade-inner"><div class="ks-loader" aria-hidden="true"><span class="ks-loader-badge"><img src="assets/logos/game%20badge.png" alt="" draggable="false"></span></div><span>Caricamento palazzetto…</span></div></div>
 
                 <div class="as-ui">
                     <!-- Titolo in alto a sinistra (come SELECT TEAM) e vista 3D in alto a destra -->
@@ -3661,6 +3679,7 @@
         // Le PNG hanno margini trasparenti diversi: le ritaglio sul contenuto così tutte le maglie
         // appaiono della stessa grandezza, e calcolo il colore medio per avvisare se le divise si somigliano.
         const jerseyTrimCache = {};
+        const jerseyTrimDone = {};   // src già pronti → niente loader
         function loadTrimmedJersey(src) {
             if (jerseyTrimCache[src]) return jerseyTrimCache[src];
             jerseyTrimCache[src] = new Promise(resolve => {
@@ -3696,6 +3715,7 @@
                 img.onerror = () => resolve(src === JERSEY_FALLBACK ? { url: src, color: null } : loadTrimmedJersey(JERSEY_FALLBACK));
                 img.src = src;
             });
+            jerseyTrimCache[src].then(() => { jerseyTrimDone[src] = true; });
             return jerseyTrimCache[src];
         }
 
@@ -11723,10 +11743,13 @@
                 step2LastKits[sd.key] = stateKey;
                 const src = getJerseyImageSrc(sd.club.jerseyClubId, sd.keys.indexOf(sd.kit));
                 const loaded = loadTrimmedJersey(src);
+                const showEl = imgEl.parentElement;
+                if (!jerseyTrimDone[src]) showEl.classList.add('is-loading');
                 if (animate) imgEl.classList.add(dir > 0 ? 'is-out-l' : 'is-out-r');
                 Promise.all([loaded, new Promise(r => setTimeout(r, animate ? 230 : 0))]).then(([res]) => {
                     if (token !== step2RenderToken && changedSide !== sd.key) return;
                     imgEl.alt = 'Maglia ' + sd.club.name + ' — ' + sd.club.kits[sd.kit].label;
+                    showEl.classList.remove('is-loading');
                     if (animate) {
                         imgEl.classList.remove('is-out-l', 'is-out-r');
                         imgEl.style.transition = 'none';
