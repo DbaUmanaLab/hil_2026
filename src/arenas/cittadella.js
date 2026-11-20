@@ -410,6 +410,7 @@
         targetGroup.add(glassPosts);
 
         buildCittadellaWoodenBar(targetGroup);
+        buildCittadellaTvTower(targetGroup);
     }
 
     // Banda luminosa sfumata (alone delle strisce LED)
@@ -540,7 +541,266 @@
         southSign.position.set(0, wallH - 0.18, cabinD / 2 + 0.04);
         barGroup.add(frontSign, southSign);
 
+        addBarSheets(barGroup, cabinW, cabinD);
+        addBarPeople(targetGroup, barGroup, cabinW, cabinD);
         targetGroup.add(barGroup);
+    }
+
+
+    // --- TORRE DELLE RIPRESE TV IN MEZZO ALLA TRIBUNA ---
+    // Ponteggio in tubi d'acciaio appoggiato sulle due file più alte, al centro della tribuna
+    // (dove la volta è abbastanza alta), con scala alla marinara, piano di lavoro con parapetto,
+    // telecamera su treppiede e operatore. Le file e la posizione sono quelle del pubblico di index.html
+    // (rowX = -rinkWidth/2 - 2.35 - row*1.25, rowY = 0.55*(row+1)); lì gli spettatori non vengono messi.
+    function buildCittadellaTvTower(targetGroup) {
+        const lowQ = getActiveQualityPreset().id === 'low';
+        const rowX = row => -rinkWidth / 2 - 2.35 - row * 1.25;
+        const rowTop = row => 0.55 * (row + 1);
+        const cx = (rowX(2) + rowX(3)) / 2, cz = CIT_TV_TOWER_Z;
+        const S = 0.85;                               // metà lato del ponteggio
+        const deckY = 5.0;
+        const tubeMat = new THREE.MeshStandardMaterial({ color: 0x9aa3ad, metalness: 0.75, roughness: 0.35 });
+        const boardMat = new THREE.MeshStandardMaterial({ color: 0x8a6a3e, roughness: 0.8 });
+        const darkMat = new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.5, metalness: 0.3 });
+
+        const tower = new THREE.Group();
+        tower.position.set(cx, 0, cz);
+        targetGroup.add(tower);
+
+        // tubi: un'unica InstancedMesh (un cilindro unitario orientato da un punto all'altro)
+        const tubes = [];
+        const tube = (a, b, r = 0.024) => tubes.push([a, b, r]);
+        const V = (x, y, z) => new THREE.Vector3(x, y, z);
+        // montanti: quelli verso la pista poggiano sulla fila 3, quelli dietro sulla fila 4
+        const legBase = x => (x > 0 ? rowTop(2) : rowTop(3));
+        const corners = [[S, S], [S, -S], [-S, S], [-S, -S]];
+        corners.forEach(([x, z]) => tube(V(x, legBase(x), z), V(x, deckY + 1.05, z), 0.028));
+        // correnti orizzontali ogni metro e diagonali alternate sui quattro lati
+        const levels = [];
+        for (let y = rowTop(3) + 0.25; y < deckY - 0.1; y += 0.95) levels.push(y);
+        levels.push(deckY);
+        levels.forEach((y, i) => {
+            tube(V(S, y, S), V(S, y, -S)); tube(V(-S, y, S), V(-S, y, -S));
+            tube(V(S, y, S), V(-S, y, S)); tube(V(S, y, -S), V(-S, y, -S));
+            if (i < levels.length - 1) {
+                const y2 = levels[i + 1], f = i % 2 ? 1 : -1;
+                tube(V(S, y, f * S), V(S, y2, -f * S), 0.018);
+                tube(V(-S, y, -f * S), V(-S, y2, f * S), 0.018);
+                tube(V(f * S, y, S), V(-f * S, y2, S), 0.018);
+                tube(V(-f * S, y, -S), V(f * S, y2, -S), 0.018);
+            }
+        });
+        // parapetto: corrente a metà e in alto
+        [0.5, 1.0].forEach(h => {
+            const y = deckY + h;
+            tube(V(S, y, S), V(S, y, -S)); tube(V(-S, y, S), V(-S, y, -S));
+            tube(V(S, y, S), V(-S, y, S)); tube(V(S, y, -S), V(-S, y, -S));
+        });
+        // scala alla marinara sul lato -Z (verso il fondo con la casetta)
+        const lz = -S - 0.12, lx0 = -0.2, lx1 = 0.2;
+        tube(V(lx0, rowTop(3), lz), V(lx0, deckY + 1.0, lz), 0.018);
+        tube(V(lx1, rowTop(3), lz), V(lx1, deckY + 1.0, lz), 0.018);
+        for (let y = rowTop(3) + 0.3; y < deckY; y += 0.3) tube(V(lx0, y, lz), V(lx1, y, lz), 0.013);
+
+        const unit = new THREE.CylinderGeometry(1, 1, 1, lowQ ? 6 : 8, 1);
+        const inst = new THREE.InstancedMesh(unit, tubeMat, tubes.length);
+        const m = new THREE.Matrix4(), q = new THREE.Quaternion(), up = V(0, 1, 0), dir = V(0, 0, 0), mid = V(0, 0, 0), sc = V(1, 1, 1);
+        tubes.forEach(([a, b, r], i) => {
+            dir.subVectors(b, a); const len = dir.length(); dir.normalize();
+            q.setFromUnitVectors(up, dir);
+            mid.addVectors(a, b).multiplyScalar(0.5);
+            sc.set(r, len, r);
+            m.compose(mid, q, sc);
+            inst.setMatrixAt(i, m);
+        });
+        inst.instanceMatrix.needsUpdate = true;
+        inst.castShadow = true;
+        tower.add(inst);
+
+        // piano di lavoro con le tavole fermapiede
+        const deck = new THREE.Mesh(new THREE.BoxGeometry(2 * S + 0.1, 0.05, 2 * S + 0.1), boardMat);
+        deck.position.y = deckY + 0.025;
+        tower.add(deck);
+        [[0, S], [0, -S]].forEach(([x, z]) => {
+            const tb = new THREE.Mesh(new THREE.BoxGeometry(2 * S, 0.15, 0.025), boardMat);
+            tb.position.set(x, deckY + 0.1, z);
+            tower.add(tb);
+        });
+        [[S, 0], [-S, 0]].forEach(([x, z]) => {
+            const tb = new THREE.Mesh(new THREE.BoxGeometry(0.025, 0.15, 2 * S), boardMat);
+            tb.position.set(x, deckY + 0.1, z);
+            tower.add(tb);
+        });
+        // piedini a vite sotto i montanti
+        corners.forEach(([x, z]) => {
+            const foot = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.02, 0.16), darkMat);
+            foot.position.set(x, legBase(x) + 0.01, z);
+            tower.add(foot);
+        });
+
+        // telecamera su treppiede, puntata verso il centro della pista
+        const cam = new THREE.Group();
+        cam.position.set(0.25, deckY + 0.05, 0);
+        tower.add(cam);
+        for (let i = 0; i < 3; i++) {
+            const a = (i / 3) * Math.PI * 2 + 0.3;
+            const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 1.3, 6), darkMat);
+            leg.position.set(Math.cos(a) * 0.17, 0.62, Math.sin(a) * 0.17);
+            leg.rotation.set(Math.sin(a) * 0.26, 0, -Math.cos(a) * 0.26);
+            cam.add(leg);
+        }
+        const headY = 1.28;
+        const fluid = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.09, 12), darkMat);
+        fluid.position.y = headY;
+        const body = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.2, 0.15), darkMat);
+        body.position.set(0.03, headY + 0.15, 0);
+        const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.32, 14), darkMat);
+        lens.rotation.z = -Math.PI / 2;
+        lens.position.set(0.38, headY + 0.15, 0);
+        const hood = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.15, 0.17), darkMat);
+        hood.position.set(0.56, headY + 0.15, 0);
+        const vf = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.08, 0.12), darkMat);
+        vf.position.set(-0.08, headY + 0.29, -0.04);
+        const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.5, 6), darkMat);
+        handle.rotation.z = Math.PI / 2 - 0.35;
+        handle.position.set(-0.36, headY + 0.08, 0.06);
+        const tally = new THREE.Mesh(new THREE.BoxGeometry(0.03, 0.03, 0.03), new THREE.MeshBasicMaterial({ color: 0xff2020 }));
+        tally.position.set(0.2, headY + 0.27, 0);
+        cam.add(fluid, body, lens, hood, vf, handle, tally);
+
+        // operatore dietro la camera
+        if (window.HIL_PEOPLE) {
+            const op = window.HIL_PEOPLE.makePerson({ top: 0x111827, pants: 0x1f2937, female: false, cap: 0x111827 });
+            op.mesh.position.set(-0.45, deckY + 0.05, 0.05);
+            op.rightArmPivot.rotation.z = 0.75;    // mano sul manico della testa fluida
+            op.leftArmPivot.rotation.z = 0.35;
+            op.headGroup.rotation.z = -0.08;
+            tower.add(op.mesh);
+        }
+    }
+
+    // --- FOGLI ATTACCATI ALLA CASETTA: listino, panini, locandina della squadra, avvisi ---
+    function citSheetTexture(kind) {
+        const c = document.createElement('canvas');
+        c.width = 256; c.height = 362;
+        const g = c.getContext('2d');
+        const paper = { menu: '#fffdf6', panini: '#fffbe8', poster: '#ffffff', notice: '#fef9c3', torneo: '#e0f2fe' }[kind] || '#fff';
+        g.fillStyle = paper; g.fillRect(0, 0, 256, 362);
+        g.textAlign = 'center';
+        const line = (txt, y, size, color = '#1c1917', weight = '700', font = 'Arial') => {
+            g.fillStyle = color; g.font = `${weight} ${size}px ${font}`; g.fillText(txt, 128, y);
+        };
+        const row = (a, b, y) => {
+            g.fillStyle = '#292524'; g.font = '600 19px Arial';
+            g.textAlign = 'left'; g.fillText(a, 22, y);
+            g.textAlign = 'right'; g.fillText(b, 234, y);
+            g.textAlign = 'center';
+            g.strokeStyle = 'rgba(0,0,0,0.15)'; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(22, y + 7); g.lineTo(234, y + 7); g.stroke(); g.setLineDash([]);
+        };
+        if (kind === 'menu') {
+            line('LISTINO PREZZI', 46, 26, '#7c2d12', '900');
+            [['Caffè', '1,20 €'], ['Caffè corretto', '1,80 €'], ['Cappuccino', '1,50 €'], ['Tè caldo', '1,50 €'], ['Acqua 0,5 l', '1,00 €'],
+             ['Bibite', '2,50 €'], ['Birra', '3,50 €'], ['Spritz', '4,00 €'], ['Patatine', '1,50 €']].forEach(([a, b], i) => row(a, b, 92 + i * 29));
+        } else if (kind === 'panini') {
+            line('PANINI', 58, 40, '#b45309', '900');
+            line('& TOAST', 92, 24, '#b45309', '800');
+            [['Porchetta', '4,50 €'], ['Salame', '4,00 €'], ['Cotto e formaggio', '4,00 €'], ['Toast', '3,50 €'], ['Piadina', '4,50 €']]
+                .forEach(([a, b], i) => row(a, b, 142 + i * 34));
+            line('chiedere al banco ☺', 336, 17, '#57534e', 'italic 600');
+        } else if (kind === 'poster') {
+            g.fillStyle = '#b91c1c'; g.fillRect(0, 0, 256, 120);
+            line('FORZA', 52, 34, '#fff', '900');
+            line('CITTADELLA', 98, 34, '#fff', '900');
+            line('HOCKEY IN LINE', 150, 20, '#b91c1c', '800');
+            line('SERIE A', 176, 18, '#1e3a8a', '800');
+            line('PROSSIMA PARTITA', 226, 18, '#1c1917', '800');
+            line('SABATO ORE 20:45', 256, 22, '#b91c1c', '900');
+            line('PALAHOCKEY', 290, 18, '#1c1917', '700');
+            line('ingresso libero', 322, 16, '#57534e', 'italic 600');
+        } else if (kind === 'notice') {
+            line('SI ACCETTANO', 90, 26, '#1c1917', '800', 'Comic Sans MS');
+            line('CARTE', 140, 40, '#15803d', '900', 'Comic Sans MS');
+            line('E SATISPAY', 188, 28, '#dc2626', '800', 'Comic Sans MS');
+            line('grazie! ☺', 262, 24, '#1c1917', '600', 'Comic Sans MS');
+        } else {
+            line('TORNEO', 64, 34, '#1e3a8a', '900');
+            line('GIOVANILE', 104, 30, '#1e3a8a', '900');
+            line('U12 • U14 • U16', 150, 20, '#0369a1', '700');
+            line('iscrizioni al bar', 210, 20, '#1c1917', '600');
+            line('o in segreteria', 238, 20, '#1c1917', '600');
+            g.fillStyle = '#1e3a8a'; g.fillRect(0, 312, 256, 50);
+            line('HC CITTADELLA', 345, 22, '#fff', '800');
+        }
+        // nastro adesivo sugli angoli in alto
+        g.fillStyle = 'rgba(235,225,200,0.75)';
+        [[18, 12, -0.5], [238, 12, 0.5]].forEach(([x, y, a]) => { g.save(); g.translate(x, y); g.rotate(a); g.fillRect(-24, -8, 48, 16); g.restore(); });
+        const tex = new THREE.CanvasTexture(c);
+        tex.anisotropy = 4;
+        return tex;
+    }
+
+    function addBarSheets(barGroup, cabinW, cabinD) {
+        const sheet = (kind, w) => {
+            const m = new THREE.Mesh(new THREE.PlaneGeometry(w, w * 1.414), new THREE.MeshStandardMaterial({ map: citSheetTexture(kind), roughness: 0.9, side: THREE.DoubleSide }));
+            return m;
+        };
+        // sotto il bancone verso la pista (+X)
+        [['menu', -1.55, 0.72, 0.04], ['poster', -0.35, 0.7, -0.05], ['notice', 0.75, 0.74, 0.07], ['panini', 1.75, 0.7, -0.03]].forEach(([k, z, y, tilt]) => {
+            const s = sheet(k, 0.34);
+            s.rotation.set(0, Math.PI / 2, tilt);
+            s.position.set(cabinW / 2 + 0.006, y, z);
+            barGroup.add(s);
+        });
+        // sotto il bancone verso la tribuna (+Z)
+        [['torneo', -1.3, 0.72, 0.05], ['menu', 0.2, 0.7, -0.03], ['poster', 1.45, 0.72, 0.04]].forEach(([k, x, y, tilt]) => {
+            const s = sheet(k, 0.34);
+            s.rotation.set(0, 0, tilt);
+            s.position.set(x, y, cabinD / 2 + 0.006);
+            barGroup.add(s);
+        });
+        // dentro, sopra il retrobanco: listino grande
+        const big = sheet('menu', 0.55);
+        big.rotation.set(0, Math.PI / 2, 0);
+        big.position.set(-cabinW / 2 + 0.215, 1.95, 1.2);
+        barGroup.add(big);
+    }
+
+    // --- DUE RAGAZZE AL BANCO E UN PO' DI GENTE FUORI DALLA CASETTA ---
+    function addBarPeople(targetGroup, barGroup, cabinW, cabinD) {
+        const P = window.HIL_PEOPLE;
+        if (!P || !P.makePerson) return;
+        // bariste: maglietta gialla, grembiule marrone; una al banco verso la pista, una verso la tribuna
+        const g1 = P.makePerson({ female: true, top: 0xfacc15, pants: 0x1f2937, apron: 0x7c2d12 });
+        g1.mesh.position.set(cabinW / 2 - 0.62, 0.16, -0.7);
+        g1.rightArmPivot.rotation.z = 0.55;     // porge il caffè sul bancone
+        barGroup.add(g1.mesh);
+        const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.028, 0.07, 10), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 }));
+        cup.position.set(cabinW / 2 + 0.05, 1.29 + 0.035, -0.55);
+        barGroup.add(cup);
+        const g2 = P.makePerson({ female: true, top: 0xfacc15, pants: 0x111827, apron: 0x7c2d12, cap: 0x7c2d12 });
+        g2.mesh.position.set(0.55, 0.16, cabinD / 2 - 0.62);
+        g2.mesh.rotation.y = -Math.PI / 2;    // guarda verso +Z
+        g2.leftArmPivot.rotation.z = 0.4;
+        barGroup.add(g2.mesh);
+
+        // clienti: in fila al banco verso la tribuna, uno al banco verso la pista, due che chiacchierano
+        const bx = barGroup.position.x, bz = barGroup.position.z;
+        const outside = [
+            [bx + 0.3, bz + cabinD / 2 + 0.75, Math.PI / 2],         // al banco (+Z), guarda verso -Z
+            [bx - 0.1, bz + cabinD / 2 + 1.5, Math.PI / 2 + 0.2],
+            [bx + 0.4, bz + cabinD / 2 + 2.2, Math.PI / 2 - 0.15],
+            [bx + cabinW / 2 + 0.62, bz - 0.6, Math.PI],             // al banco verso la pista, guarda verso -X
+            [bx + cabinW / 2 + 0.55, bz + cabinD / 2 + 0.9, -2.23],  // chiacchierano
+            [bx + cabinW / 2 + 0.05, bz + cabinD / 2 + 1.55, 0.91]
+        ];
+        const tops = [0xb91c1c, 0x1e293b, 0xf8fafc, 0x0f766e, 0x7c3aed, 0x334155];
+        outside.forEach(([x, z, ry], i) => {
+            const p = P.makePerson({ top: tops[i % tops.length], female: i % 2 === 1 });
+            p.mesh.position.set(x, 0, z);
+            p.mesh.rotation.y = ry;
+            targetGroup.add(p.mesh);
+            if (typeof crowdMembers !== 'undefined') crowdMembers.push(p);   // esultano anche loro ai gol
+        });
     }
 
     registerArenaBuilder('cittadella', buildPalaHockeyCittadellaArchitecture);

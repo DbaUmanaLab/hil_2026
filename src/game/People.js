@@ -437,6 +437,7 @@
                     c.position.x = d * R - c.geometry.parameters.width / 2 + 0.012;
                 }
             });
+            torso.userData.torsoShape = { R, h: p.height, female: !!opts.female, front };
             swap(torso, torsoGeometry(p.radiusTop, p.radiusBottom, p.height, !!opts.female, front));
             // collo, del colore della pelle, fra il busto e la testa
             if (opts.skinMat && !bodyDetail().low) {
@@ -789,7 +790,8 @@
     // Chiamata per ogni tifoso subito dopo maybeMakeCrowdChild(): headGroup è figlio di bodyPivot,
     // la testa è il primo figlio di headGroup e la calotta dei capelli il secondo; il busto è il primo
     // mesh di bodyPivot e le braccia sono i gruppi di bodyPivot (quello con z > 0 è il destro).
-    function decorateCrowdMember(root, headGroup, isChild) {
+    // opts (facoltativo): { female: true/false (forza il sesso), gear: false (niente maglia/felpa/bandierina) }
+    function decorateCrowdMember(root, headGroup, isChild, opts = {}) {
         const bodyPivot = headGroup && headGroup.parent;
         if (!bodyPivot || typeof matchConfig === 'undefined') return;
         const r = Math.random;
@@ -798,7 +800,7 @@
         const arms = bodyPivot.children.filter(c => c.isGroup && c !== headGroup);
         const rightArm = arms.find(a => a.position.z > 0);
         const adult = !isChild;
-        const female = r() < FEMALE_RATIO;
+        const female = opts.female != null ? !!opts.female : r() < FEMALE_RATIO;
         root.userData.female = female;
         arms.forEach(a => replaceSphereHand(a, a.position.z > 0 ? 1 : -1, 'relaxed', '+x'));
         // corpo modellato al posto dei cilindri (collo del colore delle mani)
@@ -824,6 +826,7 @@
             arms.forEach(a => { a.position.z *= 0.92; });
         }
 
+        if (opts.gear === false) return;
         // tifo: 10% ospiti, il resto casa
         const guest = r() < GUEST_FAN_RATIO;
         const clubId = guest ? matchConfig.guestClub : matchConfig.homeClub;
@@ -836,6 +839,118 @@
             else if (g < gearChance) dressFan(bodyPivot, torso, arms, clubId, 'hoodie', r);
         }
         if (rightArm && r() < (guest ? 0.3 : 0.15)) root.userData.flagPivot = addFlag(rightArm, clubId);
+    }
+
+    // ---------- stemma della squadra sul petto (giacche dello staff)
+    const crestTexCache = {};
+    function crestTexture(clubId) {
+        if (crestTexCache[clubId] !== undefined) return crestTexCache[clubId];
+        const file = TEAM_DATA.logos && TEAM_DATA.logos[clubId];
+        const tex = file ? new THREE.TextureLoader().load('assets/logos/' + file) : null;
+        if (tex) tex.anisotropy = 4;
+        return (crestTexCache[clubId] = tex);
+    }
+
+    // Stemma cucito sul lato sinistro del petto, appoggiato sulla sagoma del busto modellato
+    // (serve upgradeBody prima). opts: { t: altezza sul busto 0..1, size }
+    function addChestCrest(bodyPivot, clubId, opts = {}) {
+        const torso = bodyPivot && bodyPivot.children.find(c => c.isMesh && c.userData.torsoShape);
+        const tex = clubId && crestTexture(clubId);
+        if (!torso || !tex) return null;
+        const { R, h, female, front } = torso.userData.torsoShape;
+        const t = opts.t != null ? opts.t : 0.6, size = opts.size || 0.095;
+        const [d, w] = torsoAt(female, t);
+        const D = d * R, Wd = w * R;
+        // posizione sul petto: a metà fra lo sterno e il fianco, sull'ellisse della sezione
+        const off = Wd * 0.42;
+        const depth = D * Math.sqrt(Math.max(0, 1 - (off / Wd) * (off / Wd))) + 0.004;
+        // normale dell'ellisse in quel punto: lo stemma segue la curvatura
+        const yaw = Math.atan2(off / (Wd * Wd), depth / (D * D));
+        const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.35, roughness: 0.6 });
+        const crest = new THREE.Mesh(geo('crestPlane', () => new THREE.PlaneGeometry(1, 1)), mat);
+        crest.scale.set(size, size, 1);
+        const y = torso.position.y + (t - 0.5) * h;
+        // chi guarda +X ha la sinistra verso -Z; chi guarda -Z ha la sinistra verso -X
+        if (front === '-z') {
+            crest.position.set(-off, y, -depth);
+            crest.rotation.set(-0.12, Math.PI + yaw, 0, 'YXZ');
+        } else {
+            crest.position.set(depth, y, -off);
+            crest.rotation.set(-0.12, Math.PI / 2 - yaw, 0, 'YXZ');
+        }
+        bodyPivot.add(crest);
+        return crest;
+    }
+
+    // ---------- persona in piedi (bar, operatori, gente nei corridoi): stessa costruzione del pubblico
+    // dei palazzetti, poi mani, volto, capelli e corpo modellati. Guarda verso +X locale.
+    // opts: { female, top: colore maglia, pants, apron: colore grembiule, cap: colore cappellino, skin }
+    function makePerson(opts = {}) {
+        const root = new THREE.Group();
+        const top = new THREE.MeshStandardMaterial({ color: opts.top != null ? opts.top : 0x334155, roughness: 0.7 });
+        const pantsM = colorMat(opts.pants != null ? opts.pants : 0x1e293b, 0.8);
+        const skinM = colorMat(opts.skin != null ? opts.skin : 0xd9a98f, 0.6);
+        const hairM = colorMat(0x2a1d14, 0.8);
+        [-0.11, 0.11].forEach(lz => {
+            const lg = new THREE.Mesh(new THREE.CylinderGeometry(0.085, 0.07, 0.82, 7), pantsM);
+            lg.position.set(0, 0.41, lz);
+            root.add(lg);
+        });
+        const bodyPivot = new THREE.Group();
+        bodyPivot.position.set(0, 0.82, 0);
+        root.add(bodyPivot);
+        const torso = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.19, 0.55, 10), top);
+        torso.position.y = 0.27;
+        bodyPivot.add(torso);
+        const headGroup = new THREE.Group();
+        headGroup.position.y = 0.69;
+        const faceMat = typeof getRandomPhotoFaceMaterial === 'function' ? getRandomPhotoFaceMaterial() : skinM;
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 12), faceMat);
+        const hair = new THREE.Mesh(new THREE.SphereGeometry(0.148, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), hairM);
+        hair.position.x = -0.015;
+        headGroup.add(head, hair);
+        bodyPivot.add(headGroup);
+        const arm = sz => {
+            const ap = new THREE.Group();
+            ap.position.set(0, 0.48, sz);
+            const sl = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.052, 0.42, 7), top);
+            sl.position.y = -0.21;
+            const hd = new THREE.Mesh(new THREE.SphereGeometry(0.05, 7, 7), skinM);
+            hd.position.y = -0.44;
+            ap.add(sl, hd);
+            bodyPivot.add(ap);
+            return ap;
+        };
+        const leftArmPivot = arm(-0.24), rightArmPivot = arm(0.24);
+        decorateCrowdMember(root, headGroup, false, { female: opts.female, gear: false });
+        // grembiule: telo sul davanti di busto e cosce, con il laccio in vita
+        if (opts.apron != null) {
+            const ts = torso.userData.torsoShape;
+            const R = ts ? ts.R : 0.195;
+            const [d] = ts ? torsoAt(ts.female, 0.4) : [0.75];
+            const apronM = colorMat(opts.apron, 0.85, THREE.DoubleSide);
+            // spicchio di cilindro aperto, centrato sul davanti (+X)
+            const apron = new THREE.Mesh(geo('apron', () => new THREE.CylinderGeometry(1, 1.08, 1, 14, 1, true, Math.PI / 2 - 0.9, 1.8)), apronM);
+            apron.scale.set(d * R + 0.014, 0.6, R * 0.98);
+            apron.position.set(0, 0.04, 0);
+            bodyPivot.add(apron);
+            const tie = new THREE.Mesh(geo('apronTie', () => new THREE.TorusGeometry(1, 0.012, 4, 24)), apronM);
+            tie.scale.set(d * R + 0.016, R * 0.96, 1);
+            tie.rotation.x = Math.PI / 2;
+            tie.position.y = 0.2;
+            bodyPivot.add(tie);
+        }
+        if (opts.cap != null) {
+            const capM = colorMat(opts.cap, 0.7);
+            const crown = new THREE.Mesh(geo('capCrown', () => new THREE.SphereGeometry(0.155, 14, 8, 0, Math.PI * 2, 0, Math.PI * 0.42)), capM);
+            crown.position.set(-0.01, 0.03, 0);
+            const visor = new THREE.Mesh(geo('capVisor', () => new THREE.CylinderGeometry(0.11, 0.11, 0.012, 14, 1, false, 0, Math.PI)), capM);
+            visor.scale.set(1, 1, 0.75);
+            visor.position.set(0.1, 0.035, 0);
+            visor.rotation.z = -0.12;
+            headGroup.add(crown, visor);
+        }
+        return { mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: 0, phase: Math.random() * Math.PI * 2, standing: true };
     }
 
     // Animazione della bandierina: il braccio la tiene alta e l'asta resta quasi verticale
@@ -852,5 +967,5 @@
         fp.userData.cloth.rotation.x = sway * 0.25;
     }
 
-    window.HIL_PEOPLE = { playerTraits, traitsOf, findPlayerInfo, applySkaterLook, decorateCrowdMember, updateCrowdFlag, makeHand, makeHeadGeometry, upgradeBody };
+    window.HIL_PEOPLE = { playerTraits, traitsOf, findPlayerInfo, applySkaterLook, decorateCrowdMember, updateCrowdFlag, makeHand, makeHeadGeometry, upgradeBody, addChestCrest, makePerson };
 })();

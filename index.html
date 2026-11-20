@@ -5093,6 +5093,155 @@
 
         // --- TAVOLO CRONOMETRISTI SUL LATO OPPOSTO ALLE PANCHINE CON 3 CRONOMETRISTI E LAPTOP ---
         let timekeeperTodd = null;   // { mesh, headGroup, member } solo al PalaHockey di Cittadella
+        // --- CONSOLE DI COMANDO DEL TABELLONE (tavolo cronometristi) ---
+        // Chi la usa sta verso -X e guarda +X: il pannello sale verso +X, la sua sinistra è -Z.
+        function drawTimekeeperConsolePanel() {
+            const W = 1024, H = 520;
+            const c = document.createElement('canvas');
+            c.width = W; c.height = H;
+            const g = c.getContext('2d');
+            const bg = g.createLinearGradient(0, 0, 0, H);
+            bg.addColorStop(0, '#2a2b2e'); bg.addColorStop(1, '#151618');
+            g.fillStyle = bg; g.fillRect(0, 0, W, H);
+
+            const rr = (x, y, w, h, r) => { g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); };
+            // tasto in rilievo: ombra sotto, corpo con sfumatura, riflesso in alto
+            const key = (x, y, w, h, col, light, label, labelCol = '#111', r = 6) => {
+                g.fillStyle = 'rgba(0,0,0,0.55)'; rr(x + 2, y + 4, w, h, r); g.fill();
+                const lg = g.createLinearGradient(0, y, 0, y + h);
+                lg.addColorStop(0, light); lg.addColorStop(1, col);
+                g.fillStyle = lg; rr(x, y, w, h, r); g.fill();
+                g.strokeStyle = 'rgba(0,0,0,0.45)'; g.lineWidth = 1.5; rr(x, y, w, h, r); g.stroke();
+                g.fillStyle = 'rgba(255,255,255,0.28)'; rr(x + 4, y + 3, w - 8, h * 0.28, r * 0.6); g.fill();
+                if (label) {
+                    g.fillStyle = labelCol; g.textAlign = 'center'; g.textBaseline = 'middle';
+                    g.font = `700 ${Math.min(26, h * 0.5)}px Arial`;
+                    g.fillText(label, x + w / 2, y + h / 2 + 1);
+                }
+            };
+            const roundKey = (cx, cy, r, col, light) => {
+                g.fillStyle = 'rgba(0,0,0,0.55)'; g.beginPath(); g.arc(cx + 2, cy + 4, r, 0, Math.PI * 2); g.fill();
+                const rg = g.createRadialGradient(cx - r * 0.3, cy - r * 0.35, r * 0.1, cx, cy, r);
+                rg.addColorStop(0, light); rg.addColorStop(1, col);
+                g.fillStyle = rg; g.beginPath(); g.arc(cx, cy, r, 0, Math.PI * 2); g.fill();
+                g.strokeStyle = 'rgba(0,0,0,0.5)'; g.lineWidth = 1.5; g.stroke();
+                // faccina incisa come sui tasti della foto (segni di stato)
+                g.strokeStyle = 'rgba(80,0,0,0.6)'; g.lineWidth = 2;
+                g.beginPath(); g.arc(cx, cy + 2, r * 0.42, 0.2 * Math.PI, 0.8 * Math.PI); g.stroke();
+            };
+            const caption = (txt, x, y, col = '#e5e7eb', size = 13) => {
+                g.fillStyle = col; g.font = `600 ${size}px Arial`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(txt, x, y);
+            };
+            const YEL = ['#e5b800', '#ffe14d'], RED = ['#c81e1e', '#ff6b5e'], GRN = ['#109a3c', '#4ade80'], WHT = ['#d9dbde', '#ffffff'];
+
+            // colonne a sinistra: tasti rossi tondi e gialli quadrati
+            for (let i = 0; i < 4; i++) roundKey(62, 120 + i * 62, 21, ...RED);
+            for (let i = 0; i < 5; i++) key(112, 72 + i * 56, 60, 40, ...YEL);
+            // pulsanti verdi grandi in basso a sinistra
+            key(104, 372, 92, 46, ...GRN, 'START', '#062e14');
+            key(104, 432, 92, 58, ...GRN, 'STOP', '#062e14');
+            caption('GAME CLOCK', 150, 504, '#9ca3af', 12);
+
+            // display LCD
+            const LX = 222, LY = 40, LW = 392, LH = 300;
+            g.fillStyle = '#0b0b0c'; rr(LX - 12, LY - 12, LW + 24, LH + 24, 10); g.fill();
+            const lcd = g.createLinearGradient(0, LY, 0, LY + LH);
+            lcd.addColorStop(0, '#d9ddd8'); lcd.addColorStop(1, '#c3c8c2');
+            g.fillStyle = lcd; g.fillRect(LX, LY, LW, LH);
+            g.fillStyle = '#26302a'; g.textBaseline = 'middle';
+            g.font = '700 22px monospace'; g.textAlign = 'left';
+            g.fillText('HOME', LX + 14, LY + 26); g.textAlign = 'right'; g.fillText('GUEST', LX + LW - 14, LY + 26);
+            g.textAlign = 'center'; g.font = '700 44px monospace';
+            g.fillText('00', LX + 48, LY + 70); g.fillText('00', LX + LW - 48, LY + 70);
+            g.fillText('20:00', LX + LW / 2, LY + 62);
+            g.font = '700 18px monospace'; g.fillText('PERIOD 1', LX + LW / 2, LY + 102);
+            g.strokeStyle = '#3b463f'; g.lineWidth = 2;
+            g.beginPath(); g.moveTo(LX + 8, LY + 124); g.lineTo(LX + LW - 8, LY + 124); g.stroke();
+            g.beginPath(); g.moveTo(LX + LW / 2, LY + 124); g.lineTo(LX + LW / 2, LY + LH - 46); g.stroke();
+            g.font = '600 15px monospace';
+            ['PEN  # TIME', ' 1  -- --:--', ' 2  -- --:--', ' 3  -- --:--'].forEach((t, i) => {
+                g.textAlign = 'left'; g.fillText(t, LX + 12, LY + 146 + i * 26);
+                g.fillText(t, LX + LW / 2 + 12, LY + 146 + i * 26);
+            });
+            g.beginPath(); g.moveTo(LX + 8, LY + LH - 46); g.lineTo(LX + LW - 8, LY + LH - 46); g.stroke();
+            g.textAlign = 'center'; g.font = '700 15px monospace';
+            ['SCORE', 'PENAL', 'TIME', 'HORN', 'MENU'].forEach((t, i) => g.fillText(t, LX + 40 + i * 78, LY + LH - 22));
+
+            // fila di tasti gialli sotto il display
+            for (let i = 0; i < 5; i++) key(LX + 12 + i * 78, LY + LH + 30, 58, 42, ...YEL);
+            ['HOME +', 'HOME -', 'SHOT', 'GUEST -', 'GUEST +'].forEach((t, i) => caption(t, LX + 41 + i * 78, LY + LH + 92, '#d1d5db', 12));
+
+            // colonne a destra del display: gialli e rossi
+            for (let i = 0; i < 5; i++) key(642, 72 + i * 56, 60, 40, ...YEL);
+            for (let i = 0; i < 5; i++) roundKey(746, 92 + i * 58, 21, ...RED);
+
+            // tastierino numerico bianco
+            const keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', 'OK'];
+            keys.forEach((k, i) => key(800 + (i % 3) * 64, 48 + Math.floor(i / 3) * 58, 54, 46, ...WHT, k, '#111827'));
+            // pulsanti verdi a destra
+            [['HORN', 800, 300], ['TIME OUT', 864, 300], ['ENTER', 928, 300], ['SET', 800, 360], ['RESET', 864, 360], ['NEXT', 928, 360]]
+                .forEach(([t, x, y]) => key(x, y, 54, 46, ...GRN, '', '#062e14'));
+            [['HORN', 827], ['T.OUT', 891], ['ENTER', 955]].forEach(([t, x]) => caption(t, x, 356 - 6, '#d1d5db', 11));
+            // marchio generico
+            g.fillStyle = '#dc2626'; g.font = '900 22px Arial'; g.textAlign = 'left'; g.fillText('HIL', 806, 452);
+            g.fillStyle = '#e5e7eb'; g.font = '600 13px Arial'; g.fillText('SCOREBOARD CONTROL', 852, 452);
+            g.fillStyle = '#6b7280'; g.font = '600 11px Arial'; g.fillText('MULTISPORT • 2026', 852, 470);
+
+            const tex = new THREE.CanvasTexture(c);
+            tex.anisotropy = 8;
+            return tex;
+        }
+
+        let timekeeperConsoleTex = null;
+        function createTimekeeperConsole() {
+            const group = new THREE.Group();
+            // profilo laterale (X = profondità, Y = altezza), estruso sulla larghezza Z
+            const D = 0.27, Wd = 0.47;
+            const prof = [[-D / 2, 0], [D / 2, 0], [D / 2, 0.118], [D / 2 - 0.03, 0.128], [-D / 2 + 0.018, 0.036], [-D / 2, 0.03]];
+            const shape = new THREE.Shape(prof.map(([x, y]) => new THREE.Vector2(x, y)));
+            const shell = new THREE.Mesh(
+                new THREE.ExtrudeGeometry(shape, { depth: Wd, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.005, bevelSegments: 2 }),
+                new THREE.MeshStandardMaterial({ color: 0x141416, roughness: 0.45, metalness: 0.2 })
+            );
+            shell.position.z = -Wd / 2;
+            shell.castShadow = true;
+            group.add(shell);
+
+            // pannello inclinato: dal bordo basso davanti al bordo alto dietro
+            const a0 = new THREE.Vector3(-D / 2 + 0.018, 0.036, 0), a1 = new THREE.Vector3(D / 2 - 0.03, 0.128, 0);
+            const slope = a1.clone().sub(a0);
+            const len = slope.length();
+            const d = slope.normalize();
+            const n = new THREE.Vector3(-d.y, d.x, 0);              // normale verso l'alto e verso chi usa la console
+            if (!timekeeperConsoleTex) timekeeperConsoleTex = drawTimekeeperConsolePanel();
+            const panel = new THREE.Mesh(
+                new THREE.PlaneGeometry(Wd - 0.02, len - 0.012),
+                new THREE.MeshStandardMaterial({ map: timekeeperConsoleTex, roughness: 0.5, emissive: 0xffffff, emissiveMap: timekeeperConsoleTex, emissiveIntensity: 0.08 })
+            );
+            // assi del pannello: larghezza della texture lungo +Z (da sinistra a destra di chi la usa), altezza su per la pendenza
+            const basis = new THREE.Matrix4().makeBasis(new THREE.Vector3(0, 0, 1), d, n);
+            panel.quaternion.setFromRotationMatrix(basis);
+            panel.position.copy(a0).add(a1).multiplyScalar(0.5).addScaledVector(n, 0.0075);
+            group.add(panel);
+
+            // piedini in gomma
+            [[-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(([sx, sz]) => {
+                const f = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.006, 8), new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.9 }));
+                f.position.set(sx * (D / 2 - 0.03), -0.003, sz * (Wd / 2 - 0.03));
+                group.add(f);
+            });
+            // cavo che scende dietro il tavolo
+            const cable = new THREE.Mesh(
+                new THREE.TubeGeometry(new THREE.CatmullRomCurve3([
+                    new THREE.Vector3(D / 2, 0.04, 0.12), new THREE.Vector3(D / 2 + 0.08, 0.02, 0.16),
+                    new THREE.Vector3(D / 2 + 0.14, 0.005, 0.22), new THREE.Vector3(D / 2 + 0.16, 0.003, 0.4)
+                ]), 16, 0.006, 6),
+                new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.7 })
+            );
+            group.add(cable);
+            return group;
+        }
+
         function buildTimekeepersTable(targetGroup) {
             const pbr = getPhotorealisticPBRMaps();
             timekeeperTodd = null;
@@ -5150,14 +5299,12 @@
                 tkGroup.add(leg, sideGlass);
             });
 
-            const consoleBox = new THREE.Mesh(new THREE.BoxGeometry(0.26, 0.09, 0.42), frameMat);
-            consoleBox.position.set(0.32, 1.02, 0.65);
-            const hornBtn = new THREE.Mesh(
-                new THREE.CylinderGeometry(0.045, 0.045, 0.04, 12),
-                new THREE.MeshBasicMaterial({ color: 0xef4444 })
-            );
-            hornBtn.position.set(0.32, 1.08, 0.65);
-            tkGroup.add(consoleBox, hornBtn);
+            // Console di comando del tabellone: scocca nera a cuneo (bassa davanti, alta dietro) con il pannello
+            // inclinato verso i cronometristi: display LCD, pulsanti rossi tondi e gialli quadrati ai lati,
+            // fila gialla sotto il display, pulsanti verdi e tastierino numerico bianco.
+            const consoleGroup = createTimekeeperConsole();
+            consoleGroup.position.set(0.3, 0.98, 0.65);
+            tkGroup.add(consoleGroup);
 
             const screenCanvas = document.createElement('canvas');
             screenCanvas.width = 256;
@@ -5305,6 +5452,7 @@
         // Texture in assets/textures/cittadella/ (generate da foto di riferimento).
         // =====================================================================
         const CIT_TEX = 'assets/textures/cittadella/';
+        const CIT_TV_TOWER_Z = 1.25;   // torre delle riprese TV al centro della tribuna (file 3 e 4 senza pubblico lì)
         let arenaSwayItems = [];
         let arenaMascot = null;        // mascotte a bordo pista registrata dal modulo dell'arena (es. Rino a Milano): { mesh, headGroup, waving, update(t, dt) }
         let arenaCeilingHide = null;   // { group, y }: soffitto basso nascosto quando la camera sta sopra
@@ -5729,6 +5877,7 @@
                 const zStartFans = arenaId === 'cittadella' ? -24.5 : -26;
                 for (let z = zStartFans; z <= 26; z += 1.45) {
                     if (Math.random() > crowdKeepRatio) continue;
+                    if (arenaId === 'cittadella' && row >= 2 && Math.abs(z - CIT_TV_TOWER_Z) < 1.35) continue;   // torre TV
 
                     const style = outfitStyles[Math.floor(Math.random() * outfitStyles.length)];
                     const faceMat = getRandomPhotoFaceMaterial();
@@ -7643,6 +7792,8 @@
             const leftArmPivot = buildStaffArm(-0.27);
             const rightArmPivot = buildStaffArm(0.27);
             window.HIL_PEOPLE.upgradeBody(root, bodyPivot, [leftArmPivot, rightArmPivot], { front: '-z', skinMat, shoes: false });
+            // stemma della squadra sul petto, lato sinistro della giacca
+            window.HIL_PEOPLE.addChestCrest(bodyPivot, TEAM_DATA.logos && TEAM_DATA.logos[clubId] ? clubId : baseClubId, { t: 0.57 });
 
             if (isCoach) {
                 const whistle = new THREE.Mesh(
