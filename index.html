@@ -1991,6 +1991,14 @@
                                 <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="torre_pellice"></span><span class="as-home-chip hidden" data-home-chip="torre_pellice">Casa</span></span>
                             </span>
                         </button>
+                        <button type="button" data-arena="parma" class="arena-pill-btn as-card" role="option">
+                            <span class="as-thumb"><img src="assets/arenas/thumbs/parma.jpg" alt="" loading="lazy" draggable="false"><span class="as-num">21</span></span>
+                            <span class="min-w-0">
+                                <span class="as-card-name block">PalaGufi</span>
+                                <span class="as-card-loc block">Soragna (PR) • Emilia-Romagna</span>
+                                <span class="as-card-meta"><span class="as-card-logos flex gap-1" data-arena-logos="parma"></span><span class="as-home-chip hidden" data-home-chip="parma">Casa</span></span>
+                            </span>
+                        </button>
                     </div>
                     <div class="as-details">
                         <div class="as-stats">
@@ -2731,10 +2739,21 @@
                 capacity: 'Pubblico in Piedi',
                 surface: 'Piastrelle Modulari',
                 roof: 'Capriate in Legno Lamellare'
+            },
+            parma: {
+                id: 'parma',
+                name: 'PALAGUFI',
+                shortTitle: 'PalaGufi',
+                location: 'Soragna (PR) • Emilia-Romagna, Italia',
+                clubBadge: 'Casa: Gufi Parma',
+                desc: 'Il Palapattinaggio Giuseppe Avanzini: volta a botte con gli archi in legno lamellare, gli arcarecci e i tiranti incrociati sotto il telo color crema, testate e zoccolo laterale in telo verde scuro con le porte illuminate. Manica di ventilazione lungo la volta e fari LED sugli arcarecci. Pavimento in cemento grigio-verde con le righe gialle del calcetto e i cerchi neri dell\'hockey, balaustre trasparenti con il corrimano bianco; il pubblico guarda in piedi dietro la ringhiera.',
+                capacity: 'Pubblico in Piedi',
+                surface: 'Cemento Multisport',
+                roof: 'Volta a Botte in Legno Lamellare'
             }
         };
 
-        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice'];
+        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma'];
         // Palazzetti presenti nel menu ma non selezionabili (al momento nessuno)
         const DISABLED_ARENAS = new Set();
         const SELECTABLE_ARENA_IDS = ARENA_IDS.filter(id => !DISABLED_ARENAS.has(id));
@@ -4545,8 +4564,12 @@
             const n = arenaScoreboards.north;
             if (!n) return;
             n.rotation.y = 0;
-            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice'].includes(matchConfig.arena);
-            if (matchConfig.arena === 'torre_pellice') {
+            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma'].includes(matchConfig.arena);
+            if (matchConfig.arena === 'parma') {
+                // tabellone sul telo verde della testata nord
+                n.position.set(0, 6.8, -43.4);
+                n.scale.setScalar(0.45);
+            } else if (matchConfig.arena === 'torre_pellice') {
                 // tabellone appeso alla capriata nord, sopra la rete dietro la porta
                 n.position.set(0, 5.7, -39.5);
                 n.scale.setScalar(0.4);
@@ -4813,7 +4836,7 @@
                 roughness: 0.55
             });
             const benchBackMat = isAsiago ? new THREE.MeshStandardMaterial({ map: pbr.woodDiffuse, bumpMap: preset.usePhysicalMat ? pbr.woodBump : null, bumpScale: 0.015, color: 0xc8955a, roughness: 0.6 }) : new THREE.MeshStandardMaterial({
-                color: arenaId === 'torre_pellice' ? 0x8a6a48 : arenaId === 'kemarin' ? 0x14244a : arenaId === 'piacenza' ? 0x141416 : arenaId === 'ferrara' ? 0x1d3f9a : arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
+                color: arenaId === 'parma' ? 0x1e4a30 : arenaId === 'torre_pellice' ? 0x8a6a48 : arenaId === 'kemarin' ? 0x14244a : arenaId === 'piacenza' ? 0x141416 : arenaId === 'ferrara' ? 0x1d3f9a : arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
                 roughness: 0.8
             });
 
@@ -4921,7 +4944,8 @@
             ferrara: 'src/arenas/ferrara.js',
             piacenza: 'src/arenas/piacenza.js',
             kemarin: 'src/arenas/kemarin.js',
-            torre_pellice: 'src/arenas/torre_pellice.js'
+            torre_pellice: 'src/arenas/torre_pellice.js',
+            parma: 'src/arenas/parma.js'
         };
         const arenaBuilders = {};
         const arenaModulePromises = {};
@@ -5212,7 +5236,9 @@
             // Pista di Campomarino: ALL'APERTO (cielo e foschia chiari), cemento grezzo opaco, niente vetro (recinzione nel modulo)
             kemarin: { dir: 'assets/textures/kemarin/', normal: 'assets/textures/kemarin/rink_normal.jpg', floorTint: 0x8c8e90, floorTintLow: 0x86888a, noGlass: true, outdoor: true, matte: true },
             // Pista del Filatoio: piastrelle modulari grigio chiaro, reti al posto del vetro (nel modulo)
-            torre_pellice: { dir: 'assets/textures/torre_pellice/', normal: 'assets/textures/torre_pellice/rink_normal.jpg', floorTint: 0xcfcfcf, floorTintLow: 0xc4c4c4, noGlass: true, matte: true }
+            torre_pellice: { dir: 'assets/textures/torre_pellice/', normal: 'assets/textures/torre_pellice/rink_normal.jpg', floorTint: 0xcfcfcf, floorTintLow: 0xc4c4c4, noGlass: true, matte: true },
+            // PalaGufi: cemento multisport opaco, balaustre trasparenti con il telaio bianco (nel modulo)
+            parma: { dir: 'assets/textures/parma/', normal: 'assets/textures/parma/rink_normal.jpg', floorTint: 0xbfc3c3, floorTintLow: 0xb3b7b7, glassBoards: true, matte: true }
         };
 
         // Balaustre: ogni striscia rappresenta 18,5 m di pannelli pubblicitari
@@ -5548,7 +5574,7 @@
                             { jacket: 0xf8fafc, shirt: 0xdc2626, isJersey: true }
                         ]))));
 
-            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina' || arenaId === 'ferrara' || arenaId === 'piacenza' || arenaId === 'kemarin' || arenaId === 'torre_pellice') return;   // pubblico costruito dall'architettura del palazzetto
+            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina' || arenaId === 'ferrara' || arenaId === 'piacenza' || arenaId === 'kemarin' || arenaId === 'torre_pellice' || arenaId === 'parma') return;   // pubblico costruito dall'architettura del palazzetto
 
             // Spalti laterali dietro il tavolo cronometristi (con spazio sull'angolo destro per la casetta bar a Cittadella)
             for (let row = 0; row < 4; row++) {

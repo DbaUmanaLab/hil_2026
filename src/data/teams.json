@@ -4683,6 +4683,200 @@
       ]
     },
     {
+      "id": "parma",
+      "league": "SERIE B",
+      "name": "GUFI PARMA",
+      "shortName": "PARMA",
+      "abbr": "GUF",
+      "note": "Nomi e statistiche dal roster ufficiale (3 partite, 15 giocatori e 2 portieri). Numeri di maglia e ruoli NON presenti nel roster: assegnati provvisoriamente, da sostituire con quelli veri. Staff tecnico: Alessandro Tarantola, Francesco Godani, Andrea Torre.",
+      "jerseyClubId": "parma",
+      "homeArena": "parma",
+      "logo": "parma.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/parma.png"
+      ],
+      "ratings": {
+        "off": 60,
+        "def": 57,
+        "goa": 63
+      },
+      "colors": {
+        "primary": "#f2de1c",
+        "secondary": "#1e2c8c",
+        "staffJacket": "#1e2c8c",
+        "coachJacket": "#1e2c8c"
+      },
+      "rosterScreen": {
+        "photo": "parma.jpg",
+        "focus": "50% 35%"
+      },
+      "coach": {
+        "first": "Alessandro",
+        "last": "Tarantola",
+        "role": "Allenatore",
+        "note": "Staff: Francesco Godani, Andrea Torre"
+      },
+      "goalie": {
+        "num": "29",
+        "name": "CRESCI",
+        "first": "Domenico"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "BARBIERI",
+          "first": "Alessandro"
+        }
+      ],
+      "reserves": [
+        {
+          "num": "13",
+          "name": "TARANTOLA",
+          "first": "Tobia"
+        },
+        {
+          "num": "14",
+          "name": "SCAGLIONI",
+          "first": "Agata",
+          "gender": "F"
+        },
+        {
+          "num": "15",
+          "name": "CACCHIOLI",
+          "first": "Tommaso"
+        }
+      ],
+      "kits": {
+        "yellow": {
+          "label": "Divisa Giallo-Blu",
+          "primary": "#f2de1c",
+          "pants": "#1e2c8c",
+          "helmet": "#1e2c8c",
+          "glove": "#1e2c8c"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "DODI",
+            "first": "Fu Liang",
+            "g": 2,
+            "a": 1,
+            "pts": 3
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "FRANZINI",
+            "first": "Diego",
+            "g": 2,
+            "a": 1,
+            "pts": 3
+          },
+          {
+            "role": "RW",
+            "num": "21",
+            "name": "VIAROLI",
+            "first": "Jacopo",
+            "g": 2,
+            "a": 0,
+            "pts": 2
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "VALESI",
+            "first": "Juan David",
+            "g": 2,
+            "a": 0,
+            "pts": 2
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "LONGONI",
+            "first": "Jacopo",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "19",
+            "name": "CERIATI",
+            "first": "Tobias",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "7",
+            "name": "TARANTOLA",
+            "first": "Alina",
+            "gender": "F",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "COMPIANI",
+            "first": "Martina",
+            "gender": "F",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "MEDICI",
+            "first": "Sofia",
+            "gender": "F",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "8",
+            "name": "LONGONI",
+            "first": "Niccolò",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "23",
+            "name": "TASSONI",
+            "first": "Gabriele",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "GODANI",
+            "first": "Matteo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "molina",
       "league": "RFEP",
       "name": "MOLINA SPORT ACEGC",
