@@ -18,8 +18,12 @@
     const ui = {
         msgCat: 'all', msgSel: null,
         mkt: { pos: 'all', team: 'all', minOvr: 0, maxFee: 0, sort: 'ovr' },
-        comp: 'league', compView: 'table', finRange: 'season'
+        comp: 'league', compView: 'table', finRange: 'season',
+        sub: {}                 // schermi piccoli: riquadro visibile per ogni sezione
     };
+    // telefono (anche in orizzontale) e finestre piccole: un riquadro per volta, messaggi in una modale
+    const compactMq = window.matchMedia('(max-width: 900px), (max-height: 560px)');
+    const isCompact = () => compactMq.matches;
 
     // ------------------------------------------------------------------ utilità
     const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -262,7 +266,50 @@
         const ov = el.querySelector('[data-act="over"]');
         if (ov) ov.onclick = showGameOver;
         if (T.bind) T.bind(el.querySelector('.mg-content'));
+        setupSectionSwitcher(el.querySelector('.mg-content'));
     }
+
+    // Schermi piccoli: i riquadri di una sezione uno alla volta, scelti con le frecce (come l'hub
+    // delle competizioni). I messaggi fanno eccezione: elenco a tutto schermo e lettura in una modale.
+    function setupSectionSwitcher(content) {
+        const grid = content && content.querySelector(':scope > .mg-grid');
+        if (!grid || !isCompact() || tab === 'messages') return;
+        const panels = Array.from(grid.querySelectorAll(':scope > .cp-panel, :scope > .cp-col > .cp-panel'));
+        if (panels.length < 2) return;
+        const label = p => p.dataset.label || ((p.querySelector(':scope > .cp-panel-title > span') || {}).textContent || '').trim();
+        let idx = Math.max(0, Math.min(panels.length - 1, ui.sub[tab] || 0));
+        grid.classList.add('is-switch');
+        const bar = document.createElement('div');
+        bar.className = 'cp-switch mg-switch';
+        bar.innerHTML = '<button type="button" class="cp-arrow is-small" data-sw="-1" aria-label="Riquadro precedente">&#9664;</button><div class="cp-switch-label"></div><button type="button" class="cp-arrow is-small" data-sw="1" aria-label="Riquadro successivo">&#9654;</button>';
+        grid.insertAdjacentElement('beforebegin', bar);
+        const show = () => {
+            panels.forEach((p, i) => p.classList.toggle('is-current', i === idx));
+            bar.querySelector('.cp-switch-label').innerHTML = `<b>${esc(label(panels[idx]))}</b><span>${panels.map((p, i) => `<i class="${i === idx ? 'on' : ''}"></i>`).join('')}</span>`;
+            if (window.UIKit) requestAnimationFrame(() => window.UIKit.refreshPagers());
+        };
+        bar.addEventListener('click', e => {
+            const b = e.target.closest('[data-sw]');
+            if (!b) return;
+            idx = (idx + (+b.dataset.sw) + panels.length) % panels.length;
+            ui.sub[tab] = idx;
+            show();
+        });
+        // scorrimento orizzontale col dito sul riquadro
+        let sx = null, sy = 0;
+        grid.addEventListener('touchstart', e => { const t = e.touches[0]; sx = t.clientX; sy = t.clientY; }, { passive: true });
+        grid.addEventListener('touchend', e => {
+            if (sx === null) return;
+            const t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+            sx = null;
+            if (Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+            idx = (idx + (dx < 0 ? 1 : -1) + panels.length) % panels.length;
+            ui.sub[tab] = idx;
+            show();
+        }, { passive: true });
+        show();
+    }
+    compactMq.addEventListener('change', () => { if (career && root && !root.classList.contains('cp-hidden')) renderHub(); });
 
     // ------------------------------------------------------------------ avanzamento del calendario
     function onContinue() {
@@ -802,7 +849,7 @@
             const cupBody = c.cup ? En.cupBracketHtml(c.cup) : '<div class="cp-empty" style="margin:auto">La Coppa Italia si gioca a gennaio, durante la sosta del campionato</div>';
             const hist = c.seasons.slice().reverse();
             return `<div class="mg-grid mg-comps">
-                <div class="cp-panel mg-span2 mg-fill">
+                <div class="cp-panel mg-span2 mg-fill" data-label="Classifiche e tabelloni">
                     <div class="cp-panel-title"><div class="cp-tabs">
                         <button class="cp-tab${ui.comp === 'league' ? ' is-active' : ''}" data-comp="league">${MC().CFG.DIV[ud].name}</button>
                         ${c.other ? `<button class="cp-tab${ui.comp === 'other' ? ' is-active' : ''}" data-comp="other">${MC().CFG.DIV[od].name}</button>` : ''}
@@ -840,7 +887,7 @@
             const recent = c.ledger.slice().reverse().slice(0, 60);
             const cats = Object.assign({}, M.INCOME_CATS, M.EXPENSE_CATS);
             return `<div class="mg-grid mg-finance">
-                <div class="cp-panel mg-span3"><div class="mg-kpis is-row">
+                <div class="cp-panel mg-span3" data-label="Riepilogo"><div class="mg-kpis is-row">
                     <div><small>Saldo</small><b class="${c.balance < monthlyOut * 2 ? 'mg-neg' : ''}">${eur(c.balance)}</b></div>
                     <div><small>Entrate stagione</small><b>${eur(inc)}</b></div>
                     <div><small>Uscite stagione</small><b>${eur(-exp)}</b></div>
@@ -940,11 +987,44 @@
             ui.msgSel = b.dataset.msg;
             const m = career.messages.find(x => x.id === ui.msgSel);
             if (m) m.read = true;
+            if (isCompact() && m) { renderHub(); showMessageModal(m); return; }
             if (tab !== 'messages') { setTab('messages'); return; }
             renderHub();
             const f = root.querySelector(`[data-msg="${ui.msgSel}"]`);
             if (f) f.focus({ preventScroll: true });
         });
+    }
+    function msgActionsHtml(m) {
+        if (!m || !m.act) return '';
+        if (m.act.done) return `<span class="mg-tag">${esc(m.act.done)}</span>`;
+        if (m.act.kind === 'sponsor') return `<button class="cp-btn is-primary" data-ma="sp-yes">Accetta lo sponsor</button><button class="cp-btn" data-ma="sp-no">Rifiuta</button>`;
+        if (m.act.kind === 'cpu_offer') return `<button class="cp-btn is-primary" data-ma="in-yes">Accetta l'offerta</button><button class="cp-btn" data-ma="in-no">Rifiuta</button>`;
+        return '';
+    }
+    function msgViewHtml(m) {
+        const M = MC();
+        return `<span class="cp-kicker">${CAT_ICON[m.cat] || ''} ${esc(M.CAT[m.cat] || '')} • ${esc(M.dateLabel(m.d, true))}</span>
+            <h2>${esc(m.title)}</h2>
+            <p>${esc(m.body)}</p>
+            ${m.act && m.act.kind === 'sponsor' ? sponsorPreview(m.act.ref) : ''}
+            <div class="cp-next-actions">${msgActionsHtml(m)}</div>`;
+    }
+    // pulsanti di risposta (sponsor, offerte per i giocatori); after() dopo la scelta
+    function bindMsgActions(el, m, after) {
+        if (!m || !m.act) return;
+        const on = (a, fn) => { const b = el.querySelector(`[data-ma="${a}"]`); if (b) b.onclick = () => { fn(); if (after) after(); }; };
+        on('sp-yes', () => { const r = MC().acceptSponsor(career, m.act.ref); toast(r.ok ? 'Contratto firmato' : r.msg); save(true); renderHub(); });
+        on('sp-no', () => { MC().rejectSponsor(career, m.act.ref); save(true); renderHub(); });
+        on('in-yes', () => answer(m.act.ref, true));
+        on('in-no', () => answer(m.act.ref, false));
+    }
+    function showMessageModal(m) {
+        overlay(`<div class="mg-msg-view mg-msg-modal">${msgViewHtml(m)}</div>
+            <div class="cp-next-actions mg-msg-close"><button class="cp-btn${m.act && !m.act.done ? '' : ' is-primary'}" data-x="close" data-keyback${m.act && !m.act.done ? '' : ' data-focus'}>Chiudi</button></div>`,
+            (o, close) => {
+                o.querySelector('[data-x="close"]').onclick = close;
+                bindMsgActions(o, m, close);
+            });
     }
     TAB_IMPL.messages = {
         html() {
@@ -955,25 +1035,13 @@
             if (sel && !sel.read) sel.read = true;
             if (sel) ui.msgSel = sel.id;
             const cnt = k => c.messages.filter(m => !m.read && (k === 'all' || m.cat === k)).length;
-            let actions = '';
-            if (sel && sel.act) {
-                if (sel.act.done) actions = `<span class="mg-tag">${esc(sel.act.done)}</span>`;
-                else if (sel.act.kind === 'sponsor') actions = `<button class="cp-btn is-primary" data-ma="sp-yes">Accetta lo sponsor</button><button class="cp-btn" data-ma="sp-no">Rifiuta</button>`;
-                else if (sel.act.kind === 'cpu_offer') actions = `<button class="cp-btn is-primary" data-ma="in-yes">Accetta l'offerta</button><button class="cp-btn" data-ma="in-no">Rifiuta</button>`;
-            }
             return `<div class="mg-grid mg-messages">
                 <div class="cp-panel mg-fill">
                     <div class="cp-panel-title"><div class="cp-tabs mg-cat-tabs">${cats.map(k => `<button class="cp-tab${ui.msgCat === k ? ' is-active' : ''}" data-cat="${k}" title="${k === 'all' ? 'Tutti' : esc(M.CAT[k])}">${k === 'all' ? 'Tutti' : CAT_ICON[k]}${cnt(k) ? `<sup>${cnt(k)}</sup>` : ''}</button>`).join('')}</div></div>
                     <div class="mg-msglist" data-pager="y">${list.map(msgRow).join('') || '<div class="cp-empty">Nessun messaggio in questa categoria</div>'}</div>
                     <div class="cp-legend"><button class="cp-btn is-small" data-act="readall">Segna tutti come letti</button></div>
                 </div>
-                <div class="cp-panel mg-span2 mg-fill mg-msg-view">${sel ? `
-                    <span class="cp-kicker">${CAT_ICON[sel.cat] || ''} ${esc(M.CAT[sel.cat] || '')} • ${esc(M.dateLabel(sel.d, true))}</span>
-                    <h2>${esc(sel.title)}</h2>
-                    <p>${esc(sel.body)}</p>
-                    ${sel.act && sel.act.kind === 'sponsor' ? sponsorPreview(sel.act.ref) : ''}
-                    <div class="cp-next-actions">${actions}</div>` : '<div class="cp-empty" style="margin:auto">Nessun messaggio</div>'}
-                </div>
+                <div class="cp-panel mg-span2 mg-fill mg-msg-view">${sel ? msgViewHtml(sel) : '<div class="cp-empty" style="margin:auto">Nessun messaggio</div>'}</div>
             </div>`;
         },
         bind(el) {
@@ -981,14 +1049,8 @@
             bindMsgRows(el);
             const ra = el.querySelector('[data-act="readall"]');
             if (ra) ra.onclick = () => { career.messages.forEach(m => { m.read = true; }); save(true); renderHub(); };
-            const sel = career.messages.find(m => m.id === ui.msgSel);
-            const on = (a, fn) => { const b = el.querySelector(`[data-ma="${a}"]`); if (b) b.onclick = fn; };
-            if (sel && sel.act) {
-                on('sp-yes', () => { const r = MC().acceptSponsor(career, sel.act.ref); toast(r.ok ? 'Contratto firmato' : r.msg); save(true); renderHub(); });
-                on('sp-no', () => { MC().rejectSponsor(career, sel.act.ref); save(true); renderHub(); });
-                on('in-yes', () => answer(sel.act.ref, true));
-                on('in-no', () => answer(sel.act.ref, false));
-            }
+            const view = el.querySelector('.mg-msg-view');
+            if (view) bindMsgActions(view, career.messages.find(m => m.id === ui.msgSel));
         }
     };
     function sponsorPreview(offerId) {
