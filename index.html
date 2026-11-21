@@ -3373,9 +3373,72 @@
             velocity: null,
             radius: 0.22,
             height: 0.11,
-            friction: 0.992,
             gravity: -24
         };
+
+        // --- FONDO DELLA PISTA: attrito e rimbalzi del disco diversi per ogni palazzetto ---
+        // Sul pavimento il disco perde velocità per attrito radente (decelerazione costante 'slide', m/s²)
+        // e per la resistenza che cresce con la velocità ('drag', 1/s: v *= e^(-drag*dt)). In volo resta
+        // solo la resistenza dell'aria. 'bounce' = restituzione quando ricade a terra, 'boards' = quanto
+        // rimbalza sulla balaustra. Tutto per secondo: il comportamento non dipende dagli FPS.
+        // Taratura: un passaggio a 20 m/s sulle piastrelle percorre ~40 m (come prima a 60 FPS).
+        const PUCK_SURFACES = {
+            polished: { name: 'cemento lucidato', slide: 0.65, drag: 0.33, bounce: 0.34, boards: 0.82 },
+            resin:    { name: 'resina',           slide: 0.75, drag: 0.36, bounce: 0.30, boards: 0.82 },
+            tiles:    { name: 'piastrelle sportive', slide: 0.80, drag: 0.38, bounce: 0.40, boards: 0.82 },
+            parquet:  { name: 'parquet',          slide: 0.95, drag: 0.42, bounce: 0.30, boards: 0.80 },
+            concrete: { name: 'cemento grezzo',   slide: 1.40, drag: 0.50, bounce: 0.28, boards: 0.76 }
+        };
+        const ARENA_SURFACE = {
+            cittadella: 'tiles', vicenza: 'tiles', milano: 'tiles', asiago: 'tiles', novi: 'tiles', ferrara: 'tiles',
+            padova: 'tiles', edera_trieste: 'tiles',
+            cus_verona: 'polished', treviso: 'polished', time42: 'polished',
+            empoli: 'resin', molina: 'resin', piacenza: 'resin', villeneuve: 'resin', forli: 'resin', fox_legnaro: 'resin',
+            kraken_camaiore: 'parquet', roma: 'parquet',
+            kemarin: 'concrete', torre_pellice: 'concrete', parma: 'concrete'
+        };
+        const PUCK_AIR_DRAG = 0.12;     // 1/s, disco in volo
+        function getPuckSurface() {
+            const id = typeof matchConfig !== 'undefined' ? matchConfig.arena : '';
+            return PUCK_SURFACES[ARENA_SURFACE[id] || 'tiles'];
+        }
+
+        // --- TIRO AL VOLO SU PASSAGGIO DI UN COMPAGNO ---
+        // Se un giocatore tira entro ONE_TIMER_WINDOW secondi dal passaggio di un compagno, il disco si alza
+        // e arriva sulla linea di porta a metà altezza (~0.68 m): l'alzata si calcola dalla distanza e dalla
+        // velocità del tiro, con gravità e resistenza dell'aria del disco.
+        const ONE_TIMER_WINDOW = 1.6;
+        const ONE_TIMER_HEIGHT = 1.35 / 2;
+        let lastPassInfo = null;        // { from, team, time }
+        function notePass(from) { lastPassInfo = { from, team: from.team, time: clock ? clock.getElapsed() : 0 }; }
+        function isOneTimer(shooter) {
+            return !!(lastPassInfo && clock && lastPassInfo.team === shooter.team && lastPassInfo.from !== shooter
+                && clock.getElapsed() - lastPassInfo.time < ONE_TIMER_WINDOW);
+        }
+        // velocità verticale perché il disco, partito da y0 con velocità orizzontale (vx, vz), passi la linea
+        // z = goalZ all'altezza targetY; null se il tiro non va verso quella porta
+        function oneTimerLiftVy(x0, y0, z0, vx, vz, goalZ, targetY) {
+            if (Math.abs(vz) < 0.5 || (goalZ - z0) * vz <= 0) return null;
+            const vh = Math.hypot(vx, vz);
+            const dist = Math.abs((goalZ - z0) / vz) * vh;         // strada percorsa fino alla linea di porta
+            const k = PUCK_AIR_DRAG;
+            const frac = Math.min(0.95, k * dist / vh);
+            const t = -Math.log(1 - frac) / k;                       // tempo di volo con la resistenza dell'aria
+            if (!(t > 0.05)) return null;
+            // + g*dt/2: updatePuck applica la gravità prima dello spostamento (Eulero semi-implicito a ~60 FPS)
+            return (targetY - y0 - 0.5 * puckPhysics.gravity * t * t) / t - puckPhysics.gravity * (1 / 60) / 2;
+        }
+        function applyOneTimer(shooter, speedBoost = 1.12) {
+            const goalZ = aiAttackDir(shooter.team) * goalOffsetZ;
+            const v = puckPhysics.velocity;
+            v.x *= speedBoost; v.z *= speedBoost;
+            const vy = oneTimerLiftVy(puck.position.x, puck.position.y, puck.position.z, v.x, v.z, goalZ,
+                ONE_TIMER_HEIGHT + (Math.random() - 0.5) * 0.16);
+            lastPassInfo = null;
+            if (vy == null) return false;
+            v.y = Math.max(0.8, vy);
+            return true;
+        }
 
         // Riferimenti DOM
         const titleSplashScreen = document.getElementById('title-splash-screen');
@@ -10835,12 +10898,13 @@
             puck.position.x = stickTip.x + dirV.x * 0.35;
             puck.position.z = stickTip.z + dirV.z * 0.35;
             puckPhysics.velocity.set(dirV.x * speed, lift, dirV.z * speed);
+            const oneTimer = isOneTimer(s) && applyOneTimer(s);   // al volo su passaggio: si alza a metà porta
             puckReleaseCooldown = 0.25;
             s.shootAnim = 1.0;
             if (s.team === 'home') matchStats.homeShots++;
             else matchStats.guestShots++;
-            if (window.gameAudio) window.gameAudio.playPuckHit(0.75);
-            spawnSparkParticles(puck.position, speed > 27 ? 0xf97316 : 0x38bdf8, 8, 4.5, false);
+            if (window.gameAudio) window.gameAudio.playPuckHit(oneTimer ? 1 : 0.75);
+            spawnSparkParticles(puck.position, (speed > 27 || oneTimer) ? 0xf97316 : 0x38bdf8, oneTimer ? 12 : 8, 4.5, false);
         }
 
         function aiPass(s, stickTip, mate) {
@@ -10854,6 +10918,7 @@
             puckPhysics.velocity.set(passDir.x * passSpeed, 0.4, passDir.z * passSpeed);
             puckReleaseCooldown = 0.22;
             s.shootAnim = 0.75;
+            notePass(s);
             if (window.gameAudio) window.gameAudio.playPass();
             spawnSparkParticles(puck.position, 0x38bdf8, 5, 3.0, false);
         }
@@ -11574,8 +11639,9 @@
                     liftY,
                     shotDir.z * shotSpeed + player.velocity.z * 0.15
                 );
+                const oneTimer = isOneTimer(player) && applyOneTimer(player);   // al volo su passaggio: a metà porta
                 puckReleaseCooldown = 0.24;
-                spawnSparkParticles(puck.position, power > 0.7 ? 0xf97316 : 0x38bdf8, 12, 5.5, false);
+                spawnSparkParticles(puck.position, (power > 0.7 || oneTimer) ? 0xf97316 : 0x38bdf8, oneTimer ? 16 : 12, 5.5, false);
             }
         }
 
@@ -11623,6 +11689,7 @@
                 puckPhysics.velocity.set(passDir.x * passSpeed, 0.4, passDir.z * passSpeed);
                 puckReleaseCooldown = 0.22;
                 player.shootAnim = 0.75;
+                notePass(player);
                 if (window.gameAudio) window.gameAudio.playPass();
                 spawnSparkParticles(puck.position, 0x38bdf8, 6, 3.2, false);
 
@@ -11692,26 +11759,36 @@
 
         // --- FISICA DISCO E RILEVAMENTO GOL ---
         function updatePuck(dt) {
-            puckPhysics.velocity.y += puckPhysics.gravity * dt;
-            puck.position.addScaledVector(puckPhysics.velocity, dt);
+            const surf = getPuckSurface();
+            const v = puckPhysics.velocity;
+            v.y += puckPhysics.gravity * dt;
+            puck.position.addScaledVector(v, dt);
 
             const halfH = puckPhysics.height / 2;
             if (puck.position.y <= halfH) {
                 puck.position.y = halfH;
-                if (puckPhysics.velocity.y < -1.5) {
-                    puckPhysics.velocity.y = -puckPhysics.velocity.y * 0.35;
+                // ricaduta: rimbalza (con la restituzione del fondo) se arriva abbastanza forte, poi si appoggia
+                if (v.y < -1.5) {
+                    v.y = -v.y * surf.bounce;
+                    v.x *= 0.96; v.z *= 0.96;          // un po' di velocità persa nell'impatto
                 } else {
-                    puckPhysics.velocity.y = 0;
+                    v.y = 0;
                 }
-                puckPhysics.velocity.x *= puckPhysics.friction;
-                puckPhysics.velocity.z *= puckPhysics.friction;
+                // attrito sul pavimento: resistenza proporzionale alla velocità + attrito radente costante
+                const sp0 = Math.hypot(v.x, v.z);
+                if (sp0 > 0) {
+                    let sp = sp0 * Math.exp(-surf.drag * dt);
+                    sp = Math.max(0, sp - surf.slide * dt);
+                    const k = sp / sp0;
+                    v.x *= k; v.z *= k;
+                }
             } else {
-                puckPhysics.velocity.x *= 0.997;
-                puckPhysics.velocity.z *= 0.997;
+                const k = Math.exp(-PUCK_AIR_DRAG * dt);
+                v.x *= k; v.z *= k;
             }
 
-            const preVx = puckPhysics.velocity.x, preVz = puckPhysics.velocity.z;
-            constrainToCurvedRink(puck.position, puckPhysics.velocity, puckPhysics.radius, 0.82);
+            const preVx = v.x, preVz = v.z;
+            constrainToCurvedRink(puck.position, v, puckPhysics.radius, surf.boards);
             // disco contro la balaustra: la velocità cambia di verso
             const bounce = Math.hypot(puckPhysics.velocity.x - preVx, puckPhysics.velocity.z - preVz);
             if (bounce > 4 && window.gameAudio && gameState === 'playing') window.gameAudio.playBoardHit(Math.min(1, bounce / 30));
