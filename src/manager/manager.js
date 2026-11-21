@@ -324,6 +324,7 @@
         matchConfig.guestKit = awayKit;
         matchConfig.arena = HOME_CLUB_ARENAS[f.home] || f.home;
         matchConfig.userTeam = f.home === career.user ? 'home' : 'guest';
+        liveMatch = { s: ev.comp === 'cup' ? career.cup : career.league, f };
         matchActive = true;
         root.classList.add('cp-hidden');
         if (typeof showFunFactLoading === 'function') showFunFactLoading(ev.label, launchMatchFromCurrentConfig);
@@ -997,9 +998,17 @@
         return `<div class="mg-sp-preview"><div class="mg-sp-logo"><img src="${esc(s.logo)}" alt="${esc(s.name)}"></div><div><b>${esc(s.name)}</b><small>${esc(s.sector)} • livello ${'★'.repeat(s.tier)}</small><b>${eur(o.monthly)}/mese</b></div></div>`;
     }
 
+    // classifica, forma e serie della partita in corso (per la telecronaca)
+    let liveMatch = null;
+    function matchContext() {
+        if (!matchActive || !liveMatch || !liveMatch.s) return null;
+        try { return Object.assign(E().matchContext(liveMatch.s, liveMatch.f.home, liveMatch.f.away), { manager: true }); } catch (e) { return null; }
+    }
+
     window.Manager = {
         open() { ensureRoot(); showScreen('start'); },
         isMatchActive: () => matchActive,
+        matchContext,
         onUserMatchFinished,
         onUserMatchAbandoned
     };

@@ -991,6 +991,46 @@
         const f = po.series[po.round][0];
         return [f.hi, f.lo];
     }
+    // ------------------------------------------------------------------ contesto per la telecronaca
+    // risultati di una squadra in ordine di gioco ('W'/'L'), ultime n
+    function formOf(id, n = 5) {
+        const games = [];
+        if (isCup()) state.cup.rounds.forEach(r => r.forEach(f => games.push(f)));
+        else {
+            (state.rounds || []).forEach(r => r.fixtures.forEach(f => games.push(f)));
+            if (state.playoffs) state.playoffs.series.forEach(rs => rs.forEach(s => s.games.forEach(g => games.push(g))));
+        }
+        return games.filter(f => f.result && (f.home === id || f.away === id)).map(f => (winnerOf(f) === id ? 'W' : 'L')).slice(-n);
+    }
+    function matchContext(home, away) {
+        const ctx = { league: leagueOf(state), leagueName: L(state).name, user: state.user, teams: {} };
+        if (isCup()) {
+            ctx.kind = 'cup';
+            ctx.roundId = (CUP_ROUNDS[state.cup.round] || {}).id || '';
+        } else if (state.phase === 'playoff') {
+            const r = poRounds()[state.playoffs.round];
+            ctx.kind = 'playoff';
+            ctx.roundId = r.id;
+            const ser = currentPoSeries().find(x => (x.hi === home && x.lo === away) || (x.hi === away && x.lo === home));
+            if (ser) {
+                const w = seriesWins(ser);
+                ctx.series = { wins: { [ser.hi]: w[0], [ser.lo]: w[1] }, game: w[0] + w[1] + 1, bestOf: ser.bestOf };
+            }
+        } else {
+            ctx.kind = 'league';
+            ctx.round = state.roundIdx + 1;
+            ctx.rounds = state.rounds.length;
+        }
+        const table = isCup() ? [] : standings();
+        ctx.total = table.length;
+        [home, away].forEach(id => {
+            const i = table.findIndex(r => r.id === id);
+            const r = table[i];
+            ctx.teams[id] = Object.assign({ form: formOf(id) }, r ? { pos: i + 1, pts: r.pts, pg: r.pg, gf: r.gf, gs: r.gs } : {});
+        });
+        return ctx;
+    }
+
     function turnLabel() {
         if (isCup()) return state.phase === 'cup' ? `Coppa Italia • ${cupRoundLabel(state.cup.round)}` : 'Coppa Italia';
         if (state.phase === 'regular') return `${L(state).name} • Giornata ${state.roundIdx + 1} di ${state.rounds.length}`;
@@ -1023,6 +1063,7 @@
         leagueRunnerUp: s => onState(s, leagueRunnerUp)(),
         leagueFinalists: s => onState(s, leagueFinalists)(),
         turnLabel: s => onState(s, turnLabel)(),
+        matchContext: (s, home, away) => onState(s, matchContext)(home, away),
         progressLabel: s => progressLabel(s),
         // HTML già stilizzato da competition.css
         tableHtml: s => onState(s, tableHtml)(),
@@ -1044,6 +1085,8 @@
         engine,
         open() { ensureRoot(); showScreen('select'); },
         isMatchActive: () => matchActive,
+        // classifica, forma e serie della partita in corso (per la telecronaca)
+        matchContext: () => (matchActive && state && pendingFixture ? matchContext(pendingFixture.home, pendingFixture.away) : null),
         onUserMatchFinished,
         onUserMatchAbandoned,
         runShootout,

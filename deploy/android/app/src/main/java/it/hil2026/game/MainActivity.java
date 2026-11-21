@@ -8,11 +8,14 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.UtteranceProgressListener;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
 import android.view.WindowInsetsController;
 import android.view.WindowManager;
+import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -21,6 +24,8 @@ import android.webkit.WebViewClient;
 import android.widget.Toast;
 
 import androidx.webkit.WebViewAssetLoader;
+
+import java.util.Locale;
 
 /**
  * Contenitore Android di HIL 2026: una WebView a tutto schermo che serve il gioco
@@ -35,6 +40,8 @@ public class MainActivity extends Activity {
 
     private WebView webView;
     private long lastBackAt = 0;
+    private TextToSpeech tts;
+    private boolean ttsReady = false;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -91,6 +98,8 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
+
+        setupTextToSpeech();
 
         // build di debug: WebView ispezionabile da chrome://inspect sul PC
         if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) WebView.setWebContentsDebuggingEnabled(true);
@@ -150,6 +159,7 @@ public class MainActivity extends Activity {
         // in background la pagina risulta nascosta: audio e rendering si fermano
         webView.onPause();
         webView.pauseTimers();
+        if (tts != null) tts.stop();
     }
 
     @Override
@@ -165,8 +175,61 @@ public class MainActivity extends Activity {
         webView.saveState(outState);
     }
 
+    /**
+     * Telecronaca: la WebView di Android non ha speechSynthesis, quindi il gioco usa il
+     * TextToSpeech di sistema tramite window.HILNativeTTS (vedi src/audio/Commentary.js).
+     * A fine frase avvisa la pagina con Commentary._nativeEvent(id, 'end').
+     */
+    private void setupTextToSpeech() {
+        tts = new TextToSpeech(this, status -> {
+            ttsReady = status == TextToSpeech.SUCCESS;
+            if (!ttsReady) return;
+            tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
+                @Override public void onStart(String id) { }
+                @Override public void onDone(String id) { notifyTts(id, "end"); }
+                @Override public void onError(String id) { notifyTts(id, "error"); }
+                @Override public void onStop(String id, boolean interrupted) { notifyTts(id, "end"); }
+            });
+        });
+        webView.addJavascriptInterface(new NativeTts(), "HILNativeTTS");
+    }
+
+    private void notifyTts(String id, String kind) {
+        final String js = "window.Commentary&&window.Commentary._nativeEvent(" + jsId(id) + ",'" + kind + "')";
+        runOnUiThread(() -> { if (webView != null) webView.evaluateJavascript(js, null); });
+    }
+
+    private static String jsId(String s) {
+        return "'" + (s == null ? "" : s.replaceAll("[^A-Za-z0-9_-]", "")) + "'";
+    }
+
+    private class NativeTts {
+        @JavascriptInterface
+        public boolean available() { return ttsReady; }
+
+        @JavascriptInterface
+        public void speak(String id, String text, String lang, float rate, float pitch, float volume) {
+            if (!ttsReady || tts == null) { notifyTts(id, "error"); return; }
+            Locale loc = Locale.forLanguageTag(lang == null ? "it-IT" : lang);
+            if (tts.isLanguageAvailable(loc) >= TextToSpeech.LANG_AVAILABLE) tts.setLanguage(loc);
+            tts.setSpeechRate(rate);
+            tts.setPitch(pitch);
+            Bundle params = new Bundle();
+            params.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, Math.max(0f, Math.min(1f, volume)));
+            tts.speak(text, TextToSpeech.QUEUE_FLUSH, params, id);
+        }
+
+        @JavascriptInterface
+        public void stop() { if (tts != null) tts.stop(); }
+    }
+
     @Override
     protected void onDestroy() {
+        if (tts != null) {
+            tts.stop();
+            tts.shutdown();
+            tts = null;
+        }
         if (webView != null) {
             webView.destroy();
             webView = null;

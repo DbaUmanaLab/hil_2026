@@ -765,6 +765,12 @@
         .pz-switch::after { content: ''; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,.35); transition: transform .2s; }
         .pz-switch.is-on { background: #16a34a; }
         .pz-switch.is-on::after { transform: translateX(22px); }
+        .pz-h3-gap { margin-top: 22px; }
+        .pz-seg { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+        .pz-seg button { height: 32px; padding: 0 12px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #e2e8f0; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); transition: background .15s; }
+        .pz-seg button:hover, .pz-seg button:focus-visible { background: rgba(255,255,255,.18); }
+        .pz-seg button.is-active { background: var(--pz-gold); border-color: var(--pz-gold); color: var(--bx-ink, #0b1020); }
+        .pz-seg button:disabled { opacity: .35; }
         /* scelte a schede (grafica, telecamera) */
         .pz-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
         .pz-card { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 12px; text-align: left; border-radius: 12px; background: rgba(255,255,255,.04); border: 1.5px solid rgba(255,255,255,.1); transition: border-color .2s, background .2s, transform .2s; }
@@ -2276,7 +2282,7 @@
                     </button>
                     <button type="button" class="pz-item" data-pz="audio">
                         <span class="pz-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h4l5 4v-13l-5 4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></span>
-                        <span>Musica ed effetti</span>
+                        <span>Audio e telecronaca</span>
                     </button>
                     <button type="button" class="pz-item" data-pz="graphics">
                         <span class="pz-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></span>
@@ -2339,6 +2345,41 @@
                             <span>Pubblico<small>Brusio sugli spalti ed esultanza ai gol</small></span>
                             <span></span>
                             <div class="pz-range"><input id="pz-crowd-vol" type="range" min="0" max="100" step="1"><output id="pz-crowd-out">100%</output></div>
+                        </div>
+                    </div>
+                    <h3 class="pz-h3-gap">Telecronaca</h3>
+                    <p class="pz-sub">Presentazione della partita, azioni, tiri e gol in diretta, con curiosità su squadre e palazzetti nei momenti più tranquilli.</p>
+                    <div class="pz-audio">
+                        <div class="pz-aud">
+                            <span>Telecronaca<small>Voce del telecronista durante la partita</small></span>
+                            <button type="button" id="pz-cmt-sw" class="pz-switch" aria-label="Telecronaca"></button>
+                            <div class="pz-range"><input id="pz-cmt-vol" type="range" min="0" max="100" step="1"><output id="pz-cmt-out">90%</output></div>
+                        </div>
+                        <div class="pz-aud">
+                            <span>Lingua<small>Lingua del telecronista</small></span>
+                            <div id="pz-cmt-lang" class="pz-seg" role="group" aria-label="Lingua della telecronaca">
+                                <button type="button" data-cmt-lang="it">Italiano</button>
+                                <button type="button" data-cmt-lang="en">English</button>
+                            </div>
+                        </div>
+                        <div class="pz-aud">
+                            <span>Loquacità<small>Quanto parla nelle fasi di gioco più tranquille</small></span>
+                            <div id="pz-cmt-chat" class="pz-seg" role="group" aria-label="Loquacità">
+                                <button type="button" data-cmt-chat="0">Essenziale</button>
+                                <button type="button" data-cmt-chat="1">Normale</button>
+                                <button type="button" data-cmt-chat="2">Chiacchierona</button>
+                            </div>
+                        </div>
+                        <div class="pz-aud">
+                            <span>Sottotitoli<small>Le frasi del telecronista in sovrimpressione</small></span>
+                            <button type="button" id="pz-cmt-cap-sw" class="pz-switch" aria-label="Sottotitoli della telecronaca"></button>
+                        </div>
+                        <div class="pz-aud">
+                            <span>Voce<small id="pz-cmt-voice-name">Automatica</small></span>
+                            <div class="pz-seg">
+                                <button type="button" id="pz-cmt-voice">Cambia voce</button>
+                                <button type="button" id="pz-cmt-test">&#9654; Prova</button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -3410,7 +3451,9 @@
         const ONE_TIMER_WINDOW = 1.6;
         const ONE_TIMER_HEIGHT = 1.35 / 2;
         let lastPassInfo = null;        // { from, team, time }
-        function notePass(from) { lastPassInfo = { from, team: from.team, time: clock ? clock.getElapsed() : 0 }; }
+        function notePass(from) { lastPassInfo = { from, team: from.team, time: clock ? clock.getElapsed() : 0 }; commentaryEvent('pass', { from }); }
+        // telecronaca (src/audio/Commentary.js): eventi puntuali del gioco
+        function commentaryEvent(type, data) { if (window.Commentary) window.Commentary.event(type, data); }
         function isOneTimer(shooter) {
             return !!(lastPassInfo && clock && lastPassInfo.team === shooter.team && lastPassInfo.from !== shooter
                 && clock.getElapsed() - lastPassInfo.time < ONE_TIMER_WINDOW);
@@ -8306,6 +8349,7 @@
             const cur = getActiveLine(teamSide);
             if (newLineIdx === cur || newLineIdx < 0 || newLineIdx > 2) return;
             if (window.gameAudio) window.gameAudio.playLineChange();
+            commentaryEvent('lineChange', { team: teamSide, line: newLineIdx });
             const isUser = teamSide === getUserTeam();
             // con le penalità la linea può scendere in tre (o in due) e un compagno di un'altra linea può coprire un ruolo
             const lineup = pickLineup(teamSide, newLineIdx);
@@ -9937,6 +9981,7 @@
         // kind 'body' = contatto col corpo, 'stick' = colpo col bastone al portatore del disco
         function evaluateFoul(checker, victim, kind, checkerSpeed, victimHadPuck, aiFactor) {
             if (gameState !== 'playing' || penaltyCall || !checker || !victim) return false;
+            if (kind === 'body') commentaryEvent('hit', { checker, victim, speed: checkerSpeed });
             let type = null, p = 0, ejectP = 0;
             if (kind === 'stick') {
                 type = 'Colpo di bastone'; p = 0.35; ejectP = 0.05;
@@ -10109,6 +10154,7 @@
             if (!penalties.includes(pn)) return;
             penalties = penalties.filter(x => x !== pn);
             const team = pn.team, s = pn.skater;
+            commentaryEvent('penaltyEnd', { team, reason, kind: pn.kind });
             if (pn.kind !== 'expulsion') s.penaltyBox = false;
             const inPlay = gameState === 'playing';
             const onCount = skaters.filter(k => k.team === team && k.onIce && !k.isGoalie && k.lineChangeState !== 'exiting').length;
@@ -10465,6 +10511,7 @@
 
             if (winnerTeam === 'home') matchStats.homeFaceoffs = (matchStats.homeFaceoffs || 0) + 1;
             else matchStats.guestFaceoffs = (matchStats.guestFaceoffs || 0) + 1;
+            commentaryEvent('faceoff', { team: winnerTeam, skater: winnerTeam === 'home' ? homeC : guestC });
             // il disco va indietro verso la difesa di chi vince l'ingaggio
             const winC = winnerTeam === 'home' ? homeC : guestC;
             const backZ = -aiAttackDir(winnerTeam);
@@ -10905,6 +10952,7 @@
             else matchStats.guestShots++;
             if (window.gameAudio) window.gameAudio.playPuckHit(oneTimer ? 1 : 0.75);
             spawnSparkParticles(puck.position, (speed > 27 || oneTimer) ? 0xf97316 : 0x38bdf8, oneTimer ? 12 : 8, 4.5, false);
+            commentaryEvent('shot', { shooter: s, power: Math.max(0, Math.min(1, (speed - 21) / 11)), oneTimer, dist: distGoal });
         }
 
         function aiPass(s, stickTip, mate) {
@@ -11531,6 +11579,7 @@
                         if (s.team === 'home') matchStats.homeSaves++;
                         else matchStats.guestSaves++;
                         if (window.gameAudio) window.gameAudio.playSave();
+                        commentaryEvent('save', { goalie: s, speed: puckSpeed });
                         // situazione comoda: il portiere blocca il disco e si va all'ingaggio in zona
                         if (gameState === 'playing' && Math.random() < goalieFreezeChance(s, puckSpeed, Math.abs(puck.position.x - s.mesh.position.x))) {
                             startGoalieFreeze(s);
@@ -11641,6 +11690,7 @@
                 );
                 const oneTimer = isOneTimer(player) && applyOneTimer(player);   // al volo su passaggio: a metà porta
                 puckReleaseCooldown = 0.24;
+                commentaryEvent('shot', { shooter: player, power, oneTimer, dist: Math.abs(atk * goalOffsetZ - player.mesh.position.z) });
                 spawnSparkParticles(puck.position, (power > 0.7 || oneTimer) ? 0xf97316 : 0x38bdf8, oneTimer ? 16 : 12, 5.5, false);
             }
         }
@@ -11885,6 +11935,7 @@
                         p.x = px + nx * minD;
                         p.z = side * goalOffsetZ + nz * minD;
                         const vn = v.x * nx + v.z * nz;
+                        if (vn < -6) commentaryEvent('post', { side });
                         if (vn < 0) {
                             v.x -= (1 + POST_REST) * vn * nx;
                             v.z -= (1 + POST_REST) * vn * nz;
@@ -11980,6 +12031,7 @@
             }
             goalMessage.classList.remove('hidden');
             replayGoalSide = scoringTeam;
+            commentaryEvent('goal', { team: scoringTeam, scorer, sit, golden: overtimeGoldenGoal });
         }
 
         // --- TELECAMERA RAVVICINATA SUL DISCO ---
@@ -13561,6 +13613,26 @@
             document.getElementById('pz-music-vol').disabled = !musicOn;
             document.getElementById('pz-sfx-vol').disabled = !sfxOn;
             document.getElementById('pz-crowd-vol').disabled = !sfxOn;
+            renderCommentarySettings();
+        }
+        function renderCommentarySettings() {
+            const C = window.Commentary;
+            if (!C) return;
+            const cs = C.settings;
+            document.getElementById('pz-cmt-sw').classList.toggle('is-on', cs.enabled);
+            document.getElementById('pz-cmt-cap-sw').classList.toggle('is-on', cs.captions);
+            const vol = document.getElementById('pz-cmt-vol');
+            vol.value = Math.round(cs.volume * 100);
+            setRangeFill(vol);
+            vol.disabled = !cs.enabled;
+            document.getElementById('pz-cmt-out').textContent = vol.value + '%';
+            document.querySelectorAll('[data-cmt-lang]').forEach(b => b.classList.toggle('is-active', b.dataset.cmtLang === cs.lang));
+            document.querySelectorAll('[data-cmt-chat]').forEach(b => b.classList.toggle('is-active', +b.dataset.cmtChat === cs.chatter));
+            const voiceName = C.currentVoice();
+            document.getElementById('pz-cmt-voice-name').textContent = C.voiceAvailable()
+                ? (voiceName || 'Automatica')
+                : (cs.lang === 'it' ? 'Nessuna voce italiana sul dispositivo: solo sottotitoli' : 'Nessuna voce inglese sul dispositivo: solo sottotitoli');
+            document.getElementById('pz-cmt-voice').disabled = C.voices().length < 2;
         }
 
         function renderPauseGraphics() {
@@ -13811,6 +13883,29 @@
                 // anteprima del volume degli effetti al rilascio del cursore
                 inp.addEventListener('change', () => { if (k === 'sfx' && ga()) ga().playPuckHit(0.6); });
             });
+            // telecronaca
+            const cmt = () => window.Commentary;
+            document.getElementById('pz-cmt-sw').addEventListener('click', () => { if (cmt()) cmt().setEnabled(!cmt().settings.enabled); renderCommentarySettings(); });
+            document.getElementById('pz-cmt-cap-sw').addEventListener('click', () => { if (cmt()) cmt().setCaptions(!cmt().settings.captions); renderCommentarySettings(); });
+            const cmtVol = document.getElementById('pz-cmt-vol');
+            cmtVol.addEventListener('input', () => {
+                setRangeFill(cmtVol);
+                document.getElementById('pz-cmt-out').textContent = cmtVol.value + '%';
+                if (cmt()) cmt().setVolume(cmtVol.value / 100);
+            });
+            cmtVol.addEventListener('change', () => { if (cmt()) cmt().preview(); });
+            document.getElementById('pz-cmt-lang').addEventListener('click', e => {
+                const b = e.target.closest('[data-cmt-lang]');
+                if (b && cmt()) { cmt().setLang(b.dataset.cmtLang); renderCommentarySettings(); }
+            });
+            document.getElementById('pz-cmt-chat').addEventListener('click', e => {
+                const b = e.target.closest('[data-cmt-chat]');
+                if (b && cmt()) { cmt().setChatter(+b.dataset.cmtChat); renderCommentarySettings(); }
+            });
+            document.getElementById('pz-cmt-voice').addEventListener('click', () => { if (cmt()) { cmt().cycleVoice(); cmt().preview(); } renderCommentarySettings(); });
+            document.getElementById('pz-cmt-test').addEventListener('click', () => { if (cmt()) cmt().preview(); });
+            // le voci del browser arrivano in ritardo: aggiorna la pagina se è aperta
+            if (window.speechSynthesis) try { window.speechSynthesis.addEventListener('voiceschanged', () => { if (pausePage === 'audio') renderCommentarySettings(); }); } catch (e) {}
             document.getElementById('pz-gfx').addEventListener('click', e => {
                 const b = e.target.closest('[data-gfx]');
                 if (!b || b.dataset.gfx === gfxQuality.mode) return;
@@ -14586,6 +14681,8 @@
     <!-- Impaginazione con frecce, adattamento allo schermo e navigazione da tastiera -->
     <script src="src/ui/uikit.js"></script>
     <script src="src/data/funFacts.js"></script>
+    <script src="src/audio/commentaryPhrases.js"></script>
+    <script src="src/audio/Commentary.js"></script>
     <script>
         // Finto caricamento di 10 secondi con un fun fact e un'immagine scelti a caso.
         (function () {

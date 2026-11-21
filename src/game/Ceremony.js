@@ -350,6 +350,7 @@
     window.Ceremony = {
         startPeriodBreak, updatePeriodBreak, startPostMatch, updatePostMatch, reset,
         mvpHtml: () => mvpHtml(),
+        getMvp: () => mvp,
         clearMvp: () => { mvp = null; snap = null; },
         isOverlayOpen: () => !!ui && (!ui.pb.classList.contains('cm-hidden') || !ui.pg.classList.contains('cm-hidden'))
     };
