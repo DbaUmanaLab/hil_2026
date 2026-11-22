@@ -48,6 +48,11 @@
         SI: { name: 'Slovenia', svg: () => horiz(['#ffffff', '#0000ff', '#ff0000']) },
         HR: { name: 'Croazia', svg: () => horiz(['#ff0000', '#ffffff', '#171796']) },
         HU: { name: 'Ungheria', svg: () => horiz(['#ce2939', '#ffffff', '#477050']) },
+        ZA: { name: 'Sudafrica', svg: () => rect(0, 0, W, H / 2, '#e03c31') + rect(0, H / 2, W, H / 2, '#001489')
+            + `<polygon points="0,0 ${W * 0.2},0 ${W * 0.53},${H * 0.375} ${W},${H * 0.375} ${W},${H * 0.625} ${W * 0.53},${H * 0.625} ${W * 0.2},${H} 0,${H}" fill="#ffffff"/>`
+            + `<polygon points="0,${H * 0.075} ${W * 0.14},${H * 0.075} ${W * 0.49},${H * 0.45} ${W},${H * 0.45} ${W},${H * 0.55} ${W * 0.49},${H * 0.55} ${W * 0.14},${H * 0.925} 0,${H * 0.925}" fill="#007749"/>`
+            + `<polygon points="0,${H * 0.175} ${W * 0.3},${H / 2} 0,${H * 0.825}" fill="#ffb81c"/>`
+            + `<polygon points="0,${H * 0.25} ${W * 0.23},${H / 2} 0,${H * 0.75}" fill="#000000"/>` },
         RO: { name: 'Romania', svg: () => vert(['#002b7f', '#fcd116', '#ce1126']) },
         RU: { name: 'Russia', svg: () => horiz(['#ffffff', '#0039a6', '#d52b1e']) },
         UA: { name: 'Ucraina', svg: () => horiz(['#0057b7', '#ffd700']) },

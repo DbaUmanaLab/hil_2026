@@ -2641,6 +2641,17 @@
                 surface: 'Pavimento Sportivo in Resina Azzurra',
                 roof: 'Travi in Legno Lamellare e Pannelli'
             },
+            rethel: {
+                id: 'rethel',
+                name: 'GYMNASE ANDRÉ CHAUSSON',
+                shortTitle: 'Gymnase André Chausson',
+                location: 'Rethel (08) • Grand Est, Francia',
+                clubBadge: 'Casa: Diables Rethelois',
+                desc: 'Palestra con travi in legno lamellare e copertura in lamiera grigia con lucernari, file di plafoniere a tubo, pareti rivestite di doghe di pino, finestre alte e una grande vetrata a griglia sulla testata, la parete d’arrampicata, canestri sollevati, pavimento a piastrelle azzurre con la linea rossa e i cerchi arancioni, balaustre bianche e la tribuna rialzata con i seggiolini bianchi.',
+                capacity: '350 Spettatori',
+                surface: 'Piastrelle Azzurre',
+                roof: 'Travi in Legno Lamellare e Lamiera'
+            },
             roma: {
                 id: 'roma',
                 name: 'PALAMUNICIPIO ROMA XI',
@@ -2775,7 +2786,7 @@
             }
         };
 
-        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova'];
+        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'rethel', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova'];
         // Palazzetti presenti nel menu ma non selezionabili (al momento nessuno)
         const DISABLED_ARENAS = new Set();
         const SELECTABLE_ARENA_IDS = ARENA_IDS.filter(id => !DISABLED_ARENAS.has(id));
@@ -3988,7 +3999,7 @@
         };
         const ARENA_SURFACE = {
             cittadella: 'tiles', vicenza: 'tiles', milano: 'tiles', asiago: 'tiles', novi: 'tiles', ferrara: 'tiles',
-            padova: 'tiles', edera_trieste: 'tiles',
+            padova: 'tiles', edera_trieste: 'tiles', rethel: 'tiles',
             cus_verona: 'polished', treviso: 'polished', time42: 'polished',
             empoli: 'resin', molina: 'resin', piacenza: 'resin', villeneuve: 'resin', forli: 'resin', fox_legnaro: 'resin',
             kraken_camaiore: 'parquet', roma: 'parquet',
@@ -5522,7 +5533,7 @@
             const n = arenaScoreboards.north;
             if (!n) return;
             n.rotation.y = 0;
-            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova'].includes(matchConfig.arena);
+            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'rethel', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova'].includes(matchConfig.arena);
             if (matchConfig.arena === 'padova') {
                 // tabellone sulla parete della testata nord, tra gli striscioni
                 n.position.set(0, 8.6, -43.4);
@@ -5568,6 +5579,10 @@
                 n.scale.setScalar(0.42);
             } else if (matchConfig.arena === 'roma') {
                 n.position.set(8.5, 6.4, -40.2);
+                n.scale.setScalar(0.42);
+            } else if (matchConfig.arena === 'rethel') {
+                // tabellone sulla testata nord, a sinistra della parete d'arrampicata
+                n.position.set(-4, 7.4, -41.6);
                 n.scale.setScalar(0.42);
             } else if (matchConfig.arena === 'villeneuve') {
                 // tabellone elettronico sulla testata, a destra degli striscioni
@@ -5800,7 +5815,7 @@
                 roughness: 0.55
             });
             const benchBackMat = isAsiago ? new THREE.MeshStandardMaterial({ map: pbr.woodDiffuse, bumpMap: preset.usePhysicalMat ? pbr.woodBump : null, bumpScale: 0.015, color: 0xc8955a, roughness: 0.6 }) : new THREE.MeshStandardMaterial({
-                color: arenaId === 'padova' ? 0x2a2a2e : arenaId === 'parma' ? 0x1e4a30 : arenaId === 'torre_pellice' ? 0x8a6a48 : arenaId === 'kemarin' ? 0x14244a : arenaId === 'piacenza' ? 0x141416 : arenaId === 'ferrara' ? 0x1d3f9a : arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
+                color: arenaId === 'padova' ? 0x2a2a2e : arenaId === 'parma' ? 0x1e4a30 : arenaId === 'torre_pellice' ? 0x8a6a48 : arenaId === 'kemarin' ? 0x14244a : arenaId === 'piacenza' ? 0x141416 : arenaId === 'ferrara' ? 0x1d3f9a : arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'rethel' ? 0x111114 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
                 roughness: 0.8
             });
 
@@ -5903,6 +5918,7 @@
             edera_trieste: 'src/arenas/edera_trieste.js',
             kraken_camaiore: 'src/arenas/kraken_camaiore.js',
             villeneuve: 'src/arenas/villeneuve.js',
+            rethel: 'src/arenas/rethel.js',
             roma: 'src/arenas/roma.js',
             treviso: 'src/arenas/treviso.js',
             novi: 'src/arenas/novi.js',
@@ -6336,6 +6352,7 @@
             kraken_camaiore: { dir: 'assets/textures/kraken_camaiore/', normal: 'assets/textures/kraken_camaiore/rink_normal.jpg', floorTint: 0xa9a399, floorTintLow: 0x99938a, noGlass: true },
             // Gymnase Fernand Schwartz: resina azzurra multisport, vetro sopra le balaustre
             villeneuve: { dir: 'assets/textures/villeneuve/', normal: 'assets/textures/villeneuve/rink_normal.jpg', floorTint: 0x9fabb9, floorTintLow: 0x919dab },
+            rethel: { dir: 'assets/textures/rethel/', normal: 'assets/textures/rethel/rink_normal.jpg', floorTint: 0xb8d4e6, floorTintLow: 0xaecbdc },
             // Palamunicipio Roma XI: parquet d'acero, vetro sopra le balaustre bianche
             roma: { dir: 'assets/textures/roma/', normal: 'assets/textures/roma/rink_normal.jpg', floorTint: 0xaaa49a, floorTintLow: 0x9a948b },
             // Pattinodromo delle Acquette: cemento lucidato, niente vetro sopra le balaustre
@@ -6695,7 +6712,7 @@
                             { jacket: 0xf8fafc, shirt: 0xdc2626, isJersey: true }
                         ]))));
 
-            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina' || arenaId === 'ferrara' || arenaId === 'piacenza' || arenaId === 'kemarin' || arenaId === 'torre_pellice' || arenaId === 'parma' || arenaId === 'padova') return;   // pubblico costruito dall'architettura del palazzetto
+            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'rethel' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina' || arenaId === 'ferrara' || arenaId === 'piacenza' || arenaId === 'kemarin' || arenaId === 'torre_pellice' || arenaId === 'parma' || arenaId === 'padova') return;   // pubblico costruito dall'architettura del palazzetto
 
             // Spalti laterali dietro il tavolo cronometristi (con spazio sull'angolo destro per la casetta bar a Cittadella)
             for (let row = 0; row < 4; row++) {
@@ -13585,11 +13602,37 @@
                 btn.title = btn.disabled ? 'Partita di giorno non disponibile in questo palazzetto' : '';
             });
         }
+        // Nell'anteprima del palazzetto il cambio di luce è pesante (ombre di tutto il palazzetto, mappa
+        // d'ombra più grande, shader da ricompilare): si copre con lo stesso velo del cambio palazzetto e
+        // lo si toglie solo quando la scena nuova è pronta e disegnata.
+        let timeOfDayBusy = false;
         function setTimeOfDay(mode) {
-            matchConfig.timeOfDay = mode === 'day' ? 'day' : 'night';
-            try { localStorage.setItem('hil_time_of_day', matchConfig.timeOfDay); } catch (e) {}
-            applyTimeOfDay();
+            const next = mode === 'day' ? 'day' : 'night';
+            if (timeOfDayBusy) return;
+            const changed = matchConfig.timeOfDay !== next;
+            matchConfig.timeOfDay = next;
+            try { localStorage.setItem('hil_time_of_day', next); } catch (e) {}
             renderTimeOfDayButtons();
+            const fade = document.getElementById('arena-view-fade');
+            const preview = changed && fade && currentPreMatchStep === 3 && !startScreen.classList.contains('hidden');
+            if (!preview) { applyTimeOfDay(); return; }
+            timeOfDayBusy = true;
+            const label = fade.querySelector('.as-fade-inner > span');
+            const prevText = label ? label.textContent : '';
+            if (label) label.textContent = next === 'day' ? 'Entra il sole…' : 'Si accendono i fari…';
+            fade.classList.add('is-on');
+            const done = () => requestAnimationFrame(() => requestAnimationFrame(() => {
+                fade.classList.remove('is-on');
+                if (label) setTimeout(() => { label.textContent = prevText; }, 400);
+                timeOfDayBusy = false;
+            }));
+            setTimeout(() => {                          // il velo è comparso (.18 s): si può bloccare il disegno
+                try { applyTimeOfDay(); } catch (e) { console.error(e); }
+                try {
+                    if (renderer && renderer.compileAsync) renderer.compileAsync(scene, camera).then(done, done);
+                    else { if (renderer) renderer.compile(scene, camera); done(); }
+                } catch (e) { done(); }
+            }, 220);
         }
 
         // Sposta il centro della proiezione 3D al centro dell'area di anteprima (a destra del pannello)

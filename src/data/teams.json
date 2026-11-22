@@ -2275,6 +2275,183 @@
       }
     },
     {
+      "id": "rethel",
+      "league": "LIGUE ELITE",
+      "name": "DIABLES RETHELOIS",
+      "shortName": "RETHEL",
+      "abbr": "RET",
+      "jerseyClubId": "rethel",
+      "homeArena": "rethel",
+      "logo": "rethel.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/rethel_1.png"
+      ],
+      "ratings": {
+        "off": 76,
+        "def": 73,
+        "goa": 74
+      },
+      "colors": {
+        "primary": "#c8102e",
+        "secondary": "#0b0b0f",
+        "staffJacket": "#111114",
+        "coachJacket": "#c8102e"
+      },
+      "rosterScreen": {
+        "photo": "rethel.jpg",
+        "focus": "50% 35%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "1",
+        "name": "SCHEJBAL",
+        "first": "Adam",
+        "nat": "CZ"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "FRANCE",
+          "first": "Paul"
+        }
+      ],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "NOVAK",
+            "first": "Lukas",
+            "nat": "CZ",
+            "g": 7,
+            "a": 5,
+            "pts": 12
+          },
+          {
+            "role": "LW",
+            "num": "19",
+            "name": "FEKETE",
+            "first": "Alex",
+            "nat": "HU",
+            "g": 6,
+            "a": 6,
+            "pts": 12
+          },
+          {
+            "role": "RW",
+            "num": "88",
+            "name": "JANECEK",
+            "first": "Michal",
+            "nat": "CZ",
+            "g": 6,
+            "a": 3,
+            "pts": 9
+          },
+          {
+            "role": "D",
+            "num": "20",
+            "name": "GONZALO",
+            "first": "Jiménez",
+            "nat": "ES",
+            "g": 3,
+            "a": 5,
+            "pts": 8
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "17",
+            "name": "SKACEL",
+            "first": "Kamil",
+            "nat": "CZ",
+            "g": 3,
+            "a": 3,
+            "pts": 6
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "VENIN",
+            "first": "Angus",
+            "g": 1,
+            "a": 3,
+            "pts": 4
+          },
+          {
+            "role": "RW",
+            "num": "23",
+            "name": "SZOLLOSI",
+            "first": "Csaba",
+            "nat": "HU",
+            "g": 3,
+            "a": 0,
+            "pts": 3
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "PONSARD",
+            "first": "Antoine",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "71",
+            "name": "COETZEE",
+            "first": "Johannes Willem",
+            "nat": "ZA",
+            "g": 1,
+            "a": 1,
+            "pts": 2
+          },
+          {
+            "role": "LW",
+            "num": "14",
+            "name": "KLEIN",
+            "first": "Hugo",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "27",
+            "name": "SMID",
+            "first": "Lukas",
+            "nat": "CZ",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "LANGLAIT",
+            "first": "Mickael",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [],
+      "kits": {
+        "black": {
+          "label": "Divisa Nera",
+          "primary": "#111114",
+          "pants": "#111114",
+          "helmet": "#111114",
+          "glove": "#c8102e"
+        }
+      }
+    },
+    {
       "id": "asiago_newts",
       "league": "SERIE B",
       "name": "ASIAGO NEWTS",
