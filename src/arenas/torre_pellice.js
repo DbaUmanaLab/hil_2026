@@ -83,6 +83,7 @@
         const osbMat = new THREE.MeshStandardMaterial({ map: osbTex, color: 0xe2cfb2, roughness: 0.85, side: THREE.DoubleSide });
         const WINY = 4.6, WTOP = 6.4;                           // fascia di finestre, poi di nuovo OSB fino alla gronda
         const winMat = new THREE.MeshStandardMaterial({ color: 0xdfe8ee, emissive: 0xc8d6e0, emissiveIntensity: 0.55, roughness: 0.3, side: THREE.DoubleSide });
+        winMat.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
         [[XE, -Math.PI / 2], [XW, Math.PI / 2]].forEach(([x, rot]) => {
             const w = meterPlane(osbMat, ZS - ZN, WINY, 2.44, 1.22);
             w.position.set(x, WINY / 2, 0); w.rotation.y = rot; targetGroup.add(w);

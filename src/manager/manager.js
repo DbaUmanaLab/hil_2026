@@ -335,12 +335,18 @@
         const inj = MC().teamPlayers(career, career.user).filter(p => p.inj);
         return inj.length ? `Indisponibili: ${inj.map(p => esc(p.name)).join(', ')}` : 'Tutta la rosa a disposizione';
     }
+    // orario della partita dal calendario della carriera (giorno della settimana e mese veri): decide se si
+    // gioca col sole o di sera (motore orari in competition.js)
+    function kickoffOf(ev, f) {
+        const d = new Date(ev.date + 'T12:00:00Z');
+        return E().kickoff([career.id, ev.date, f.home, f.away].join('|'), d.getUTCMonth(), d.getUTCDay());
+    }
     function showMatchDialog(ev, f) {
         const r = CLUB_RATINGS;
         const opp = f.home === career.user ? f.away : f.home;
         const mine = r[career.user], theirs = r[opp];
         overlay(`
-            <span class="cp-kicker">${esc(ev.label)} • ${esc(MC().dateLabel(ev.date, true))}</span>
+            <span class="cp-kicker">${esc(ev.label)} • ${esc(MC().dateLabel(ev.date, true))} • ore ${esc(kickoffOf(ev, f).time)}</span>
             ${versusHtml(f)}
             <div class="cp-next-arena">${esc(MC().arenaName(f.home))}${f.home === career.user ? ' • incasso di biglietti e bar' : ''}</div>
             <div class="mg-compare"><span>OFF ${mine.off} • DEF ${mine.def} • GOA ${mine.goa}</span><b>vs</b><span>OFF ${theirs.off} • DEF ${theirs.def} • GOA ${theirs.goa}</span></div>
@@ -372,10 +378,12 @@
         matchConfig.arena = HOME_CLUB_ARENAS[f.home] || f.home;
         matchConfig.userTeam = f.home === career.user ? 'home' : 'guest';
         liveMatch = { s: ev.comp === 'cup' ? career.cup : career.league, f };
+        const ko = kickoffOf(ev, f);
+        matchConfig.timeOfDay = ko.daytime ? 'day' : 'night';      // partita pomeridiana o serale
         matchActive = true;
         // il Manager si chiude quando il caricamento lo copre (niente palazzetto nella dissolvenza)
         const hideMgr = () => root.classList.add('cp-hidden');
-        if (typeof showFunFactLoading === 'function') showFunFactLoading(ev.label, launchMatchFromCurrentConfig, hideMgr);
+        if (typeof showFunFactLoading === 'function') showFunFactLoading(`${ev.label} • ${ko.label}`, launchMatchFromCurrentConfig, hideMgr);
         else { hideMgr(); launchMatchFromCurrentConfig(); }
     }
     function onUserMatchFinished(res) {
@@ -495,7 +503,7 @@
             const fs = M.freeSlots(c);
             if (fs.main + fs.sec > 0 && !c.sponsors.offers.length) alerts.push(`<button type="button" class="mg-alert is-info" data-go="sponsors">🤝 ${fs.main + fs.sec} spazi sponsor liberi</button>`);
             const next = !ev ? '<div class="cp-rest"><b>Carriera terminata</b></div>' : f
-                ? `<div class="cp-next-meta"><span>${esc(ev.label)}</span><span>${esc(M.dateLabel(ev.date, true))}</span></div>${versusHtml(f)}<div class="cp-next-arena">${esc(M.arenaName(f.home))}</div>
+                ? `<div class="cp-next-meta"><span>${esc(ev.label)}</span><span>${esc(M.dateLabel(ev.date, true))} • ore ${esc(kickoffOf(ev, f).time)}</span></div>${versusHtml(f)}<div class="cp-next-arena">${esc(M.arenaName(f.home))} • ${kickoffOf(ev, f).daytime ? '☀ di pomeriggio' : '☾ in serata'}</div>
                    <div class="cp-next-actions"><button class="cp-btn" data-act="sim">Simula</button><button class="cp-btn is-primary" data-act="play" data-focus>Gioca ▶</button></div>`
                 : `<div class="cp-next-meta"><span>${esc(M.dateLabel(ev.date, true))}</span></div><div class="cp-rest"><b>${esc(ev.label)}</b>${esc(eventHint(ev))}</div>
                    <div class="cp-next-actions"><button class="cp-btn is-primary" data-act="go" data-focus>Continua ▶</button></div>`;

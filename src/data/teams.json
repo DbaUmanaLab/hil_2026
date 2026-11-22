@@ -649,7 +649,8 @@
       "logoOnScoreboard": "drawn",
       "jerseys": [
         "assets/jerseys/asiago_1.png",
-        "assets/jerseys/asiago_2.png"
+        "assets/jerseys/asiago_2.png",
+        "assets/jerseys/asiago_3.png"
       ],
       "ratings": {
         "off": 76,
@@ -836,6 +837,13 @@
           "pants": "#09090b",
           "helmet": "#09090b",
           "glove": "#f97316"
+        },
+        "orange": {
+          "label": "Schema Arancio",
+          "primary": "#e2541c",
+          "pants": "#09090b",
+          "helmet": "#09090b",
+          "glove": "#09090b"
         }
       }
     },

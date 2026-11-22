@@ -120,6 +120,7 @@
         const endGeo = new THREE.ShapeGeometry(endShape, 28);
         const endMat = new THREE.MeshStandardMaterial({ map: loadFileTexture(T + 'membrane.jpg', { repeat: [1 / 6, 1 / 6] }), color: 0xd8e8ea, emissive: 0xcfe0e2, emissiveIntensity: 0.18, roughness: 0.9, side: THREE.DoubleSide });
         const winMat = new THREE.MeshStandardMaterial({ color: 0xcfe6ee, emissive: 0xbfdbe6, emissiveIntensity: 0.5, roughness: 0.2 });
+        winMat.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
         const netTex = loadFileTexture('assets/textures/kraken_camaiore/net_white.png', { repeat: [1 / 0.12, 1 / 0.12] });   // UV in metri, maglia 12 cm
         const netMat = new THREE.MeshBasicMaterial({ map: netTex, transparent: true, alphaTest: 0.1, side: THREE.DoubleSide, depthWrite: false, opacity: 0.85 });
         [-1, 1].forEach(dir => {

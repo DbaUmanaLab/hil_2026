@@ -173,6 +173,7 @@
 
         // ---------- 6. pareti basse laterali, bianche, con porte e finestre
         const winMat = new THREE.MeshStandardMaterial({ color: 0xbfe0f5, emissive: 0xd9eefb, emissiveIntensity: 0.6, roughness: 0.2 });
+        winMat.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
         const doorMat = new THREE.MeshStandardMaterial({ color: 0x8b95a0, roughness: 0.5, metalness: 0.4 });
         [CX - A + 1.0, CX + A - 1.0].forEach(x => {
             const s = x < 0 ? 1 : -1;

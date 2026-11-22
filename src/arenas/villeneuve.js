@@ -96,12 +96,14 @@
         flat(LEN, 0.8, adsMat, XW + 0.03, 3.4, 0, Math.PI / 2);
         flat(LEN, 5.0, lit(tex('gallery_glass.jpg', [LEN / 8, 2.5]), 0.35), XW, 6.3, 0, Math.PI / 2);
         flat(LEN, 1.4, beige(LEN, 1.4), XW, 9.5, 0, Math.PI / 2);
-        flat(LEN, 2.2, lit(tex('windows_day.jpg', [LEN / 8, 1.1]), 0.25), XW, 11.3, 0, Math.PI / 2);   // finestre alte
+        // finestre verso l'esterno: di giorno ci entra il sole (index.html)
+        const winLit = (t, k) => { const m = lit(t, k); m.userData.sunWindow = true; return m; };
+        flat(LEN, 2.2, winLit(tex('windows_day.jpg', [LEN / 8, 1.1]), 0.25), XW, 11.3, 0, Math.PI / 2);   // finestre alte
         flat(LEN, yt(XW) - 12.4 + 0.1, beige(LEN, yt(XW) - 12.4), XW, (12.4 + yt(XW) + 0.1) / 2, 0, Math.PI / 2);
         // est (panchine): blocchi con porte gialle, fascia, finestroni
         flat(LEN, 3.2, block(3.2), XE, 1.6, 0, -Math.PI / 2);
         flat(LEN, 0.8, adsMat, XE - 0.03, 3.6, 0, -Math.PI / 2);
-        flat(LEN, 7.0, lit(tex('windows_day.jpg', [LEN / 8, 3.5]), 0.25), XE, 7.5, 0, -Math.PI / 2);   // finestroni alti
+        flat(LEN, 7.0, winLit(tex('windows_day.jpg', [LEN / 8, 3.5]), 0.25), XE, 7.5, 0, -Math.PI / 2);   // finestroni alti
         flat(LEN, yt(XE) - 11.0 + 0.1, beige(LEN, yt(XE) - 11.0), XE, (11.0 + yt(XE) + 0.1) / 2, 0, -Math.PI / 2);
         const doorMat = new THREE.MeshStandardMaterial({ color: 0xe9c21f, roughness: 0.5 });
         [-30, -10, 10, 30].forEach(z => {

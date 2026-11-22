@@ -45,6 +45,7 @@
 
         // ---------- 2. telaio verde: pilastri, correnti, controventi a croce e finestroni
         const winMat = new THREE.MeshStandardMaterial({ map: loadFileTexture(T + 'window.jpg'), emissive: 0xffffff, emissiveMap: loadFileTexture(T + 'window.jpg'), emissiveIntensity: 0.55, roughness: 0.3 });
+        winMat.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
         const blindMat = new THREE.MeshStandardMaterial({ map: loadFileTexture(T + 'blind.jpg'), emissive: 0xfff4d0, emissiveMap: loadFileTexture(T + 'blind.jpg'), emissiveIntensity: 0.45, roughness: 0.8 });
         const beams = [];
         const V = (x, y, z) => new THREE.Vector3(x, y, z);

@@ -2827,7 +2827,7 @@
             guestClub: 'vicenza',
             guestKit: 'red',
             arena: 'cittadella',
-            // 'day' (luce del sole dalle finestre, fari spenti) o 'night' (fari accesi); solo nei palazzetti in ARENA_DAYLIGHT_IDS
+            // 'day' (luce del sole dalle finestre, fari spenti) o 'night' (fari accesi); vedi arenaSupportsDay
             timeOfDay: (() => { try { return localStorage.getItem('hil_time_of_day') === 'day' ? 'day' : 'night'; } catch (e) { return 'night'; } })(),
             // squadra controllata dall'utente ('home' o 'guest'), ricordata nel browser
             userTeam: (() => { try { return localStorage.getItem('hil_user_team') === 'guest' ? 'guest' : 'home'; } catch (e) { return 'home'; } })()
@@ -2952,12 +2952,12 @@
         // finestre: chiazze di sole sulla pista, giocatori che passano dall'ombra alla luce, fasci nel pulviscolo.
         // Il modulo del palazzetto descrive il sole e accende/spegne le sue parti con registerArenaDaylight().
         // =====================================================================
-        const ARENA_DAYLIGHT_IDS = new Set(['cittadella']);
         let arenaDaylight = null;          // { sunDir, center, bounds: {min, max}, sunColor, sunIntensity, ambient, hemi, exposure, apply(mode, info) }
         let nightLighting = null;          // valori della sera, per tornare indietro
         let dayLightingOn = false;
         function registerArenaDaylight(cfg) { arenaDaylight = cfg; }
-        function arenaSupportsDay(id) { return ARENA_DAYLIGHT_IDS.has(id); }
+        // tutti i palazzetti: Cittadella ha il suo modulo (src/arenas/cittadella.js), gli altri setupGenericDaylight
+        function arenaSupportsDay(id) { return !!ARENA_CATALOG[id]; }
         function isDaytimeMatch() { return matchConfig.timeOfDay === 'day' && arenaSupportsDay(matchConfig.arena); }
         function captureNightLighting() {
             const c = mainDirLight.shadow.camera;
@@ -3063,6 +3063,337 @@
             dayLightingOn = day;
             if (arenaDaylight && arenaDaylight.apply) arenaDaylight.apply(day ? 'day' : 'night', { shadows: !!preset.shadows, quality: preset.id });
         }
+
+        // ---------------------------------------------------------------------
+        // GIORNO GENERICO: per i palazzetti senza un modulo dedicato (tutti tranne Cittadella).
+        // 1. ingombro del palazzetto (senza il paesaggio lontano);
+        // 2. finestre = mesh col materiale marcato userData.sunWindow nei moduli (src/arenas/*.js); dove
+        //    non ce ne sono si aggiunge una fascia di finestre sul lato più adatto;
+        // 3. il sole entra dal lato con più vetrate (o dall'alto se ci sono solo lucernari);
+        // 4. guscio invisibile attorno al palazzetto che fa solo ombra, con i buchi dove ci sono le
+        //    finestre (spezzate in vetri con i montanti, così le chiazze di sole vengono a strisce);
+        // 5. fasci di luce nel pulviscolo, chiazze disegnate se non ci sono ombre, granelli che brillano;
+        // 6. di giorno aloni additivi, lampade bianche e superfici luminose dei fari si spengono.
+        // ARENA_SUN_OVERRIDES regola i singoli palazzetti: side ('+x','-x','+z','-z','roof'), elev e az in
+        // gradi, intensity, synthetic (finestre aggiunte dove non ce ne sono: { side, y0, y1 }; side 'roof' =
+        // lucernari sul colmo), skylights (lucernari sul colmo anche se ci sono già finestre).
+        // ---------------------------------------------------------------------
+        const ARENA_SUN_OVERRIDES = {
+            // senza finestre nel modello: fascia di finestre sul lato panchine, o lucernari lungo il colmo
+            // nelle tensostrutture e nelle cupole (una fascia in parete finirebbe fuori dal telo)
+            milano: { synthetic: { side: 'roof' } },
+            empoli: { synthetic: { side: 'roof' } },
+            cus_verona: { synthetic: { side: 'roof' } },
+            roma: { synthetic: { side: '+x' } },
+            novi: { synthetic: { side: '+x' } },
+            kraken_camaiore: { synthetic: { side: '+x' } },
+            parma: { synthetic: { side: '+x' } },
+            piacenza: { side: '+x' },
+            // finestre piccole o solo sulle testate: in più i lucernari sul colmo, da cui entra il sole
+            fox_legnaro: { skylights: true },
+            ferrara: { skylights: true },
+            molina: { elev: 52 }
+        };
+        function sunBeamGradientTexture() {
+            if (sunBeamGradientTexture.tex) return sunBeamGradientTexture.tex;
+            const c = document.createElement('canvas');
+            c.width = 64; c.height = 256;
+            const g = c.getContext('2d');
+            const img = g.createImageData(64, 256);
+            for (let y = 0; y < 256; y++) {
+                const along = y / 255;                     // 0 = pavimento, 1 = finestra
+                const fall = 0.06 + 0.62 * Math.pow(1 - along, 0.15) * Math.pow(along, 1.25) + 0.18 * along;
+                for (let x = 0; x < 64; x++) {
+                    const across = Math.pow(Math.sin(Math.PI * (x + 0.5) / 64), 0.8);
+                    const streak = 0.85 + 0.15 * Math.sin(x * 0.9 + Math.sin(y * 0.05) * 2);
+                    const v = Math.min(255, 255 * fall * across * streak);
+                    img.data.set([v, v * 0.92, v * 0.78, 255], (y * 64 + x) * 4);
+                }
+            }
+            g.putImageData(img, 0, 0);
+            const t = new THREE.CanvasTexture(c);
+            if (THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace;
+            sunBeamGradientTexture.tex = t;
+            return t;
+        }
+        function dustSpriteTexture() {
+            if (dustSpriteTexture.tex) return dustSpriteTexture.tex;
+            const c = document.createElement('canvas');
+            c.width = c.height = 32;
+            const g = c.getContext('2d');
+            const grd = g.createRadialGradient(16, 16, 0, 16, 16, 16);
+            grd.addColorStop(0, 'rgba(255,255,255,1)'); grd.addColorStop(0.35, 'rgba(255,255,255,0.45)'); grd.addColorStop(1, 'rgba(255,255,255,0)');
+            g.fillStyle = grd; g.fillRect(0, 0, 32, 32);
+            dustSpriteTexture.tex = new THREE.CanvasTexture(c);
+            return dustSpriteTexture.tex;
+        }
+        function setupGenericDaylight(group, arenaId) {
+            const preset = getActiveQualityPreset();
+            const ov = ARENA_SUN_OVERRIDES[arenaId] || {};
+            const outdoor = !!currentArenaOutdoor;
+            group.updateMatrixWorld(true);
+
+            // ---------- 1. ingombro e raccolta di finestre e lampade
+            const B = new THREE.Box3(), mb = new THREE.Box3(), mc = new THREE.Vector3();
+            const winMeshes = [], lampMats = new Set(), glowObjs = [], tallCasters = [];
+            const isWin = m => m && m.userData && m.userData.sunWindow;
+            group.traverse(o => {
+                if (o.isSprite) { if (o.material && o.material.blending === THREE.AdditiveBlending) glowObjs.push(o); return; }
+                if (!o.isMesh || !o.geometry) return;
+                const mats = Array.isArray(o.material) ? o.material : [o.material];
+                mb.setFromObject(o);
+                if (mb.isEmpty()) return;
+                mb.getCenter(mc);
+                if (Math.abs(mc.x) < 60 && Math.abs(mc.z) < 75 && mc.y < 40 && mc.y > -2) B.union(mb);
+                // tetti, pareti e travi che fanno già ombra (per le luci della sera): di giorno l'ombra la fa il guscio
+                if (o.castShadow && mb.max.y > 3.2) tallCasters.push(o);
+                if (mats.some(isWin)) { winMeshes.push({ mesh: o, box: mb.clone() }); return; }
+                mats.forEach(m => {
+                    if (!m) return;
+                    if (m.blending === THREE.AdditiveBlending) { glowObjs.push(o); return; }
+                    // lampade: superfici bianche "accese" senza texture (MeshBasic chiaro) o molto emissive
+                    if (m.isMeshBasicMaterial && !m.map && m.color && (m.color.r + m.color.g + m.color.b) / 3 > 0.86) lampMats.add(m);
+                    else if (m.emissive && m.emissiveIntensity >= 0.4 && !m.emissiveMap && (m.emissive.r + m.emissive.g + m.emissive.b) / 3 > 0.6) lampMats.add(m);
+                });
+            });
+            if (B.isEmpty()) return;
+            B.min.y = 0;
+            const roofY = B.max.y;
+
+            // ---------- 2. rettangoli delle finestre sulle facce del guscio
+            // faccia: '+x' '-x' '+z' '-z' (pareti) o 'roof'; rettangolo nelle coordinate della faccia:
+            // pareti ±x: (z, y); pareti ±z: (x, y); tetto: (x, z). d = posizione reale della finestra lungo la normale.
+            const rects = [];
+            const addRect = (face, a0, a1, b0, b1, d, mesh) => rects.push({ face, a0, a1, b0, b1, d, mesh });
+            const faceOf = (box) => {
+                const c = box.getCenter(new THREE.Vector3()), s = box.getSize(new THREE.Vector3());
+                if (s.y < 0.35 * Math.max(s.x, s.z) && c.y > 0.55 * roofY) return 'roof';
+                const dd = { '-x': Math.abs(c.x - B.min.x), '+x': Math.abs(c.x - B.max.x), '-z': Math.abs(c.z - B.min.z), '+z': Math.abs(c.z - B.max.z) };
+                return Object.keys(dd).sort((p, q) => dd[p] - dd[q])[0];
+            };
+            winMeshes.forEach(({ mesh, box }) => {
+                const s = box.getSize(new THREE.Vector3());
+                // fascia che gira tutto attorno (es. policarbonato): diventa una fascia su ciascun lato
+                if (s.x > 0.8 * (B.max.x - B.min.x) && s.z > 0.8 * (B.max.z - B.min.z)) {
+                    addRect('+x', box.min.z, box.max.z, box.min.y, box.max.y, B.max.x, mesh);
+                    addRect('-x', box.min.z, box.max.z, box.min.y, box.max.y, B.min.x, mesh);
+                    addRect('+z', box.min.x, box.max.x, box.min.y, box.max.y, B.max.z, mesh);
+                    addRect('-z', box.min.x, box.max.x, box.min.y, box.max.y, B.min.z, mesh);
+                    return;
+                }
+                const f = faceOf(box);
+                if (f === 'roof') addRect(f, box.min.x, box.max.x, box.min.z, box.max.z, (box.min.y + box.max.y) / 2, mesh);
+                else if (f[1] === 'x') addRect(f, box.min.z, box.max.z, box.min.y, box.max.y, (box.min.x + box.max.x) / 2, mesh);
+                else addRect(f, box.min.x, box.max.x, box.min.y, box.max.y, (box.min.z + box.max.z) / 2, mesh);
+            });
+            // palazzetti senza finestre: lucernari sul colmo o fascia di finestre alta sul lato scelto (visibili)
+            let synthWinMat = null;
+            if ((!rects.length || ov.skylights) && !outdoor) {
+                const sy = ov.synthetic || { side: '+x' };
+                const side = ov.skylights ? 'roof' : (sy.side || '+x');
+                const y0 = sy.y0 || Math.max(3.4, roofY * 0.34), y1 = sy.y1 || Math.max(y0 + 1.6, roofY * 0.5);
+                synthWinMat = new THREE.MeshBasicMaterial({ color: 0x23324d, side: THREE.DoubleSide });
+                synthWinMat.userData.sunWindow = true;
+                if (side === 'roof') {
+                    // due file di lucernari ai lati del colmo, a pannelli da 4 m
+                    const cx = (B.min.x + B.max.x) / 2, y = roofY - 0.25;
+                    const pane = new THREE.PlaneGeometry(1, 1);
+                    [-3.2, 3.2].forEach(dx => {
+                        for (let z = B.min.z + 6; z < B.max.z - 6 - 1; z += 4.6) {
+                            const len = Math.min(4, B.max.z - 6 - z);
+                            const m = new THREE.Mesh(pane, synthWinMat);
+                            m.rotation.x = -Math.PI / 2;
+                            m.scale.set(1.8, len, 1);
+                            m.position.set(cx + dx, y, z + len / 2);
+                            group.add(m);
+                            addRect('roof', cx + dx - 0.9, cx + dx + 0.9, z, z + len, y, m);
+                        }
+                    });
+                } else {
+                    // fascia di vetri da 2,6 m sulla parete scelta
+                    const alongX = side[1] === 'z';
+                const lo = alongX ? B.min.x + 4 : B.min.z + 4, hi = alongX ? B.max.x - 4 : B.max.z - 4;
+                const d = side === '+x' ? B.max.x - 0.08 : side === '-x' ? B.min.x + 0.08 : side === '+z' ? B.max.z - 0.08 : B.min.z + 0.08;
+                const pane = new THREE.PlaneGeometry(1, 1);
+                for (let a = lo; a < hi - 1; a += 3.0) {
+                    const w = Math.min(2.6, hi - a);
+                    const m = new THREE.Mesh(pane, synthWinMat);
+                    m.scale.set(w, y1 - y0, 1);
+                    if (alongX) m.position.set(a + w / 2, (y0 + y1) / 2, d);
+                    else { m.position.set(d, (y0 + y1) / 2, a + w / 2); m.rotation.y = Math.PI / 2; }
+                    group.add(m);
+                    addRect(side, a, a + w, y0, y1, d, m);
+                }
+                }
+            }
+
+            // ---------- 3. lato del sole e direzione
+            const area = { '+x': 0, '-x': 0, '+z': 0, '-z': 0, roof: 0 };
+            rects.forEach(r => { area[r.face] += (r.a1 - r.a0) * (r.b1 - r.b0); });
+            let side = ov.side;
+            if (!side) {
+                const walls = ['+x', '-x', '+z', '-z'].sort((p, q) => area[q] - area[p]);
+                side = area.roof > area[walls[0]] ? 'roof' : (area[walls[0]] > 0 ? walls[0] : '+x');
+            }
+            const normal = { '+x': [1, 0], '-x': [-1, 0], '+z': [0, 1], '-z': [0, -1], roof: [1, 0] }[side];
+            // sole basso (mattino d'inverno) dalle pareti: le chiazze arrivano fino a metà pista; alto dai lucernari
+            const elev = (ov.elev || (side === 'roof' ? 56 : (outdoor ? 38 : 19))) * Math.PI / 180;
+            const az = (ov.az != null ? ov.az : 24) * Math.PI / 180;
+            const hx = normal[0] * Math.cos(az) - normal[1] * Math.sin(az), hz = normal[0] * Math.sin(az) + normal[1] * Math.cos(az);
+            const sun = new THREE.Vector3(hx * Math.cos(elev), Math.sin(elev), hz * Math.cos(elev)).normalize();
+
+            // ---------- 4. guscio d'ombra (solo al chiuso)
+            const G = { x0: B.min.x - 0.5, x1: B.max.x + 0.5, z0: B.min.z - 0.5, z1: B.max.z + 0.5, y1: roofY + 0.4 };
+            const shell = new THREE.Group();
+            // vetri spezzati in pannelli da 2,6 m con 0,4 m di montante (le chiazze vengono a strisce)
+            const panes = [];
+            rects.forEach(r => {
+                const len = r.a1 - r.a0;
+                if (len <= 3.4 || r.face === 'roof') { panes.push(r); return; }
+                for (let a = r.a0 + 0.2; a < r.a1 - 0.5; a += 3.0) panes.push(Object.assign({}, r, { a0: a, a1: Math.min(r.a1 - 0.2, a + 2.6) }));
+            });
+            if (!outdoor) {
+                const shellMat = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false, side: THREE.DoubleSide });
+                shellMat.shadowSide = THREE.DoubleSide;
+                const faces = {
+                    '+x': { w: [G.z0, G.z1], h: [0, G.y1], place: m => { m.rotation.y = -Math.PI / 2; m.position.x = G.x1; } },
+                    '-x': { w: [G.z0, G.z1], h: [0, G.y1], place: m => { m.rotation.y = -Math.PI / 2; m.position.x = G.x0; } },
+                    '+z': { w: [G.x0, G.x1], h: [0, G.y1], place: m => { m.position.z = G.z1; } },
+                    '-z': { w: [G.x0, G.x1], h: [0, G.y1], place: m => { m.position.z = G.z0; } },
+                    roof: { w: [G.x0, G.x1], h: [G.z0, G.z1], place: m => { m.rotation.x = Math.PI / 2; m.position.y = G.y1; } }
+                };
+                Object.entries(faces).forEach(([fk, F]) => {
+                    // con rotation.y = -π/2 l'asse x locale va su +z: le coordinate "a" vanno usate così come sono
+                    const shape = new THREE.Shape();
+                    shape.moveTo(F.w[0], F.h[0]); shape.lineTo(F.w[1], F.h[0]); shape.lineTo(F.w[1], F.h[1]); shape.lineTo(F.w[0], F.h[1]); shape.lineTo(F.w[0], F.h[0]);
+                    // buchi: pannelli di questa faccia, uniti se si sovrappongono, dentro il bordo
+                    let holes = panes.filter(r => r.face === fk).map(r => ({ a0: Math.max(F.w[0] + 0.3, r.a0), a1: Math.min(F.w[1] - 0.3, r.a1), b0: Math.max(F.h[0] + 0.3, r.b0), b1: Math.min(F.h[1] - 0.3, r.b1) }))
+                        .filter(h => h.a1 - h.a0 > 0.2 && h.b1 - h.b0 > 0.2);
+                    let merged = true;
+                    while (merged) {
+                        merged = false;
+                        outer: for (let i = 0; i < holes.length; i++) for (let j = i + 1; j < holes.length; j++) {
+                            const p = holes[i], q = holes[j];
+                            if (p.a0 < q.a1 + 0.05 && q.a0 < p.a1 + 0.05 && p.b0 < q.b1 + 0.05 && q.b0 < p.b1 + 0.05) {
+                                holes[i] = { a0: Math.min(p.a0, q.a0), a1: Math.max(p.a1, q.a1), b0: Math.min(p.b0, q.b0), b1: Math.max(p.b1, q.b1) };
+                                holes.splice(j, 1); merged = true; break outer;
+                            }
+                        }
+                    }
+                    holes.forEach(h => {
+                        const path = new THREE.Path();
+                        path.moveTo(h.a0, h.b0); path.lineTo(h.a0, h.b1); path.lineTo(h.a1, h.b1); path.lineTo(h.a1, h.b0); path.lineTo(h.a0, h.b0);
+                        shape.holes.push(path);
+                    });
+                    const m = new THREE.Mesh(new THREE.ShapeGeometry(shape), shellMat);
+                    F.place(m);
+                    m.castShadow = true;
+                    m.receiveShadow = false;
+                    m.userData.recvNight = false;            // applyTimeOfDay non deve fargli ricevere ombre
+                    shell.add(m);
+                });
+                shell.visible = false;
+                group.add(shell);
+            }
+
+            // ---------- 5. fasci, chiazze e pulviscolo dalle finestre del lato del sole
+            const corners = r => {
+                const V = (a, b) => r.face === 'roof' ? new THREE.Vector3(a, r.d, b) : (r.face[1] === 'x' ? new THREE.Vector3(r.d, b, a) : new THREE.Vector3(a, b, r.d));
+                return [V(r.a0, r.b0), V(r.a1, r.b0), V(r.a1, r.b1), V(r.a0, r.b1)];
+            };
+            const reach = p => {                            // dove il raggio tocca il pavimento (o la parete opposta)
+                let t = (p.y - 0.02) / sun.y;
+                [['x', B.min.x, B.max.x], ['z', B.min.z, B.max.z]].forEach(([ax, lo, hi]) => {
+                    const d = -sun[ax];
+                    if (d > 1e-4) t = Math.min(t, Math.max(0, (hi - p[ax]) / d));
+                    else if (d < -1e-4) t = Math.min(t, Math.max(0, (lo - p[ax]) / d));
+                });
+                return p.clone().addScaledVector(sun, -t);
+            };
+            const beamPos = [], beamUv = [], patchPos = [], dustPts = [];
+            const dustPer = preset.id === 'high' ? 26 : (preset.id === 'medium' ? 14 : 0);
+            panes.filter(r => r.face === side).slice(0, 80).forEach(r => {
+                const c = corners(r), f = c.map(reach);
+                for (let k = 0; k < 4; k++) {
+                    const a = c[k], b = c[(k + 1) % 4], fb = f[(k + 1) % 4], fa = f[k];
+                    beamPos.push(a.x, a.y, a.z, b.x, b.y, b.z, fb.x, fb.y, fb.z, a.x, a.y, a.z, fb.x, fb.y, fb.z, fa.x, fa.y, fa.z);
+                    beamUv.push(0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0);
+                }
+                if (f.every(p => p.y < 0.2)) patchPos.push(f[0].x, 0.025, f[0].z, f[1].x, 0.025, f[1].z, f[2].x, 0.025, f[2].z, f[0].x, 0.025, f[0].z, f[2].x, 0.025, f[2].z, f[3].x, 0.025, f[3].z);
+                for (let n = 0; n < dustPer; n++) {
+                    const u = Math.random(), v = Math.random();
+                    const top = c[0].clone().lerp(c[1], u).lerp(c[3].clone().lerp(c[2], u), v);
+                    dustPts.push(top.lerp(reach(top), 0.08 + Math.random() * 0.85));
+                }
+            });
+            const fx = new THREE.Group();
+            let beams = null, patches = null, dust = null;
+            if (beamPos.length && !outdoor) {
+                const bg = new THREE.BufferGeometry();
+                bg.setAttribute('position', new THREE.Float32BufferAttribute(beamPos, 3));
+                bg.setAttribute('uv', new THREE.Float32BufferAttribute(beamUv, 2));
+                beams = new THREE.Mesh(bg, new THREE.MeshBasicMaterial({ map: sunBeamGradientTexture(), color: 0xffe6bf, transparent: true, opacity: 0.36, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+                beams.renderOrder = 3;
+                fx.add(beams);
+            }
+            if (patchPos.length) {
+                const pg = new THREE.BufferGeometry();
+                pg.setAttribute('position', new THREE.Float32BufferAttribute(patchPos, 3));
+                patches = new THREE.Mesh(pg, new THREE.MeshBasicMaterial({ color: 0xffd9a0, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide }));
+                patches.renderOrder = 2;
+                fx.add(patches);
+            }
+            if (dustPts.length && !outdoor) {
+                dust = new THREE.Points(new THREE.BufferGeometry().setFromPoints(dustPts.slice(0, 2500)), new THREE.PointsMaterial({ map: dustSpriteTexture(), color: 0xfff1d6, size: 0.05, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, alphaTest: 0.01 }));
+                fx.add(dust);
+                if (typeof arenaSwayItems !== 'undefined') arenaSwayItems.push({ obj: dust, speed: 0.25, phase: 0, amp: 0.004 });
+            }
+            fx.visible = false;
+            group.add(fx);
+
+            // ---------- 6. registrazione: cosa cambia fra giorno e sera
+            const winMats = new Set();
+            rects.forEach(r => [].concat(r.mesh.material).forEach(m => m && winMats.add(m)));
+            const remember = m => {
+                if (m.userData.night) return m.userData.night;
+                m.userData.night = { color: m.color ? m.color.getHex() : null, emi: m.emissive ? m.emissive.getHex() : null, ei: m.emissiveIntensity };
+                return m.userData.night;
+            };
+            registerArenaDaylight({
+                sunDir: sun.toArray(),
+                center: [(B.min.x + B.max.x) / 2, 0, (B.min.z + B.max.z) / 2],
+                bounds: { min: [G.x0, 0, G.z0], max: [G.x1, G.y1, G.z1] },
+                sunColor: 0xffd49a,
+                sunIntensity: ov.intensity || (outdoor ? 1.6 : 2.6),
+                sunIntensityFlat: outdoor ? 1.6 : 1.0,
+                ambient: outdoor ? 0.75 : 0.45,
+                hemi: outdoor ? 1.0 : 0.85,
+                exposure: 0.74,
+                apply(mode, info) {
+                    const day = mode === 'day';
+                    shell.visible = day && info.shadows;
+                    tallCasters.forEach(o => { o.castShadow = !(day && info.shadows); });
+                    fx.visible = day;
+                    if (patches) patches.visible = day && !info.shadows;
+                    glowObjs.forEach(o => { o.visible = !day; });
+                    lampMats.forEach(m => {
+                        const n = remember(m);
+                        if (m.isMeshBasicMaterial) m.color.setHex(day ? 0x8d8a84 : n.color);
+                        else m.emissiveIntensity = day ? n.ei * 0.12 : n.ei;      // fari e lampade spenti
+                    });
+                    winMats.forEach(m => {                                          // cielo luminoso dalle finestre
+                        const n = remember(m);
+                        if (m === synthWinMat) { m.color.setHex(day ? 0xf6faff : 0x23324d); return; }
+                        if (m.isMeshBasicMaterial) m.color.setHex(day ? 0xf6faff : n.color);
+                        else if (m.emissive) {
+                            m.emissiveIntensity = day ? Math.max(0.8, (n.ei || 0) * 1.7) : n.ei;
+                            if (!m.emissiveMap && day) m.emissive.setHex(0xf2f7ff); else if (n.emi != null) m.emissive.setHex(n.emi);
+                        }
+                    });
+                }
+            });
+        }
+
 
         // Sistema Rilevamento Dispositivo & Qualità Grafica Adattiva
         const QUALITY_PRESETS = {
@@ -5550,6 +5881,9 @@
                 buildPenaltyBoxes(builtGroup);
                 buildArenaCrowd(builtGroup, arenaId);
                 applyScoreboardLayout();
+                if (!arenaDaylight && arenaSupportsDay(arenaId)) {
+                    try { setupGenericDaylight(builtGroup, arenaId); } catch (e) { console.error('[giorno] ' + arenaId, e); }
+                }
                 applyTimeOfDay();
             };
             if (arenaBuilders[archId]) finishArena();
@@ -7088,24 +7422,6 @@
                         }
                         const base = avg(sideSamples) || [240, 240, 240];
 
-                        // colletto: sul busto 3D lo scollo a V e lo sprone sotto il collo della foto finivano sul petto
-                        // come una pettorina. In tutte le maglie stanno nel primo 20% circa dell'altezza: quella fascia
-                        // si copre col colore prevalente del petto subito sotto (il più frequente, non una media).
-                        const collarCut = y0 + bh * 0.2;
-                        const collar = Math.max(0, Math.min(0.25, (collarCut - crop.y0) / ch));
-                        let collarFill = base;
-                        {
-                            const bins = {};
-                            for (let y = collarCut; y < collarCut + bh * 0.05; y += 2) for (let x = cx - cw * 0.3; x <= cx + cw * 0.3; x += 3) {
-                                const q = P(x, y);
-                                if (q[3] < 160) continue;
-                                const k = (q[0] >> 5) + ',' + (q[1] >> 5) + ',' + (q[2] >> 5);
-                                const bn = bins[k] || (bins[k] = { n: 0, r: 0, g: 0, b: 0 });
-                                bn.n++; bn.r += q[0]; bn.g += q[1]; bn.b += q[2];
-                            }
-                            const top = Object.values(bins).sort((m, n) => n.n - m.n)[0];
-                            if (top) collarFill = [top.r / top.n, top.g / top.n, top.b / top.n];
-                        }
 
                         // colori d'accento: istogramma quantizzato escludendo il colore di base
                         const hist = {};
@@ -7181,7 +7497,7 @@
                         for (let i = 0; i < simg.data.length; i += 4) if (simg.data[i + 3] === 0) simg.data.set([sleeveAvg[0], sleeveAvg[1], sleeveAvg[2], 255], i);
                         sctx.putImageData(simg, 0, 0);
 
-                        resolve({ ok: true, img, crop, base, collar, collarFill, accent, accent2, band, sleeve, sleeveAvg, sleeveAccent, sleevePalette });
+                        resolve({ ok: true, img, crop, base, accent, accent2, band, sleeve, sleeveAvg, sleeveAccent, sleevePalette });
                     } catch (e) {
                         resolve({ ok: false });
                     }
@@ -7206,17 +7522,6 @@
                     const u = (c + 0.5) / W;
                     const sxp = cr.x0 + (1 - Math.cos(2 * Math.PI * u)) / 2 * (cw - 1);
                     ctx.drawImage(info.img, sxp, cr.y0, 1, ch, c, 0, 1, H);
-                }
-                // via il colletto dal davanti: fascia alta col colore della maglia, bordo sfumato
-                if (info.collar > 0.01) {
-                    const cy = H * info.collar, feather = H * 0.035, fc = info.collarFill || base;
-                    ctx.fillStyle = rgbCss(fc);
-                    ctx.fillRect(0, 0, half, cy);
-                    const g = ctx.createLinearGradient(0, cy, 0, cy + feather);
-                    g.addColorStop(0, rgbCss(fc));
-                    g.addColorStop(1, `rgba(${fc.map(v => Math.round(v)).join(',')},0)`);
-                    ctx.fillStyle = g;
-                    ctx.fillRect(0, cy, half, feather);
                 }
             } else {
                 ctx.fillStyle = rgbCss(fallback.accent);
@@ -7418,7 +7723,9 @@
 
 
         // Superficie di rivoluzione a sezione ellittica con UV: u=0.25 davanti (-Z), u=0.75 dietro (+Z)
-        function buildEllipticLathe(profile, segs, vFrom = 0, vTo = 1, smoothN = 0) {
+        // vByArc: la coordinata v della texture segue la lunghezza del profilo invece dell'altezza (busto: la
+        // calotta delle spalle, quasi orizzontale, riceve la sua parte d'immagine, cioè il colletto della maglia)
+        function buildEllipticLathe(profile, segs, vFrom = 0, vTo = 1, smoothN = 0, vByArc = false) {
             let pts = profile;
             if (smoothN > 0) {
                 const crv = new THREE.CatmullRomCurve3(profile.map(q => new THREE.Vector3(q[1], q[0], q[2])));
@@ -7430,12 +7737,19 @@
                 }
             }
             const ymin = pts[0][0], ymax = pts[pts.length - 1][0];
+            const arc = [0];
+            for (let k = 1; k < pts.length; k++) {
+                const r0 = (pts[k - 1][1] + pts[k - 1][2]) / 2, r1 = (pts[k][1] + pts[k][2]) / 2;
+                arc.push(arc[k - 1] + Math.hypot(pts[k][0] - pts[k - 1][0], r1 - r0));
+            }
+            const arcLen = arc[arc.length - 1] || 1;
             const pos = [], uv = [], idx = [];
-            pts.forEach(([y, rx, rz, zo]) => {
+            pts.forEach(([y, rx, rz, zo], k) => {
+                const t = vByArc ? arc[k] / arcLen : (y - ymin) / (ymax - ymin || 1);
                 for (let i = 0; i <= segs; i++) {
                     const u = i / segs, a = 2 * Math.PI * u;
                     pos.push(rx * Math.cos(a), y, (zo || 0) - rz * Math.sin(a));
-                    uv.push(u, vFrom + (y - ymin) / (ymax - ymin || 1) * (vTo - vFrom));
+                    uv.push(u, vFrom + t * (vTo - vFrom));
                 }
             });
             for (let j = 0; j < pts.length - 1; j++) for (let i = 0; i < segs; i++) {
@@ -7515,7 +7829,7 @@
                 [0.64, 0.29 * tW, 0.165 * tD, 0.0],
                 [0.7, 0.17, 0.12, 0.004],
                 [0.73, 0.09, 0.075, 0.01]
-            ], SEG, 0, 1, preset.id === 'low' ? 14 : 28), jerseyMat);
+            ], SEG, 0, 1, preset.id === 'low' ? 14 : 28, true), jerseyMat);   // colletto sulla calotta delle spalle
             bodyPivot.add(torso);
             const collar = new THREE.Mesh(new THREE.TorusGeometry(1, 0.016, 6, 20), blackMat);
             collar.scale.set(0.088, 0.075, 1);
@@ -13268,7 +13582,7 @@
             document.querySelectorAll('.arena-time-btn').forEach(btn => {
                 btn.classList.toggle('is-active', btn.dataset.time === eff);
                 btn.disabled = btn.dataset.time === 'day' && !ok;
-                btn.title = btn.disabled ? 'Partita di giorno non ancora disponibile in questo palazzetto' : '';
+                btn.title = btn.disabled ? 'Partita di giorno non disponibile in questo palazzetto' : '';
             });
         }
         function setTimeOfDay(mode) {
@@ -13827,7 +14141,7 @@
             matchConfig.homeKit = best.hk;
             matchConfig.guestKit = best.gk;
             matchConfig.arena = pick(SELECTABLE_ARENA_IDS);
-            matchConfig.timeOfDay = Math.random() < 0.5 ? 'day' : 'night';   // vale solo dove il giorno è disponibile
+            matchConfig.timeOfDay = Math.random() < 0.5 ? 'day' : 'night';
             preloadArenaModule(matchConfig.arena);
         }
 

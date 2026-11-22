@@ -118,6 +118,7 @@
         box(std(0xbdbdb8, 0.85), GX0 - XW + 0.4, 0.5, ZS - ZN - 1, (GX0 + XW) / 2 + 0.2, SY + 0.25, 0);   // soletta
         // lucernari traslucidi sotto la soletta e telo verde sul fondo della passerella
         const sky = new THREE.MeshStandardMaterial({ map: loadFileTexture(T + 'skylight.jpg', { wrap: true }), emissive: 0xe8d4a0, emissiveIntensity: 0.5, roughness: 0.6, side: THREE.DoubleSide });
+        sky.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
         const skyP = meterPlane(sky, GX0 - XW, ZS - ZN - 1, 4, 1.5);
         skyP.rotation.x = Math.PI / 2; skyP.position.set((GX0 + XW) / 2, SY - 0.01, 0); targetGroup.add(skyP);
         const greenNet = new THREE.MeshStandardMaterial({ color: 0x4f7a4a, emissive: 0x6f9a62, emissiveIntensity: 0.35, roughness: 0.9, side: THREE.DoubleSide });
@@ -138,6 +139,7 @@
             box(std(0x7a1418, 0.6), 1.12, 0.6, 1.62, XE - 1.0, 6.7, z);     // bocchetta
         });
         const winMat = new THREE.MeshStandardMaterial({ color: 0xcfe0d8, emissive: 0xb6cfc4, emissiveIntensity: 0.5, roughness: 0.3, side: THREE.DoubleSide });
+        winMat.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
         place(new THREE.Mesh(new THREE.PlaneGeometry(ZS - ZN - 4, 1.8), winMat), XE - 0.05, 7.6, 0, -Math.PI / 2);
         const mull = [];
         for (let z = -40; z <= 40.01; z += 2.5) mull.push([V(XE - 0.08, 6.7, z), V(XE - 0.08, 8.5, z), 0.07]);

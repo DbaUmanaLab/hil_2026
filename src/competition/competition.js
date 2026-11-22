@@ -675,7 +675,7 @@
         const side = (id, lbl) => `<div class="side${id === state.user ? ' is-user' : ''}"><img src="${logo(id)}" alt=""><span>${esc(club(id).shortName || clubName(id))}</span><small>${lbl}</small></div>`;
         return `<div class="cp-next-meta"><span>${meta}</span><span>${extra}</span></div>
             <div class="cp-versus">${side(f.home, 'CASA')}<span class="cp-vs">VS</span>${side(f.away, 'OSPITE')}</div>
-            <div class="cp-next-arena">${esc(arenaTitle(f.home))}</div>
+            <div class="cp-next-arena">${esc(arenaTitle(f.home))} • ${esc(kickoffText(fixtureKickoff(f)))}</div>
             <div class="cp-next-actions">
                 <button class="cp-btn is-primary" data-act="play" data-focus>Gioca ▶</button>
                 <button class="cp-btn" data-act="sim">Simula partita</button>
@@ -794,7 +794,7 @@
         const side = (id, lbl) => `<div class="side${id === state.user ? ' is-user' : ''}"><img src="${logo(id)}" alt=""><span>${esc(club(id).shortName || clubName(id))}</span><small>${lbl}</small></div>`;
         return `<div class="cp-next-meta"><span>${meta}</span><span>Gara secca</span></div>
             <div class="cp-versus">${side(f.home, 'CASA')}<span class="cp-vs">VS</span>${side(f.away, 'OSPITE')}</div>
-            <div class="cp-next-arena">${esc(arenaTitle(f.home))}</div>
+            <div class="cp-next-arena">${esc(arenaTitle(f.home))} • ${esc(kickoffText(fixtureKickoff(f)))}</div>
             <div class="cp-next-actions">
                 <button class="cp-btn is-primary" data-act="play" data-focus>Gioca ▶</button>
                 <button class="cp-btn" data-act="sim">Simula partita</button>
@@ -901,10 +901,12 @@
         matchConfig.userTeam = f.home === state.user ? 'home' : 'guest';   // non tocca la preferenza salvata
         pendingFixture = f;
         matchActive = true;
+        const ko = fixtureKickoff(f);
+        matchConfig.timeOfDay = ko.daytime ? 'day' : 'night';      // partita pomeridiana o serale
         const label = isCup() ? `Coppa Italia • ${cupRoundLabel(state.cup.round)}`
             : (state.phase === 'regular' ? `${L(state).name} • Giornata ${state.roundIdx + 1}` : `${L(state).name} • ${poRounds()[state.playoffs.round].label}`);
         // la schermata della competizione si chiude quando il caricamento la copre (niente palazzetto nella dissolvenza)
-        if (typeof showFunFactLoading === 'function') showFunFactLoading(label, launchMatchFromCurrentConfig, hideRoot);
+        if (typeof showFunFactLoading === 'function') showFunFactLoading(`${label} • ${ko.label}`, launchMatchFromCurrentConfig, hideRoot);
         else { hideRoot(); launchMatchFromCurrentConfig(); }
     }
     function onUserMatchFinished(res) {
@@ -991,6 +993,46 @@
         const f = po.series[po.round][0];
         return [f.hi, f.lo];
     }
+    // ------------------------------------------------------------------ orario delle partite
+    // Ogni partita ha un orario stabile (dipende da squadre e turno): sabato sera per lo più, poi sabato
+    // pomeriggio, domenica e qualche infrasettimanale. Si gioca "di giorno" se la partita finisce prima del
+    // tramonto del mese (ora legale compresa): decide la luce in pista (matchConfig.timeOfDay).
+    const SUNSET = [17.1, 17.7, 18.3, 20.0, 20.5, 21.0, 21.0, 20.4, 19.5, 18.6, 17.0, 16.7];   // gen..dic, Italia
+    const KICKOFF_SLOTS = {
+        6: [[20.75, 4], [18, 2], [16, 2], [20.5, 1]],          // sabato: [ora, peso]
+        0: [[15.5, 2], [17, 1], [18, 2]],                     // domenica
+        other: [[20.75, 3], [21, 1]]                          // infrasettimanale
+    };
+    const WEEKDAY = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+    function hashKey(str) {
+        let h = 2166136261;
+        for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
+        return h;
+    }
+    // month 0..11; weekday 0 (dom) ..6 (sab), o null per sceglierlo (competizioni senza calendario)
+    function kickoff(key, month, weekday) {
+        const h = hashKey(String(key));
+        if (weekday == null) weekday = [6, 6, 6, 6, 0, 0, 5][h % 7];
+        const slots = KICKOFF_SLOTS[weekday] || KICKOFF_SLOTS.other;
+        let r = (h >>> 8) % slots.reduce((a, sl) => a + sl[1], 0), hour = slots[0][0];
+        for (const [hh, w] of slots) { if (r < w) { hour = hh; break; } r -= w; }
+        const hh = Math.floor(hour), mm = Math.round((hour - hh) * 60);
+        const time = `${hh}:${String(mm).padStart(2, '0')}`;
+        const daytime = hour + 0.75 < SUNSET[((month % 12) + 12) % 12];
+        return { weekday, dayName: WEEKDAY[weekday], hour, time, label: `${WEEKDAY[weekday]} ${time}`, daytime, icon: daytime ? '☀' : '☾' };
+    }
+    // competizione senza calendario: mese stimato dalla fase (campionato ottobre-marzo, play-off aprile-maggio, coppa gennaio)
+    function fixtureMonth() {
+        if (isCup()) return 0;
+        if (state.phase === 'playoff') return state.playoffs.round === 0 ? 3 : 4;
+        const fr = state.roundIdx / Math.max(1, state.rounds.length);
+        return [9, 10, 11, 0, 1, 2][Math.min(5, Math.floor(fr * 6))];
+    }
+    function fixtureKickoff(f) {
+        return kickoff([state.comp, state.season, f.home, f.away, f.n || '', isCup() ? state.cup.round : state.roundIdx].join('|'), fixtureMonth(), null);
+    }
+    const kickoffText = ko => `${ko.icon} ${ko.label}`;
+
     // ------------------------------------------------------------------ contesto per la telecronaca
     // risultati di una squadra in ordine di gioco ('W'/'L'), ultime n
     function formOf(id, n = 5) {
@@ -1063,6 +1105,7 @@
         leagueRunnerUp: s => onState(s, leagueRunnerUp)(),
         leagueFinalists: s => onState(s, leagueFinalists)(),
         turnLabel: s => onState(s, turnLabel)(),
+        kickoff,
         matchContext: (s, home, away) => onState(s, matchContext)(home, away),
         progressLabel: s => progressLabel(s),
         // HTML già stilizzato da competition.css

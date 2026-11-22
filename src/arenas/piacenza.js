@@ -129,7 +129,9 @@
         };
         strip(0, 1.1, new THREE.MeshStandardMaterial({ color: 0xe9e8e4, roughness: 0.8, side: THREE.DoubleSide }), 4);
         const winTex = loadFileTexture(T + 'windows.jpg', { wrap: true });
-        strip(1.1, WH, new THREE.MeshStandardMaterial({ map: winTex, emissive: 0xffffff, emissiveMap: winTex, emissiveIntensity: 0.45, roughness: 0.3, side: THREE.DoubleSide }), 4);
+        const winStripMat = new THREE.MeshStandardMaterial({ map: winTex, emissive: 0xffffff, emissiveMap: winTex, emissiveIntensity: 0.45, roughness: 0.3, side: THREE.DoubleSide });
+        winStripMat.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
+        strip(1.1, WH, winStripMat, 4);
         const posts = [];
         foot.forEach((p, i) => {
             posts.push([V(p.x, 0, p.z), V(p.x, WH, p.z), 0.07]);

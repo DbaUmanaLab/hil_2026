@@ -150,6 +150,7 @@
         // ---------- 5. vetrate continue sui lati lunghi, parete grigia sopra
         const winTex = loadFileTexture(T + 'window.jpg', { repeat: [2 * ZE / 3, 1] });
         const winMat = new THREE.MeshStandardMaterial({ map: winTex, emissive: 0xffffff, emissiveMap: winTex, emissiveIntensity: 0.55, roughness: 0.2, metalness: 0.1, side: THREE.DoubleSide });
+        winMat.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
         const WH = 7.5;
         [-1, 1].forEach(s => {
             const w = new THREE.Mesh(new THREE.PlaneGeometry(2 * ZE, WH), winMat);

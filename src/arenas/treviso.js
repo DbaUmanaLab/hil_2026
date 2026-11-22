@@ -114,6 +114,7 @@
         // ---------- 4. fianchi: pilastri in cemento con le vetrate verdi
         const concreteMat = new THREE.MeshStandardMaterial({ map: loadFileTexture(T + 'concrete.jpg', { wrap: true }), roughness: 0.85 });
         const glassMat = new THREE.MeshStandardMaterial({ map: loadFileTexture(T + 'glass_green.jpg', { repeat: [2 * HL / 6, 1] }), roughness: 0.3, metalness: 0.2, side: THREE.DoubleSide });
+        glassMat.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
         [arch(0).x, arch(Math.PI).x].forEach(x => {
             const s = x > CX ? -1 : 1;
             const g = new THREE.Mesh(new THREE.PlaneGeometry(2 * HL, SPRING), glassMat);

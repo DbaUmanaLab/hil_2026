@@ -60,6 +60,7 @@
         const roofTex = loadFileTexture(T + 'roof.jpg', { wrap: true, repeat: [2 * ZE / 2.5, 6] });
         const roofMat = new THREE.MeshStandardMaterial({ map: roofTex, color: 0x9aa4b2, roughness: 0.7, metalness: 0.4, side: THREE.DoubleSide });
         const skyMat = new THREE.MeshBasicMaterial({ color: 0xf2f6fb, side: THREE.DoubleSide });
+        skyMat.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
         [-1, 1].forEach(s => {
             const len = Math.hypot(XW, YR - YW);
             const slope = Math.atan2(YR - YW, XW);
@@ -143,6 +144,7 @@
         for (let z = -ZE; z <= ZE; z += 2) rail.push([V(-XW + 3.4, 4.55, z), V(-XW + 3.4, 5.55, z), 0.05]);
         targetGroup.add(new THREE.Mesh(mergeBeamGeometry(rail), blueCol));
         const winMat = new THREE.MeshBasicMaterial({ color: 0xeef4fa });
+        winMat.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
         const frameMat = new THREE.MeshStandardMaterial({ color: 0x23409a, roughness: 0.5 });
         for (let z = -36; z <= 36; z += 6) {
             const w = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.1), winMat);

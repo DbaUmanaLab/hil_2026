@@ -71,6 +71,7 @@
         // ---------- 3. lato panchine (+x): grandi vetrate con telai verdi
         const winSide = loadFileTexture(T + 'window_side.jpg');
         const winSideMat = new THREE.MeshStandardMaterial({ map: winSide, emissive: 0xffffff, emissiveMap: winSide, emissiveIntensity: 0.4, roughness: 0.25 });
+        winSideMat.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
         for (let z = -30; z <= 30.01; z += 6) plane(winSideMat, 5.2, 2.6, XE - 0.05, 3.4, z, -Math.PI / 2);
         box(greenFrame, 0.12, 0.14, 62, XE - 0.08, 2.08, 0);
         box(greenFrame, 0.12, 0.14, 62, XE - 0.08, 4.72, 0);

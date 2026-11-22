@@ -27,12 +27,16 @@
             normalMap: loadFileTexture(T + 'wall_block_n.jpg', { repeat: [len / 2, h / 2] }),
             roughness: 0.9
         });
-        const winMatFor = len => new THREE.MeshStandardMaterial({
-            map: loadFileTexture(T + 'windows.jpg', { repeat: [len / 6, 1] }),
-            emissive: 0xffffff,
-            emissiveMap: loadFileTexture(T + 'windows.jpg', { repeat: [len / 6, 1] }),
-            emissiveIntensity: 0.35, roughness: 0.15, metalness: 0.4
-        });
+        const winMatFor = len => {
+            const m = new THREE.MeshStandardMaterial({
+                map: loadFileTexture(T + 'windows.jpg', { repeat: [len / 6, 1] }),
+                emissive: 0xffffff,
+                emissiveMap: loadFileTexture(T + 'windows.jpg', { repeat: [len / 6, 1] }),
+                emissiveIntensity: 0.35, roughness: 0.15, metalness: 0.4
+            });
+            m.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
+            return m;
+        };
 
         // ---------- 1. pareti: blocchi bianchi, fascia finestrata, fascia alta più scura
         function wallPlane(mat, w, h, x, y, z, rotY) {

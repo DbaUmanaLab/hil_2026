@@ -34,11 +34,13 @@
         plane(texMat('wall_blue.jpg', 2 * HL / 4, 5.6 / 4), 2 * HL, 5.6, XE, 2.8, 0, -Math.PI / 2);
         const winTex = texMat('ribbon_window.jpg', 2 * HL / 2.4, 1, { emissive: 0xe6f2fa, emissiveIntensity: 0.55 });
         winTex.emissiveMap = winTex.map;
+        winTex.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
         plane(winTex, 2 * HL, 1.8, XE, 6.5, 0, -Math.PI / 2);
         plane(texMat('wall_blue.jpg', 2 * HL / 4, 0.6 / 4), 2 * HL, 0.6, XE, 7.7, 0, -Math.PI / 2);
         // lato tribuna (-x): vetrata a tutta altezza sugli alberi
         const facade = texMat('facade_glass.jpg', 2 * HL / 3, WALL_H / 3, { emissive: 0xffffff, emissiveIntensity: 0.55, roughness: 0.25 });
         facade.emissiveMap = facade.map;
+        facade.userData.sunWindow = true;            // finestra verso l'esterno: di giorno ci entra il sole (index.html)
         plane(facade, 2 * HL, WALL_H, XW, WALL_H / 2, 0, Math.PI / 2);
         // testate in intonaco azzurro
         [-1, 1].forEach(dir => plane(texMat('wall_blue.jpg', LX / 4, WALL_H / 4), LX, WALL_H, CX, WALL_H / 2, dir * HL, dir > 0 ? Math.PI : 0));
