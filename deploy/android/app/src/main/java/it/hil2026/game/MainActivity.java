@@ -11,6 +11,9 @@ import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.speech.tts.Voice;
+import android.view.InputDevice;
+import android.view.KeyEvent;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
@@ -113,6 +116,10 @@ public class MainActivity extends Activity {
         if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) WebView.setWebContentsDebuggingEnabled(true);
 
         setContentView(webView);
+        // telecomando TV: le frecce devono arrivare alla pagina (navigazione dei menu e movimento)
+        webView.setFocusable(true);
+        webView.setFocusableInTouchMode(true);
+        webView.requestFocus();
         enterImmersive();
 
         if (savedInstanceState != null) webView.restoreState(savedInstanceState);
@@ -134,6 +141,79 @@ public class MainActivity extends Activity {
                 "{key:'Escape',code:'Escape',keyCode:27,which:27,bubbles:true,cancelable:true}));});})();",
                 null);
         Toast.makeText(this, "Premi di nuovo indietro per uscire", Toast.LENGTH_SHORT).show();
+    }
+
+    // ---------------------------------------------------------------- controller e telecomando
+    // I pulsanti del controller vanno alla pagina già decodificati (window.HILPad, src/input/Gamepad.js),
+    // che li traduce nei tasti del gioco: così non dipendiamo dal supporto della Gamepad API nella WebView
+    // e il tasto B non diventa "indietro" di sistema. Il telecomando TV (frecce, OK) passa invece com'è:
+    // la WebView lo consegna alla pagina come frecce e Invio; Indietro = Esc (onBackPressed).
+    private boolean padStickUp, padStickDown, padStickLeft, padStickRight;
+
+    private static boolean fromPad(int source) {
+        return (source & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD
+                || (source & InputDevice.SOURCE_JOYSTICK) == InputDevice.SOURCE_JOYSTICK;
+    }
+
+    private static String padButton(int keyCode) {
+        switch (keyCode) {
+            case KeyEvent.KEYCODE_BUTTON_A: return "a";
+            case KeyEvent.KEYCODE_BUTTON_B: return "b";
+            case KeyEvent.KEYCODE_BUTTON_X: return "x";
+            case KeyEvent.KEYCODE_BUTTON_Y: return "y";
+            case KeyEvent.KEYCODE_BUTTON_L1: return "lb";
+            case KeyEvent.KEYCODE_BUTTON_R1: return "rb";
+            case KeyEvent.KEYCODE_BUTTON_START: return "start";
+            case KeyEvent.KEYCODE_BUTTON_SELECT: return "select";
+            case KeyEvent.KEYCODE_DPAD_UP: return "up";
+            case KeyEvent.KEYCODE_DPAD_DOWN: return "down";
+            case KeyEvent.KEYCODE_DPAD_LEFT: return "left";
+            case KeyEvent.KEYCODE_DPAD_RIGHT: return "right";
+            default: return null;
+        }
+    }
+
+    private void sendPad(String js) {
+        if (webView != null) webView.evaluateJavascript("window.HILPad&&window.HILPad." + js, null);
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent event) {
+        int code = event.getKeyCode();
+        // tasti multimediali del telecomando: Play/Pausa mette in pausa la partita (Esc)
+        if (code == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE || code == KeyEvent.KEYCODE_MEDIA_PLAY || code == KeyEvent.KEYCODE_MEDIA_PAUSE) {
+            if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) sendPad("native('pause',true)");
+            else if (event.getAction() == KeyEvent.ACTION_UP) sendPad("native('pause',false)");
+            return true;
+        }
+        if (fromPad(event.getSource())) {
+            String b = padButton(code);
+            if (b != null) {
+                if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) sendPad("native('" + b + "',true)");
+                else if (event.getAction() == KeyEvent.ACTION_UP) sendPad("native('" + b + "',false)");
+                return true;
+            }
+        }
+        return super.dispatchKeyEvent(event);
+    }
+
+    @Override
+    public boolean dispatchGenericMotionEvent(MotionEvent ev) {
+        if (fromPad(ev.getSource()) && ev.getAction() == MotionEvent.ACTION_MOVE) {
+            float x = ev.getAxisValue(MotionEvent.AXIS_X), y = ev.getAxisValue(MotionEvent.AXIS_Y);
+            // croce digitale riportata come "hat" da molti controller
+            float hx = ev.getAxisValue(MotionEvent.AXIS_HAT_X), hy = ev.getAxisValue(MotionEvent.AXIS_HAT_Y);
+            if (Math.abs(hx) > Math.abs(x)) x = hx;
+            if (Math.abs(hy) > Math.abs(y)) y = hy;
+            boolean u = y < -0.45f, d = y > 0.45f, l = x < -0.45f, r = x > 0.45f;
+            // alla pagina solo i cambi di direzione, non ogni piccolo movimento della levetta
+            if (u != padStickUp || d != padStickDown || l != padStickLeft || r != padStickRight) {
+                padStickUp = u; padStickDown = d; padStickLeft = l; padStickRight = r;
+                sendPad("nativeAxes(" + (l ? -1 : r ? 1 : 0) + "," + (u ? -1 : d ? 1 : 0) + ")");
+            }
+            return true;
+        }
+        return super.dispatchGenericMotionEvent(ev);
     }
 
     private void enterImmersive() {

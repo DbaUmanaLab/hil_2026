@@ -2436,6 +2436,7 @@
                     <h3>Comandi</h3>
                     <p class="pz-sub">Clicca un tasto e premi quello nuovo. Le impostazioni restano salvate in questo browser.</p>
                     <div id="pz-keys" class="pz-keys" data-pager="y"></div>
+                    <p class="pz-sub pz-pad-help"><b>Controller:</b> levetta o croce per muoverti, A tiro (tieni premuto per caricarlo), X passaggio, B carica, Y o RB cambio linea, LB telecamera, Start pausa. Nei menu A conferma e B torna indietro.<br><b>Telecomando TV:</b> frecce per muoverti, OK breve passaggio, OK tenuto tiro, Indietro pausa.</p>
                     <div class="pz-row-actions">
                         <span id="pz-keys-note" class="pz-note">Esc mette sempre in pausa.</span>
                         <button type="button" id="pz-keys-reset" class="pz-btn">Ripristina predefiniti</button>
@@ -14359,6 +14360,8 @@
         let pauseFocusIdx = 0;
         let pauseLineSnapshot = null;
         let keyRebindAction = null;
+        let okPressedAt = 0;                 // OK del telecomando premuto (ms): breve = passaggio, tenuto = tiro
+        const OK_PASS_MS = 240;
 
         // --- TASTI CONFIGURABILI (salvati in localStorage, codici fisici KeyboardEvent.code) ---
         const KEYBIND_STORAGE = 'hil_keybinds';
@@ -15348,6 +15351,13 @@
                     return;
                 }
 
+                // intermezzi (roster, sigla, presentazione del palazzetto e delle squadre): OK del
+                // telecomando, Invio o A del controller fanno come "Salta"
+                if ((e.key === 'Enter' || e.code === 'NumpadEnter') && !e.repeat) {
+                    const skip = { lineup_loading: advanceRosterScreen, logo_intro: finishLogoIntro, arena_tour: finishArenaTour, intro: finishIntro }[gameState];
+                    if (skip) { e.preventDefault(); skip(); return; }
+                }
+
                 if (gameState === 'replay') {
                     if (e.code === 'Space') {
                         e.preventDefault();
@@ -15377,8 +15387,23 @@
                 // assegnazione di un nuovo tasto dal menu di pausa
                 if (keyRebindAction) { e.preventDefault(); applyKeyRebind(code); return; }
                 if (gamePaused) { handlePauseMenuKey(e, code); return; }
-                if (e.key === 'Escape' || code === keyBindings.pause) {
+                if (e.key === 'Escape' || code === keyBindings.pause || e.key === 'MediaPlayPause' || e.key === 'MediaPause') {
                     if (canPauseGame()) { e.preventDefault(); openPauseMenu(); }
+                    return;
+                }
+                // OK del telecomando (o Invio): premuto brevemente passa, tenuto carica il tiro; salta gli stacchi
+                // e vince l'ingaggio. Con il telecomando si gioca solo con frecce, OK e Indietro (pausa).
+                if ((e.key === 'Enter' || code === 'NumpadEnter') && !keyActionFor(code)) {
+                    e.preventDefault();
+                    if (e.repeat) return;
+                    if (gameState === 'cutaway' || gameState === 'goalie_freeze' || gameState === 'penalty_call') { document.getElementById('skip-cut-btn').click(); return; }
+                    if (gameState === 'faceoff') { attemptFaceoffWin(); return; }
+                    if (gameState === 'playing' && !keys.s) {
+                        okPressedAt = performance.now();
+                        shotCharging = true;
+                        shotChargePower = 0.25;
+                        keys.s = true;
+                    }
                     return;
                 }
                 const act = keyActionFor(code);
@@ -15416,6 +15441,21 @@
             });
 
             window.addEventListener('keyup', (e) => {
+                if (okPressedAt && (e.key === 'Enter' || e.code === 'NumpadEnter')) {
+                    const held = performance.now() - okPressedAt;
+                    okPressedAt = 0;
+                    keys.s = false;
+                    if (!shotCharging || gamePaused) return;
+                    if (held < OK_PASS_MS) {                  // tocco breve: passaggio
+                        shotCharging = false;
+                        shotChargePower = 0;
+                        shotPowerWrap.classList.add('hidden');
+                        performSmartPass();
+                    } else {
+                        releaseChargedShot();
+                    }
+                    return;
+                }
                 const act = keyActionFor(eventKeyCode(e));
                 if (act === 'up') keys.up = false;
                 if (act === 'down') keys.down = false;
@@ -15821,6 +15861,7 @@
     <script src="src/manager/manager.js"></script>
     <!-- Impaginazione con frecce, adattamento allo schermo e navigazione da tastiera -->
     <script src="src/ui/uikit.js"></script>
+    <script src="src/input/Gamepad.js"></script>
     <script src="src/data/funFacts.js"></script>
     <script src="src/audio/commentaryPhrases.js"></script>
     <script src="src/audio/Commentary.js"></script>
