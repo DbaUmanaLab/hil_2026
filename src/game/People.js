@@ -1010,7 +1010,10 @@
             tilt.rotation.z = 0.68;                    // l'asta scende in avanti
             stick.add(tilt);
             const shaftLen = 1.18;
-            const shaft = new THREE.Mesh(geo('wuShaft', () => new THREE.BoxGeometry(0.03, shaftLen, 0.042)), colorMat(0x1f2937, 0.4));
+            // stessa grafica delle stecche dei giocatori (marchio inventato, index.html), se disponibile
+            const stickModel = ['nexa', 'vortex', 'apex'][Math.floor(Math.random() * 3)];
+            const shaftMat = typeof getStickBrandMaterial === 'function' ? getStickBrandMaterial(stickModel) : colorMat(0x1f2937, 0.4);
+            const shaft = new THREE.Mesh(geo('wuShaft', () => new THREE.BoxGeometry(0.03, shaftLen, 0.042)), shaftMat);
             shaft.position.y = -shaftLen / 2 + 0.12;
             const blade = new THREE.Mesh(geo('wuBlade', () => new THREE.BoxGeometry(0.3, 0.075, 0.018)), colorMat(0x111111, 0.5));
             blade.rotation.z = -0.68;                  // lama piatta sul pavimento

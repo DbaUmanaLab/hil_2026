@@ -815,6 +815,37 @@
         .pz-switch.is-on { background: #16a34a; }
         .pz-switch.is-on::after { transform: translateX(22px); }
         .pz-h3-gap { margin-top: 22px; }
+        /* pagina audio a due schede (Musica ed effetti / Telecronaca): non supera mai l'altezza dello schermo */
+        #pz-audio-tabs.pz-tabs { justify-content: flex-start; margin: 8px 0 10px; }
+        .pz-tabs button { height: 34px; padding: 0 14px; font-size: 13px; }
+        .pz-audio-sec.hidden { display: none; }
+        .pz-audio-sec .pz-audio { gap: 8px; }
+        .pz-audio-sec .pz-aud { padding: 9px 12px; gap: 6px 12px; }
+        @media (max-height: 700px) {
+            .pz-audio-sec .pz-aud > span small { display: none; }
+            .pz-audio-sec .pz-sub { display: none; }
+            .pz-audio-sec .pz-aud { padding: 7px 10px; }
+            .pz-audio-sec .pz-audio { gap: 6px; }
+        }
+        @media (max-height: 460px) {
+            /* telefono in orizzontale: con una pagina aperta l'elenco delle sezioni lascia tutta la larghezza */
+            #pause-menu.has-page .pz-panel { visibility: hidden; }
+            #pause-menu.has-page .pz-content { position: absolute; inset: 6px 12px; width: auto; max-height: none; }
+            .pz-back { display: inline-block; }
+            .pz-close { display: none; }
+            #pz-audio-tabs.pz-tabs { margin: 4px 0 6px; }
+            #pause-menu.has-page .pz-back { position: absolute; top: 12px; right: 16px; margin: 0; z-index: 1; }
+            /* righe su una sola linea: nome | cursore | interruttore o pulsanti */
+            .pz-audio-sec .pz-aud { grid-template-columns: minmax(96px, auto) minmax(0, 1fr) auto; }
+            .pz-audio-sec .pz-aud > :nth-child(2) { grid-column: 3; grid-row: 1; }
+            .pz-audio-sec .pz-aud .pz-range { grid-column: 2; grid-row: 1; }
+            .pz-tabs button, .pz-seg button { height: 28px; padding: 0 10px; font-size: 11px; }
+            .pz-audio-sec .pz-aud { padding: 5px 10px; }
+            .pz-audio-sec .pz-aud > span { font-size: 13px; }
+            .pz-switch { width: 44px; height: 24px; }
+            .pz-switch::after { width: 18px; height: 18px; }
+            .pz-switch.is-on::after { transform: translateX(20px); }
+        }
         .pz-seg { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
         .pz-seg button { height: 32px; padding: 0 12px; border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: #e2e8f0; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.18); transition: background .15s; }
         .pz-seg button:hover, .pz-seg button:focus-visible { background: rgba(255,255,255,.18); }
@@ -2381,7 +2412,12 @@
                 </div>
 
                 <div class="pz-page hidden" data-page="audio">
-                    <h3>Musica ed effetti</h3>
+                    <h3>Audio</h3>
+                    <div id="pz-audio-tabs" class="pz-seg pz-tabs" role="tablist" aria-label="Sezioni audio">
+                        <button type="button" role="tab" data-audio-tab="mix">Musica ed effetti</button>
+                        <button type="button" role="tab" data-audio-tab="cmt">Telecronaca</button>
+                    </div>
+                    <div class="pz-audio-sec" data-audio-sec="mix">
                     <p class="pz-sub">Le preferenze audio restano salvate in questo browser.</p>
                     <div class="pz-audio">
                         <div class="pz-aud">
@@ -2400,7 +2436,8 @@
                             <div class="pz-range"><input id="pz-crowd-vol" type="range" min="0" max="100" step="1"><output id="pz-crowd-out">100%</output></div>
                         </div>
                     </div>
-                    <h3 class="pz-h3-gap">Telecronaca</h3>
+                    </div>
+                    <div class="pz-audio-sec" data-audio-sec="cmt">
                     <p class="pz-sub">Presentazione della partita, azioni, tiri e gol in diretta, con curiosità su squadre e palazzetti nei momenti più tranquilli.</p>
                     <div class="pz-audio">
                         <div class="pz-aud">
@@ -2434,6 +2471,7 @@
                                 <button type="button" id="pz-cmt-test">&#9654; Prova</button>
                             </div>
                         </div>
+                    </div>
                     </div>
                 </div>
 
@@ -4681,6 +4719,180 @@
                 metalness: 0.55
             });
             return window.stickMat;
+        }
+
+
+        // =====================================================================
+        // ATTREZZATURA CON MARCHIO TECNICO INVENTATO "BOREAL"
+        // Caschi, stecche, maschere e gambali con la grafica dei marchi da hockey (maiuscolo obliquo,
+        // linee di stecche con i loro colori) senza usare marchi reali.
+        // =====================================================================
+        const GEAR_BRAND = 'BOREAL';
+        const gearTexCache = {};
+        const gearMatCache = {};
+        function gearCanvasTexture(key, w, h, draw) {
+            if (gearTexCache[key]) return gearTexCache[key];
+            const c = document.createElement('canvas');
+            c.width = w; c.height = h;
+            draw(c.getContext('2d'), w, h);
+            const t = new THREE.CanvasTexture(c);
+            if (THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace;
+            t.anisotropy = getActiveQualityPreset().anisotropy || 1;
+            gearTexCache[key] = t;
+            return t;
+        }
+        // scritta del marchio: maiuscolo corsivo pesante, con contorno se serve stacco dal fondo
+        function drawGearText(g, text, x, y, size, fill, stroke, align = 'center', weight = 900) {
+            g.save();
+            g.translate(x, y);
+            g.font = `italic ${weight} ${size}px "Arial Black", Impact, sans-serif`;
+            g.textAlign = align;
+            g.textBaseline = 'middle';
+            if (stroke) { g.lineWidth = Math.max(2, size * 0.16); g.strokeStyle = stroke; g.lineJoin = 'round'; g.strokeText(text, 0, 0); }
+            g.fillStyle = fill;
+            g.fillText(text, 0, 0);
+            g.restore();
+        }
+        // testo lungo l'asta della stecca: si legge dal basso (lama) verso l'alto (pomello)
+        function drawStickText(g, text, cx, cy, size, fill, weight = 900) {
+            g.save();
+            g.translate(cx, cy);
+            g.rotate(-Math.PI / 2);
+            g.font = `italic ${weight} ${size}px "Arial Black", Impact, sans-serif`;
+            g.textAlign = 'center';
+            g.textBaseline = 'middle';
+            g.fillStyle = fill;
+            g.fillText(text, 0, 0);
+            g.restore();
+        }
+        // decalcomania trasparente con il logo, per caschi e maschere
+        function gearLogoTexture(fill, stroke) {
+            return gearCanvasTexture(`logo|${fill}|${stroke}`, 512, 128, (g, w, h) => {
+                g.clearRect(0, 0, w, h);
+                drawGearText(g, GEAR_BRAND, w / 2, h / 2 + 4, 92, fill, stroke);
+            });
+        }
+        function gearDecalMaterial(tex) {
+            const key = tex.uuid;
+            if (!gearMatCache[key]) gearMatCache[key] = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.08, depthWrite: false, roughness: 0.3, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+            return gearMatCache[key];
+        }
+        // Decalcomania curva su una calotta sferica di raggio R (in coordinate della sfera, prima della scala
+        // ellittica del gruppo): tronco di cono che segue la superficie fra le quote yc ± h/2, centrato
+        // sull'angolo thetaC (CylinderGeometry: theta = π davanti (-Z), π/2 a destra (+X), 3π/2 a sinistra).
+        function shellDecal(tex, R, yc, h, thetaC, arc, inflate = 0.0025) {
+            const rr = y => Math.sqrt(Math.max(0, R * R - y * y)) + inflate;
+            const rt = rr(yc + h / 2), rb = rr(yc - h / 2);
+            const len = arc / ((rt + rb) / 2);
+            const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, 10, 1, true, thetaC - len / 2, len), gearDecalMaterial(tex));
+            m.position.y = yc;
+            return m;
+        }
+        const gearLum = hex => 0.299 * ((hex >> 16) & 255) + 0.587 * ((hex >> 8) & 255) + 0.114 * (hex & 255);
+
+        // ---------- stecche: linee del marchio, scelte per giocatore (sempre la stessa per lo stesso giocatore)
+        const STICK_MODELS = {
+            // asta nera in carbonio, scritte azzurre (ricorda le stecche nere e turchesi)
+            nexa: (g, w, h) => {
+                g.fillStyle = '#0d0e11'; g.fillRect(0, 0, w, h);
+                drawStickText(g, GEAR_BRAND, w / 2, 230, 34, '#e5e7eb');
+                drawStickText(g, 'NEXA', w / 2, 470, 50, '#22c7d9');
+                drawStickText(g, 'E5 PRO', w / 2, 660, 38, '#22c7d9', 800);
+                g.strokeStyle = '#22c7d9'; g.lineWidth = 3;
+                for (let i = 0; i < 4; i++) { g.beginPath(); g.moveTo(0, 820 + i * 34); g.lineTo(w, 860 + i * 34); g.stroke(); }
+                drawStickText(g, 'P92 / 75 FLEX', w / 2, 960, 16, '#9ca3af', 700);
+            },
+            // metà alta arancio con il marchio nero, metà bassa nera con le scritte arancio
+            vortex: (g, w, h) => {
+                g.fillStyle = '#0d0e11'; g.fillRect(0, 0, w, h);
+                g.fillStyle = '#f97316'; g.fillRect(0, 60, w, 440);
+                g.fillStyle = '#0d0e11';
+                g.beginPath(); g.moveTo(0, 500); g.lineTo(w, 440); g.lineTo(w, 500); g.closePath(); g.fill();
+                drawStickText(g, GEAR_BRAND, w / 2, 270, 50, '#0d0e11');
+                drawStickText(g, 'VORTEX', w / 2, 640, 40, '#f97316');
+                drawStickText(g, 'X8', w / 2, 800, 40, '#f97316');
+                drawStickText(g, 'P88 / 70 FLEX', w / 2, 950, 16, '#9ca3af', 700);
+            },
+            // grigio antracite con bianco e rosso
+            apex: (g, w, h) => {
+                g.fillStyle = '#26282d'; g.fillRect(0, 0, w, h);
+                g.fillStyle = '#dc2626'; g.fillRect(0, 520, w, 10); g.fillRect(0, 540, w, 4);
+                drawStickText(g, GEAR_BRAND, w / 2, 290, 46, '#ffffff');
+                drawStickText(g, 'APEX', w / 2, 680, 42, '#dc2626');
+                drawStickText(g, '3X', w / 2, 820, 38, '#ffffff');
+            },
+            // portiere: asta nera con il marchio bianco e filetti viola
+            hyperion: (g, w, h) => {
+                g.fillStyle = '#0d0e11'; g.fillRect(0, 0, w, h);
+                g.fillStyle = '#7c3aed'; g.fillRect(0, 600, w, 6); g.fillRect(0, 614, w, 3);
+                drawStickText(g, GEAR_BRAND, w / 2, 330, 46, '#ffffff');
+                drawStickText(g, 'HYPERION', w / 2, 800, 24, '#a78bfa');
+            }
+        };
+        function pickStickModel(name, num, isGoalie) {
+            if (isGoalie) return 'hyperion';
+            let hsh = 0;
+            for (const ch of String(name) + '#' + String(num)) hsh = (hsh * 31 + ch.charCodeAt(0)) >>> 0;
+            const r = hsh % 100;
+            return r < 50 ? 'nexa' : (r < 80 ? 'vortex' : 'apex');
+        }
+        function getStickBrandMaterial(model) {
+            const key = 'stick|' + model;
+            if (gearMatCache[key]) return gearMatCache[key];
+            const lowQ = getActiveQualityPreset().id === 'low';
+            const tex = gearCanvasTexture(key, lowQ ? 32 : 64, lowQ ? 512 : 1024, (g, w, h) => {
+                g.save();
+                if (lowQ) g.scale(0.5, 0.5);
+                (STICK_MODELS[model] || STICK_MODELS.nexa)(g, 64, 1024);
+                // trama del carbonio, leggera
+                g.fillStyle = 'rgba(255,255,255,0.035)';
+                for (let y = 0; y < 1024; y += 8) for (let x = (y % 16 ? 4 : 0); x < 64; x += 8) g.fillRect(x, y, 4, 4);
+                g.restore();
+            });
+            const pbr = getPhotorealisticPBRMaps();
+            gearMatCache[key] = new THREE.MeshStandardMaterial({ map: tex, normalMap: pbr.carbonNormal, normalScale: new THREE.Vector2(0.5, 0.5), roughness: 0.3, metalness: 0.35 });
+            return gearMatCache[key];
+        }
+        // paletta del bastone del portiere: bianca, marchio e nome del modello
+        function goaliePaddleTexture() {
+            return gearCanvasTexture('paddle', 128, 512, (g, w, h) => {
+                g.fillStyle = '#f8fafc'; g.fillRect(0, 0, w, h);
+                g.fillStyle = '#0d0e11'; g.fillRect(0, 0, w, 70);
+                g.fillStyle = '#7c3aed'; g.fillRect(0, 70, w, 8);
+                g.save(); g.translate(w / 2, 300); g.rotate(-Math.PI / 2);
+                g.font = 'italic 900 64px "Arial Black", Impact, sans-serif';
+                g.textAlign = 'center'; g.textBaseline = 'middle';
+                g.fillStyle = '#0d0e11'; g.fillText(GEAR_BRAND, 0, 0);
+                g.font = 'italic 800 30px "Arial Black", Impact, sans-serif';
+                g.fillStyle = '#7c3aed'; g.fillText('HYPERION', 0, 52);
+                g.restore();
+            });
+        }
+        // gambali del portiere: V nel colore della squadra con filetti neri, marchio verticale sul lato esterno
+        function goaliePadTexture(accentHex, outerRight) {
+            const acc = '#' + accentHex.toString(16).padStart(6, '0');
+            return gearCanvasTexture(`pad|${accentHex}|${outerRight ? 1 : 0}`, 256, 640, (g, w, h) => {
+                g.clearRect(0, 0, w, h);
+                const band = (x0, x1) => {
+                    g.beginPath();
+                    g.moveTo(x0, 40); g.lineTo(x0 + 46, 40); g.lineTo(w / 2 + 14, 470); g.lineTo(w / 2 - 14, 470);
+                    g.closePath();
+                    g.fillStyle = acc; g.fill();
+                    g.lineWidth = 5; g.strokeStyle = '#111114'; g.stroke();
+                };
+                band(18, 0);
+                g.save(); g.translate(w, 0); g.scale(-1, 1); band(18, 0); g.restore();
+                g.fillStyle = '#111114'; g.fillRect(0, 560, w, 80);          // punta
+                // marchio verticale sul lato esterno
+                g.save();
+                g.translate(outerRight ? w - 22 : 22, 300);
+                g.rotate(outerRight ? Math.PI / 2 : -Math.PI / 2);
+                g.font = 'italic 900 34px "Arial Black", Impact, sans-serif';
+                g.textAlign = 'center'; g.textBaseline = 'middle';
+                g.fillStyle = '#111114'; g.fillText(GEAR_BRAND, 0, 0);
+                g.restore();
+                drawGearText(g, 'X5', w / 2, 520, 34, '#111114', null);
+            });
         }
 
         function getSockMaterial(clubId, kitId) {
@@ -7109,6 +7321,7 @@
             const SEG = Math.max(16, preset.torsoSegs[0]);
             const LSEG = Math.max(10, preset.limbSegs[0]);
             const SM = preset.id === 'low' ? 10 : 18;
+            const lowQ = preset.id === 'low';       // grafica bassa: niente decalcomanie del marchio
 
             // ---------- materiali
             const refMats = isRef ? getRefereeMaterials() : null;
@@ -7264,6 +7477,19 @@
                     addBar(pts, edge ? 0.0055 : 0.0032);
                 }
                 headGroup.add(cap, sides, chin, liner, stripeTop, stripeBack, cage);
+                // marchio sulla fronte e sui fianchi della maschera
+                if (!lowQ) {
+                    const tex = gearLogoTexture('#111114', null);
+                    const decals = new THREE.Group();
+                    decals.scale.copy(MSC);
+                    decals.position.copy(MPOS);
+                    decals.add(
+                        shellDecal(tex, MR, 0.128, 0.03, Math.PI, 0.1, 0.003),
+                        shellDecal(tex, MR, 0.02, 0.03, Math.PI / 2 + 0.32, 0.1, 0.003),
+                        shellDecal(tex, MR, 0.02, 0.03, Math.PI * 1.5 - 0.32, 0.1, 0.003)
+                    );
+                    headGroup.add(decals);
+                }
             } else {
                 // calotta: parte alta completa + fianchi/nuca, lasciando libero il viso (davanti = -Z, phi 3π/2)
                 const shell = new THREE.Group();
@@ -7280,14 +7506,36 @@
                 ridge.position.set(0, 0.345, 0.03);
                 const vents = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.012, 0.05), blackMat);
                 vents.position.set(0, 0.34, 0.09);
-                const earL = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 10), helmetMat);
+                // paraorecchie in plastica nera (come i caschi da gara), sottogola bianco
+                const earMat = new THREE.MeshPhysicalMaterial({ color: 0x17181b, roughness: 0.35, clearcoat: 0.4 });
+                const earL = new THREE.Mesh(new THREE.SphereGeometry(0.05, 12, 10), earMat);
                 earL.scale.set(0.45, 1, 0.9);
                 earL.position.set(-0.142, 0.15, 0.015);
                 const earR = earL.clone(); earR.position.x = 0.142;
-                const strap = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.007, 6, 16, Math.PI), blackMat);
+                const strap = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.007, 6, 16, Math.PI), isRef ? blackMat : new THREE.MeshStandardMaterial({ color: 0xe5e7eb, roughness: 0.8 }));
                 strap.rotation.set(Math.PI, Math.PI / 2, 0);
                 strap.position.set(0, 0.12, -0.02);
-                headGroup.add(shell, brim, ridge, vents, earL, earR, strap);
+                // prese d'aria: tre feritoie inclinate sulla fronte-calotta e regolazione nera sulla nuca
+                const ventL = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.012, 0.07), blackMat);
+                ventL.position.set(-0.05, 0.338, -0.035); ventL.rotation.set(0.35, 0.18, 0.12);
+                const ventR = ventL.clone(); ventR.position.x = 0.05; ventR.rotation.set(0.35, -0.18, -0.12);
+                const adjust = new THREE.Mesh(createRoundedBoxGeometry(0.09, 0.03, 0.02, 0.008), blackMat);
+                adjust.position.set(0, 0.205, 0.188);
+                headGroup.add(shell, brim, ridge, vents, ventL, ventR, adjust, earL, earR, strap);
+                // marchio tecnico: davanti sopra la visiera e sui due fianchi (nero sui caschi chiari)
+                if (!isRef && !lowQ) {
+                    const light = gearLum(helmetColor) > 150;
+                    const tex = gearLogoTexture(light ? '#111114' : '#ffffff', light ? null : 'rgba(0,0,0,0.35)');
+                    const decals = new THREE.Group();
+                    decals.scale.copy(shell.scale);
+                    decals.position.copy(shell.position);
+                    decals.add(
+                        shellDecal(tex, 0.162, 0.062, 0.032, Math.PI, 0.105),
+                        shellDecal(tex, 0.162, 0.028, 0.03, Math.PI / 2 + 0.3, 0.11),
+                        shellDecal(tex, 0.162, 0.028, 0.03, Math.PI * 1.5 - 0.3, 0.11)
+                    );
+                    headGroup.add(decals);
+                }
                 if (!isRef) {
                     const visor = new THREE.Mesh(
                         new THREE.CylinderGeometry(0.17, 0.165, 0.09, 24, 1, true, -Math.PI * 0.38, Math.PI * 0.76),
@@ -7334,16 +7582,20 @@
                 if (isGoalie) {
                     const pad = new THREE.Mesh(createRoundedBoxGeometry(0.27, 0.66, 0.17, 0.06), padWhiteMat);
                     pad.position.set(0, -0.09, -0.1);
-                    const padBand = new THREE.Mesh(createRoundedBoxGeometry(0.276, 0.1, 0.176, 0.03), padAccentMat);
-                    padBand.position.set(0, -0.05, -0.1);
-                    const padBand2 = padBand.clone(); padBand2.position.y = 0.12;
+                    // grafica a V nel colore della squadra, marchio verticale sul lato esterno (al posto delle fasce)
+                    const padArt = new THREE.Mesh(new THREE.PlaneGeometry(0.25, 0.62), new THREE.MeshStandardMaterial({
+                        map: goaliePadTexture(padAccentMat.color.getHex(), sideX < 0), transparent: true, alphaTest: 0.08,
+                        depthWrite: false, roughness: 0.45, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
+                    }));
+                    padArt.rotation.y = Math.PI;          // guarda in avanti (-Z)
+                    padArt.position.set(0, -0.09, -0.1 - 0.085 - 0.003);
                     const knee2 = new THREE.Mesh(createRoundedBoxGeometry(0.2, 0.16, 0.12, 0.05), padWhiteMat);
                     knee2.position.set(0, 0.26, -0.09);
                     const inner = new THREE.Mesh(createRoundedBoxGeometry(0.1, 0.18, 0.14, 0.04), padAccentMat);
                     inner.position.set(-Math.sign(sideX) * 0.13, 0.03, -0.04);
                     const boot = new THREE.Mesh(createRoundedBoxGeometry(0.25, 0.13, 0.22, 0.05), padWhiteMat);
                     boot.position.set(0, -0.36, -0.13);
-                    kneePivot.add(pad, padBand, padBand2, knee2, inner, boot);
+                    kneePivot.add(pad, padArt, knee2, inner, boot);
                 }
 
                 const skate = new THREE.Group();
@@ -7464,7 +7716,9 @@
             if (!isRef) {
                 stickGroup = new THREE.Group();
                 const shaftLen = isGoalie ? 1.44 : 1.54;
-                const shaft = new THREE.Mesh(createRoundedBoxGeometry(0.03, shaftLen, 0.042, 0.008), getStickMaterial());
+                // asta con la grafica della linea di stecche del marchio (scelta per giocatore)
+                const stickModel = pickStickModel(playerName, jerseyNum, isGoalie);
+                const shaft = new THREE.Mesh(new THREE.BoxGeometry(0.03, shaftLen, 0.042), getStickBrandMaterial(stickModel));
                 shaft.position.set(0, -shaftLen / 2 + 0.18, 0);
                 const knob = new THREE.Mesh(createRoundedBoxGeometry(0.038, 0.09, 0.05, 0.012), new THREE.MeshStandardMaterial({ color: 0xf2f2f2, roughness: 0.9 }));
                 knob.position.set(0, 0.15, 0);
@@ -7472,9 +7726,15 @@
                 if (isGoalie) {
                     const paddle = new THREE.Mesh(createRoundedBoxGeometry(0.038, 0.56, 0.115, 0.012), padWhiteMat);
                     paddle.position.set(0, -shaftLen + 0.48, -0.025);
-                    const trim = new THREE.Mesh(createRoundedBoxGeometry(0.042, 0.1, 0.118, 0.012), padAccentMat);
-                    trim.position.set(0, -shaftLen + 0.68, -0.025);
-                    stickGroup.add(paddle, trim);
+                    stickGroup.add(paddle);
+                    // grafica della paletta sui due lati
+                    const paddleMat = new THREE.MeshStandardMaterial({ map: goaliePaddleTexture(), roughness: 0.4, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+                    [-1, 1].forEach(sd => {
+                        const art = new THREE.Mesh(new THREE.PlaneGeometry(0.11, 0.55), paddleMat);
+                        art.rotation.y = sd * Math.PI / 2;
+                        art.position.set(sd * 0.0195, -shaftLen + 0.48, -0.025);
+                        stickGroup.add(art);
+                    });
                 }
                 const bladeLen = isGoalie ? 0.46 : 0.34, bladeH = isGoalie ? 0.11 : 0.085;
                 const bladeGeo = createRoundedBoxGeometry(isGoalie ? 0.05 : 0.016, bladeH, bladeLen, 0.006, 4).clone();
@@ -7487,7 +7747,8 @@
                 const blade = new THREE.Mesh(bladeGeo, new THREE.MeshStandardMaterial({ color: 0x0c0c0e, roughness: 0.35, metalness: 0.2 }));
                 blade.position.set(0, -shaftLen + 0.2, -bladeLen / 2 + 0.02);
                 blade.rotation.y = 0.12;
-                const tape = new THREE.Mesh(createRoundedBoxGeometry(isGoalie ? 0.056 : 0.022, bladeH + 0.004, bladeLen * 0.5, 0.006), new THREE.MeshStandardMaterial({ color: 0xf4f4f4, roughness: 0.95 }));
+                const tapeBlack = !isGoalie && stickModel !== 'vortex' && (String(jerseyNum).length % 2 === 0);
+                const tape = new THREE.Mesh(createRoundedBoxGeometry(isGoalie ? 0.056 : 0.022, bladeH + 0.004, bladeLen * 0.5, 0.006), new THREE.MeshStandardMaterial({ color: tapeBlack ? 0x1a1a1d : 0xf4f4f4, roughness: 0.95 }));
                 tape.position.set(0.01, -shaftLen + 0.2, -bladeLen * 0.5);
                 tape.rotation.y = 0.12;
                 stickGroup.add(blade, tape);
@@ -8038,7 +8299,7 @@
                 leftArmPivot.rotation.x = 0.75;
                 leftArmPivot.add(clipboard);
             } else {
-                const spareStick = new THREE.Mesh(new THREE.BoxGeometry(0.032, 1.48, 0.042), getStickMaterial());
+                const spareStick = new THREE.Mesh(new THREE.BoxGeometry(0.032, 1.48, 0.042), getStickBrandMaterial('vortex'));
                 spareStick.position.set(0, -0.35, -0.12);
                 spareStick.rotation.x = 0.25;
                 const tapeRoll = new THREE.Mesh(
@@ -8090,7 +8351,7 @@
             toolBox.position.y = 0.18;
             rackGroup.add(toolBox);
             [-0.18, 0, 0.18].forEach((sz, idx) => {
-                const st = new THREE.Mesh(new THREE.BoxGeometry(0.03, 1.48, 0.04), getStickMaterial());
+                const st = new THREE.Mesh(new THREE.BoxGeometry(0.03, 1.48, 0.04), getStickBrandMaterial(['nexa', 'vortex', 'apex'][idx % 3]));
                 st.position.set(0.15, 0.74, sz);
                 st.rotation.z = 0.12 + idx * 0.03;
                 rackGroup.add(st);
@@ -13786,7 +14047,18 @@
         }
 
         function setRangeFill(input) { input.style.setProperty('--p', input.value + '%'); }
+        let pauseAudioTab = 'mix';
+        function showPauseAudioTab(tab) {
+            pauseAudioTab = tab === 'cmt' ? 'cmt' : 'mix';
+            document.querySelectorAll('[data-audio-tab]').forEach(b => {
+                const on = b.dataset.audioTab === pauseAudioTab;
+                b.classList.toggle('is-active', on);
+                b.setAttribute('aria-selected', on ? 'true' : 'false');
+            });
+            document.querySelectorAll('[data-audio-sec]').forEach(sec => sec.classList.toggle('hidden', sec.dataset.audioSec !== pauseAudioTab));
+        }
         function renderPauseAudio() {
+            showPauseAudioTab(pauseAudioTab);
             const ga = window.gameAudio;
             const musicOn = ga ? ga.musicEnabled : true, sfxOn = ga ? ga.sfxEnabled : true;
             document.getElementById('pz-music-sw').classList.toggle('is-on', musicOn);
@@ -14074,6 +14346,10 @@
                 });
                 // anteprima del volume degli effetti al rilascio del cursore
                 inp.addEventListener('change', () => { if (k === 'sfx' && ga()) ga().playPuckHit(0.6); });
+            });
+            document.getElementById('pz-audio-tabs').addEventListener('click', e => {
+                const b = e.target.closest('[data-audio-tab]');
+                if (b) showPauseAudioTab(b.dataset.audioTab);
             });
             // telecronaca
             const cmt = () => window.Commentary;
