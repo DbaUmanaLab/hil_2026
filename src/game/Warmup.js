@@ -20,6 +20,14 @@
         return { shirt, shorts, socks: shirt };
     }
 
+    // giocatori di movimento della rosa, senza doppioni (uno può comparire in due linee)
+    function rosterSkaters(clubId) {
+        const club = typeof CLUB_ROSTERS !== 'undefined' && CLUB_ROSTERS[clubId];
+        if (!club) return [];
+        const all = [].concat(...(club.lines || []));
+        return all.filter((p, i) => all.findIndex(q => q.num === p.num && q.name === p.name) === i);
+    }
+
     function makePlayer(team, clubId, kitId) {
         const c = kitColors(clubId, kitId);
         const p = window.HIL_PEOPLE.makePerson({
@@ -41,14 +49,25 @@
         const puckGeo = new THREE.CylinderGeometry(pr, pr, ph, 16);
         const puckMat = new THREE.MeshStandardMaterial({ color: 0x0b0b0c, roughness: 0.5 });
         const pairs = [];
+        const featured = [];
         // la squadra di casa difende la porta a +Z: si scalda nella metà +Z, gli ospiti nella metà -Z
         [['home', 1, matchConfig.homeClub, matchConfig.homeKit], ['guest', -1, matchConfig.guestClub, matchConfig.guestKit]].forEach(([team, side, clubId, kitId]) => {
             const rows = lowQ ? [7, 13, 19] : [5.5, 10, 14.5, 19];
+            // ogni giocatore del riscaldamento è uno vero della rosa: il miglior marcatore nella coppia più
+            // vicina al centro (la inquadra la camera prima della presentazione delle squadre), gli altri a caso
+            const roster = rosterSkaters(clubId);
+            const star = roster.slice().sort((p, q) => (q.pts || 0) - (p.pts || 0) || (q.g || 0) - (p.g || 0))[0];
+            const others = roster.filter(p => p !== star).sort(() => Math.random() - 0.5);
+            const ids = star ? [star].concat(others) : others;
+            let nextId = 0;
             rows.forEach((zr, i) => {
                 const z = side * zr + (Math.random() - 0.5) * 0.6;
                 const half = 2.7 + Math.random() * 0.8;
                 const xc = (i % 2 ? 1.2 : -1.2) + (Math.random() - 0.5) * 0.8;
                 const a = makePlayer(team, clubId, kitId), b = makePlayer(team, clubId, kitId);
+                a.info = ids[nextId++ % Math.max(1, ids.length)] || null;
+                b.info = ids[nextId++ % Math.max(1, ids.length)] || null;
+                if (i === 0 && a.info) featured.push({ person: a, team, clubId, info: a.info });
                 a.mesh.position.set(xc - half, a.lift, z);
                 b.mesh.position.set(xc + half, b.lift, z);
                 a.mesh.rotation.y = 0;            // guarda verso +X, cioè verso il compagno
@@ -65,7 +84,7 @@
                 });
             });
         });
-        state = { group, pairs, time: 0, puckGeo, puckMat };
+        state = { group, pairs, featured, time: 0, puckGeo, puckMat };
         update(0);
     }
 
@@ -141,5 +160,8 @@
         state = null;
     }
 
-    window.HIL_WARMUP = { start, update, stop, isActive: () => !!state };
+    // giocatori da presentare in primo piano: { person, team, clubId, info: scheda di teams.json }
+    function featured() { return state ? state.featured.slice() : []; }
+
+    window.HIL_WARMUP = { start, update, stop, featured, isActive: () => !!state };
 })();

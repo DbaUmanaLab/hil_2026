@@ -9083,8 +9083,52 @@
             if (mascotShot.t >= MASCOT_SHOT_DURATION) finishArenaTour();
         }
 
+        // Primi piani nel riscaldamento: dopo la panoramica la camera passa vicino al miglior marcatore di
+        // ciascuna squadra mentre si scalda (sottopancia con nome e numero, la telecronaca lo presenta).
+        const WARMUP_SHOT_DURATION = 3.0;
+        let warmupShot = null;          // { list, idx, t }
+        function startWarmupShots() {
+            const list = window.HIL_WARMUP && window.HIL_WARMUP.featured ? window.HIL_WARMUP.featured() : [];
+            if (!list.length) return false;
+            // prima la squadra di casa, poi gli ospiti
+            list.sort((a, b) => (a.team === 'home' ? 0 : 1) - (b.team === 'home' ? 0 : 1));
+            warmupShot = { list, idx: -1, t: 0 };
+            nextWarmupShot();
+            return true;
+        }
+        function nextWarmupShot() {
+            warmupShot.idx++;
+            warmupShot.t = 0;
+            const f = warmupShot.list[warmupShot.idx];
+            if (!f) { warmupShot = null; finishArenaTour(); return; }
+            const club = CLUB_ROSTERS[f.clubId];
+            const role = { C: 'Centro', LW: 'Ala sinistra', RW: 'Ala destra', D: 'Difensore' }[f.info.role] || '';
+            document.getElementById('tour-arena-tag').textContent = 'RISCALDAMENTO';
+            tourArenaTitle.textContent = `#${f.info.num} ${playerFullName(f.info.first, f.info.name)}`;
+            tourArenaLoc.textContent = [club ? club.name : '', role, (f.info.pts || 0) > 0 ? `${f.info.g || 0} gol • ${f.info.pts} punti` : ''].filter(Boolean).join(' • ');
+            restartAnim(arenaTourOverlay.querySelector('.bx-l3'));
+            updateWarmupShot(0, true);
+            if (window.Commentary) window.Commentary.event('warmupPlayer', { team: f.team, info: f.info });
+        }
+        function updateWarmupShot(dt, cut = false) {
+            const f = warmupShot.list[warmupShot.idx];
+            warmupShot.t += dt;
+            const k = Math.min(1, warmupShot.t / WARMUP_SHOT_DURATION);
+            const m = f.person.mesh;
+            const head = new THREE.Vector3(m.position.x, m.position.y + 1.45 * m.scale.y, m.position.z);
+            // tre quarti davanti al giocatore (guarda verso il compagno), poi un lento giro e avvicinamento
+            const face = m.rotation.y, side = f.team === 'home' ? 1 : -1;
+            const a = face + side * (0.75 - k * 0.55);
+            const dist = 3.4 - k * 1.0;
+            const target = new THREE.Vector3(head.x + Math.cos(a) * dist, head.y + 0.35 - k * 0.15, head.z - Math.sin(a) * dist);
+            if (cut) camera.position.copy(target); else camera.position.lerp(target, 0.1);
+            camera.lookAt(head.x, head.y - 0.25, head.z);
+            if (warmupShot.t >= WARMUP_SHOT_DURATION) nextWarmupShot();
+        }
+
         function updateArenaTour(dt) {
             if (window.HIL_WARMUP) window.HIL_WARMUP.update(dt);
+            if (warmupShot) { updateWarmupShot(dt); return; }
             if (mascotShot) { updateMascotShot(dt); return; }
             tourTimer += dt;
             const duration = ARENA_TOUR_DURATION;
@@ -9100,12 +9144,11 @@
             const lookX = t < 0.45 ? -4.0 : 3.5;
             camera.lookAt(lookX, lookY, camZ - 14);
 
-            if (tourTimer >= duration) {
-                finishArenaTour();
-            }
+            if (tourTimer >= duration && !startWarmupShots()) finishArenaTour();
         }
 
         function finishArenaTour() {
+            warmupShot = null;              // "salta" durante i primi piani: si passa oltre
             // la mascotte viene sempre inquadrata, anche se la panoramica è stata saltata
             if (arenaMascot && !mascotShot) { startMascotShot(); return; }
             if (arenaMascot) arenaMascot.waving = false;
@@ -14129,8 +14172,9 @@
             document.querySelectorAll('[data-splash-action]').forEach(item => {
                 item.addEventListener('click', () => {
                     const action = item.dataset.splashAction;
-                    titleSplashScreen.classList.add('hidden');
+                    const hideSplash = () => titleSplashScreen.classList.add('hidden');
                     const proceed = () => {
+                        hideSplash();
                         if (action === 'quick') {
                             matchOrigin = 'quick';
                             randomizeQuickMatchConfig();
@@ -14147,7 +14191,7 @@
                     };
                     // finto caricamento con un fun fact prima di entrare nella modalità scelta
                     const modeLabel = (item.querySelector('.splash-tile-title') || {}).textContent || '';
-                    if (window.showFunFactLoading) window.showFunFactLoading(modeLabel.trim(), proceed);
+                    if (window.showFunFactLoading) window.showFunFactLoading(modeLabel.trim(), proceed, hideSplash);
                     else proceed();
                     // keyboard highlight
                     document.querySelectorAll('.nhl-menu-item').forEach(el => el.classList.remove('active'));
@@ -14907,11 +14951,13 @@
             }
             window.addEventListener('resize', () => { if (running) fitPhoto(); });
 
-            window.showFunFactLoading = function (modeLabel, onDone) {
+            // onCovered: chiamata quando il pannello è del tutto opaco. Chi apre il caricamento ci chiude la
+            // propria schermata: chiudendola prima, nella dissolvenza d'ingresso si vedeva il palazzetto 3D sotto.
+            window.showFunFactLoading = function (modeLabel, onDone, onCovered) {
                 const root = document.getElementById('funfact-loader');
                 const facts = window.FUN_FACTS || [];
                 const imgs = window.FUN_FACT_IMAGES || [];
-                if (!root || running || !facts.length) { if (onDone) onDone(); return; }
+                if (!root || running || !facts.length) { if (onCovered) onCovered(); if (onDone) onDone(); return; }
                 running = true;
 
                 const fi = pickIndex(facts.length, lastFact); lastFact = fi;
@@ -14951,6 +14997,10 @@
                 root.classList.add('is-in');
 
                 const t0 = performance.now();
+                let covered = !onCovered;
+                const cover = () => { if (covered) return; covered = true; try { onCovered(); } catch (err) { console.error(err); } };
+                setTimeout(cover, 480);                          // fine della dissolvenza d'ingresso (.45 s)
+                if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) cover();
                 let lastLine = 0;
                 function tick(now) {
                     const t = Math.min(1, (now - t0) / DURATION_MS);
@@ -14962,6 +15012,7 @@
                     if (t < 1) { requestAnimationFrame(tick); return; }
                     // prima si apre la schermata di destinazione, ancora coperta dal pannello opaco, poi la
                     // dissolvenza: così non si intravede per un attimo quello che c'era sotto
+                    cover();
                     try { if (onDone) onDone(); } catch (err) { console.error(err); }
                     requestAnimationFrame(() => {
                         root.classList.add('is-out');

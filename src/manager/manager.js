@@ -373,9 +373,10 @@
         matchConfig.userTeam = f.home === career.user ? 'home' : 'guest';
         liveMatch = { s: ev.comp === 'cup' ? career.cup : career.league, f };
         matchActive = true;
-        root.classList.add('cp-hidden');
-        if (typeof showFunFactLoading === 'function') showFunFactLoading(ev.label, launchMatchFromCurrentConfig);
-        else launchMatchFromCurrentConfig();
+        // il Manager si chiude quando il caricamento lo copre (niente palazzetto nella dissolvenza)
+        const hideMgr = () => root.classList.add('cp-hidden');
+        if (typeof showFunFactLoading === 'function') showFunFactLoading(ev.label, launchMatchFromCurrentConfig, hideMgr);
+        else { hideMgr(); launchMatchFromCurrentConfig(); }
     }
     function onUserMatchFinished(res) {
         matchActive = false;

@@ -85,8 +85,11 @@
         const scoreFull = lead ? `${score} ${settings.lang === 'it' ? 'per' : 'for'} ${teamName(lead)}` : score;
         return { sh: h, sg: g, home: teamName('home'), guest: teamName('guest'), lead: lead ? teamName(lead) : '', score, scoreFull };
     }
+    // "1 reti" -> "1 rete", "1 goals" -> "1 goal": le frasi sono scritte al plurale
+    const SINGULAR = { reti: 'rete', punti: 'punto', parate: 'parata', vittorie: 'vittoria', sconfitte: 'sconfitta', minuti: 'minuto', goals: 'goal', points: 'point', saves: 'save', shots: 'shot', minutes: 'minute', wins: 'win', faceoffs: 'faceoff', games: 'game' };
     function fill(tpl, vars) {
         return tpl.replace(/\{(\w+)\}/g, (m, k) => (vars[k] !== undefined && vars[k] !== null ? String(vars[k]) : ''))
+            .replace(/(^|[^\d])1 (\w+)/g, (m, pre, w) => pre + '1 ' + (SINGULAR[w] || w))
             .replace(/\s+([,.!?:])/g, '$1').replace(/\s{2,}/g, ' ').trim();
     }
     // un segnaposto con valore null esclude le varianti che lo usano (es. la città se è già nel nome del palazzetto)
@@ -610,6 +613,23 @@
                 if (st !== 'playing' || isBusy() || settings.chatter === 0 || !ready('line' + d.team, 25)) return;
                 const T = P().terms[settings.lang] || {};
                 enqueue(phrase('lineChange', { t: teamName(d.team), line: (T.line || [])[d.line] || d.line + 1 }), { prio: 0, ttl: 2, tag: 'line', mood: 'calm' });
+                break;
+            }
+            case 'warmupPlayer': {
+                // primo piano nel riscaldamento: lo presenta subito dopo la frase in corso, e la stessa
+                // presentazione non si ripete più avanti nell'intro
+                const p = d.info;
+                if (!p) return;
+                const v = infoVars(p, d.team);
+                for (let i = queue.length - 1; i >= 0; i--) if (queue[i].tag === 'intro' && queue[i].text.includes(v.pf)) queue.splice(i, 1);
+                // va detta mentre il giocatore è inquadrato: la frase dell'intro in corso si interrompe e riparte dopo
+                if (current && current.tag === 'intro') {
+                    // si ripete solo se era appena cominciata: a metà frase meglio lasciarla
+                    const again = now() - (current.started || 0) < 1.2 ? Object.assign({}, current, { t: now() }) : null;
+                    interrupt();
+                    if (again && !again.text.includes(v.pf)) queue.unshift(again);
+                }
+                enqueue(phrase((p.g || 0) > 0 ? 'warmup.playerStats' : 'warmup.player', v), { prio: 1.5, ttl: 3, tag: 'warmup', front: true });
                 break;
             }
             case 'penaltyEnd': {

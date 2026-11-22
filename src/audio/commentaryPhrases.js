@@ -163,6 +163,21 @@
             'Tutto pronto: buon divertimento!'
         ],
 
+        'warmup.player': [
+            'Nel riscaldamento la telecamera trova {pf}, numero {n} di {t}.',
+            'Eccolo: {pf}, il numero {n}, che scalda il bastone.',
+            'Occhi su {pf}: numero {n} per {t}.',
+            'Si scalda anche {pf}, maglia numero {n}.',
+            'Ecco {pf} di {t}, concentratissim{o} già nel riscaldamento.'
+        ],
+        'warmup.playerStats': [
+            'Ecco {pf}, numero {n} di {t}: {g} gol in stagione.',
+            'Nel riscaldamento c\'è {pf}, il bomber di {t} con {g} reti.',
+            'Si scalda {pf}: {pts} punti fin qui, è l\'uomo da tenere d\'occhio.',
+            'Primo piano su {pf}, numero {n}: {g} gol e {pts} punti in stagione per {t}.',
+            'Eccolo, {pf}! Con {g} reti è il riferimento offensivo di {t}.'
+        ],
+
         // ------------------------------------------------------------ periodi
         'period.start1': [
             'Si parte! Ingaggio al centro della pista.',
@@ -755,6 +770,19 @@
             'All set: let\'s drop the puck!',
             'Here we go: the puck is about to drop at centre rink.',
             'Sit back and enjoy, we\'re under way!'
+        ],
+
+        'warmup.player': [
+            'The camera finds {pf} in the warm-up, number {n} for {t}.',
+            'There\'s {pf}, number {n}, getting loose.',
+            'Eyes on {pf}: number {n} for {t}.',
+            '{pf} of {t} warming up, already focused.'
+        ],
+        'warmup.playerStats': [
+            'Here\'s {pf}, number {n} for {t}: {g} goals this season.',
+            'Warming up, {pf}, the top scorer for {t} with {g} goals.',
+            '{pf} getting ready: {pts} points so far, one to watch.',
+            'A close look at {pf}, number {n}: {g} goals and {pts} points for {t}.'
         ],
 
         'period.start1': [

@@ -901,11 +901,11 @@
         matchConfig.userTeam = f.home === state.user ? 'home' : 'guest';   // non tocca la preferenza salvata
         pendingFixture = f;
         matchActive = true;
-        hideRoot();
         const label = isCup() ? `Coppa Italia • ${cupRoundLabel(state.cup.round)}`
             : (state.phase === 'regular' ? `${L(state).name} • Giornata ${state.roundIdx + 1}` : `${L(state).name} • ${poRounds()[state.playoffs.round].label}`);
-        if (typeof showFunFactLoading === 'function') showFunFactLoading(label, launchMatchFromCurrentConfig);
-        else launchMatchFromCurrentConfig();
+        // la schermata della competizione si chiude quando il caricamento la copre (niente palazzetto nella dissolvenza)
+        if (typeof showFunFactLoading === 'function') showFunFactLoading(label, launchMatchFromCurrentConfig, hideRoot);
+        else { hideRoot(); launchMatchFromCurrentConfig(); }
     }
     function onUserMatchFinished(res) {
         matchActive = false;
