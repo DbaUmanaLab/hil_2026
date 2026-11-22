@@ -1132,6 +1132,10 @@
         .as-views .arena-view-btn { font-family: 'Oswald', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: 12px; padding: 5px 12px; border-radius: 999px; color: #cbd5e1; transition: background .2s, color .2s; }
         .as-views .arena-view-btn:hover { color: #fff; }
         .as-views .arena-view-btn.is-active { background: #f6b511; color: #111827; }
+        .as-views .arena-time-btn { font-family: 'Oswald', sans-serif; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; font-size: 12px; padding: 5px 12px; border-radius: 999px; color: #cbd5e1; transition: background .2s, color .2s; }
+        .as-views .arena-time-btn:hover:not(:disabled) { color: #fff; }
+        .as-views .arena-time-btn.is-active { background: #f6b511; color: #111827; }
+        .as-views .arena-time-btn:disabled { opacity: .4; cursor: not-allowed; }
         .as-center { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: clamp(8px, 1.6vh, 14px); padding: 0 clamp(10px, 2vw, 24px) clamp(10px, 2vh, 18px); }
         .as-count { font-size: clamp(11px, 1.1vw, 15px) !important; color: rgba(255,255,255,.65) !important; }
         .as-count b { color: #f6b511; }
@@ -1963,6 +1967,10 @@
                                 <button type="button" data-arena-view="overview" class="arena-view-btn">Panoramica</button>
                                 <button type="button" data-arena-view="interior" class="arena-view-btn">Centro pista</button>
                                 <button type="button" data-arena-view="roof" class="arena-view-btn">Tetto</button>
+                            </div>
+                            <div class="as-views as-time" role="group" aria-label="Orario della partita">
+                                <button type="button" data-time="day" class="arena-time-btn">&#9728; Giorno</button>
+                                <button type="button" data-time="night" class="arena-time-btn">&#9790; Sera</button>
                             </div>
                         </div>
                     </div>
@@ -2819,6 +2827,8 @@
             guestClub: 'vicenza',
             guestKit: 'red',
             arena: 'cittadella',
+            // 'day' (luce del sole dalle finestre, fari spenti) o 'night' (fari accesi); solo nei palazzetti in ARENA_DAYLIGHT_IDS
+            timeOfDay: (() => { try { return localStorage.getItem('hil_time_of_day') === 'day' ? 'day' : 'night'; } catch (e) { return 'night'; } })(),
             // squadra controllata dall'utente ('home' o 'guest'), ricordata nel browser
             userTeam: (() => { try { return localStorage.getItem('hil_user_team') === 'guest' ? 'guest' : 'home'; } catch (e) { return 'home'; } })()
         };
@@ -2932,6 +2942,127 @@
         let puckGlowLight = null, puckTrailMesh = null;
         let arenaCeilingLights = [];
         let mainDirLight = null;
+        let sceneAmbientLight = null, sceneHemiLight = null;
+        let arenaNightBeams = [];          // coni luminosi dei fari (createDynamicArenaLights): spenti di giorno
+
+        // =====================================================================
+        // GIORNO / SERA
+        // Di sera: fari accesi, come sempre. Di giorno: fari e lampade spenti, la luce principale diventa il
+        // sole (caldo, basso, molto intenso) e proietta le ombre di tutto il palazzetto, così entra solo dalle
+        // finestre: chiazze di sole sulla pista, giocatori che passano dall'ombra alla luce, fasci nel pulviscolo.
+        // Il modulo del palazzetto descrive il sole e accende/spegne le sue parti con registerArenaDaylight().
+        // =====================================================================
+        const ARENA_DAYLIGHT_IDS = new Set(['cittadella']);
+        let arenaDaylight = null;          // { sunDir, center, bounds: {min, max}, sunColor, sunIntensity, ambient, hemi, exposure, apply(mode, info) }
+        let nightLighting = null;          // valori della sera, per tornare indietro
+        let dayLightingOn = false;
+        function registerArenaDaylight(cfg) { arenaDaylight = cfg; }
+        function arenaSupportsDay(id) { return ARENA_DAYLIGHT_IDS.has(id); }
+        function isDaytimeMatch() { return matchConfig.timeOfDay === 'day' && arenaSupportsDay(matchConfig.arena); }
+        function captureNightLighting() {
+            const c = mainDirLight.shadow.camera;
+            nightLighting = {
+                pos: mainDirLight.position.clone(), color: mainDirLight.color.getHex(), intensity: mainDirLight.intensity,
+                cam: { left: c.left, right: c.right, top: c.top, bottom: c.bottom, near: c.near, far: c.far },
+                bias: mainDirLight.shadow.bias, normalBias: mainDirLight.shadow.normalBias, radius: mainDirLight.shadow.radius,
+                amb: sceneAmbientLight.color.getHex(), ambI: sceneAmbientLight.intensity,
+                sky: sceneHemiLight.color.getHex(), ground: sceneHemiLight.groundColor.getHex(), hemiI: sceneHemiLight.intensity
+            };
+        }
+        function setSunShadowSize(size) {
+            const sh = mainDirLight.shadow;
+            if (sh.mapSize.width === size) return;
+            sh.mapSize.set(size, size);
+            if (sh.map) { sh.map.dispose(); sh.map = null; }
+        }
+        // inquadra con la camera dell'ombra tutto il palazzetto visto dal sole (anche gli spalti e le pareti)
+        function fitSunShadowCamera(bounds) {
+            const tmp = new THREE.OrthographicCamera();
+            tmp.position.copy(mainDirLight.position);
+            tmp.lookAt(mainDirLight.target.position);
+            tmp.updateMatrixWorld(true);
+            const inv = tmp.matrixWorld.clone().invert();
+            let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+            const v = new THREE.Vector3();
+            for (let i = 0; i < 8; i++) {
+                v.set(i & 1 ? bounds.max[0] : bounds.min[0], i & 2 ? bounds.max[1] : bounds.min[1], i & 4 ? bounds.max[2] : bounds.min[2]).applyMatrix4(inv);
+                x0 = Math.min(x0, v.x); x1 = Math.max(x1, v.x); y0 = Math.min(y0, v.y); y1 = Math.max(y1, v.y); z0 = Math.min(z0, v.z); z1 = Math.max(z1, v.z);
+            }
+            const c = mainDirLight.shadow.camera;
+            c.left = x0 - 1; c.right = x1 + 1; c.bottom = y0 - 1; c.top = y1 + 1;
+            c.near = Math.max(0.5, -z1 - 2); c.far = -z0 + 2;
+            c.updateProjectionMatrix();
+        }
+        function applyTimeOfDay() {
+            if (!mainDirLight || !sceneAmbientLight || !nightLighting) return;
+            const preset = getActiveQualityPreset();
+            const day = isDaytimeMatch() && !!arenaDaylight;
+            const N = nightLighting;
+            if (day) {
+                const D = arenaDaylight;
+                const sun = new THREE.Vector3().fromArray(D.sunDir).normalize();
+                const center = new THREE.Vector3().fromArray(D.center || [0, 0, 0]);
+                if (!mainDirLight.target.parent) scene.add(mainDirLight.target);
+                mainDirLight.target.position.copy(center);
+                mainDirLight.target.updateMatrixWorld();
+                mainDirLight.position.copy(center).addScaledVector(sun, 90);
+                mainDirLight.color.setHex(D.sunColor || 0xffe2b4);
+                // senza ombre il sole illuminerebbe tutto in modo uniforme: più tenue, le chiazze le disegna il modulo
+                mainDirLight.intensity = (preset.shadows ? (D.sunIntensity || 3.2) : (D.sunIntensityFlat || 1.1)) * LEGACY_LIGHT_SCALE;
+                sceneAmbientLight.color.setHex(0xd8e3ff);
+                sceneAmbientLight.intensity = N.ambI * (D.ambient != null ? D.ambient : 0.45);
+                sceneHemiLight.color.setHex(0xdde8ff);
+                sceneHemiLight.groundColor.setHex(0x7a6048);
+                sceneHemiLight.intensity = N.hemiI * (D.hemi != null ? D.hemi : 0.7);
+                arenaCeilingLights.forEach(pt => { pt.visible = false; });
+                arenaNightBeams.forEach(b => { b.visible = false; });
+                if (preset.shadows) {
+                    setSunShadowSize(preset.id === 'high' ? 4096 : Math.max(2048, preset.shadowMapSize));
+                    mainDirLight.shadow.bias = -0.0006;
+                    mainDirLight.shadow.normalBias = 0.05;
+                    mainDirLight.shadow.radius = 1.6;
+                    fitSunShadowCamera(D.bounds);
+                }
+                if (renderer) renderer.toneMappingExposure = D.exposure || 0.74;
+                if (scene.background && scene.background.isColor) scene.background.setHex(0xcfe1f4);
+                if (scene.fog) { scene.fog.color.setHex(0x7d8796); scene.fog.density = 0.0042; }
+            } else {
+                mainDirLight.position.copy(N.pos);
+                mainDirLight.target.position.set(0, 0, 0);
+                mainDirLight.target.updateMatrixWorld();
+                mainDirLight.color.setHex(N.color);
+                mainDirLight.intensity = N.intensity;
+                sceneAmbientLight.color.setHex(N.amb); sceneAmbientLight.intensity = N.ambI;
+                sceneHemiLight.color.setHex(N.sky); sceneHemiLight.groundColor.setHex(N.ground); sceneHemiLight.intensity = N.hemiI;
+                arenaCeilingLights.forEach((pt, idx) => { pt.visible = idx < preset.arenaLights; });
+                arenaNightBeams.forEach(b => { b.visible = true; });
+                setSunShadowSize(preset.shadowMapSize);
+                mainDirLight.shadow.bias = N.bias; mainDirLight.shadow.normalBias = N.normalBias; mainDirLight.shadow.radius = N.radius;
+                const c = mainDirLight.shadow.camera;
+                Object.assign(c, N.cam);
+                c.updateProjectionMatrix();
+                if (renderer) renderer.toneMappingExposure = 0.7;
+                if (dayLightingOn) {
+                    if (scene.background && scene.background.isColor) scene.background.setHex(currentArenaOutdoor ? 0xbcd3e6 : 0x090f1d);
+                    if (scene.fog) { scene.fog.color.setHex(currentArenaOutdoor ? 0xcfdce6 : 0x090f1d); scene.fog.density = currentArenaOutdoor ? 0.003 : 0.0055; }
+                }
+            }
+            // di giorno tutto (pubblico, panchine, giocatori) riceve l'ombra del tetto: senza, chi sta al coperto
+            // sembrerebbe al sole; di sera si torna alle impostazioni di prima
+            const wantRecv = day && preset.shadows;
+            scene.traverse(o => {
+                if (!o.isMesh) return;
+                if (wantRecv) {
+                    if (o.userData.recvNight === undefined) o.userData.recvNight = o.receiveShadow;
+                    o.receiveShadow = true;
+                } else if (o.userData.recvNight !== undefined) {
+                    o.receiveShadow = o.userData.recvNight;
+                    delete o.userData.recvNight;
+                }
+            });
+            dayLightingOn = day;
+            if (arenaDaylight && arenaDaylight.apply) arenaDaylight.apply(day ? 'day' : 'night', { shadows: !!preset.shadows, quality: preset.id });
+        }
 
         // Sistema Rilevamento Dispositivo & Qualità Grafica Adattiva
         const QUALITY_PRESETS = {
@@ -3138,6 +3269,7 @@
             if (arenaDustPoints) {
                 arenaDustPoints.visible = preset.dustCount > 0;
             }
+            applyTimeOfDay();
 
             if (rebuildSceneAssets && prevLevel !== targetLevel) {
                 buildSelectedArena(matchConfig.arena);
@@ -5006,6 +5138,8 @@
             const hemiLight = new THREE.HemisphereLight(0xe0ecff, 0x4a3b30, (preset.shadows ? 0.5 : 0.42) * LEGACY_LIGHT_SCALE);
             hemiLight.position.set(0, 30, 0);
             scene.add(hemiLight);
+            sceneAmbientLight = ambientLight;
+            sceneHemiLight = hemiLight;
 
             // Luce principale quasi zenitale (fari sul soffitto): ombre corte e realistiche.
             // Il frustum dell'ombra copre solo la pista, per una risoluzione molto più alta.
@@ -5024,6 +5158,7 @@
             mainDirLight.shadow.normalBias = 0.025;
             mainDirLight.shadow.radius = 2.5;
             scene.add(mainDirLight);
+            captureNightLighting();
 
             arenaCeilingLights = [];
             [0, -22, 22].forEach((zPos, idx) => {
@@ -5148,6 +5283,7 @@
             arenaGroup = new THREE.Group();
             scene.add(arenaGroup);
             crowdMembers = [];
+            arenaDaylight = null;
 
             const isVicenza = arenaId === 'vicenza';
             const isMilano = arenaId === 'milano';
@@ -5414,6 +5550,7 @@
                 buildPenaltyBoxes(builtGroup);
                 buildArenaCrowd(builtGroup, arenaId);
                 applyScoreboardLayout();
+                applyTimeOfDay();
             };
             if (arenaBuilders[archId]) finishArena();
             else loadArenaModule(archId).then(finishArena, finishArena);
@@ -6603,6 +6740,7 @@
                     const beam = new THREE.Mesh(beamGeo, beamMat);
                     beam.position.set(0, 8.2, zPos);
                     scene.add(beam);
+                    arenaNightBeams.push(beam);
                 });
             }
 
@@ -13112,6 +13250,7 @@
             document.querySelectorAll('.arena-view-btn').forEach(btn => {
                 btn.classList.toggle('is-active', btn.dataset.arenaView === arenaPreviewState.view);
             });
+            renderTimeOfDayButtons();
 
             if (animate) {
                 const stage = document.getElementById('prematch-step-3');
@@ -13120,6 +13259,23 @@
                 stage.classList.add('as-anim');
                 if (dir < 0) stage.classList.add('is-back');
             }
+        }
+
+        // Giorno / Sera: il giorno solo nei palazzetti che lo supportano (gli altri restano di sera)
+        function renderTimeOfDayButtons() {
+            const ok = arenaSupportsDay(matchConfig.arena);
+            const eff = isDaytimeMatch() ? 'day' : 'night';
+            document.querySelectorAll('.arena-time-btn').forEach(btn => {
+                btn.classList.toggle('is-active', btn.dataset.time === eff);
+                btn.disabled = btn.dataset.time === 'day' && !ok;
+                btn.title = btn.disabled ? 'Partita di giorno non ancora disponibile in questo palazzetto' : '';
+            });
+        }
+        function setTimeOfDay(mode) {
+            matchConfig.timeOfDay = mode === 'day' ? 'day' : 'night';
+            try { localStorage.setItem('hil_time_of_day', matchConfig.timeOfDay); } catch (e) {}
+            applyTimeOfDay();
+            renderTimeOfDayButtons();
         }
 
         // Sposta il centro della proiezione 3D al centro dell'area di anteprima (a destra del pannello)
@@ -13671,6 +13827,7 @@
             matchConfig.homeKit = best.hk;
             matchConfig.guestKit = best.gk;
             matchConfig.arena = pick(SELECTABLE_ARENA_IDS);
+            matchConfig.timeOfDay = Math.random() < 0.5 ? 'day' : 'night';   // vale solo dove il giorno è disponibile
             preloadArenaModule(matchConfig.arena);
         }
 
@@ -13702,6 +13859,7 @@
             scoreGuestEl.textContent = '0';
             buildSelectedArena(matchConfig.arena);
             rebuildMatchTeams();
+            applyTimeOfDay();               // giocatori e staff appena creati: ombre del giorno
             assignMatchReferees();
             applyMatchConfigToHUD();
             updateScoreboardVisuals();
@@ -14461,6 +14619,7 @@
                             window.Manager.open();
                         } else {
                             matchOrigin = 'friendly';
+                            try { matchConfig.timeOfDay = localStorage.getItem('hil_time_of_day') === 'day' ? 'day' : 'night'; } catch (e) {}
                             startScreen.classList.remove('hidden');
                             setPreMatchStep(1);
                         }
@@ -14649,6 +14808,9 @@
                     arenaPreviewState.view = btn.dataset.arenaView;
                     renderStep3Arena();
                 });
+            });
+            document.querySelectorAll('.arena-time-btn').forEach(btn => {
+                btn.addEventListener('click', () => { if (!btn.disabled) setTimeOfDay(btn.dataset.time); });
             });
 
             const backToStep2Btn = document.getElementById('back-to-step2-btn');

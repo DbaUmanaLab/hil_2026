@@ -21,7 +21,10 @@
             'Bentrovati! La cornice è quella del {arena}, a {city}, e l\'atmosfera è già bollente.',
             'Buonasera e benvenuti! Da {city}, {arena}, comincia la nostra telecronaca.',
             'Ciao a tutti e benvenuti in pista: siamo al {arena}, pronti per una partita tutta da vivere.',
-            'Saluti dal {arena}! Luci accese, pubblico sugli spalti: si gioca!'
+            'Saluti dal {arena}! Luci accese, pubblico sugli spalti: si gioca!',
+            'Buon pomeriggio a tutti e benvenuti al {arena}!',
+            'Buon pomeriggio dal {arena}: il sole entra dalle vetrate e si gioca!',
+            'Ben ritrovati, in questo pomeriggio di hockey dal {arena}.'
         ],
         'intro.capacity': [
             'Un impianto da {cap} posti, e stasera si sente il calore del pubblico.',
@@ -647,7 +650,9 @@
             'A warm welcome to all of you, live from {arena} for a big night of inline hockey.',
             'Good evening from {city}! The setting is {arena}, and the atmosphere is already electric.',
             'Hi everybody and welcome to the rink: we are at {arena}, ready for a cracking game.',
-            'Greetings from {arena}! The lights are on, the fans are in: let\'s play some hockey!'
+            'Greetings from {arena}! The lights are on, the fans are in: let\'s play some hockey!',
+            'Good afternoon, and welcome to {arena}!',
+            'Good afternoon from {arena}: the sun is pouring in and we\'re ready to go!'
         ],
         'intro.capacity': [
             'A {cap}-seat venue, and you can feel the buzz tonight.',

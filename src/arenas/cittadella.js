@@ -60,10 +60,31 @@
                 vUv.push((z + HL) / BAY, (i / nTh) * 13.6);
             }
         }
+        // finestre in PVC trasparente nel telo: una per campata su entrambi i lati, fra circa 4,5 e 8,8 m
+        // d'altezza (le campate di testa restano chiuse). Di giorno il sole entra da quelle sul lato panchine.
+        const WIN_TH0 = 0.27, WIN_TH1 = 0.56;
+        const winSide = (j, i) => {
+            const zc = -HL + (2 * HL * (j + 0.5)) / nZ, thc = (Math.PI * (i + 0.5)) / nTh;
+            if (Math.abs(zc) > HL - BAY) return 0;
+            const bf = ((zc + HL) / BAY) % 1;
+            if (bf < 0.17 || bf > 0.83) return 0;
+            if (thc > WIN_TH0 && thc < WIN_TH1) return 1;                         // lato panchine (+X)
+            if (thc > Math.PI - WIN_TH1 && thc < Math.PI - WIN_TH0) return -1;    // lato tribuna (-X)
+            return 0;
+        };
+        const winIdx = [];
+        const sunWindows = {};            // campata -> { j0, j1, i0, i1 } delle finestre sul lato del sole
         for (let j = 0; j < nZ; j++) {
             for (let i = 0; i < nTh; i++) {
                 const a = j * (nTh + 1) + i, b = a + nTh + 1;
-                vIdx.push(a, b, a + 1, b, b + 1, a + 1);
+                const side = winSide(j, i);
+                if (!side) { vIdx.push(a, b, a + 1, b, b + 1, a + 1); continue; }
+                winIdx.push(a, b, a + 1, b, b + 1, a + 1);
+                if (side > 0) {
+                    const bay = Math.floor(((-HL + (2 * HL * (j + 0.5)) / nZ) + HL) / BAY);
+                    const w = sunWindows[bay] || (sunWindows[bay] = { j0: j, j1: j, i0: i, i1: i });
+                    w.j0 = Math.min(w.j0, j); w.j1 = Math.max(w.j1, j); w.i0 = Math.min(w.i0, i); w.i1 = Math.max(w.i1, i);
+                }
             }
         }
         const vaultGeo = new THREE.BufferGeometry();
@@ -71,7 +92,16 @@
         vaultGeo.setAttribute('uv', new THREE.Float32BufferAttribute(vUv, 2));
         vaultGeo.setIndex(vIdx);
         vaultGeo.computeVertexNormals();
-        targetGroup.add(new THREE.Mesh(vaultGeo, membraneMat));
+        membraneMat.shadowSide = THREE.DoubleSide;      // di giorno il telo fa ombra da entrambe le facce
+        const vault = new THREE.Mesh(vaultGeo, membraneMat);
+        targetGroup.add(vault);
+        const glassGeo = new THREE.BufferGeometry();
+        glassGeo.setAttribute('position', vaultGeo.getAttribute('position'));
+        glassGeo.setIndex(winIdx);
+        const vaultGlassMat = new THREE.MeshBasicMaterial({ color: 0x23324d, transparent: true, opacity: 0.88, side: THREE.DoubleSide, depthWrite: false });
+        const vaultGlass = new THREE.Mesh(glassGeo, vaultGlassMat);
+        targetGroup.add(vaultGlass);
+        const vtx = (j, i) => { const k = (j * (nTh + 1) + i) * 3; return new THREE.Vector3(vPos[k], vPos[k + 1], vPos[k + 2]); };
 
         // ---------- 2. archi in legno lamellare a sezione rettangolare (instanced)
         function buildArchGeometry(depth, width, inset) {
@@ -111,8 +141,11 @@
             g.setIndex(idx);
             return g;
         }
+        const dayCasters = [vault];        // di giorno fanno ombra al sole (di sera no: la luce dei fari viene dall'alto)
+        const nightGlow = [];              // aloni e bagliori dei fari: spenti di giorno
         const archCount = 2 * HL / BAY + 1;
         const arches = new THREE.InstancedMesh(buildArchGeometry(0.95, 0.26, 0.12), woodMat, archCount);
+        dayCasters.push(arches);
         const tmpM = new THREE.Matrix4();
         for (let k = 0; k < archCount; k++) {
             tmpM.makeTranslation(0, 0, -HL + k * BAY + (k === 0 ? 0.3 : (k === archCount - 1 ? -0.3 : 0)));
@@ -130,6 +163,7 @@
             purlin.position.set(pnt.x, pnt.y, 0);
             purlin.rotation.z = Math.atan2(nn.x, -nn.y);
             targetGroup.add(purlin);
+            dayCasters.push(purlin);
         });
 
         // ---------- 4. pareti grecate bordeaux sui lati lunghi e in testata
@@ -139,6 +173,7 @@
             w.position.set(wx, WALL_H / 2, 0);
             w.receiveShadow = preset.shadows;
             targetGroup.add(w);
+            dayCasters.push(w);
             const cap = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.08, 2 * HL), steelMat);
             cap.position.set(wx, WALL_H + 0.04, 0);
             targetGroup.add(cap);
@@ -181,6 +216,7 @@
         endShape.lineTo(CX + A, 0);
         const endGeo = new THREE.ShapeGeometry(endShape, 24);
         const endMembraneMat = membraneMat.clone();
+        endMembraneMat.shadowSide = THREE.DoubleSide;
         endMembraneMat.map = loadFileTexture(CIT_TEX + 'membrane.jpg', { repeat: [0.2, 0.2] });
         endMembraneMat.emissiveMap = endMembraneMat.map;
         endMembraneMat.normalMap = loadFileTexture(CIT_TEX + 'membrane_n.jpg', { repeat: [0.2, 0.2] });
@@ -189,10 +225,12 @@
             const endMembrane = new THREE.Mesh(endGeo, endMembraneMat);
             endMembrane.position.z = ez;
             targetGroup.add(endMembrane);
+            dayCasters.push(endMembrane);
 
             const lowWall = new THREE.Mesh(new THREE.BoxGeometry(2 * A, WALL_H, 0.3), endWallMat);
             lowWall.position.set(CX, WALL_H / 2, ez - dir * 0.15);
             targetGroup.add(lowWall);
+            dayCasters.push(lowWall);
 
             for (let dx = -20; dx <= 20; dx += 5) {
                 const topY = B * Math.sqrt(Math.max(0, 1 - (dx / A) ** 2)) - 0.6;
@@ -227,6 +265,7 @@
                 const hUp = new THREE.Vector3().crossVectors(hIn, hZ);
                 halo.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(hZ, hUp, hIn));
                 targetGroup.add(halo);
+                nightGlow.push(halo);
             }
         });
         const housingGeo = new THREE.CylinderGeometry(0.34, 0.26, 0.32, 16);
@@ -248,6 +287,7 @@
                     spr.scale.set(2.6, 2.6, 1);
                     spr.position.set(pnt.x, pnt.y - 0.3, z);
                     targetGroup.add(spr);
+                    nightGlow.push(spr);
                 }
             });
         }
@@ -408,6 +448,12 @@
         });
         glassPosts.instanceMatrix.needsUpdate = true;
         targetGroup.add(glassPosts);
+
+        // ---------- 12. GIORNO: sole basso dal lato panchine che entra dalle finestre del telo
+        setupCittadellaDaylight(targetGroup, {
+            sunWindows, vtx, dayCasters, nightGlow, lightMat, winMat, vaultGlassMat, membraneMats: [membraneMat, endMembraneMat],
+            bounds: { min: [CX - A - 1, 0, -HL - 1], max: [CX + A + 1, B + 1, HL + 1] }, center: [CX, 0, 0]
+        });
 
         buildCittadellaWoodenBar(targetGroup);
         buildCittadellaTvTower(targetGroup);
@@ -1033,6 +1079,121 @@
             p.idleFn(p, 0);
             targetGroup.add(p.mesh);
             if (typeof crowdMembers !== 'undefined') crowdMembers.push(p);
+        });
+    }
+
+
+    // ===================================================================== GIORNO / SERA
+    // Sole a ~24° d'altezza dal lato panchine (+X), un po' di traverso: entra dalle finestre del telo e
+    // disegna sulla metà pista lato panchine una fila di chiazze di luce, una per campata. Con le ombre
+    // attive le chiazze sono vere (il telo fa ombra al resto); senza ombre (grafica bassa) sono disegnate.
+    // I fasci visibili nel pulviscolo e i granelli che brillano ci sono sempre.
+    const CIT_SUN_DIR = [0.933, 0.445, 0.359];     // ~24° sull'orizzonte: le chiazze arrivano fino al centro pista
+    function sunBeamTexture() {
+        const c = document.createElement('canvas');
+        c.width = 64; c.height = 256;
+        const g = c.getContext('2d');
+        const img = g.createImageData(64, 256);
+        for (let y = 0; y < 256; y++) {
+            const along = y / 255;                                  // 0 = pavimento, 1 = finestra (riga alta = v 1)
+            const fall = 0.06 + 0.62 * Math.pow(1 - along, 0.15) * Math.pow(along, 1.25) + 0.18 * along;
+            for (let x = 0; x < 64; x++) {
+                const across = Math.pow(Math.sin(Math.PI * (x + 0.5) / 64), 0.8);
+                const streak = 0.85 + 0.15 * Math.sin(x * 0.9 + Math.sin(y * 0.05) * 2);
+                const v = Math.min(255, 255 * fall * across * streak);
+                img.data.set([v, v * 0.92, v * 0.78, 255], (y * 64 + x) * 4);
+            }
+        }
+        g.putImageData(img, 0, 0);
+        const t = new THREE.CanvasTexture(c);
+        if (THREE.SRGBColorSpace) t.colorSpace = THREE.SRGBColorSpace;
+        return t;
+    }
+    function setupCittadellaDaylight(targetGroup, o) {
+        const preset = getActiveQualityPreset();
+        const sun = new THREE.Vector3().fromArray(CIT_SUN_DIR).normalize();
+        const toFloor = p => p.clone().addScaledVector(sun, -(p.y - 0.02) / sun.y);   // dove il raggio tocca il pavimento
+        const beamMat = new THREE.MeshBasicMaterial({ map: sunBeamTexture(), color: 0xffe6bf, transparent: true, opacity: 0.42, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+        const patchMat = new THREE.MeshBasicMaterial({ color: 0xffd9a0, transparent: true, opacity: 0.3, blending: THREE.AdditiveBlending, depthWrite: false });
+        const beams = new THREE.Group(), patches = new THREE.Group();
+        const dustPts = [];
+        const dustPer = preset.id === 'high' ? 70 : (preset.id === 'medium' ? 40 : 0);
+        Object.values(o.sunWindows).forEach(w => {
+            // angoli della finestra (sul telo) e loro proiezione sul pavimento
+            const c = [o.vtx(w.j0, w.i0), o.vtx(w.j0, w.i1 + 1), o.vtx(w.j1 + 1, w.i1 + 1), o.vtx(w.j1 + 1, w.i0)];
+            const f = c.map(toFloor);
+            const pos = [], uv = [];
+            for (let k = 0; k < 4; k++) {
+                const a = c[k], b = c[(k + 1) % 4], fb = f[(k + 1) % 4], fa = f[k];
+                pos.push(a.x, a.y, a.z, b.x, b.y, b.z, fb.x, fb.y, fb.z, a.x, a.y, a.z, fb.x, fb.y, fb.z, fa.x, fa.y, fa.z);
+                uv.push(0, 1, 1, 1, 1, 0, 0, 1, 1, 0, 0, 0);
+            }
+            const bg = new THREE.BufferGeometry();
+            bg.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+            bg.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+            const beam = new THREE.Mesh(bg, beamMat);
+            beam.renderOrder = 3;
+            beams.add(beam);
+            // chiazza sul pavimento (solo senza ombre vere)
+            const pg = new THREE.BufferGeometry();
+            pg.setAttribute('position', new THREE.Float32BufferAttribute([
+                f[0].x, 0.025, f[0].z, f[1].x, 0.025, f[1].z, f[2].x, 0.025, f[2].z,
+                f[0].x, 0.025, f[0].z, f[2].x, 0.025, f[2].z, f[3].x, 0.025, f[3].z
+            ], 3));
+            pg.computeVertexNormals();
+            const patch = new THREE.Mesh(pg, patchMat);
+            patch.renderOrder = 2;
+            patches.add(patch);
+            // pulviscolo dentro il fascio
+            for (let n = 0; n < dustPer; n++) {
+                const u = Math.random(), v = Math.random();
+                const top = c[0].clone().lerp(c[1], v).lerp(c[3].clone().lerp(c[2], v), u);
+                dustPts.push(top.lerp(toFloor(top), 0.08 + Math.random() * 0.85));
+            }
+        });
+        targetGroup.add(beams, patches);
+        let dust = null;
+        if (dustPts.length) {
+            const dg = new THREE.BufferGeometry().setFromPoints(dustPts);
+            // granello tondo e sfumato (senza texture i punti sono quadrati, e da vicino si notano)
+            const dc = document.createElement('canvas');
+            dc.width = dc.height = 32;
+            const dctx = dc.getContext('2d');
+            const grd = dctx.createRadialGradient(16, 16, 0, 16, 16, 16);
+            grd.addColorStop(0, 'rgba(255,255,255,1)'); grd.addColorStop(0.35, 'rgba(255,255,255,0.45)'); grd.addColorStop(1, 'rgba(255,255,255,0)');
+            dctx.fillStyle = grd; dctx.fillRect(0, 0, 32, 32);
+            const dustTex = new THREE.CanvasTexture(dc);
+            dust = new THREE.Points(dg, new THREE.PointsMaterial({ map: dustTex, color: 0xfff1d6, size: 0.05, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false, alphaTest: 0.01 }));
+            targetGroup.add(dust);
+            if (typeof arenaSwayItems !== 'undefined') arenaSwayItems.push({ obj: dust, speed: 0.25, phase: 0, amp: 0.004 });
+        }
+
+        registerArenaDaylight({
+            sunDir: CIT_SUN_DIR,
+            center: o.center,
+            bounds: o.bounds,
+            sunColor: 0xffd49a,
+            sunIntensity: 2.2,
+            sunIntensityFlat: 1.0,
+            ambient: 0.5,
+            hemi: 0.85,
+            exposure: 0.74,
+            apply(mode, info) {
+                const day = mode === 'day';
+                o.dayCasters.forEach(m => { m.castShadow = day && info.shadows; });
+                o.nightGlow.forEach(m => { m.visible = !day; });
+                o.lightMat.color.setHex(day ? 0x8d8a84 : 0xfff7e6);            // strisce e fari spenti
+                o.winMat.color.setHex(day ? 0xfbfdff : 0x23324d);               // finestrelle sul lato panchine
+                o.vaultGlassMat.color.setHex(day ? 0xf6faff : 0x23324d);        // cielo che entra dal PVC trasparente
+                o.vaultGlassMat.opacity = day ? 0.96 : 0.88;
+                o.membraneMats.forEach(m => {                                   // telo illuminato da fuori
+                    m.emissive.setHex(day ? 0xf7f4ec : 0xffe9c8);
+                    m.emissiveIntensity = day ? 0.42 : 0.2;
+                });
+                beams.visible = day;
+                patches.visible = day && !info.shadows;
+                if (dust) dust.visible = day;
+            }
         });
     }
 

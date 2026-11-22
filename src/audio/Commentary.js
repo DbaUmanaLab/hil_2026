@@ -106,6 +106,15 @@
         vars = vars || {};
         const used = recent[settings.lang + key] || (recent[settings.lang + key] = []);
         let ok = list.map((t, i) => i).filter(i => usable(list[i], vars));
+        // partita di giorno: via le varianti da sera ("buonasera", "stasera", "tonight"...), se ne restano altre
+        const daytime = typeof G('isDaytimeMatch') === 'function' && G('isDaytimeMatch')();
+        if (daytime) {
+            const noEve = ok.filter(i => !/(buonasera|sera|serata|stasera|evening|tonight|night)/i.test(list[i]));
+            if (noEve.length) ok = noEve;
+        } else {
+            const noDay = ok.filter(i => !/(pomeriggio|afternoon)/i.test(list[i]));
+            if (noDay.length) ok = noDay;
+        }
         if (!ok.length) ok = list.map((t, i) => i);
         let cands = ok.filter(i => !used.includes(i));
         if (!cands.length) { used.length = 0; cands = ok; }
