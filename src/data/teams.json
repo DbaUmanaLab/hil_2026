@@ -5497,6 +5497,188 @@
           "glove": "#f59e0b"
         }
       }
+    },
+    {
+      "id": "valladolid",
+      "league": "RFEP",
+      "name": "CPLV HOCKEY VALLADOLID",
+      "shortName": "VALLADOLID",
+      "abbr": "VAL",
+      "note": "Roster dal club, senza statistiche (g/a/pts a 0) e senza ruoli: C/LW/RW/D assegnati provvisoriamente. Capitano Daniel Díez Mora; assistenti Galván Torres, Díez Fernández, Fernández Pérez. Entrambi i portieri hanno il 16 nel roster; Jimmy Teed è portiere-allenatore. Con 10 giocatori di movimento Díez Mora e Díez Fernández compaiono anche nella terza linea.",
+      "jerseyClubId": "valladolid",
+      "homeArena": "valladolid",
+      "logo": "valladolid.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/valladolid_1.png",
+        "assets/jerseys/valladolid_2.png"
+      ],
+      "ratings": {
+        "off": 78,
+        "def": 76,
+        "goa": 77
+      },
+      "colors": {
+        "primary": "#1e88e5",
+        "secondary": "#2b2e35",
+        "staffJacket": "#1c1e24",
+        "coachJacket": "#1e88e5"
+      },
+      "rosterScreen": {
+        "photo": "valladolid.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": {
+        "first": "Jimmy",
+        "last": "Teed",
+        "role": "Portiere-allenatore",
+        "note": "Anche secondo portiere"
+      },
+      "goalie": {
+        "num": "16",
+        "name": "CARRANZA",
+        "first": "David"
+      },
+      "backupGoalies": [
+        {
+          "num": "16",
+          "name": "TEED",
+          "first": "Jimmy"
+        }
+      ],
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "DÍEZ MORA",
+            "first": "Daniel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "GALVÁN TORRES",
+            "first": "Pedro Jaime",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "97",
+            "name": "FERNÁNDEZ PÉREZ",
+            "first": "Gabriel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "87",
+            "name": "DÍEZ FERNÁNDEZ",
+            "first": "Nicolás",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "8",
+            "name": "CONTRERAS DE LA FUENTE",
+            "first": "Arturo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "7",
+            "name": "BENITO LIVENTSEVA",
+            "first": "Daniel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "44",
+            "name": "PÉREZ DE LA IGLESIA",
+            "first": "Daniel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "3",
+            "name": "SANZ ARIAS",
+            "first": "Nicolás",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "23",
+            "name": "LUNA LUNA",
+            "first": "Nicolás",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "47",
+            "name": "FERNÁNDEZ ARRONDO",
+            "first": "Miquel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "10",
+            "name": "DÍEZ MORA",
+            "first": "Daniel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "87",
+            "name": "DÍEZ FERNÁNDEZ",
+            "first": "Nicolás",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ],
+      "reserves": [],
+      "kits": {
+        "grey": {
+          "label": "Divisa Grigia",
+          "primary": "#3a3d44",
+          "pants": "#111114",
+          "helmet": "#111114",
+          "glove": "#1e88e5"
+        },
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#eef0f3",
+          "pants": "#111114",
+          "helmet": "#f2f3f5",
+          "glove": "#1e88e5"
+        }
+      }
     }
   ]
 }

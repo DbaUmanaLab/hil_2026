@@ -2652,6 +2652,17 @@
                 surface: 'Piastrelle Azzurre',
                 roof: 'Travi in Legno Lamellare e Lamiera'
             },
+            valladolid: {
+                id: 'valladolid',
+                name: 'POLIDEPORTIVO CANTERAC',
+                shortTitle: 'Polideportivo Canterac',
+                location: 'Valladolid • Castilla y León, Spagna',
+                clubBadge: 'Casa: CPLV Hockey Valladolid',
+                desc: 'Capannone a campata unica con gli archi in acciaio chiaro su pilastri bianchi, copertura scura con lunghe file di lucernari e lampade tonde appese, pareti blu in basso e bianche sopra, pista a piastrelle azzurre con i cerchi a gradini di piastrelle rosse, reti alte dietro le porte e la tribuna con le panche blu e le scale gialle.',
+                capacity: '500 Spettatori',
+                surface: 'Piastrelle Azzurre',
+                roof: 'Archi in Acciaio e Lamiera con Lucernari'
+            },
             roma: {
                 id: 'roma',
                 name: 'PALAMUNICIPIO ROMA XI',
@@ -2786,7 +2797,7 @@
             }
         };
 
-        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'rethel', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova'];
+        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'rethel', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'valladolid', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova'];
         // Palazzetti presenti nel menu ma non selezionabili (al momento nessuno)
         const DISABLED_ARENAS = new Set();
         const SELECTABLE_ARENA_IDS = ARENA_IDS.filter(id => !DISABLED_ARENAS.has(id));
@@ -3999,7 +4010,7 @@
         };
         const ARENA_SURFACE = {
             cittadella: 'tiles', vicenza: 'tiles', milano: 'tiles', asiago: 'tiles', novi: 'tiles', ferrara: 'tiles',
-            padova: 'tiles', edera_trieste: 'tiles', rethel: 'tiles',
+            padova: 'tiles', edera_trieste: 'tiles', rethel: 'tiles', valladolid: 'tiles',
             cus_verona: 'polished', treviso: 'polished', time42: 'polished',
             empoli: 'resin', molina: 'resin', piacenza: 'resin', villeneuve: 'resin', forli: 'resin', fox_legnaro: 'resin',
             kraken_camaiore: 'parquet', roma: 'parquet',
@@ -5533,7 +5544,7 @@
             const n = arenaScoreboards.north;
             if (!n) return;
             n.rotation.y = 0;
-            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'rethel', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova'].includes(matchConfig.arena);
+            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'rethel', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'valladolid', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova'].includes(matchConfig.arena);
             if (matchConfig.arena === 'padova') {
                 // tabellone sulla parete della testata nord, tra gli striscioni
                 n.position.set(0, 8.6, -43.4);
@@ -5579,6 +5590,10 @@
                 n.scale.setScalar(0.42);
             } else if (matchConfig.arena === 'roma') {
                 n.position.set(8.5, 6.4, -40.2);
+                n.scale.setScalar(0.42);
+            } else if (matchConfig.arena === 'valladolid') {
+                // tabellone sulla testata nord, fra il ventilatore e lo striscione del club
+                n.position.set(-3, 6.4, -41.6);
                 n.scale.setScalar(0.42);
             } else if (matchConfig.arena === 'rethel') {
                 // tabellone sulla testata nord, a sinistra della parete d'arrampicata
@@ -5815,7 +5830,7 @@
                 roughness: 0.55
             });
             const benchBackMat = isAsiago ? new THREE.MeshStandardMaterial({ map: pbr.woodDiffuse, bumpMap: preset.usePhysicalMat ? pbr.woodBump : null, bumpScale: 0.015, color: 0xc8955a, roughness: 0.6 }) : new THREE.MeshStandardMaterial({
-                color: arenaId === 'padova' ? 0x2a2a2e : arenaId === 'parma' ? 0x1e4a30 : arenaId === 'torre_pellice' ? 0x8a6a48 : arenaId === 'kemarin' ? 0x14244a : arenaId === 'piacenza' ? 0x141416 : arenaId === 'ferrara' ? 0x1d3f9a : arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'rethel' ? 0x111114 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
+                color: arenaId === 'padova' ? 0x2a2a2e : arenaId === 'parma' ? 0x1e4a30 : arenaId === 'torre_pellice' ? 0x8a6a48 : arenaId === 'kemarin' ? 0x14244a : arenaId === 'piacenza' ? 0x141416 : arenaId === 'ferrara' ? 0x1d3f9a : arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'rethel' ? 0x111114 : arenaId === 'valladolid' ? 0x1c1e24 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
                 roughness: 0.8
             });
 
@@ -5919,6 +5934,7 @@
             kraken_camaiore: 'src/arenas/kraken_camaiore.js',
             villeneuve: 'src/arenas/villeneuve.js',
             rethel: 'src/arenas/rethel.js',
+            valladolid: 'src/arenas/valladolid.js',
             roma: 'src/arenas/roma.js',
             treviso: 'src/arenas/treviso.js',
             novi: 'src/arenas/novi.js',
@@ -6352,6 +6368,7 @@
             kraken_camaiore: { dir: 'assets/textures/kraken_camaiore/', normal: 'assets/textures/kraken_camaiore/rink_normal.jpg', floorTint: 0xa9a399, floorTintLow: 0x99938a, noGlass: true },
             // Gymnase Fernand Schwartz: resina azzurra multisport, vetro sopra le balaustre
             villeneuve: { dir: 'assets/textures/villeneuve/', normal: 'assets/textures/villeneuve/rink_normal.jpg', floorTint: 0x9fabb9, floorTintLow: 0x919dab },
+            valladolid: { dir: 'assets/textures/valladolid/', normal: 'assets/textures/valladolid/rink_normal.jpg', floorTint: 0xaebfd0, floorTintLow: 0xa2b3c4 },
             rethel: { dir: 'assets/textures/rethel/', normal: 'assets/textures/rethel/rink_normal.jpg', floorTint: 0xb8d4e6, floorTintLow: 0xaecbdc },
             // Palamunicipio Roma XI: parquet d'acero, vetro sopra le balaustre bianche
             roma: { dir: 'assets/textures/roma/', normal: 'assets/textures/roma/rink_normal.jpg', floorTint: 0xaaa49a, floorTintLow: 0x9a948b },
@@ -6712,7 +6729,7 @@
                             { jacket: 0xf8fafc, shirt: 0xdc2626, isJersey: true }
                         ]))));
 
-            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'rethel' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina' || arenaId === 'ferrara' || arenaId === 'piacenza' || arenaId === 'kemarin' || arenaId === 'torre_pellice' || arenaId === 'parma' || arenaId === 'padova') return;   // pubblico costruito dall'architettura del palazzetto
+            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'rethel' || arenaId === 'valladolid' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina' || arenaId === 'ferrara' || arenaId === 'piacenza' || arenaId === 'kemarin' || arenaId === 'torre_pellice' || arenaId === 'parma' || arenaId === 'padova') return;   // pubblico costruito dall'architettura del palazzetto
 
             // Spalti laterali dietro il tavolo cronometristi (con spazio sull'angolo destro per la casetta bar a Cittadella)
             for (let row = 0; row < 4; row++) {
