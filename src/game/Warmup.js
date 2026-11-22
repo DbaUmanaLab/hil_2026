@@ -115,8 +115,7 @@
                     pair.phase = 'travel'; pair.t = 0;
                     pair.from.copy(pair.puck.position);
                     pair.travel = 0.45 + Math.random() * 0.25;
-                    if (window.gameAudio && window.gameAudio.playPass && typeof camera !== 'undefined'
-                        && camera.position.distanceTo(pair.puck.position) < 16) window.gameAudio.playPass();
+                    // niente suono: durante il riscaldamento i passaggi sono solo di contorno
                 }
             } else {
                 // il disco va verso la lama del compagno (che si muove un poco)

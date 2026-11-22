@@ -411,6 +411,8 @@
 
         buildCittadellaWoodenBar(targetGroup);
         buildCittadellaTvTower(targetGroup);
+        buildCittadellaFanStand(targetGroup, -(HL - 0.3));
+        addBoardLeaners(targetGroup);
     }
 
     // Banda luminosa sfumata (alone delle strisce LED)
@@ -631,6 +633,16 @@
             tb.position.set(x, deckY + 0.1, z);
             tower.add(tb);
         });
+        // drappo con lo stemma della squadra appeso al parapetto, sul lato verso la pista
+        const drapeTex = citClubDrapeTexture('cittadella');
+        const drape = new THREE.Mesh(new THREE.PlaneGeometry(1.6, 2.3), new THREE.MeshStandardMaterial({
+            map: drapeTex, emissiveMap: drapeTex, emissive: 0xffffff, emissiveIntensity: 0.12,
+            side: THREE.DoubleSide, roughness: 0.9
+        }));
+        drape.rotation.y = Math.PI / 2;                 // guarda verso +X, cioè la pista
+        drape.position.set(S + 0.05, deckY + 1.0 - 1.15, 0);
+        tower.add(drape);
+
         // piedini a vite sotto i montanti
         corners.forEach(([x, z]) => {
             const foot = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.02, 0.16), darkMat);
@@ -800,6 +812,227 @@
             p.mesh.rotation.y = ry;
             targetGroup.add(p.mesh);
             if (typeof crowdMembers !== 'undefined') crowdMembers.push(p);   // esultano anche loro ai gol
+        });
+    }
+
+
+    // --- DRAPPO CON LO STEMMA DELLA SQUADRA (torre TV) ---
+    // Telo bordeaux con bordo bianco e frange; lo stemma arriva appena caricato il logo.
+    function citClubDrapeTexture(clubId) {
+        const c = document.createElement('canvas');
+        c.width = 256; c.height = 368;
+        const g = c.getContext('2d');
+        const paint = img => {
+            g.clearRect(0, 0, 256, 368);
+            g.fillStyle = '#7a1520'; g.fillRect(0, 0, 256, 344);
+            g.strokeStyle = '#ffffff'; g.lineWidth = 10; g.strokeRect(12, 12, 232, 320);
+            g.strokeStyle = '#c8102e'; g.lineWidth = 4; g.strokeRect(24, 24, 208, 296);
+            // frange in fondo
+            g.fillStyle = '#f5f5f4';
+            for (let x = 4; x < 256; x += 9) g.fillRect(x, 344, 4, 20 + (x % 3) * 2);
+            // stemma su un disco bianco
+            g.fillStyle = '#ffffff'; g.beginPath(); g.arc(128, 150, 92, 0, Math.PI * 2); g.fill();
+            if (img) {
+                const k = Math.min(150 / img.width, 150 / img.height);
+                g.drawImage(img, 128 - img.width * k / 2, 150 - img.height * k / 2, img.width * k, img.height * k);
+            }
+            g.fillStyle = '#ffffff'; g.textAlign = 'center';
+            g.font = 'bold 30px Arial Black, Arial, sans-serif';
+            g.fillText('FORZA', 128, 276);
+            g.font = 'bold 26px Arial Black, Arial, sans-serif';
+            g.fillText('CITTADELLA', 128, 308);
+        };
+        paint(null);
+        const tex = new THREE.CanvasTexture(c);
+        if (THREE.SRGBColorSpace) tex.colorSpace = THREE.SRGBColorSpace;
+        const img = new Image();
+        img.onload = () => { paint(img); tex.needsUpdate = true; };
+        img.src = typeof getClubLogoSrc === 'function' ? getClubLogoSrc(clubId) : 'assets/logos/' + clubId + '.png';
+        return tex;
+    }
+
+    // --- CURVA DEI TIFOSI SOTTO IL DRAPPO DEI CARRARESI ---
+    // Piccola gradinata in legno a tre gradini con telaio e corrimano rossi, contro la parete di fondo
+    // nord, sotto il drappo e le tende bordeaux: ragazzi con tamburo, trombette e bandiera, striscione bianco.
+    function buildCittadellaFanStand(targetGroup, backZ) {
+        const P = window.HIL_PEOPLE;
+        const lowQ = getActiveQualityPreset().id === 'low';
+        const cx = 1.0, W = 6.2, D = 0.62, H = 0.32, N = 3;
+        const frontZ = backZ + N * D;
+        const plankMat = new THREE.MeshStandardMaterial({ color: 0xb98a55, roughness: 0.75 });
+        const riserMat = new THREE.MeshStandardMaterial({ color: 0x8a6239, roughness: 0.85 });
+        const redMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, metalness: 0.45, roughness: 0.45 });
+        const stand = new THREE.Group();
+        targetGroup.add(stand);
+        const stepTop = i => H * (i + 1);
+        const stepZ = i => frontZ - (i + 0.5) * D;          // centro del gradino i (0 = davanti, il più basso)
+        for (let i = 0; i < N; i++) {
+            const depth = (N - i) * D;
+            const riser = new THREE.Mesh(new THREE.BoxGeometry(W, H, depth), riserMat);
+            riser.position.set(cx, H * i + H / 2, backZ + depth / 2);
+            riser.receiveShadow = true;
+            const plank = new THREE.Mesh(new THREE.BoxGeometry(W + 0.04, 0.04, D - 0.04), plankMat);
+            plank.position.set(cx, stepTop(i) + 0.02, stepZ(i));
+            plank.receiveShadow = true;
+            stand.add(riser, plank);
+        }
+        // telaio rosso: corrimano inclinati sui due lati e ringhiera dietro l'ultimo gradino
+        const tube = (a, b, r = 0.03) => {
+            const dir = new THREE.Vector3().subVectors(b, a), len = dir.length();
+            const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, len, 8), redMat);
+            m.position.addVectors(a, b).multiplyScalar(0.5);
+            m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), dir.normalize());
+            stand.add(m);
+        };
+        const V = (x, y, z) => new THREE.Vector3(x, y, z);
+        const topY = stepTop(N - 1);
+        [cx - W / 2 - 0.05, cx + W / 2 + 0.05].forEach(x => {
+            tube(V(x, 0.95, frontZ + 0.1), V(x, topY + 0.95, backZ + 0.12));
+            tube(V(x, 0, frontZ + 0.1), V(x, 0.95, frontZ + 0.1));
+            tube(V(x, 0, backZ + 0.12), V(x, topY + 0.95, backZ + 0.12));
+            tube(V(x, 0.5, frontZ + 0.1), V(x, topY + 0.5, backZ + 0.12), 0.02);
+        });
+        [0.5, 0.95].forEach(h => tube(V(cx - W / 2 - 0.05, topY + h, backZ + 0.12), V(cx + W / 2 + 0.05, topY + h, backZ + 0.12)));
+        for (let x = cx - W / 2 + 1.0; x < cx + W / 2; x += 1.55) tube(V(x, topY, backZ + 0.12), V(x, topY + 0.95, backZ + 0.12), 0.022);
+
+        // striscione bianco legato alla ringhiera
+        const bc = document.createElement('canvas');
+        bc.width = 512; bc.height = 128;
+        const bg = bc.getContext('2d');
+        bg.fillStyle = '#f8fafc'; bg.fillRect(0, 0, 512, 128);
+        bg.textAlign = 'center'; bg.textBaseline = 'middle';
+        bg.fillStyle = '#b91c1c'; bg.font = 'bold 54px Arial Black, Arial, sans-serif';
+        bg.fillText('CITTADELLA', 256, 52);
+        bg.fillStyle = '#1e3a8a'; bg.font = 'bold 30px Arial Black, Arial, sans-serif';
+        bg.fillText('ULTRAS • HOCKEY', 256, 102);
+        const bTex = new THREE.CanvasTexture(bc);
+        if (THREE.SRGBColorSpace) bTex.colorSpace = THREE.SRGBColorSpace;
+        const banner = new THREE.Mesh(new THREE.PlaneGeometry(2.8, 0.7), new THREE.MeshStandardMaterial({ map: bTex, side: THREE.DoubleSide, roughness: 0.9, emissive: 0xffffff, emissiveMap: bTex, emissiveIntensity: 0.12 }));
+        banner.position.set(cx - 1.2, topY + 0.6, backZ + 0.16);
+        stand.add(banner);
+
+        if (!P || !P.makePerson) return;
+        const crowd = typeof crowdMembers !== 'undefined' ? crowdMembers : null;
+        const redPlastic = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.4 });
+        const tops = [0xb91c1c, 0x1e293b, 0x7f1d1d, 0x334155, 0xdc2626, 0x0f172a, 0x991b1b, 0x475569];
+        // [gradino, x rispetto al centro, scala, ruolo]: per lo più ragazzi, come nella foto
+        const spots = [
+            [0, -1.5, 0.74, 'drum'], [0, 0.1, 0.78, 'horn'], [0, 1.6, 0.8, ''], [0, 3.0, 0.72, 'horn'],
+            [1, -0.8, 0.84, ''], [1, 0.9, 1.0, 'flag'], [1, 2.4, 0.76, 'horn'],
+            [2, -1.6, 0.8, ''], [2, 0.2, 0.86, 'horn'], [2, 1.8, 0.95, '']
+        ].filter((sp, i) => !lowQ || i % 2 === 0 || sp[3] === 'drum' || sp[3] === 'flag');
+        spots.forEach(([step, dx, sc, role], i) => {
+            const p = P.makePerson({ top: tops[i % tops.length], female: i % 3 === 1, cap: i % 4 === 2 ? 0xb91c1c : undefined });
+            p.mesh.scale.setScalar(sc);
+            p.mesh.position.set(cx + dx, stepTop(step), stepZ(step) + 0.05);
+            p.mesh.rotation.y = -Math.PI / 2;               // guardano la pista (+Z)
+            p.baseY = stepTop(step);
+            const phase = Math.random() * Math.PI * 2;
+            if (role === 'drum') {
+                // grancassa bianca davanti alla pancia, mazza nella destra
+                const drum = new THREE.Mesh(new THREE.CylinderGeometry(0.27, 0.27, 0.3, 20), new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.45 }));
+                drum.rotation.x = Math.PI / 2;
+                drum.position.set(0.36, 0.95, 0);
+                const rim = new THREE.Mesh(new THREE.TorusGeometry(0.27, 0.02, 6, 24), redPlastic);
+                rim.position.set(0.36, 0.95, 0.15);
+                const rim2 = rim.clone(); rim2.position.z = -0.15;
+                p.mesh.add(drum, rim, rim2);
+                const stick = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.42, 6), new THREE.MeshStandardMaterial({ color: 0xe7d3b0 }));
+                stick.position.set(0.12, -0.5, 0); stick.rotation.z = 1.2;
+                p.rightArmPivot.add(stick);
+                p.idleFn = (f, t) => {
+                    const beat = Math.max(0, Math.sin(t * 9 + phase));
+                    f.rightArmPivot.rotation.set(0, 0, 0.75 + beat * 0.5);
+                    f.leftArmPivot.rotation.set(0, 0, 0.9);
+                    f.bodyPivot.rotation.z = -0.04;
+                    f.headGroup.rotation.y = Math.sin(t * 0.7 + phase) * 0.15;
+                };
+            } else if (role === 'horn') {
+                // trombetta da stadio rossa nella destra, suonata ogni tanto
+                const horn = new THREE.Mesh(new THREE.ConeGeometry(0.05, 0.32, 10, 1, true), redPlastic);
+                horn.position.set(0, -0.6, 0);
+                horn.rotation.z = Math.PI;
+                p.rightArmPivot.add(horn);
+                p.idleFn = (f, t) => {
+                    const blow = Math.sin(t * 0.9 + phase) > 0.55;
+                    f.rightArmPivot.rotation.set(0, 0, blow ? 2.2 : 0.35);
+                    f.leftArmPivot.rotation.set(0.1, 0, 0.18 + Math.sin(t * 1.8 + phase) * 0.05);
+                    f.bodyPivot.rotation.z = blow ? 0.06 : Math.sin(t * 1.8 + phase) * 0.03;
+                    f.headGroup.rotation.y = Math.sin(t * 0.8 + phase) * 0.2;
+                };
+            } else if (role === 'flag') {
+                // bandiera bordeaux e bianca sventolata con la destra
+                const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 1.8, 6), new THREE.MeshStandardMaterial({ color: 0xd6d3d1 }));
+                pole.position.set(0, -0.45, 0);
+                const fc = document.createElement('canvas'); fc.width = 128; fc.height = 80;
+                const fg = fc.getContext('2d');
+                fg.fillStyle = '#7a1520'; fg.fillRect(0, 0, 128, 80);
+                fg.fillStyle = '#ffffff'; fg.fillRect(0, 30, 128, 20);
+                const ft = new THREE.CanvasTexture(fc);
+                if (THREE.SRGBColorSpace) ft.colorSpace = THREE.SRGBColorSpace;
+                const cloth = new THREE.Mesh(new THREE.PlaneGeometry(0.9, 0.56), new THREE.MeshStandardMaterial({ map: ft, side: THREE.DoubleSide, roughness: 0.9 }));
+                cloth.position.set(0, 0.6, 0.45);
+                pole.add(cloth);
+                p.rightArmPivot.add(pole);
+                p.idleFn = (f, t) => {
+                    f.rightArmPivot.rotation.set(Math.sin(t * 3.2 + phase) * 0.45, 0, 2.75);
+                    f.leftArmPivot.rotation.set(0, 0, 0.2);
+                    cloth.rotation.y = Math.sin(t * 6 + phase) * 0.35;
+                    f.headGroup.rotation.y = Math.sin(t * 0.8 + phase) * 0.15;
+                };
+            } else {
+                // battono le mani a tempo col tamburo
+                p.idleFn = (f, t) => {
+                    const clap = Math.max(0, Math.sin(t * 4.5 + phase));
+                    f.rightArmPivot.rotation.set(0.35 + clap * 0.25, 0, 1.15);     // mani verso il centro del petto
+                    f.leftArmPivot.rotation.set(-0.35 - clap * 0.25, 0, 1.15);
+                    f.bodyPivot.rotation.z = Math.sin(t * 2.25 + phase) * 0.03;
+                    f.headGroup.rotation.y = Math.sin(t * 0.7 + phase) * 0.12;
+                };
+            }
+            p.idleFn(p, 0);
+            stand.add(p.mesh);
+            if (crowd) crowd.push(p);
+        });
+    }
+
+    // --- GENTE APPOGGIATA ALLA BALAUSTRA VICINO ALLA CASETTA BAR ---
+    // Nella curva nord-ovest (dove finisce la tribuna e c'è il bar) la balaustra non ha i vetri:
+    // qualcuno guarda la partita con gli avambracci appoggiati, lungo l'arco dell'angolo e sul fondo.
+    function addBoardLeaners(targetGroup) {
+        const P = window.HIL_PEOPLE;
+        if (!P || !P.makePerson) return;
+        const lowQ = getActiveQualityPreset().id === 'low';
+        const ccx = -rinkWidth / 2 + cornerRadius, ccz = -rinkLength / 2 + cornerRadius;   // centro dell'arco dell'angolo
+        const R = cornerRadius + 0.5;
+        const spots = [];
+        [213, 223, 233, 244, 256].forEach(deg => {
+            const a = deg * Math.PI / 180, dx = Math.cos(a), dz = Math.sin(a);
+            spots.push([ccx + dx * R, ccz + dz * R, Math.atan2(dz, -dx)]);
+        });
+        [-9.6, -8.8].forEach(x => spots.push([x, -rinkLength / 2 - 0.5, Math.atan2(-1, 0)]));   // sul fondo, dietro i vetri
+        const tops = [0x1e293b, 0xb91c1c, 0x0f766e, 0xf8fafc, 0x7c3aed, 0x334155, 0xca8a04];
+        spots.forEach(([x, z, ry], i) => {
+            if (lowQ && i % 2) return;
+            const kid = i === 2;
+            const p = P.makePerson({ top: tops[i % tops.length], female: i % 3 === 1, cap: i === 4 ? 0x111827 : undefined });
+            if (kid) p.mesh.scale.setScalar(0.8);
+            p.mesh.position.set(x, 0, z);
+            p.mesh.rotation.y = ry;                      // guardano verso il centro della pista
+            p.baseY = 0;
+            const phase = Math.random() * Math.PI * 2;
+            // avambracci sulla balaustra (alta 1,15 m), busto un po' in avanti; il bambino ci arriva a braccia alte
+            p.idleFn = (f, t) => {
+                f.bodyPivot.rotation.z = -0.16;
+                const arm = kid ? 1.75 : 1.22;
+                f.leftArmPivot.rotation.set(0.12, 0, arm + Math.sin(t * 1.1 + phase) * 0.03);
+                f.rightArmPivot.rotation.set(-0.12, 0, arm);
+                f.headGroup.rotation.y = Math.sin(t * 0.6 + phase) * 0.3;
+                f.headGroup.rotation.z = 0.08;
+            };
+            p.idleFn(p, 0);
+            targetGroup.add(p.mesh);
+            if (typeof crowdMembers !== 'undefined') crowdMembers.push(p);
         });
     }
 

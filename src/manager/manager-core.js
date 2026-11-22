@@ -17,7 +17,7 @@
 
     // ------------------------------------------------------------------ parametri di gioco
     const CFG = {
-        START_BUDGET: 100000,
+        START_BUDGET: { A: 15000, B: 5000 },        // budget iniziale per divisione di partenza
         MIN_ROSTER: 14, MAX_ROSTER: 20, MIN_SKATERS: 12, MIN_GOALIES: 1,
         SLOTS: { main: 1, sec: 4 },                 // sponsor: 1 di maglia + 4 secondari
         TIER_BASE: [0, 50, 85, 130, 185, 250],      // €/mese per livello di sponsor (1..5), Serie A
@@ -1081,7 +1081,7 @@
             v: 2, id: 'm' + Date.now().toString(36), name: '', createdAt: Date.now(),
             user, teams, div, other: null,
             seasonYear: year, date: ymd(year, 7, 1), stage: 'summer', summerWeek: 0,
-            balance: CFG.START_BUDGET, fans: 58, rep: null, lastRank: null, form: [],
+            balance: div.B.includes(user) ? CFG.START_BUDGET.B : CFG.START_BUDGET.A, fans: 58, rep: null, lastRank: null, form: [],
             players: {}, nextPid: 1, nextMid: 1,
             league: null, cup: null, season: {}, seasons: [], trophies: [],
             window: null, market: { neg: {}, incoming: [] },
@@ -1104,7 +1104,7 @@
         syncWorld(c);
         openWindow(c, 'summer');
         msg(c, 'club', `Benvenuto alla guida di ${clubName(user)}`,
-            `Il presidente ti affida la squadra con un budget di ${eur(CFG.START_BUDGET)}. Ogni mese paghi gli stipendi (${eur(payroll(c))}) e ogni settimana l'affitto del palazzetto (${eur(arenaFee(user, c))}). Si parte in ${CFG.DIV[userDiv(c)].name}: l'ultima di Serie A retrocede, la vincente dei play-off di Serie B sale. Biglietti, bar, sponsor e premi portano entrate. Se il saldo va sotto zero la società fallisce.`);
+            `Il presidente ti affida la squadra con un budget di ${eur(c.balance)}. Ogni mese paghi gli stipendi (${eur(payroll(c))}) e ogni settimana l'affitto del palazzetto (${eur(arenaFee(user, c))}). Si parte in ${CFG.DIV[userDiv(c)].name}: l'ultima di Serie A retrocede, la vincente dei play-off di Serie B sale. Biglietti, bar, sponsor e premi portano entrate. Se il saldo va sotto zero la società fallisce.`);
         sponsorOffer(c, 'main');
         sponsorOffer(c, 'sec');
         sponsorOffer(c, 'sec');

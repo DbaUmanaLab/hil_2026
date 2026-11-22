@@ -327,8 +327,9 @@
     }
 
     // =====================================================================
-    // RINO — costume da rinoceronte grigio con casco da hockey blu (fascia rossa),
-    // maglia arancio HCM con polsini blu/bianchi. Guarda verso la pista (+x locale).
+    // RINO — costume da rinoceronte grigio con casco da hockey blu (fascia rossa), vestito con la
+    // maglia blu navy dell'HC Milano (assets/jerseys/milano_2.png: Quanta, rinoceronte, tricolore) e
+    // calzoni da hockey blu con le bande rosso-bianche. Guarda verso la pista (+x locale).
     // Si registra in arenaMascot: index.html lo inquadra all'inizio di ogni partita.
     // =====================================================================
     function buildRinoMascot(targetGroup, preset) {
@@ -343,27 +344,27 @@
         const eyeMat = new THREE.MeshStandardMaterial({ color: 0x1e3fd8, roughness: 0.2, metalness: 0.1 });
         const pantsMat = felt(0x1b2f7a);
         const shoeMat = new THREE.MeshStandardMaterial({ color: 0x15171c, roughness: 0.6 });
-        const sleeveMat = new THREE.MeshStandardMaterial({ color: 0xe8541e, roughness: 0.6 });
+        // maglia e maniche dalla foto della divisa blu (stesse texture dei giocatori: davanti dalla foto,
+        // sulla schiena nome e numero). Ripiego a tinta unita se lo script principale non le offre.
+        const hasKit = typeof getPlayerJerseyMaterial === 'function' && typeof getKitSleeveMaterial === 'function';
+        const jerseyMat = hasKit ? getPlayerJerseyMaterial('milano', 'navy', '00', 'RINO') : felt(0x0f2557);
+        const sleeveMat = hasKit ? getKitSleeveMaterial('milano', 'navy') : felt(0x0f2557);
 
-        // maglia: canvas avvolto sul busto (u = 0.25 → davanti, +x; u = 0.75 → schiena)
-        const cv = document.createElement('canvas');
-        cv.width = 512; cv.height = 256;
-        const g = cv.getContext('2d');
-        g.fillStyle = '#e8541e'; g.fillRect(0, 0, 512, 256);
-        g.fillStyle = '#1f3fc4'; g.fillRect(0, 196, 512, 22);
-        g.fillStyle = '#ffffff'; g.fillRect(0, 188, 512, 8); g.fillRect(0, 218, 512, 8);
-        g.save(); g.translate(128, 104);   // stemma sul petto
-        g.fillStyle = '#ffffff'; g.beginPath(); g.arc(0, 0, 46, 0, Math.PI * 2); g.fill();
-        g.fillStyle = '#1f3fc4'; g.beginPath(); g.arc(0, 0, 40, 0, Math.PI * 2); g.fill();
-        g.fillStyle = '#ffffff'; g.font = 'bold 34px Arial Black, Arial, sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-        g.fillText('HCM', 0, 2);
-        g.restore();
-        g.fillStyle = '#ffffff'; g.textAlign = 'center'; g.textBaseline = 'middle';
-        g.font = 'bold 40px Arial Black, Arial, sans-serif'; g.fillText('RINO', 384, 48);
-        g.font = 'bold 96px Arial Black, Arial, sans-serif'; g.fillText('00', 384, 126);
-        const jerseyTex = new THREE.CanvasTexture(cv);
-        if (THREE.SRGBColorSpace) jerseyTex.colorSpace = THREE.SRGBColorSpace;
-        const jerseyMat = new THREE.MeshStandardMaterial({ map: jerseyTex, roughness: 0.6 });
+        // calzoni da hockey: blu navy, banda rossa e filetti bianchi sui fianchi (u = 0 / 0.5 → lati)
+        const pcv = document.createElement('canvas');
+        pcv.width = 256; pcv.height = 128;
+        const pg = pcv.getContext('2d');
+        pg.fillStyle = '#13265f'; pg.fillRect(0, 0, 256, 128);
+        [0, 128, 256].forEach(x => {
+            pg.fillStyle = '#ffffff'; pg.fillRect(x - 14, 0, 28, 128);
+            pg.fillStyle = '#d3262e'; pg.fillRect(x - 10, 0, 20, 128);
+        });
+        pg.fillStyle = '#d3262e'; pg.fillRect(0, 0, 256, 10);          // cintura
+        pg.fillStyle = '#ffffff'; pg.fillRect(0, 118, 256, 4);         // orlo
+        const pantsTex = new THREE.CanvasTexture(pcv);
+        if (THREE.SRGBColorSpace) pantsTex.colorSpace = THREE.SRGBColorSpace;
+        const hockeyPantsMat = new THREE.MeshStandardMaterial({ map: pantsTex, roughness: 0.85 });
+        const gloveCuffMat = new THREE.MeshStandardMaterial({ color: 0xd3262e, roughness: 0.6 });
 
         const rino = new THREE.Group();
         const add = (parent, geo, mat, x, y, z, sx = 1, sy = 1, sz = 1) => {
@@ -378,10 +379,11 @@
 
         // gambe e scarpe
         [-0.13, 0.13].forEach(z => {
-            add(rino, new THREE.CylinderGeometry(0.12, 0.1, 0.78, 10), pantsMat, 0, 0.47, z);
+            add(rino, new THREE.CylinderGeometry(0.1, 0.09, 0.5, 10), pantsMat, 0, 0.3, z);                 // calzettoni
+            add(rino, new THREE.CylinderGeometry(0.15, 0.135, 0.34, 14), hockeyPantsMat, 0, 0.66, z);      // calzoni
             add(rino, sph(12, 8), shoeMat, 0.06, 0.06, z, 0.17, 0.08, 0.1);
         });
-        add(rino, new THREE.CylinderGeometry(0.27, 0.25, 0.22, 16), pantsMat, 0, 0.88, 0);
+        add(rino, new THREE.CylinderGeometry(0.3, 0.28, 0.24, 18), hockeyPantsMat, 0, 0.88, 0);
 
         // busto con la maglia (oscilla col bacino)
         const bodyPivot = new THREE.Group();
@@ -390,15 +392,14 @@
         add(bodyPivot, new THREE.CylinderGeometry(0.31, 0.28, 0.62, 20), jerseyMat, 0, 0.3, 0);
         add(bodyPivot, sph(), jerseyMat, 0, 0.6, 0, 0.31, 0.12, 0.31);
 
-        // braccia: maniche arancio, polsino blu/bianco, guantone grigio
+        // braccia: manica della maglia (con le sue bande al polso), guantone grigio con polsino rosso
         const mkArm = z => {
             const p = new THREE.Group();
             p.position.set(0, 0.55, z);
             add(p, sph(12, 10), sleeveMat, 0, 0, 0, 0.11, 0.11, 0.11);
-            add(p, new THREE.CylinderGeometry(0.095, 0.08, 0.46, 10), sleeveMat, 0, -0.23, 0);
-            add(p, new THREE.CylinderGeometry(0.083, 0.083, 0.06, 10), whiteMat, 0, -0.43, 0);
-            add(p, new THREE.CylinderGeometry(0.084, 0.084, 0.05, 10), helmetMat, 0, -0.48, 0);
-            add(p, sph(12, 10), greyMat, 0.01, -0.57, 0, 0.09, 0.1, 0.08);
+            add(p, new THREE.CylinderGeometry(0.095, 0.08, 0.5, 12), sleeveMat, 0, -0.25, 0);
+            add(p, new THREE.CylinderGeometry(0.075, 0.075, 0.05, 10), gloveCuffMat, 0, -0.5, 0);
+            add(p, sph(12, 10), greyMat, 0.01, -0.58, 0, 0.09, 0.1, 0.08);
             bodyPivot.add(p);
             return p;
         };

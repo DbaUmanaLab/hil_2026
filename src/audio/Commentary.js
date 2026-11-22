@@ -17,13 +17,18 @@
     const P = () => window.COMMENTARY_PHRASES || { it: {}, en: {}, terms: { it: {}, en: {} } };
 
     // ================================================================== preferenze
-    const settings = { enabled: true, lang: 'it', volume: 0.9, captions: true, chatter: 1, voice: { it: '', en: '' } };
+    // enabled: deciso dal test prestazioni del primo avvio (alta/media sì, bassa no) finché l'utente
+    // non lo cambia a mano (userSet). I sottotitoli partono spenti: li accende l'utente.
+    const PREFS_VERSION = 2;
+    const settings = { v: PREFS_VERSION, enabled: true, userSet: false, lang: 'it', volume: 0.9, captions: false, chatter: 1, voice: { it: '', en: '' } };
     try {
         const s = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
-        if (typeof s.enabled === 'boolean') settings.enabled = s.enabled;
+        const current = s.v === PREFS_VERSION;            // preferenze salvate prima di questa versione: si riparte dai default
+        if (current && typeof s.enabled === 'boolean') settings.enabled = s.enabled;
+        if (current && typeof s.userSet === 'boolean') settings.userSet = s.userSet;
         if (s.lang === 'it' || s.lang === 'en') settings.lang = s.lang;
         if (typeof s.volume === 'number') settings.volume = Math.max(0, Math.min(1, s.volume));
-        if (typeof s.captions === 'boolean') settings.captions = s.captions;
+        if (current && typeof s.captions === 'boolean') settings.captions = s.captions;
         if ([0, 1, 2].includes(s.chatter)) settings.chatter = s.chatter;
         if (s.voice && typeof s.voice === 'object') settings.voice = Object.assign(settings.voice, s.voice);
     } catch (e) { /* preferenze di default */ }
@@ -142,6 +147,19 @@
         };
         return list.slice().sort((a, b) => score(b) - score(a))[0];
     }
+    // voci del TextToSpeech di Android: [{ n: nome, m: maschile, l: senza rete }], le maschili per prime
+    function nativeVoices() {
+        const n = native();
+        if (!n || typeof n.voices !== 'function') return [];
+        try { return JSON.parse(n.voices(LANG_TAG[settings.lang]) || '[]'); } catch (e) { return []; }
+    }
+    // i nomi di Android sono codici ("it-it-x-itd-local"): in opzioni si mostra "Voce maschile 2"
+    function nativeVoiceLabel(v, list) {
+        const same = list.filter(x => x.m === v.m);
+        const k = same.indexOf(v) + 1;
+        const it = settings.lang === 'it';
+        return `${v.m ? (it ? 'Voce maschile' : 'Male voice') : (it ? 'Voce' : 'Voice')} ${k}${v.l ? '' : (it ? ' (online)' : ' (online)')}`;
+    }
     function voiceAvailable() { return !!native() || (!!synth && voicesFor(settings.lang).length > 0); }
 
     // ================================================================== sottotitoli
@@ -242,7 +260,11 @@
         const m = MOOD[item.mood] || MOOD[''];
         const nat = native();
         if (nat) {
-            try { nat.speak(String(id), item.text, LANG_TAG[settings.lang], m.rate, m.pitch, settings.volume); return; } catch (e) { /* passa al web */ }
+            try {
+                if (nat.setVoice) nat.setVoice(settings.voice[settings.lang] || '');
+                nat.speak(String(id), item.text, LANG_TAG[settings.lang], m.rate, m.pitch, settings.volume);
+                return;
+            } catch (e) { /* passa al web */ }
         }
         if (!synth || !voicesFor(settings.lang).length || settings.volume <= 0) {
             item.captionOnly = true;                            // niente voce: solo sottotitolo, per il tempo di lettura
@@ -814,24 +836,36 @@
     window.Commentary = {
         event: (type, data) => { try { onEvent(type, data || {}); } catch (e) { console.warn('[telecronaca]', e); } },
         settings,
-        setEnabled(on) { settings.enabled = !!on; savePrefs(); if (!on) stopAll(); else if (!M && G('gameState') !== 'menu') buildMatch(); },
+        setEnabled(on) { settings.enabled = !!on; settings.userSet = true; savePrefs(); if (!on) stopAll(); else if (!M && G('gameState') !== 'menu') buildMatch(); },
         setLang(l) {
             if (l !== 'it' && l !== 'en') return;
             settings.lang = l; savePrefs(); stopAll();
             if (M) M.facts = buildFacts();
         },
+        // test prestazioni: telecronaca attiva con grafica alta o media, spenta con la bassa
+        // (se l'utente non l'ha già accesa o spenta a mano). Restituisce lo stato risultante.
+        setPerformanceDefault(level) {
+            if (!settings.userSet) { settings.enabled = level === 'high' || level === 'medium'; savePrefs(); if (!settings.enabled) stopAll(); }
+            return settings.enabled;
+        },
         setVolume(v) { settings.volume = Math.max(0, Math.min(1, +v || 0)); savePrefs(); },
         setCaptions(on) { settings.captions = !!on; savePrefs(); if (!on) hideCaption(0); },
         setChatter(n) { if ([0, 1, 2].includes(+n)) { settings.chatter = +n; savePrefs(); } },
         // voci disponibili per la lingua scelta (vuoto su Android: usa il motore di sistema)
-        voices: () => voicesFor(settings.lang).map(v => v.name),
-        currentVoice: () => { if (native()) return settings.lang === 'it' ? 'Voce di sistema' : 'System voice'; const v = pickVoice(settings.lang); return v ? v.name : ''; },
+        voices: () => (native() ? nativeVoices().map(v => v.n) : voicesFor(settings.lang).map(v => v.name)),
+        currentVoice: () => {
+            if (native()) {
+                const list = nativeVoices();
+                const cur = list.find(v => v.n === settings.voice[settings.lang]) || list[0];
+                return cur ? nativeVoiceLabel(cur, list) : (settings.lang === 'it' ? 'Voce di sistema' : 'System voice');
+            }
+            const v = pickVoice(settings.lang); return v ? v.name : '';
+        },
         cycleVoice() {
-            const list = voicesFor(settings.lang);
-            if (!list.length) return '';
-            const cur = pickVoice(settings.lang);
-            const i = list.indexOf(cur);
-            settings.voice[settings.lang] = list[(i + 1) % list.length].name;
+            const names = native() ? nativeVoices().map(v => v.n) : voicesFor(settings.lang).map(v => v.name);
+            if (!names.length) return '';
+            const cur = native() ? (settings.voice[settings.lang] || names[0]) : (pickVoice(settings.lang) || {}).name;
+            settings.voice[settings.lang] = names[(names.indexOf(cur) + 1) % names.length];
             savePrefs();
             return settings.voice[settings.lang];
         },

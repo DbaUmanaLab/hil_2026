@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
+import android.speech.tts.Voice;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowInsets;
@@ -25,7 +26,14 @@ import android.widget.Toast;
 
 import androidx.webkit.WebViewAssetLoader;
 
+import org.json.JSONArray;
+import org.json.JSONObject;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 
 /**
  * Contenitore Android di HIL 2026: una WebView a tutto schermo che serve il gioco
@@ -203,15 +211,92 @@ public class MainActivity extends Activity {
         return "'" + (s == null ? "" : s.replaceAll("[^A-Za-z0-9_-]", "")) + "'";
     }
 
+    // ---------------------------------------------------------------- scelta della voce
+    // Android non dichiara il genere delle voci: si riconoscono dai codici delle voci Google
+    // (it-it-x-itc / itd, en-gb-x-gbb / gbd / rjs, en-us-x-iol / iom / tpd) o dal nome ("male").
+    private static final String[] MALE_CODES = { "-itc", "-itd", "-gbb", "-gbd", "-rjs", "-iol", "-iom", "-tpd", "-aua", "-aub" };
+    private volatile String chosenVoice = "";
+
+    private static boolean isMaleVoice(Voice v) {
+        String n = v.getName().toLowerCase(Locale.ROOT);
+        if (n.contains("female")) return false;
+        if (n.contains("male")) return true;
+        for (String c : MALE_CODES) if (n.contains(c)) return true;
+        return false;
+    }
+
+    private List<Voice> voicesFor(String lang) {
+        List<Voice> list = new ArrayList<>();
+        if (!ttsReady || tts == null) return list;
+        Locale want = Locale.forLanguageTag(lang == null ? "it-IT" : lang);
+        Set<Voice> all;
+        try { all = tts.getVoices(); } catch (Exception e) { return list; }
+        if (all == null) return list;
+        for (Voice v : all) {
+            Locale l = v.getLocale();
+            if (l == null || !l.getLanguage().equals(want.getLanguage())) continue;
+            if (v.getFeatures() != null && v.getFeatures().contains(TextToSpeech.Engine.KEY_FEATURE_NOT_INSTALLED)) continue;
+            list.add(v);
+        }
+        // prima le maschili, poi quelle del paese giusto (it-IT, en-GB), poi quelle che non chiedono la rete
+        Collections.sort(list, (a, b) -> {
+            int c = Boolean.compare(isMaleVoice(b), isMaleVoice(a));
+            if (c != 0) return c;
+            c = Boolean.compare(want.getCountry().equals(b.getLocale().getCountry()), want.getCountry().equals(a.getLocale().getCountry()));
+            if (c != 0) return c;
+            c = Boolean.compare(!b.isNetworkConnectionRequired(), !a.isNetworkConnectionRequired());
+            if (c != 0) return c;
+            return a.getName().compareTo(b.getName());
+        });
+        return list;
+    }
+
+    private Voice pickVoice(String lang) {
+        List<Voice> list = voicesFor(lang);
+        if (list.isEmpty()) return null;
+        String want = chosenVoice;
+        if (want != null && !want.isEmpty()) for (Voice v : list) if (v.getName().equals(want)) return v;
+        return list.get(0);
+    }
+
     private class NativeTts {
         @JavascriptInterface
         public boolean available() { return ttsReady; }
+
+        /** Voci installate per la lingua (es. "it-IT"), le maschili per prime: [{"n":nome,"m":maschile,"l":locale}]. */
+        @JavascriptInterface
+        public String voices(String lang) {
+            JSONArray out = new JSONArray();
+            for (Voice v : voicesFor(lang)) {
+                try {
+                    JSONObject o = new JSONObject();
+                    o.put("n", v.getName());
+                    o.put("m", isMaleVoice(v));
+                    o.put("l", !v.isNetworkConnectionRequired());
+                    out.put(o);
+                } catch (Exception ignored) { }
+            }
+            return out.toString();
+        }
+
+        /** Voce scelta dall'utente nelle opzioni ("" = automatica: la prima voce maschile disponibile). */
+        @JavascriptInterface
+        public void setVoice(String name) { chosenVoice = name == null ? "" : name; }
+
+        /** Nome della voce che verrebbe usata per la lingua. */
+        @JavascriptInterface
+        public String currentVoice(String lang) {
+            Voice v = pickVoice(lang);
+            return v == null ? "" : v.getName();
+        }
 
         @JavascriptInterface
         public void speak(String id, String text, String lang, float rate, float pitch, float volume) {
             if (!ttsReady || tts == null) { notifyTts(id, "error"); return; }
             Locale loc = Locale.forLanguageTag(lang == null ? "it-IT" : lang);
             if (tts.isLanguageAvailable(loc) >= TextToSpeech.LANG_AVAILABLE) tts.setLanguage(loc);
+            Voice v = pickVoice(lang);
+            if (v != null && (tts.getVoice() == null || !v.getName().equals(tts.getVoice().getName()))) tts.setVoice(v);
             tts.setSpeechRate(rate);
             tts.setPitch(pitch);
             Bundle params = new Bundle();

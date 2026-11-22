@@ -147,7 +147,7 @@
             <div class="cp-head">
                 <img class="cp-head-logo" src="assets/logos/game%20badge.png" alt="" onerror="this.style.display='none'">
                 <div class="cp-head-titles"><span class="cp-kicker">Hockey Manager • Carriera</span><span class="cp-title">Scegli il tuo club</span></div>
-                <div class="cp-head-right"><span class="cp-pill">Budget iniziale ${eur(MC().CFG.START_BUDGET)}</span></div>
+                <div class="cp-head-right"><span class="cp-pill">Budget iniziale ${eur(inB ? MC().CFG.START_BUDGET.B : MC().CFG.START_BUDGET.A)}</span></div>
             </div>
             <div class="mg-start">
                 <div class="cp-panel mg-start-teams">

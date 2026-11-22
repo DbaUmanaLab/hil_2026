@@ -3360,12 +3360,14 @@
                 updateGraphicsQualityUI();
                 gfxQuality.refreshCap = cap ? Math.round(cap) : 0;
                 if (reliable) saveGfxBenchmark(chosen, { source: 'benchmark', fps: Math.round(bestFps), cap: gfxQuality.refreshCap, results });
+                // telecronaca solo dove la grafica regge il livello medio o alto
+                const commentaryOn = window.Commentary ? window.Commentary.setPerformanceDefault(chosen) : false;
 
                 setTier(chosen, 'is-pick', 'Selezionata ✓');
                 setFps(bestFps);
                 barEl.style.width = '100%';
                 el.classList.add('is-done');
-                statusEl.textContent = `Grafica impostata su ${QUALITY_PRESETS[chosen].label} ✓`;
+                statusEl.textContent = `Grafica impostata su ${QUALITY_PRESETS[chosen].label} ✓${window.Commentary ? (commentaryOn ? ' • Telecronaca attiva' : ' • Telecronaca disattivata') : ''}`;
                 await wait(1600);
 
                 el.classList.add('is-out');
@@ -6736,6 +6738,25 @@
                         }
                         const base = avg(sideSamples) || [240, 240, 240];
 
+                        // colletto: sul busto 3D lo scollo a V e lo sprone sotto il collo della foto finivano sul petto
+                        // come una pettorina. In tutte le maglie stanno nel primo 20% circa dell'altezza: quella fascia
+                        // si copre col colore prevalente del petto subito sotto (il più frequente, non una media).
+                        const collarCut = y0 + bh * 0.2;
+                        const collar = Math.max(0, Math.min(0.25, (collarCut - crop.y0) / ch));
+                        let collarFill = base;
+                        {
+                            const bins = {};
+                            for (let y = collarCut; y < collarCut + bh * 0.05; y += 2) for (let x = cx - cw * 0.3; x <= cx + cw * 0.3; x += 3) {
+                                const q = P(x, y);
+                                if (q[3] < 160) continue;
+                                const k = (q[0] >> 5) + ',' + (q[1] >> 5) + ',' + (q[2] >> 5);
+                                const bn = bins[k] || (bins[k] = { n: 0, r: 0, g: 0, b: 0 });
+                                bn.n++; bn.r += q[0]; bn.g += q[1]; bn.b += q[2];
+                            }
+                            const top = Object.values(bins).sort((m, n) => n.n - m.n)[0];
+                            if (top) collarFill = [top.r / top.n, top.g / top.n, top.b / top.n];
+                        }
+
                         // colori d'accento: istogramma quantizzato escludendo il colore di base
                         const hist = {};
                         for (let y = crop.y0; y < crop.y1; y += 3) for (let x = crop.x0; x < crop.x1; x += 3) {
@@ -6810,7 +6831,7 @@
                         for (let i = 0; i < simg.data.length; i += 4) if (simg.data[i + 3] === 0) simg.data.set([sleeveAvg[0], sleeveAvg[1], sleeveAvg[2], 255], i);
                         sctx.putImageData(simg, 0, 0);
 
-                        resolve({ ok: true, img, crop, base, accent, accent2, band, sleeve, sleeveAvg, sleeveAccent, sleevePalette });
+                        resolve({ ok: true, img, crop, base, collar, collarFill, accent, accent2, band, sleeve, sleeveAvg, sleeveAccent, sleevePalette });
                     } catch (e) {
                         resolve({ ok: false });
                     }
@@ -6835,6 +6856,17 @@
                     const u = (c + 0.5) / W;
                     const sxp = cr.x0 + (1 - Math.cos(2 * Math.PI * u)) / 2 * (cw - 1);
                     ctx.drawImage(info.img, sxp, cr.y0, 1, ch, c, 0, 1, H);
+                }
+                // via il colletto dal davanti: fascia alta col colore della maglia, bordo sfumato
+                if (info.collar > 0.01) {
+                    const cy = H * info.collar, feather = H * 0.035, fc = info.collarFill || base;
+                    ctx.fillStyle = rgbCss(fc);
+                    ctx.fillRect(0, 0, half, cy);
+                    const g = ctx.createLinearGradient(0, cy, 0, cy + feather);
+                    g.addColorStop(0, rgbCss(fc));
+                    g.addColorStop(1, `rgba(${fc.map(v => Math.round(v)).join(',')},0)`);
+                    ctx.fillStyle = g;
+                    ctx.fillRect(0, cy, half, feather);
                 }
             } else {
                 ctx.fillStyle = rgbCss(fallback.accent);
@@ -12203,6 +12235,8 @@
                         fan.headGroup.rotation.y = Math.sin(time * 1.2 + fan.phase) * 0.12;
                         return;
                     }
+                    // posa a riposo propria (chi è appoggiato alla balaustra, il tamburino, chi suona la trombetta...)
+                    if (fan.idleFn) { fan.mesh.position.y = fan.baseY; fan.idleFn(fan, time); return; }
                     const idle = Math.sin(time * 1.8 + fan.phase);
                     fan.mesh.position.y = fan.baseY + (fan.standing ? Math.max(0, idle) * 0.02 : 0);
                     fan.bodyPivot.rotation.z = idle * 0.03;
@@ -12384,6 +12418,10 @@
         function setPreMatchStep(stepNum, pick = 'home') {
             currentPreMatchStep = stepNum;
             prematchPick = pick;
+            // cambiare passo non deve mai mostrare la schermata: la apre solo chi la vuole (con remove('hidden')).
+            // Prima la riscrittura di className la rendeva visibile già all'avvio, sotto il menu principale, e
+            // compariva per un attimo nelle dissolvenze verso partita rapida, competizioni e manager.
+            const startWasHidden = startScreen.classList.contains('hidden');
             const step1 = document.getElementById('prematch-step-1');
             const step2 = document.getElementById('prematch-step-2');
             const step3 = document.getElementById('prematch-step-3');
@@ -12425,6 +12463,7 @@
                 sub.textContent = 'Scelta Palazzetto 3D';
                 renderStep3Arena();
             }
+            if (startWasHidden) startScreen.classList.add('hidden');
             applyPrematchPick();
         }
 
@@ -13122,8 +13161,7 @@
             if (backBtn) backBtn.onclick = () => {
                 clearTimeout(rosterSwapTimeout);
                 document.getElementById('prematch-lineup-screen').classList.add('hidden');
-                document.getElementById('start-screen').classList.remove('hidden');
-                gameState = 'menu';
+                returnToMatchOrigin();
             };
 
             lineupLoadingTimer = 0;
@@ -13287,11 +13325,9 @@
                 document.getElementById('stats-menu-btn').addEventListener('click', () => {
                     document.getElementById('match-stats-modal').classList.add('hidden');
                     if (window.gameAudio && window.gameAudio.stopCrowd) window.gameAudio.stopCrowd();
-                    gameState = 'menu';
                     uiLayer.classList.add('hidden');
                     replayUi.classList.add('hidden');
-                    startScreen.classList.remove('hidden');
-                    setPreMatchStep(1);
+                    returnToMatchOrigin();
                 });
             }
 
@@ -13300,6 +13336,17 @@
 
         // Partita rapida: squadre, divise e palazzetto sempre a caso. Le divise sono scelte in modo che i
         // colori principali delle due squadre siano il più possibile diversi.
+        // da dove è partita l'amichevole in corso: 'quick' (partita rapida, squadre a caso) o 'friendly'
+        // (scelta squadre). Serve per sapere dove tornare: la partita rapida non passa dalla scelta squadre.
+        let matchOrigin = 'friendly';
+        function returnToMatchOrigin() {
+            gameState = 'menu';
+            if (isCompetitionMatch()) { competitionHost().onUserMatchAbandoned(); return; }
+            if (matchOrigin === 'quick') { startScreen.classList.add('hidden'); titleSplashScreen.classList.remove('hidden'); return; }
+            titleSplashScreen.classList.add('hidden');
+            startScreen.classList.remove('hidden');
+            setPreMatchStep(1);
+        }
         function randomizeQuickMatchConfig() {
             const pick = arr => arr[Math.floor(Math.random() * arr.length)];
             const ids = CLUB_IDS.filter(id => CLUB_ROSTERS[id]);
@@ -14085,6 +14132,7 @@
                     titleSplashScreen.classList.add('hidden');
                     const proceed = () => {
                         if (action === 'quick') {
+                            matchOrigin = 'quick';
                             randomizeQuickMatchConfig();
                             launchMatchFromCurrentConfig();
                         } else if (action === 'competition' && window.Competition) {
@@ -14092,6 +14140,7 @@
                         } else if (action === 'manager' && window.Manager) {
                             window.Manager.open();
                         } else {
+                            matchOrigin = 'friendly';
                             startScreen.classList.remove('hidden');
                             setPreMatchStep(1);
                         }
@@ -14911,13 +14960,17 @@
                     const line = Math.min(STATUS_LINES.length - 1, Math.floor(t * STATUS_LINES.length));
                     if (line !== lastLine) { lastLine = line; status.textContent = STATUS_LINES[line]; }
                     if (t < 1) { requestAnimationFrame(tick); return; }
-                    root.classList.add('is-out');
-                    setTimeout(() => {
-                        root.classList.add('ff-hidden');
-                        root.classList.remove('is-in', 'is-out');
-                        running = false;
-                        if (onDone) onDone();
-                    }, 450);
+                    // prima si apre la schermata di destinazione, ancora coperta dal pannello opaco, poi la
+                    // dissolvenza: così non si intravede per un attimo quello che c'era sotto
+                    try { if (onDone) onDone(); } catch (err) { console.error(err); }
+                    requestAnimationFrame(() => {
+                        root.classList.add('is-out');
+                        setTimeout(() => {
+                            root.classList.add('ff-hidden');
+                            root.classList.remove('is-in', 'is-out');
+                            running = false;
+                        }, 450);
+                    });
                 }
                 requestAnimationFrame(tick);
             };
