@@ -14,6 +14,7 @@
     <!-- Three.js 0.187 in bundle classico (npm run build:three) + compatibilità con le tarature r128 -->
     <script src="src/vendor/three.min.js"></script>
     <script src="src/graphics/three-compat.js"></script>
+    <script src="src/graphics/DepthOfField.js"></script>
     <!-- Phaser 3 — gestore game loop, scene e input -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/phaser/3.60.0/phaser.min.js"></script>
     <style>
@@ -8319,7 +8320,7 @@
 
             if (s.isRef) {
                 s.hipGroup.position.y = 0.88 - Math.abs(stride) * 0.04;
-                s.bodyPivot.rotation.set(-0.10, 0, 0);
+                s.bodyPivot.rotation.set(-0.12 - Math.abs(stride) * 0.2, 0, 0);
                 s.leftLegPivot.rotation.set(-stride, 0, 0);
                 s.leftKneePivot.rotation.set(-Math.max(0, -stride) * 0.7, 0, 0);
                 s.rightLegPivot.rotation.set(stride, 0, 0);
@@ -8335,7 +8336,8 @@
             s.hipGroup.position.y = 0.88 - crouch;
 
             const twist = -charge * 0.42 + shootSwing * 0.55;
-            s.bodyPivot.rotation.set(-0.18 - charge * 0.08, -twist, -stride * 0.05);
+            // busto in avanti (rotation.x negativa = in avanti); caricando il tiro si raddrizza un poco
+            s.bodyPivot.rotation.set(-0.24 + charge * 0.06, -twist, -stride * 0.05);
 
             s.leftLegPivot.rotation.set(-stride + 0.08, 0, 0.06 + Math.max(0, stride) * 0.14);
             s.leftKneePivot.rotation.set(-0.16 - Math.max(0, -stride) * 0.75 - crouch * 1.4, 0, 0);
@@ -8369,8 +8371,10 @@
             if (s.contactShadow) s.contactShadow.visible = true;
 
             if (!s.isGoalie) {
-                s.bodyPivot.rotation.x -= Math.min(0.2, speed * 0.013);
-                s.hipGroup.position.y -= Math.min(0.05, speed * 0.003);
+                // più veloce = più piegato in avanti (fino a ~37° in tutto); la stecca segue le mani
+                s.bodyPivot.rotation.x -= Math.min(0.4, speed * 0.05);
+                s.hipGroup.position.y -= Math.min(0.06, speed * 0.004);
+                updateSkaterStickPose(s);
             }
 
             if (s.headGroup && puck) {
@@ -9827,6 +9831,7 @@
             const camTarget = new THREE.Vector3(head.x + toRink * (3.4 - k * 0.9), head.y + 0.35 - k * 0.1, head.z + 1.3 - k * 0.6);
             camera.position.lerp(camTarget, 0.05);
             camera.lookAt(head.x, head.y - 0.05, head.z);
+            focusCameraOn(head.x, head.y - 0.2, head.z);
             if (mascotShot.t >= MASCOT_SHOT_DURATION) finishArenaTour();
         }
 
@@ -9870,6 +9875,7 @@
             const target = new THREE.Vector3(head.x + Math.cos(a) * dist, head.y + 0.35 - k * 0.15, head.z - Math.sin(a) * dist);
             if (cut) camera.position.copy(target); else camera.position.lerp(target, 0.1);
             camera.lookAt(head.x, head.y - 0.25, head.z);
+            focusCameraOn(head.x, head.y - 0.3, head.z);
             if (warmupShot.t >= WARMUP_SHOT_DURATION) nextWarmupShot();
         }
 
@@ -10443,6 +10449,7 @@
                 camTarget.y = head.y + 0.42 - k * 0.1;
                 camera.position.lerp(camTarget, sp.t < 0.8 ? 0.07 : 0.12);
                 camera.lookAt(head.x, head.y - 0.12, head.z);
+                focusCameraOn(head.x, head.y - 0.12, head.z);
             } else if (sk.isCoach) {
                 // camera bassa dal lato pista, davanti alla panchina: l'allenatore saluta il pubblico
                 const p = sk.mesh.position;
@@ -10450,6 +10457,7 @@
                 const camTarget = new THREE.Vector3(p.x - 3.2 + k * 0.7, 1.75 - k * 0.12, p.z + dz * (1.4 - k * 0.6));
                 camera.position.lerp(camTarget, sp.t < 0.8 ? 0.07 : 0.12);
                 camera.lookAt(p.x, 1.35, p.z);
+                focusCameraOn(p.x, 1.35, p.z);
             } else {            // Le formazioni sono schierate ai due lati della linea centrale: la camera sta
             // dal lato del centro pista e il giocatore si gira verso di lei
             const fwd = sk.isRef ? new THREE.Vector3(-1, 0, 0) : new THREE.Vector3(0, 0, sk.mesh.position.z >= 0 ? -1 : 1);
@@ -10462,6 +10470,7 @@
             camTarget.y = 1.6 - k * 0.15;
             camera.position.lerp(camTarget, sp.t < 0.8 ? 0.07 : 0.12);
             camera.lookAt(sk.mesh.position.x, 1.25, sk.mesh.position.z);
+            focusCameraOn(sk.mesh.position.x, 1.25, sk.mesh.position.z);
             if (sk.headGroup) sk.headGroup.rotation.y = 0;
             }
             if (sp.t >= SPOTLIGHT_DURATION) {
@@ -10990,6 +10999,7 @@
                 : new THREE.Vector3(-15.3, 1.85, bz + 2.7 * zs);
             camera.position.lerp(camTarget, far ? 0.06 : 0.05);
             camera.lookAt(P.x, 1.05, P.z);
+            if (!far) focusCameraOn(P.x, 1.05, P.z);
             if (c.t > 10) finishPenaltyCall();                     // rete di sicurezza
         }
 
@@ -11269,12 +11279,16 @@
                 const o = sh.orbit, a = o.a0 + (o.a1 - o.a0) * e;
                 camera.position.set(o.c.x + Math.cos(a) * o.r, o.y, o.c.z + Math.sin(a) * o.r);
                 camera.lookAt(o.c);
+                if (CUT_FOCUS_TYPES.includes(sh.type)) focusCameraOn(o.c.x, o.c.y, o.c.z);
                 return;
             }
             camera.position.lerpVectors(sh.from[0], sh.to[0], e);
             const look = new THREE.Vector3().lerpVectors(sh.from[1], sh.to[1], e);
             camera.lookAt(look);
+            if (CUT_FOCUS_TYPES.includes(sh.type)) focusCameraOn(look.x, look.y, look.z);
         }
+        // stacchi ravvicinati su persone (fuoco sul soggetto, sfondo sfocato)
+        const CUT_FOCUS_TYPES = ['scorer', 'goalie', 'referee', 'bench_home', 'bench_guest'];
 
         function updateCutaway(dt) {
             const c = cutaway;
@@ -13154,7 +13168,21 @@
 
             updateDynamicArenaLights(dt);
             updatePenaltyDoors(dt);
-            renderer.render(scene, camera);
+            renderMainFrame(dt);
+        }
+
+        // Primi piani: chi muove la camera indica il punto a fuoco del fotogramma (focusCameraOn) e
+        // con grafica alta lo sfondo e il primo piano vengono sfocati (src/graphics/DepthOfField.js)
+        let cameraFocusPoint = null;
+        function focusCameraOn(x, y, z) {
+            cameraFocusPoint = (cameraFocusPoint || new THREE.Vector3()).set(x, y, z);
+            cameraFocusPoint.active = true;
+        }
+        function renderMainFrame(dt) {
+            const fp = cameraFocusPoint && cameraFocusPoint.active ? cameraFocusPoint : null;
+            if (cameraFocusPoint) cameraFocusPoint.active = false;
+            const hi = getActiveQualityPreset().id === 'high';
+            if (!(hi && window.HIL_DOF && window.HIL_DOF.render(renderer, scene, camera, fp, dt))) renderer.render(scene, camera);
         }
 
         // --- GESTIONE UI PRE-PARTITA A 3 STEP ---
