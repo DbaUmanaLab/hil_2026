@@ -1092,6 +1092,19 @@
         .mc-btn.is-line { width: 22%; height: 22%; right: 46%; bottom: 46%; border-color: rgba(110,231,183,.75); background: rgba(52,211,153,.14); }
         @media (pointer: coarse) { .hint-key { display: none; } }
         .sb-period, .sb-time, .sb-abbr { white-space: nowrap; }
+        /* portatore del disco: targhetta a fianco del tabellone, a sinistra la casa e a destra gli ospiti */
+        .sb-carrier { position: absolute; bottom: 0; height: clamp(36px, 5.6vh, 52px); display: flex; align-items: center; gap: clamp(6px, .7vw, 10px);
+            padding: 0 clamp(10px, 1vw, 16px) 0 clamp(4px, .5vw, 8px); border-radius: 4px; color: #fff; --c: var(--home);
+            background: linear-gradient(90deg, color-mix(in srgb, var(--c) 75%, #000), var(--c)); background-color: var(--c);
+            box-shadow: 0 6px 24px rgba(0,0,0,.45); font-family: 'Oswald', sans-serif; white-space: nowrap;
+            opacity: 0; transition: opacity .18s ease, transform .18s ease; }
+        .sb-carrier.is-home { right: 100%; margin-right: 8px; transform: translateX(10px); }
+        .sb-carrier.is-guest { left: 100%; margin-left: 8px; --c: var(--guest); transform: translateX(-10px); flex-direction: row-reverse; padding: 0 clamp(4px, .5vw, 8px) 0 clamp(10px, 1vw, 16px); }
+        .sb-carrier.is-on { opacity: 1; transform: none; }
+        .sbc-logo { width: clamp(26px, 3.9vh, 38px); height: clamp(26px, 3.9vh, 38px); border-radius: 50%; background: #fff; display: grid; place-items: center; flex: 0 0 auto; box-shadow: 0 2px 6px rgba(0,0,0,.35); }
+        .sbc-logo img, .sbc-logo svg { width: 82% !important; height: 82% !important; object-fit: contain; }
+        .sbc-num { font-weight: 700; font-style: italic; font-size: clamp(16px, 2.8vh, 26px); background: rgba(0,0,0,.28); padding: 0 6px; border-radius: 3px; font-variant-numeric: tabular-nums; }
+        .sbc-name { font-weight: 600; font-size: clamp(13px, 2.2vh, 20px); letter-spacing: .04em; text-transform: uppercase; max-width: clamp(110px, 16vw, 260px); overflow: hidden; text-overflow: ellipsis; }
         /* telefono in verticale: tabellone compatto in alto, lontano dai comandi */
         @media (orientation: portrait) and (max-width: 700px) {
             #hud-scorebug { bottom: auto; top: calc(env(safe-area-inset-top, 0px) + 10px); flex-direction: column-reverse; }
@@ -1107,6 +1120,11 @@
             .fo-pill { margin-top: 58px; gap: 8px; padding: 6px 12px; }
             .fo-help { display: none; }
             #hud-toast { top: calc(env(safe-area-inset-top, 0px) + 64px); }
+            /* in verticale non c'è spazio ai lati: la targhetta va sotto il tabellone */
+            .sb-carrier, .sb-carrier.is-guest { position: static; order: -1; margin: 4px 0 0; height: 28px; transform: none; flex-direction: row; padding: 0 10px 0 4px; }
+            .sbc-logo { width: 20px; height: 20px; }
+            .sbc-num { font-size: 14px; }
+            .sbc-name { font-size: 12px; max-width: 60vw; }
         }
 
         /* --- STEP 3: SCELTA PALAZZETTO (stile della scelta squadre, anteprima 3D a tutto schermo) --- */
@@ -2155,6 +2173,10 @@
                     <div id="hudGuestLogo" class="sb-logo"></div>
                 </div>
             </div>
+            <!-- chi ha il disco: a fianco del tabellone, dal lato della sua squadra -->
+            <div id="hud-carrier" class="sb-carrier" aria-live="off">
+                <div class="sbc-logo"></div><span class="sbc-num"></span><span class="sbc-name"></span>
+            </div>
         </div>
 
         <!-- Pausa: impostazioni raccolte in un unico pulsante semitrasparente -->
@@ -2934,6 +2956,7 @@
         let penalties = [];                 // { team, skater, type, kind, remaining, total }
         let penaltyCall = null;
         let penaltyDoors = {};              // { home|guest: { pivot, sign, open, z } }
+        let benchDoors = [];                // porte delle panchine: { pivot, sign, open, z, team }
         let penaltySeq = 0;
         let penaltyHudFlash = null;
 
@@ -5657,6 +5680,7 @@
             arenaMascot = null;
             arenaCeilingHide = null;
             penaltyDoors = {};
+            benchDoors = [];
             const fileArena = ARENA_FILE_TEX[arenaId] || null;
             // piste all'aperto (outdoor): cielo chiaro e foschia leggera al posto del buio del palazzetto;
             // la volta celeste, gli edifici e il paesaggio li disegna il modulo dell'arena
@@ -5853,6 +5877,18 @@
                     const front2 = new THREE.Mesh(new THREE.BoxGeometry(boardThick, 0.92, seg2Len), (fileArena && fileBoardMat(fileArena, 'boards_b.jpg', seg2Len * 1.25, 0.1)) || cleanBoardMat);
                     front2.position.set(rightX, 0.46, b.zEnd - seg2Len / 2);
                     arenaGroup.add(front2);
+                }
+                // porta della panchina: chiusa, si apre solo per i cambi (updatePenaltyDoors)
+                {
+                    const ext = b.gateZ > 0 ? 1 : -1;                  // cerniera dal lato della linea centrale
+                    const pivot = new THREE.Group();
+                    pivot.position.set(rightX, 0, b.gateZ - ext * 0.75);
+                    const door = new THREE.Mesh(new THREE.BoxGeometry(boardThick, 0.92, 1.5), (fileArena && fileBoardMat(fileArena, 'boards_center.jpg', 1.5 * 1.25, 0.3)) || cleanBoardMat);
+                    door.position.set(0, 0.46, ext * 0.75);
+                    door.castShadow = preset.shadows;
+                    pivot.add(door);
+                    arenaGroup.add(pivot);
+                    benchDoors.push({ pivot, sign: ext, open: 0, z: b.gateZ, team: b.gateZ > 0 ? 'home' : 'guest' });
                 }
 
                 const floorB = new THREE.Mesh(new THREE.BoxGeometry(2.8, 0.12, totalLen), benchFloorMat);
@@ -10278,6 +10314,7 @@
             const cutEl = document.getElementById('cut-overlay');
             if (cutEl && gameState !== 'cutaway' && gameState !== 'goalie_freeze' && gameState !== 'penalty_call' && !cutEl.classList.contains('hidden')) { cutEl.classList.add('hidden'); cutaway = null; }
             const inPlay = gameState === 'cutaway' || gameState === 'faceoff' || gameState === 'playing' || gameState === 'goal_celebration' || gameState === 'goalie_freeze' || gameState === 'penalty_call';
+            if (gameState !== 'playing') setHudCarrierTag(null, false);
             const key = inPlay ? 'play' : 'off';
             if (key === hudStateKey) return;
             hudStateKey = key;
@@ -10859,6 +10896,16 @@
                 d.open += ((near ? 1 : 0) - d.open) * Math.min(1, dt * 6);
                 d.pivot.rotation.y = d.sign * d.open * 1.75;
             });
+            // panchine: la porta si apre solo per chi esce o entra col cambio (e per le entrate in pista
+            // della presentazione e le uscite di fine periodo/partita)
+            const crowdPhase = gameState === 'intro' || gameState === 'period_break' || gameState === 'postgame';
+            benchDoors.forEach(d => {
+                const near = skaters.some(k => !k.isGoalie && k.mesh.visible && Math.abs(k.mesh.position.z - d.z) < 1.6 &&
+                    k.mesh.position.x > 15.4 && k.mesh.position.x < 19.6 &&
+                    (k.lineChangeState === 'exiting' || k.lineChangeState === 'entering' || crowdPhase));
+                d.open += ((near ? 1 : 0) - d.open) * Math.min(1, dt * 6);
+                d.pivot.rotation.y = -d.sign * d.open * 1.6;        // si apre verso la pista: in panchina non intralcia
+            });
         }
 
         // ---------- valutazione del fallo: l'arbitro non fischia sempre
@@ -11424,6 +11471,8 @@
                     z: s.mesh.position.z,
                     rotX: s.mesh.rotation.x,
                     rotY: s.mesh.rotation.y,
+                    rotZ: s.mesh.rotation.z,
+                    headY: s.headGroup ? s.headGroup.rotation.y : 0,
                     hipY: s.hipGroup.position.y,
                     bodyRotX: s.bodyPivot.rotation.x,
                     bodyRotY: s.bodyPivot.rotation.y,
@@ -11435,9 +11484,11 @@
                     rightLegZ: s.rightLegPivot.rotation.z,
                     rightKneeX: s.rightKneePivot.rotation.x,
                     leftArmX: s.leftArmPivot.rotation.x,
+                    leftArmY: s.leftArmPivot.rotation.y,
                     leftArmZ: s.leftArmPivot.rotation.z,
                     leftElbowX: s.leftElbowPivot.rotation.x,
                     rightArmX: s.rightArmPivot.rotation.x,
+                    rightArmY: s.rightArmPivot.rotation.y,
                     rightArmZ: s.rightArmPivot.rotation.z,
                     rightElbowX: s.rightElbowPivot.rotation.x,
                     stickPos: s.stickGroup ? s.stickGroup.position.clone() : null,
@@ -11489,17 +11540,18 @@
                 const s = skaters[idx];
                 if (!s) return;
                 s.mesh.position.set(st.x, st.y, st.z);
-                s.mesh.rotation.x = st.rotX;
-                s.mesh.rotation.y = st.rotY;
+                // la posa si rimette esattamente com'era (prima i segni erano invertiti: busto all'indietro)
+                s.mesh.rotation.set(st.rotX, st.rotY, st.rotZ || 0);
+                if (s.headGroup) s.headGroup.rotation.y = st.headY || 0;
                 s.hipGroup.position.y = st.hipY;
-                s.bodyPivot.rotation.set(-st.bodyRotX, -st.bodyRotY, st.bodyRotZ);
-                s.leftLegPivot.rotation.set(-st.leftLegX, 0, st.leftLegZ);
+                s.bodyPivot.rotation.set(st.bodyRotX, st.bodyRotY, st.bodyRotZ);
+                s.leftLegPivot.rotation.set(st.leftLegX, 0, st.leftLegZ);
                 s.leftKneePivot.rotation.x = st.leftKneeX;
-                s.rightLegPivot.rotation.set(-st.rightLegX, 0, st.rightLegZ);
+                s.rightLegPivot.rotation.set(st.rightLegX, 0, st.rightLegZ);
                 s.rightKneePivot.rotation.x = st.rightKneeX;
-                s.leftArmPivot.rotation.set(-st.leftArmX, -0.2, st.leftArmZ);
+                s.leftArmPivot.rotation.set(st.leftArmX, st.leftArmY || 0, st.leftArmZ);
                 s.leftElbowPivot.rotation.x = st.leftElbowX;
-                s.rightArmPivot.rotation.set(-st.rightArmX, 0.2, st.rightArmZ);
+                s.rightArmPivot.rotation.set(st.rightArmX, st.rightArmY || 0, st.rightArmZ);
                 s.rightElbowPivot.rotation.x = st.rightElbowX;
                 if (s.stickGroup && st.stickPos && st.stickQuat) {
                     s.stickGroup.position.copy(st.stickPos);
@@ -12334,6 +12386,27 @@
         }
 
         // --- INTERAZIONI GIOCATORI-DISCO, TARGHETTA POSSESSO, TIRO CARICATO E PASSAGGIO MIRATO ---
+        // targhetta del portatore a fianco del tabellone (il DOM si tocca solo quando cambia qualcosa)
+        let hudCarrierKey = '';
+        function setHudCarrierTag(c, show) {
+            const el = document.getElementById('hud-carrier');
+            if (!el) return;
+            if (!show || !c) {
+                if (hudCarrierKey !== 'off') { hudCarrierKey = 'off'; el.classList.remove('is-on'); }
+                return;
+            }
+            const key = `${c.team}|${c.jerseyNum}|${c.playerName}`;
+            if (key === hudCarrierKey) return;
+            hudCarrierKey = key;
+            const side = c.team === 'home' ? 'home' : 'guest';
+            el.classList.toggle('is-home', side === 'home');
+            el.classList.toggle('is-guest', side === 'guest');
+            el.querySelector('.sbc-logo').innerHTML = getClubLogoSVG(c.clubId || matchConfig[side === 'home' ? 'homeClub' : 'guestClub'], 'w-6 h-6');
+            el.querySelector('.sbc-num').textContent = c.jerseyNum != null && c.jerseyNum !== '' ? '#' + c.jerseyNum : '';
+            el.querySelector('.sbc-name').textContent = skaterFullName(c);
+            el.classList.add('is-on');
+        }
+
         function updatePuckCarrierUI(dt) {
             if (carrierHoldTimer > 0) {
                 carrierHoldTimer = Math.max(0, carrierHoldTimer - dt);
@@ -12402,6 +12475,7 @@
                     );
                 }
 
+                setHudCarrierTag(c, gameState === 'playing');
                 if (hudCarrierEl) {
                     hudCarrierEl.textContent = `#${c.jerseyNum} ${skaterFullName(c)} (${club ? club.shortName : ''})`;
                     hudCarrierEl.className = c.team === getUserTeam()
@@ -12409,6 +12483,7 @@
                         : 'font-black text-red-400 tracking-wide';
                 }
             } else {
+                setHudCarrierTag(null, false);
                 if (carrierNameSprite) carrierNameSprite.visible = false;
                 if (hudCarrierEl) {
                     hudCarrierEl.textContent = 'DISCO LIBERO';
