@@ -17,7 +17,8 @@
         const shirt = kit ? kit.primary : 0xdc2626;
         let shorts = kit && kit.pants != null ? kit.pants : 0x111827;
         if (shorts === shirt) shorts = (shirt === 0xffffff ? 0x14235a : 0x111827);
-        return { shirt, shorts, socks: shirt };
+        const gloves = kit && kit.glove != null ? kit.glove : 0x111114;
+        return { shirt, shorts, socks: shirt, gloves };
     }
 
     // giocatori di movimento della rosa, senza doppioni (uno può comparire in due linee)
@@ -32,7 +33,7 @@
         const c = kitColors(clubId, kitId);
         const p = window.HIL_PEOPLE.makePerson({
             female: false, top: c.shirt, shortSleeves: true, shorts: c.shorts, socks: c.socks,
-            skates: true, stick: true, crestClub: clubId, skin: 0xd6a38a
+            skates: true, stick: true, gloves: c.gloves, crestClub: clubId, crestSize: 0.22, skin: 0xd6a38a
         });
         p.team = team;
         return p;
@@ -111,13 +112,14 @@
             pair.players.forEach(p => {
                 p.mesh.position.z = p.base.z + Math.sin(T * 0.6 + p.phase) * 0.35;
                 p.mesh.position.x = p.base.x + Math.sin(T * 0.45 + p.phase * 1.7) * 0.25;
-                p.bodyPivot.rotation.z = -0.06 + Math.sin(T * 1.3 + p.phase) * 0.03;   // busto un po' in avanti
+                p.bodyPivot.rotation.z = -0.2 + Math.sin(T * 1.3 + p.phase) * 0.03;    // busto piegato in avanti, da hockey
                 if (p.swingT >= 0) p.swingT += dt;
                 if (p.swingT > 0.8) p.swingT = -1;
                 let yaw = swingAngle(p.swingT);
                 if (pair.phase === 'hold' && pair.players[pair.holder] === p && p.swingT < 0) yaw = Math.sin(T * 9 + p.phase) * 0.22;   // palleggio
                 p.stickGroup.rotation.y = yaw;
-                p.headGroup.rotation.y = Math.sin(T * 0.8 + p.phase) * 0.15;
+                p.headGroup.rotation.set(0, Math.sin(T * 0.8 + p.phase) * 0.15, 0.14);   // sguardo al compagno, non a terra
+                if (p.updateGrip) p.updateGrip();          // le mani restano chiuse sull'asta
             });
         });
         state.group.updateMatrixWorld(true);

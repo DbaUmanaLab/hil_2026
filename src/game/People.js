@@ -860,6 +860,31 @@
         if (!torso || !tex) return null;
         const { R, h, female, front } = torso.userData.torsoShape;
         const t = opts.t != null ? opts.t : 0.6, size = opts.size || 0.095;
+        if (opts.center) {
+            // stemma grande al centro del petto: il piano è piegato sulla sagoma del busto (niente bordi sospesi)
+            const mat = new THREE.MeshStandardMaterial({ map: tex, transparent: true, alphaTest: 0.35, roughness: 0.6 });
+            const key = ['crestC', mm(R), mm(h), mm(size), mm(t), female ? 'f' : 'm', front].join('_');
+            const g = geo(key, () => {
+                const pg = new THREE.PlaneGeometry(size, size, 12, 8);
+                const p = pg.attributes.position;
+                for (let i = 0; i < p.count; i++) {
+                    const u = p.getX(i), v = p.getY(i);
+                    const [dd, ww] = torsoAt(female, t + v / h);
+                    const Wd = ww * R, Dd = dd * R;
+                    const depth = Dd * Math.sqrt(Math.max(0, 1 - (u / Wd) * (u / Wd))) + 0.005;
+                    // chi guarda +X ha la sinistra verso -Z (la destra dell'immagine va verso -Z);
+                    // chi guarda -Z ha la sinistra verso -X
+                    if (front === '-z') p.setXYZ(i, -u, v, -depth);
+                    else p.setXYZ(i, depth, v, -u);
+                }
+                pg.computeVertexNormals();
+                return pg;
+            });
+            const crest = new THREE.Mesh(g, mat);
+            crest.position.y = torso.position.y + (t - 0.5) * h;
+            bodyPivot.add(crest);
+            return crest;
+        }
         const [d, w] = torsoAt(female, t);
         const D = d * R, Wd = w * R;
         // posizione sul petto: a metà fra lo sterno e il fianco, sull'ellisse della sezione
@@ -956,80 +981,237 @@
         }
         const out = { mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: 0, phase: Math.random() * Math.PI * 2, standing: true };
 
-        // maniche corte: il braccio diventa pelle, la manica copre spalla e metà del braccio
-        if (opts.shortSleeves) {
+        // maniche corte (senza bastone): il braccio diventa pelle, la manica modellata copre spalla e metà braccio
+        if (opts.shortSleeves && !opts.stick) {
             [leftArmPivot, rightArmPivot].forEach(ap => {
                 const arm = ap.children.find(c => c.isMesh && !c.userData.isHand && c.material === top);
                 if (arm) arm.material = skinM;
-                const sleeve = new THREE.Mesh(geo('shortSleeve', () => new THREE.CylinderGeometry(0.079, 0.071, 0.22, 14, 1, true)), top);
-                sleeve.position.y = -0.075;
-                ap.add(sleeve);
+                ap.add(new THREE.Mesh(sleeveGeometry(), top));
             });
         }
-        // pantaloncini e calzettoni: le gambe diventano pelle, sopra i due tubi di stoffa
+        // pantaloncini e calzettoni modellati sulla gamba (niente tubi): le gambe diventano pelle
         const legs = root.children.filter(c => c.isMesh && c.material === pantsM);
         if (opts.shorts != null) {
-            const shortsM = colorMat(opts.shorts, 0.75, THREE.DoubleSide);
+            const shortsM = colorMat(opts.shorts, 0.75);
             const socksM = colorMat(opts.socks != null ? opts.socks : opts.shorts, 0.8);
-            legs.forEach(leg => {
-                leg.material = skinM;
-                const sh = new THREE.Mesh(geo('shortsLeg', () => new THREE.CylinderGeometry(0.106, 0.112, 0.3, 14, 1, true)), shortsM);
-                sh.position.set(leg.position.x, 0.67, leg.position.z);
-                const so = new THREE.Mesh(geo('sockLeg', () => new THREE.CylinderGeometry(0.068, 0.05, 0.4, 12, 1, true)), socksM);
-                so.position.set(leg.position.x, 0.25, leg.position.z);
-                root.add(sh, so);
-            });
-            const seat = new THREE.Mesh(geo('shortsSeat', () => new THREE.CylinderGeometry(0.2, 0.205, 0.12, 16)), shortsM);
-            seat.position.y = 0.8;
-            root.add(seat);
+            legs.forEach(leg => { leg.material = skinM; });
+            const spots = legs.map(l => [l.position.x, l.position.z]);
+            const key = spots.map(p => p.map(mm).join(',')).join(';') + (bodyDetail().low ? '_lo' : '_hi');
+            root.add(new THREE.Mesh(geo('wuShorts_' + key, () => shortsGeometry(spots)), shortsM));
+            root.add(new THREE.Mesh(geo('wuSocks_' + key, () => socksGeometry(spots)), socksM));
         }
-        // pattini in linea: scarpetta, telaio e quattro ruote sotto ogni gamba (le ruote toccano y = -SKATE_LIFT)
+        // pattini in linea come quelli dei giocatori in partita: scarpetta arrotondata con punta, collarino,
+        // linguetta, telaio e quattro ruote (le ruote toccano y = -SKATE_LIFT). Un mesh per materiale.
         if (opts.skates) {
             const spots = legs.map(l => [l.position.x, l.position.z]);
-            const key = 'skates_' + spots.map(p => p.map(mm).join(',')).join(';');
-            const bootG = geo(key + '_boot', () => mergeParts(spots.flatMap(([x, z]) => {
-                const boot = new THREE.BoxGeometry(0.27, 0.15, 0.11); boot.translate(x + 0.03, -SKATE_LIFT + 0.17, z);
-                const toe = new THREE.SphereGeometry(0.056, 10, 6); toe.scale(1.2, 0.75, 1); toe.translate(x + 0.15, -SKATE_LIFT + 0.13, z);
-                const frame = new THREE.BoxGeometry(0.3, 0.035, 0.03); frame.translate(x + 0.03, -SKATE_LIFT + 0.075, z);
-                return [boot, toe, frame];
-            })));
-            const wheelG = geo(key + '_wheels', () => mergeParts(spots.flatMap(([x, z]) => [-0.1, -0.033, 0.033, 0.1].map(dx => {
-                const w = new THREE.CylinderGeometry(0.036, 0.036, 0.022, 12); w.rotateX(Math.PI / 2); w.translate(x + 0.03 + dx, -SKATE_LIFT + 0.036, z);
-                return w;
-            }))));
-            root.add(new THREE.Mesh(bootG, colorMat(0x141416, 0.45)), new THREE.Mesh(wheelG, colorMat(0xf5c518, 0.35)));
+            const key = 'skates2_' + spots.map(p => p.map(mm).join(',')).join(';') + (bodyDetail().low ? '_lo' : '_hi');
+            const parts = geo(key, () => skateGeometries(spots));
+            root.add(new THREE.Mesh(parts.boot, colorMat(0x141416, 0.35)), new THREE.Mesh(parts.tongue, colorMat(0xf1f1f1, 0.6)),
+                new THREE.Mesh(parts.chassis, CHASSIS_MAT()), new THREE.Mesh(parts.wheels, colorMat(0xf5c518, 0.35)));
         }
-        // bastone: tenuto con le due mani davanti, lama a terra davanti e a destra; ruota sul suo perno
-        // (stickGroup.rotation.y = colpo laterale), stickBlade è il punto della lama dove sta il disco
+        // bastone impugnato a due mani: braccia con gomito e guanti da hockey (al posto delle mani), che
+        // a ogni fotogramma (updateGrip) si chiudono sull'asta qualunque sia la rotazione del bastone.
+        // stickGroup ruota attorno alla mano alta (rotation.y = colpo laterale), stickBlade è il punto
+        // della lama dove sta il disco.
         if (opts.stick) {
-            leftArmPivot.rotation.z = 0.5; rightArmPivot.rotation.z = 0.62;
+            const gloveM = colorMat(opts.gloves != null ? opts.gloves : 0x111114, 0.5);
+            const trimM = colorMat(opts.gloves === 0xffffff ? 0x14235a : 0xffffff, 0.5);
+            const arms = [leftArmPivot, rightArmPivot].map((ap, i) => buildAthleteArm(ap, i ? 1 : -1, top, skinM, gloveM, trimM));
             const stick = new THREE.Group();
             stick.rotation.order = 'YXZ';
-            stick.position.set(0.32, 0.86, 0.1);
+            stick.position.set(STICK.px, STICK.py, STICK.pz);       // mano alta
             const tilt = new THREE.Group();
-            tilt.rotation.z = 0.68;                    // l'asta scende in avanti
+            tilt.rotation.order = 'ZYX';
+            tilt.rotation.set(STICK.tx, 0, STICK.tz);               // l'asta scende in avanti e verso destra
             stick.add(tilt);
-            const shaftLen = 1.18;
+            // lunghezza dell'asta perché il tallone della lama arrivi al pavimento
+            const dir = new THREE.Vector3(0, -1, 0).applyEuler(tilt.rotation);
+            const shaftLen = (STICK.py - (-SKATE_LIFT + 0.03)) / -dir.y;
             // stessa grafica delle stecche dei giocatori (marchio inventato, index.html), se disponibile
             const stickModel = ['nexa', 'vortex', 'apex'][Math.floor(Math.random() * 3)];
             const shaftMat = typeof getStickBrandMaterial === 'function' ? getStickBrandMaterial(stickModel) : colorMat(0x1f2937, 0.4);
-            const shaft = new THREE.Mesh(geo('wuShaft', () => new THREE.BoxGeometry(0.03, shaftLen, 0.042)), shaftMat);
-            shaft.position.y = -shaftLen / 2 + 0.12;
-            const blade = new THREE.Mesh(geo('wuBlade', () => new THREE.BoxGeometry(0.3, 0.075, 0.018)), colorMat(0x111111, 0.5));
-            blade.rotation.z = -0.68;                  // lama piatta sul pavimento
-            blade.position.set(0.1, -shaftLen + 0.12, 0);
+            const shaft = new THREE.Mesh(geo('wuShaft_' + mm(shaftLen), () => new THREE.BoxGeometry(0.03, shaftLen + 0.09, 0.042)), shaftMat);
+            shaft.position.y = -shaftLen / 2 + 0.045;
+            const knob = new THREE.Mesh(geo('wuKnob', () => roundedBox(0.036, 0.07, 0.048, 0.01)), colorMat(0xf2f2f2, 0.9));
+            knob.position.y = 0.07;
+            tilt.add(shaft, knob);
+            // lama piatta sul pavimento: dal tallone (fondo dell'asta) verso destra e un po' in avanti,
+            // faccia di diritto verso il davanti; nastro sulla metà centrale
+            const heel = dir.clone().multiplyScalar(shaftLen);
+            const bDir = new THREE.Vector3(0.45, 0, 0.89);              // verso della punta della lama
+            const bFace = new THREE.Vector3(0.89, 0, -0.45);            // faccia di diritto
+            const bladeYaw = Math.atan2(-bDir.z, bDir.x);
+            const bladeY = -SKATE_LIFT + 0.04 - STICK.py;                   // nel sistema del bastone (perno alla mano alta)
+            const blade = new THREE.Mesh(geo('wuBlade2', () => {
+                const g = roundedBox(0.3, 0.075, 0.016, 0.006);
+                const p = g.attributes.position;                        // lama curva verso la faccia di diritto
+                for (let i = 0; i < p.count; i++) { const t = (p.getX(i) + 0.15) / 0.3; p.setZ(i, p.getZ(i) - t * t * 0.035); }
+                g.computeVertexNormals();
+                return g;
+            }), colorMat(0x0c0c0e, 0.35));
+            blade.rotation.y = bladeYaw;
+            blade.position.set(heel.x + bDir.x * 0.14, bladeY, heel.z + bDir.z * 0.14);
+            const tape = new THREE.Mesh(geo('wuTape', () => roundedBox(0.15, 0.079, 0.022, 0.006)), colorMat(Math.random() < 0.5 ? 0xf4f4f4 : 0x1a1a1d, 0.95));
+            tape.rotation.y = bladeYaw;
+            tape.position.set(heel.x + bDir.x * 0.16 + bFace.x * 0.004, bladeY, heel.z + bDir.z * 0.16 + bFace.z * 0.004);
             const tip = new THREE.Object3D();
-            tip.position.set(0.14, -shaftLen + 0.09, 0.04);
-            tilt.add(shaft, blade, tip);
+            tip.position.set(heel.x + bDir.x * 0.15 + bFace.x * 0.05, bladeY - 0.02, heel.z + bDir.z * 0.15 + bFace.z * 0.05);
+            stick.add(blade, tape, tip);
             root.add(stick);
             out.stickGroup = stick;
             out.stickBlade = tip;
+            // impugnature sull'asta (nel sistema dell'asta): mano sinistra in cima, destra più in basso
+            const grips = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, -STICK.gap, 0)];
+            const gw = new THREE.Vector3();
+            out.updateGrip = () => {
+                root.updateWorldMatrix(true, true);
+                arms.forEach((arm, i) => {
+                    tilt.localToWorld(gw.copy(grips[i]));
+                    solveArm(arm, gw, root);
+                });
+            };
+            out.updateGrip();
         }
-        if (opts.crestClub) addChestCrest(bodyPivot, opts.crestClub, { t: 0.62, size: 0.1 });
+        if (opts.crestClub) addChestCrest(bodyPivot, opts.crestClub, opts.crestSize ? { t: 0.69, size: opts.crestSize, center: true } : { t: 0.62, size: 0.1 });
         out.lift = opts.skates ? SKATE_LIFT : 0;
         return out;
     }
     const SKATE_LIFT = 0.1;
+    // bastone dei giocatori in riscaldamento (sistema della persona, guarda +X, destra = +Z): mano alta,
+    // inclinazione dell'asta e distanza fra le mani, scelte perché le braccia ci arrivino per tutto il
+    // movimento del colpo (busto piegato in avanti di ~0.2 rad)
+    const STICK = { px: 0.2, py: 1.0, pz: 0.12, tx: -0.25, tz: 0.38, gap: 0.27 };
+    const ARM_UPPER = 0.28, ARM_LOWER = 0.3;      // spalla-gomito, gomito-centro del guanto
+
+    let chassisMat = null;
+    const CHASSIS_MAT = () => chassisMat || (chassisMat = new THREE.MeshStandardMaterial({ color: 0xd9dde2, metalness: 0.75, roughness: 0.25 }));
+
+    // parallelepipedo arrotondato (quello dei giocatori se disponibile), sempre una copia propria
+    function roundedBox(w, h, d, r) {
+        return typeof createRoundedBoxGeometry === 'function' ? createRoundedBoxGeometry(w, h, d, r).clone() : new THREE.BoxGeometry(w, h, d);
+    }
+    // copia non indicizzata -> indicizzata per mergeParts (che vuole posizioni, normali e indici)
+    function indexed(g) {
+        if (g.index) return g;
+        const n = g.attributes.position.count, idx = [];
+        for (let i = 0; i < n; i++) idx.push(i);
+        g.setIndex(idx);
+        return g;
+    }
+
+    // manica corta modellata: segue spalla e bicipite, orlo chiuso (dal basso si vede la stoffa)
+    function sleeveGeometry() {
+        const D = bodyDetail();
+        return geo('sleeve2' + (D.low ? '_lo' : '_hi'), () => ellipticLathe([
+            [-0.16, 0.062, 0.066], [-0.12, 0.064, 0.068], [-0.05, 0.068, 0.072], [0.0, 0.069, 0.072], [0.035, 0.06, 0.064], [0.06, 0.04, 0.045]
+        ], Math.max(10, D.seg - 4), D.sm, '+x', true, true));
+    }
+
+    // pantaloncini: bacino unico che copre le due anche e due gambe svasate sulle cosce (gamba alta 0.82, piedi a y = 0)
+    function shortsGeometry(spots) {
+        const D = bodyDetail(), seg = Math.max(10, D.seg - 4);
+        const parts = [ellipticLathe([
+            [0.69, 0.128, 0.2], [0.74, 0.142, 0.222], [0.79, 0.148, 0.222], [0.83, 0.143, 0.2], [0.86, 0.134, 0.178]
+        ], D.seg, D.sm, '+x', true, true)];
+        spots.forEach(([x, z]) => {
+            const g = ellipticLathe([[0.5, 0.104, 0.108], [0.56, 0.104, 0.108], [0.66, 0.106, 0.11], [0.76, 0.104, 0.108]], seg, 0, '+x', true, true);
+            g.translate(x, 0, z);
+            parts.push(g);
+        });
+        return mergeParts(parts);
+    }
+
+    // calzettoni aderenti dalla caviglia a sotto il ginocchio (seguono il profilo di standingLegGeometry)
+    function socksGeometry(spots) {
+        const D = bodyDetail(), seg = Math.max(10, D.seg - 6);
+        return mergeParts(spots.map(([x, z]) => {
+            const g = ellipticLathe([
+                [0.02, 0.047, 0.049], [0.06, 0.051, 0.053], [0.16, 0.067, 0.07], [0.25, 0.066, 0.069], [0.36, 0.059, 0.062], [0.42, 0.062, 0.065], [0.45, 0.066, 0.069]
+            ], seg, D.sm, '+x', true, true);
+            g.translate(x, 0, z);
+            return g;
+        }));
+    }
+
+    // pattini dei giocatori in partita, girati verso +X: { boot, tongue, chassis, wheels }
+    function skateGeometries(spots) {
+        const D = bodyDetail(), L = -SKATE_LIFT;
+        const boot = [], tongue = [], chassis = [], wheels = [];
+        spots.forEach(([x, z]) => {
+            const up = indexed(roundedBox(0.26, 0.13, 0.105, 0.035)); up.translate(x + 0.03, L + 0.155, z); boot.push(up);
+            const toe = new THREE.SphereGeometry(0.055, D.low ? 10 : 14, D.low ? 6 : 10); toe.scale(1.35, 0.75, 0.95); toe.translate(x + 0.155, L + 0.13, z); boot.push(toe);
+            const cuff = ellipticLathe([[0.0, 0.078, 0.074], [0.05, 0.082, 0.078], [0.08, 0.08, 0.076]], D.low ? 10 : 14, 0, '+x', true, true);
+            cuff.translate(x + 0.01, L + 0.21, z); boot.push(cuff);
+            const tg = indexed(roundedBox(0.03, 0.11, 0.07, 0.012)); tg.rotateZ(-0.28); tg.translate(x + 0.085, L + 0.23, z); tongue.push(tg);
+            const ch = indexed(roundedBox(0.3, 0.05, 0.03, 0.012)); ch.translate(x + 0.035, L + 0.065, z); chassis.push(ch);
+            [-0.077, 0.0, 0.077, 0.152].forEach(dx => {
+                const w = new THREE.CylinderGeometry(0.036, 0.036, 0.022, D.low ? 10 : 16); w.rotateX(Math.PI / 2); w.translate(x + dx - 0.005, L + 0.036, z); wheels.push(w);
+            });
+        });
+        return { boot: mergeParts(boot), tongue: mergeParts(tongue), chassis: mergeParts(chassis), wheels: mergeParts(wheels) };
+    }
+
+    // Braccio da atleta con gomito, al posto di quello del pubblico: spalla e manica corta della maglia,
+    // braccio e avambraccio nudi, guanto da hockey (polsino, dorso imbottito, dita a rullo, fasce).
+    // Il centro del guanto è a ARM_LOWER sotto il gomito: è il punto che si chiude sull'asta.
+    function buildAthleteArm(ap, side, topM, skinM, gloveM, trimM) {
+        while (ap.children.length) ap.remove(ap.children[0]);   // geometrie condivise: niente dispose
+        ap.rotation.set(0, 0, 0);
+        const D = bodyDetail(), seg = Math.max(10, D.seg - 6);
+        const shoulder = new THREE.Mesh(geo('wuShoulder' + D.seg, () => new THREE.SphereGeometry(0.066, seg, Math.max(6, seg >> 1))), topM);
+        shoulder.scale.set(1, 0.9, 1.0);
+        const upper = new THREE.Mesh(geo('wuUpper' + D.seg, () => ellipticLathe([
+            [-ARM_UPPER - 0.01, 0.04, 0.043], [-0.24, 0.045, 0.048], [-0.17, 0.051, 0.055], [-0.09, 0.057, 0.061], [-0.02, 0.061, 0.064], [0.03, 0.05, 0.054]
+        ], seg, D.sm, '+x', true, true)), skinM);
+        const sleeve = new THREE.Mesh(sleeveGeometry(), topM);
+        ap.add(shoulder, upper, sleeve);
+        const elbow = new THREE.Group();
+        elbow.position.y = -ARM_UPPER;
+        ap.add(elbow);
+        const joint = new THREE.Mesh(geo('wuElbow' + D.seg, () => new THREE.SphereGeometry(0.042, seg, Math.max(6, seg >> 1))), skinM);
+        const fore = new THREE.Mesh(geo('wuFore' + D.seg, () => ellipticLathe([
+            [-0.2, 0.031, 0.036], [-0.14, 0.036, 0.042], [-0.07, 0.042, 0.048], [-0.01, 0.043, 0.047], [0.02, 0.04, 0.043]
+        ], seg, D.sm, '+x', true, true)), skinM);
+        const glove = new THREE.Mesh(geo('wuGlove' + D.seg, () => {
+            const cuff = ellipticLathe([[-0.255, 0.058, 0.062], [-0.215, 0.064, 0.068], [-0.17, 0.067, 0.071], [-0.16, 0.06, 0.064]], seg, 0, '+x', true, true);
+            const back = indexed(roundedBox(0.11, 0.125, 0.105, 0.035)); back.translate(-0.005, -ARM_LOWER, 0);
+            const roll = new THREE.CapsuleGeometry(0.036, 0.045, 3, D.low ? 8 : 12); roll.rotateX(Math.PI / 2); roll.translate(0.03, -ARM_LOWER - 0.055, 0);
+            const thumb = new THREE.CapsuleGeometry(0.02, 0.04, 2, 8); thumb.rotateZ(0.7); thumb.translate(0.05, -ARM_LOWER + 0.03, 0);
+            return mergeParts([cuff, back, roll, thumb]);
+        }), gloveM);
+        const trim = new THREE.Mesh(geo('wuGloveTrim', () => mergeParts([-0.2, -0.235].map(y => {
+            const t = new THREE.TorusGeometry(1, 0.13, 4, 16); t.scale(0.066, 0.07, 0.066); t.rotateX(Math.PI / 2); t.translate(0, y, 0);
+            return t;
+        }))), trimM);
+        elbow.add(joint, fore, glove, trim);
+        return { pivot: ap, elbow, side, upper: ARM_UPPER, lower: ARM_LOWER };
+    }
+
+    // IK a due ossa: il centro del guanto va sul punto target (mondo), il gomito piega verso l'esterno
+    // e in basso dietro. Le ossa puntano lungo il loro -Y locale.
+    const _S = new THREE.Vector3(), _E = new THREE.Vector3(), _T = new THREE.Vector3(), _dir = new THREE.Vector3(),
+        _pole = new THREE.Vector3(), _q = new THREE.Quaternion(), _DOWN = new THREE.Vector3(0, -1, 0);
+    function aimBone(pivot, from, to) {
+        _dir.subVectors(to, from).normalize();
+        pivot.parent.getWorldQuaternion(_q).invert();
+        _dir.applyQuaternion(_q);
+        pivot.quaternion.setFromUnitVectors(_DOWN, _dir);
+        pivot.updateMatrixWorld(true);
+    }
+    function solveArm(arm, target, root) {
+        const a = arm.upper, b = arm.lower;
+        arm.pivot.getWorldPosition(_S);
+        _T.subVectors(target, _S);
+        const d = clamp(_T.length(), Math.abs(a - b) + 0.02, a + b - 0.002);
+        _T.normalize();
+        const x = (a * a - b * b + d * d) / (2 * d), h = Math.sqrt(Math.max(0, a * a - x * x));
+        _pole.set(-0.35, -0.45, arm.side).applyQuaternion(root.getWorldQuaternion(_q));
+        _pole.addScaledVector(_T, -_pole.dot(_T)).normalize();
+        _E.copy(_S).addScaledVector(_T, x).addScaledVector(_pole, h);
+        const hand = _T.multiplyScalar(d).add(_S);              // target raggiungibile (sulla stessa retta)
+        aimBone(arm.pivot, _S, _E);
+        aimBone(arm.elbow, _E, hand);
+    }
 
     // Animazione della bandierina: il braccio la tiene alta e l'asta resta quasi verticale
     function updateCrowdFlag(fan, time, cheering) {

@@ -3056,11 +3056,15 @@
                 mainDirLight.color.setHex(D.sunColor || 0xffe2b4);
                 // senza ombre il sole illuminerebbe tutto in modo uniforme: più tenue, le chiazze le disegna il modulo
                 mainDirLight.intensity = (preset.shadows ? (D.sunIntensity || 3.2) : (D.sunIntensityFlat || 1.1)) * LEGACY_LIGHT_SCALE;
+                // luce di riempimento: con le ombre del sole le zone al coperto vedono solo ambiente ed emisfera,
+                // che vanno rinforzate (luce del cielo dalle vetrate e rimbalzo del sole sulla pista) perché
+                // non diventino quasi nere; il colore "da terra" chiaro e caldo è il riverbero del pavimento
+                const fill = preset.shadows ? 1.6 : 1.0;
                 sceneAmbientLight.color.setHex(0xd8e3ff);
-                sceneAmbientLight.intensity = N.ambI * (D.ambient != null ? D.ambient : 0.45);
+                sceneAmbientLight.intensity = N.ambI * (D.ambient != null ? D.ambient : 0.45) * fill;
                 sceneHemiLight.color.setHex(0xdde8ff);
-                sceneHemiLight.groundColor.setHex(0x7a6048);
-                sceneHemiLight.intensity = N.hemiI * (D.hemi != null ? D.hemi : 0.7);
+                sceneHemiLight.groundColor.setHex(preset.shadows ? 0xa48d74 : 0x7a6048);
+                sceneHemiLight.intensity = N.hemiI * (D.hemi != null ? D.hemi : 0.7) * fill;
                 arenaCeilingLights.forEach(pt => { pt.visible = false; });
                 arenaNightBeams.forEach(b => { b.visible = false; });
                 if (preset.shadows) {
@@ -8351,6 +8355,13 @@
                 s.leftElbowPivot.rotation.set(L(0.55, 0.35), 0, 0);
                 s.rightArmPivot.rotation.set(L(0.48, 0.62), 0.2, L(-0.25, 0.28));
                 s.rightElbowPivot.rotation.set(L(0.45, 0.3), 0, 0);
+                if (shootSwing > 0) {
+                    // respinta / poke check: braccio del bastone allungato in avanti e di lato, busto che si sbilancia
+                    s.rightArmPivot.rotation.x += shootSwing * 0.75;
+                    s.rightArmPivot.rotation.z += shootSwing * 0.35;
+                    s.rightElbowPivot.rotation.x *= (1 - shootSwing * 0.8);
+                    s.bodyPivot.rotation.x -= shootSwing * 0.18;
+                }
                 updateSkaterStickPose(s);
                 return;
             }
@@ -12044,6 +12055,15 @@
         // |dx| <= 0.8 m fino a 1.27 m (altri 1.04 m²), guanto e bloccatore |dx| <= 1.4 m fino a 1.02 m
         // (altri 0.48 m²): 3.5 m², cioè il 70% della porta. Il disco deve attraversare il piano del
         // portiere andando verso la porta (anche fra un fotogramma e l'altro, per i tiri forti).
+        // distanza sul piano XZ fra il punto (px,pz) e il segmento (ax,az)-(bx,bz)
+        function segPointDist2D(ax, az, bx, bz, px, pz) {
+            const vx = bx - ax, vz = bz - az;
+            const l2 = vx * vx + vz * vz;
+            let t = l2 > 1e-8 ? ((px - ax) * vx + (pz - az) * vz) / l2 : 0;
+            t = Math.max(0, Math.min(1, t));
+            return Math.hypot(ax + vx * t - px, az + vz * t - pz);
+        }
+
         function goalieButterflyCovers(g, dt) {
             const gz = g.mesh.position.z;
             const goalZ = g.team === 'home' ? goalOffsetZ : -goalOffsetZ;
@@ -12538,9 +12558,49 @@
                 if (s.isGoalie) {
                     const puckSpeed = puckPhysics.velocity.length();
                     const maxSaveHeight = puckSpeed > 22 ? 0.76 : 0.94;
-                    const bodyHit = (distBody < 0.62 || distPuck < 0.52) && puck.position.y < maxSaveHeight;
+                    // Controllo "spazzato": tratto dal punto in cui il disco era alla fine del fotogramma
+                    // precedente (prima di un tiro o della conduzione, che lo spostano a scatti) fino a dove
+                    // arriverà in questo fotogramma. Così né i tiri a bruciapelo né quelli fortissimi
+                    // attraversano il portiere. Niente attesa di puckReleaseCooldown: il portiere reagisce
+                    // anche ai tiri appena partiti (dopo una sua respinta lo ferma saveCooldown).
+                    let sx0 = puckPrevPos.x, sz0 = puckPrevPos.z;
+                    const sx1 = puck.position.x + puckPhysics.velocity.x * dt, sz1 = puck.position.z + puckPhysics.velocity.z * dt;
+                    if (Math.hypot(sx1 - sx0, sz1 - sz0) > 4) { sx0 = puck.position.x; sz0 = puck.position.z; }   // disco riposizionato (ingaggio)
+                    const sweepBody = segPointDist2D(sx0, sz0, sx1, sz1, s.mesh.position.x, s.mesh.position.z);
+                    const sweepStick = segPointDist2D(sx0, sz0, sx1, sz1, stickTip.x, stickTip.z);
+                    const bodyHit = (distBody < 0.62 || distPuck < 0.52 || sweepBody < 0.62 || sweepStick < 0.52) && puck.position.y < maxSaveHeight;
                     const butterflyHit = (s.butterfly || 0) > 0.6 && goalieButterflyCovers(s, dt);
-                    if (s.saveCooldown <= 0 && (bodyHit || butterflyHit) && puckReleaseCooldown <= 0) {
+                    // avversario che arriva col disco sul bastone fin sotto la porta: il portiere allunga la
+                    // stecca (poke check) e allontana il disco, oppure ci si butta sopra e lo blocca
+                    const gGoalZ = s.team === 'home' ? goalOffsetZ : -goalOffsetZ;
+                    const gOut = s.team === 'home' ? -1 : 1;
+                    const pc = currentPuckCarrier;
+                    const carriedByOpp = pc && pc !== s && !pc.isGoalie && pc.team !== s.team && carrierHoldTimer > 0 && puckReleaseCooldown <= 0;
+                    const pokeReach = carriedByOpp && gameState === 'playing' && puck.position.y < 0.5 && distBody < 1.55
+                        && gOut * (puck.position.z - gGoalZ) > -0.3 && Math.abs(puck.position.x) < 3.2;
+                    if (s.saveCooldown <= 0 && (pokeReach || (carriedByOpp && bodyHit))) {
+                        if (Math.random() < 0.4) {
+                            startGoalieFreeze(s);
+                            return;
+                        }
+                        currentPuckCarrier = s;
+                        carrierHoldTimer = 0.45;
+                        // disco spinto via col bastone, rasoterra, verso l'angolo dal lato del disco
+                        const side = Math.abs(puck.position.x - s.mesh.position.x) > 0.15 ? Math.sign(puck.position.x - s.mesh.position.x) : (puck.position.x >= 0 ? 1 : -1);
+                        puckPhysics.velocity.set(side * (7 + Math.random() * 4), 0, gOut * (4 + Math.random() * 4));
+                        puck.position.x = s.mesh.position.x + side * 0.9;
+                        puck.position.z = s.mesh.position.z + gOut * 0.5;
+                        puckPrevPos.copy(puck.position);
+                        puckReleaseCooldown = 0.3;
+                        s.saveCooldown = 0.6;
+                        s.shootAnim = 0.85;
+                        if (window.gameAudio) window.gameAudio.playPuckHit(0.45);
+                        spawnSparkParticles(puck.position, 0xffffff, 5, 2.5, false);
+                        return;
+                    }
+                    // un passaggio appena partito dal bastone di un compagno non è un tiro da parare
+                    const ownFreshPass = puckReleaseCooldown > 0 && lastScoringSkater && lastScoringSkater.team === s.team && !lastScoringSkater.isGoalie;
+                    if (s.saveCooldown <= 0 && !ownFreshPass && (bodyHit || butterflyHit)) {
                         if (s.team === 'home') matchStats.homeSaves++;
                         else matchStats.guestSaves++;
                         if (window.gameAudio) window.gameAudio.playSave();
