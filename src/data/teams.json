@@ -5309,6 +5309,172 @@
       ]
     },
     {
+      "id": "monleale",
+      "league": "SERIE A VINTAGE",
+      "name": "SPORTLEALE MONLEALE",
+      "shortName": "MONLEALE",
+      "abbr": "MON",
+      "note": "Roster fornito dal club (11 giocatori di movimento, solo Marco Oddone con il ruolo indicato). Numeri provvisori per i giocatori senza numero: Leonardo Melis 8, Nicolò Melis 9, Giovanni Barisone 2, Gabriele Morgavi 3. Nessun portiere nel roster: portiere provvisorio senza nome. Ruoli C/LW/RW/D (tranne Oddone) e linee scelti provvisoriamente; Dylan Ghiglione compare in due linee.",
+      "jerseyClubId": "monleale",
+      "homeArena": "monleale",
+      "logo": "monleale.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/monleale_1.png"
+      ],
+      "ratings": {
+        "off": 70,
+        "def": 69,
+        "goa": 68
+      },
+      "colors": {
+        "primary": "#f26a1b",
+        "secondary": "#1c286e",
+        "staffJacket": "#1c286e",
+        "coachJacket": "#f26a1b"
+      },
+      "rosterScreen": {
+        "photo": "monleale.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": {
+        "first": "Massimiliano",
+        "last": "Zagni",
+        "role": "Allenatore",
+        "note": "Allenatore della Sportleale Monleale"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "PORTIERE",
+        "first": ""
+      },
+      "kits": {
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#f6f6f4",
+          "pants": "#1c286e",
+          "helmet": "#141416",
+          "glove": "#1c286e"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "NOVELLI",
+            "first": "Gianmarco",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "16",
+            "name": "GHIGLIONE",
+            "first": "Dylan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "71",
+            "name": "DEMICHELI",
+            "first": "Daniele",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "ODDONE",
+            "first": "Marco",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "66",
+            "name": "PAGANI",
+            "first": "Matia",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "46",
+            "name": "LUSIGNANI",
+            "first": "Nicola",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "8",
+            "name": "MELIS",
+            "first": "Leonardo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "CRISCI",
+            "first": "Edoardo Fabrizio",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "MELIS",
+            "first": "Nicolò",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "3",
+            "name": "MORGAVI",
+            "first": "Gabriele",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "16",
+            "name": "GHIGLIONE",
+            "first": "Dylan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "2",
+            "name": "BARISONE",
+            "first": "Giovanni",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "molina",
       "league": "RFEP",
       "name": "MOLINA SPORT ACEGC",
