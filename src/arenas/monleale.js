@@ -17,11 +17,13 @@
         const lowQ = preset.id === 'low';
         const T = 'assets/textures/monleale/';
         // sezione trasversale: pareti fino a EAVE, poi la volta ad arco acuto fino al colmo RIDGE.
-        // y(u) = EAVE + (RIDGE - EAVE) * (1 - u)^0.6, u = |x| / HW: verticale alla gronda, a punta al colmo
-        const HW = 23, EAVE = 3.8, RIDGE = 12.2, HL = 42, BAY = 6;
+        // y(u) = EAVE + (RIDGE - EAVE) * (1 - u)^0.4, u = |x| / HW: verticale alla gronda, a punta al colmo.
+        // Volta alta e piena perché le telecamere di gioco (laterale fino a x = 17,5 m e y = 10,5 m,
+        // broadcast a y = 11,6 m, dall'alto a y = 13-15 m) restino sempre dentro il telo
+        const HW = 25, EAVE = 4.5, RIDGE = 16.5, HL = 42, BAY = 6;
         const tmpM = new THREE.Matrix4();
         const V = (x, y, z) => new THREE.Vector3(x, y, z);
-        const roofY = u => EAVE + (RIDGE - EAVE) * Math.pow(Math.max(0, 1 - u), 0.6);
+        const roofY = u => EAVE + (RIDGE - EAVE) * Math.pow(Math.max(0, 1 - u), 0.4);
         // punto della volta per s in [-1, 1] (da ovest a est), rientrato di d verso l'interno
         const roofPt = (s, d) => {
             const u = Math.min(1, Math.abs(s));
@@ -56,7 +58,7 @@
         // soffitto (telo, archi, lampade): nascosto se una telecamera sale sopra la volta
         const ceilGroup = new THREE.Group();
         targetGroup.add(ceilGroup);
-        arenaCeilingHide = { group: ceilGroup, y: EAVE + 1.5 };
+        arenaCeilingHide = { group: ceilGroup, y: RIDGE - 0.5 };     // solo se una camera esce dal colmo
 
         // ---------- 1. telo della volta, appena gonfio fra un arco e l'altro
         const nS = lowQ ? 40 : 72, nZ = (2 * HL / BAY) * (lowQ ? 3 : 6);
