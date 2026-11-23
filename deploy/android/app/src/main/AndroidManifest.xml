@@ -4,7 +4,8 @@
     <!-- solo per i link esterni eventuali: in versione offline il gioco gira tutto dagli asset -->
     <uses-permission android:name="android.permission.INTERNET" />
 
-    <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+    <!-- three.js r163+ funziona solo con WebGL 2, cioè OpenGL ES 3.0: niente installazione dove non c'è -->
+    <uses-feature android:glEsVersion="0x00030000" android:required="true" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
     <uses-feature android:name="android.hardware.gamepad" android:required="false" />
     <!-- Android TV: installabile e visibile nella home della TV (telecomando o controller) -->

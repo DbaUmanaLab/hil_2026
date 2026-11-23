@@ -8,6 +8,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800;900&family=Oswald:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- app Android su TV (MainActivity: window.HILApp): aiuti a schermo per il telecomando -->
+    <script>try { if (window.HILApp && window.HILApp.isTv()) document.documentElement.classList.add('is-tv'); } catch (e) {}</script>
     <link rel="stylesheet" href="src/ui/uikit.css">
     <link rel="stylesheet" href="src/competition/competition.css" data-comp-css>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -1541,6 +1543,14 @@
         .splash-keys i { display: inline-block; width: 4px; height: 4px; border-radius: 50%; background: rgba(246,181,17,.5); margin: 0 8px; vertical-align: middle; }
         .splash-keys-touch { display: none; }
         @media (hover: none) and (pointer: coarse) { .splash-keys-kb { display: none; } .splash-keys-touch { display: inline; } }
+        /* Android TV (telecomando) e controller: aiuti con i loro tasti invece di quelli della tastiera */
+        .splash-keys-tv, .splash-keys-pad { display: none; }
+        html.is-tv .splash-keys-kb, html.is-tv .splash-keys-touch, html.has-pad .splash-keys-kb, html.has-pad .splash-keys-touch { display: none; }
+        html.is-tv:not(.has-pad) .splash-keys-tv { display: inline; }
+        html.has-pad .splash-keys-pad { display: inline; }
+        html.is-tv .hint-key, html.has-pad .hint-key { display: grid; font-size: 0; width: auto; min-width: 22px; padding: 0 6px; border-radius: 11px; }
+        html.is-tv .hint-key::after { content: 'OK'; font-size: 11px; }
+        html.has-pad .hint-key::after { content: 'A'; font-size: 12px; }
 
         /* ═══ OPZIONI dal menu principale: stesso pannello della pausa, senza la regia e le voci di partita ═══ */
         .splash-opt-btn { height: 38px; padding: 0 14px 0 10px; border-radius: 999px; display: inline-flex; align-items: center; gap: 7px; color: #f6b511; background: rgba(10,14,26,.6); border: 1.5px solid rgba(246,181,17,.55);
@@ -1730,6 +1740,8 @@
             <div class="splash-keys text-[11px] font-black uppercase tracking-widest text-amber-300">
                 <span class="splash-keys-kb"><kbd>←</kbd><kbd>→</kbd> Scegli <i></i> <kbd>Invio</kbd> Gioca <i></i> <kbd>O</kbd> Opzioni <i></i> <kbd>M</kbd> Musica</span>
                 <span class="splash-keys-touch animate-pulse">Tocca una modalità per iniziare</span>
+                <span class="splash-keys-tv"><kbd>◀</kbd><kbd>▶</kbd> Scegli <i></i> <kbd>OK</kbd> Gioca <i></i> <kbd>▲</kbd> Opzioni e musica <i></i> <kbd>Indietro</kbd> ×2 Esci</span>
+                <span class="splash-keys-pad"><kbd>◀</kbd><kbd>▶</kbd> Scegli <i></i> <kbd>A</kbd> Gioca <i></i> <kbd>B</kbd> Indietro <i></i> <kbd>▲</kbd> Opzioni e musica</span>
             </div>
             <!-- spazio vuoto largo quanto il blocco di sinistra: tiene centrate le indicazioni dei tasti -->
             <div class="hidden sm:block flex-1 basis-0" aria-hidden="true"></div>
@@ -2886,6 +2898,8 @@
             arena: 'cittadella',
             // 'day' (luce del sole dalle finestre, fari spenti) o 'night' (fari accesi); vedi arenaSupportsDay
             timeOfDay: (() => { try { return localStorage.getItem('hil_time_of_day') === 'day' ? 'day' : 'night'; } catch (e) { return 'night'; } })(),
+            // livello della squadra avversaria: 'easy' | 'normal' | 'hard' (DIFFICULTY_LEVELS)
+            difficulty: (() => { try { const d = localStorage.getItem('hil_difficulty'); return d === 'easy' || d === 'hard' ? d : 'normal'; } catch (e) { return 'normal'; } })(),
             // squadra controllata dall'utente ('home' o 'guest'), ricordata nel browser
             userTeam: (() => { try { return localStorage.getItem('hil_user_team') === 'guest' ? 'guest' : 'home'; } catch (e) { return 'home'; } })()
         };
@@ -2931,6 +2945,89 @@
             if (e.target && e.target.matches && e.target.matches('input[type="text"], input[type="number"], textarea')) return;
             if (!window.disclaimerOpen && !window.perfBenchOpen && inMenuForUiSound()) playUiSoundFor('move');
         }, true);
+
+        // =====================================================================
+        // LIVELLI DI DIFFICOLTÀ della squadra avversaria (CPU).
+        // cpu: reazione delle decisioni del portatore (s), precisione al tiro (0-1), probabilità di
+        //      rubare il disco col bastone e di caricare, velocità (moltiplicatore), propensione al tiro
+        //      (shootBias) e soglia per scegliere un passaggio (passPick: più basso = passa di più e meglio).
+        // goalie: portiere CPU — intervallo fra due letture del tiro (s), errore di piazzamento (m),
+        //      prontezza e velocità laterale, raggio del poke check sul portatore che arriva in porta (m).
+        // "normal" corrisponde alla AI di prima dei livelli.
+        // =====================================================================
+        const DIFFICULTY_LEVELS = {
+            easy: {
+                label: 'Facile', icon: '🟢',
+                desc: 'Avversari più lenti a decidere, tiri imprecisi e pochi contrasti. Il portiere reagisce in ritardo.',
+                cpu: { reaction: 0.34, shotAccuracy: 0.42, pokeChance: 0.14, hitChance: 0.03, speed: 0.92, shootBias: 0.8, passPick: 1.5 },
+                goalie: { react: 0.3, inaccuracy: 1.6, lateral: 3.6, maxSpeed: 4.3, pokeReach: 1.2 }
+            },
+            normal: {
+                label: 'Normale', icon: '🟡',
+                desc: 'Partita equilibrata: la CPU gioca di squadra, pressa e tira quando ha spazio.',
+                cpu: { reaction: 0.2, shotAccuracy: 0.62, pokeChance: 0.3, hitChance: 0.1, speed: 1.04, shootBias: 1.0, passPick: 1.0 },
+                goalie: { react: 0.22, inaccuracy: 1.15, lateral: 4.4, maxSpeed: 5.1, pokeReach: 1.55 }
+            },
+            hard: {
+                label: 'Difficile', icon: '🔴',
+                desc: 'Avversari rapidi e aggressivi: decisioni immediate, tiri precisi sugli angoli, pressing e cariche. Portiere attentissimo.',
+                cpu: { reaction: 0.12, shotAccuracy: 0.8, pokeChance: 0.44, hitChance: 0.17, speed: 1.1, shootBias: 1.18, passPick: 0.7 },
+                goalie: { react: 0.14, inaccuracy: 0.6, lateral: 5.8, maxSpeed: 6.4, pokeReach: 1.75 }
+            }
+        };
+        const DIFFICULTY_IDS = ['easy', 'normal', 'hard'];
+        function normDifficulty(id) { return DIFFICULTY_LEVELS[id] ? id : 'normal'; }
+        function difficultyLevel() { return DIFFICULTY_LEVELS[normDifficulty(matchConfig.difficulty)]; }
+        // portiere dell'utente: comandato dall'AI ma sempre allo stesso livello (il più reattivo)
+        const USER_GOALIE_TUNING = { react: 0.14, inaccuracy: 0.65, lateral: 5.6, maxSpeed: 6.4, pokeReach: 1.55 };
+        function goalieTune(team) { return team === getUserTeam() ? USER_GOALIE_TUNING : difficultyLevel().goalie; }
+
+        // Finestra di scelta del livello (amichevole, partita rapida, nuova competizione, nuova carriera).
+        // Mouse, tastiera e controller: è un livello .cp-overlay di src/ui/uikit.js (frecce, Invio, Esc).
+        // opts: { title, sub, current, currentTag (etichetta sotto il livello proposto), onPick(id), onCancel() }
+        window.pickDifficulty = function (opts = {}) {
+            const old = document.querySelector('.df-overlay');
+            if (old) old.remove();
+            const cur = normDifficulty(opts.current || matchConfig.difficulty);
+            const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+            const o = document.createElement('div');
+            o.className = 'cp-overlay df-overlay';
+            o.innerHTML = `<div class="cp-panel cp-dialog df-dialog" role="dialog" aria-modal="true" aria-label="Livello di difficoltà">
+                <span class="df-kicker">${esc(opts.sub || 'Squadra avversaria')}</span>
+                <h2>${esc(opts.title || 'Scegli la difficoltà')}</h2>
+                <div class="df-options">${DIFFICULTY_IDS.map(id => {
+                    const L = DIFFICULTY_LEVELS[id];
+                    return `<button type="button" class="df-option df-${id}${id === cur ? ' is-current' : ''}" data-df="${id}"${id === cur ? ` data-focus data-tag="${esc(opts.currentTag || 'Ultima scelta')}"` : ''}>
+                        <span class="df-icon" aria-hidden="true">${L.icon}</span><b>${esc(L.label)}</b><small>${esc(L.desc)}</small></button>`;
+                }).join('')}</div>
+                <div class="cp-next-actions"><button type="button" class="cp-btn" data-df-cancel data-keyback>◀ Indietro</button></div>
+            </div>`;
+            document.body.appendChild(o);
+            let done = false;
+            const close = () => { done = true; o.remove(); };
+            const cancel = () => { if (done) return; close(); if (opts.onCancel) opts.onCancel(); };
+            o.addEventListener('click', e => { if (e.target === o) cancel(); });
+            o.querySelector('[data-df-cancel]').onclick = cancel;
+            o.querySelectorAll('[data-df]').forEach(b => {
+                b.onclick = () => {
+                    if (done) return;
+                    const id = b.dataset.df;
+                    close();
+                    if (opts.onPick) opts.onPick(id);
+                };
+            });
+            const f = o.querySelector('[data-focus]');
+            if (f) {
+                if (window.UIKit && window.UIKit.focus) window.UIKit.focus(f);
+                else f.focus({ preventScroll: true });
+            }
+            return o;
+        };
+        // amichevole e partita rapida: livello scelto ogni volta (proposto l'ultimo usato)
+        function setFreeMatchDifficulty(id) {
+            matchConfig.difficulty = normDifficulty(id);
+            try { localStorage.setItem('hil_difficulty', matchConfig.difficulty); } catch (e) {}
+        }
 
         function getUserTeam() { return matchConfig.userTeam === 'guest' ? 'guest' : 'home'; }
         function getCpuTeam() { return getUserTeam() === 'home' ? 'guest' : 'home'; }
@@ -5509,7 +5606,14 @@
                     powerPreference: 'high-performance'
                 });
             } catch (e) {
-                renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false });
+                try {
+                    renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: false });
+                } catch (e2) {
+                    // three.js r163+ richiede WebGL 2: vecchi box TV o WebView non aggiornata. Meglio un messaggio
+                    // chiaro che una schermata nera.
+                    showUnsupportedGraphics();
+                    throw e2;
+                }
             }
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, preset.pixelRatio));
@@ -11688,11 +11792,12 @@
         // --- AI DI SQUADRA: POSSESSO, PRESSING, MARCATURE, SMARCAMENTI, TIRI E PASSAGGI ---
         // Parametri per squadra: tempo di reazione (s), precisione al tiro (0-1),
         // probabilità di rubare il disco col bastone e di caricare il portatore.
+        // I compagni dell'utente usano sempre AI_TUNING.user; la squadra avversaria (CPU) usa i parametri
+        // del livello di difficoltà della partita (DIFFICULTY_LEVELS, matchConfig.difficulty).
         const AI_TUNING = {
-            user: { reaction: 0.16, shotAccuracy: 0.7,  pokeChance: 0.22, hitChance: 0.0,  speed: 1.0 },
-            cpu:  { reaction: 0.2,  shotAccuracy: 0.62, pokeChance: 0.3,  hitChance: 0.1,  speed: 1.04 }
+            user: { reaction: 0.16, shotAccuracy: 0.7,  pokeChance: 0.22, hitChance: 0.0,  speed: 1.0, shootBias: 1.0, passPick: 1.0 }
         };
-        function aiTune(team) { return team === getUserTeam() ? AI_TUNING.user : AI_TUNING.cpu; }
+        function aiTune(team) { return team === getUserTeam() ? AI_TUNING.user : difficultyLevel().cpu; }
         const aiPlan = { timer: 0, home: null, guest: null };
 
         function aiAttackDir(team) { return team === 'home' ? -1 : 1; }
@@ -11971,6 +12076,7 @@
                 else if (distGoal < 13) shootChance = laneBlocked ? 0.12 : 0.55;
                 else if (distGoal < 19) shootChance = laneBlocked ? 0.03 : 0.18;
             }
+            shootChance = Math.min(0.95, shootChance * (tune.shootBias || 1));
             if (Math.random() < shootChance) {
                 aiShoot(s, stickTip, shotTarget, distGoal);
                 return true;
@@ -11993,7 +12099,8 @@
                     const score = open * 1.4 + advance * 0.35 - mateGoalDist * 0.12;
                     if (score > bestScore) { bestScore = score; best = m; }
                 });
-                if (best && (underPressure ? bestScore > 1 : bestScore > 4)) {
+                const pick = tune.passPick || 1;
+                if (best && (underPressure ? bestScore > 1 * pick : bestScore > 4 * pick)) {
                     aiPass(s, stickTip, best);
                     return true;
                 }
@@ -12310,11 +12417,11 @@
 
                     const homeGoalZ = s.team === 'home' ? goalOffsetZ : -goalOffsetZ;
                     const outDir = s.team === 'home' ? -1 : 1;
-                    const isOpponent = s.team !== getUserTeam();
+                    const gT = goalieTune(s.team);       // livello: portiere CPU secondo la difficoltà
 
                     s.goalieReactTimer -= dt;
                     if (s.goalieReactTimer <= 0) {
-                        s.goalieReactTimer = isOpponent ? 0.22 : 0.14;
+                        s.goalieReactTimer = gT.react;
                         let desiredX = puck.position.x * 0.42;
                         const movingTowardGoal = (s.team === 'home' && puckPhysics.velocity.z > 2.5) ||
                                                  (s.team === 'guest' && puckPhysics.velocity.z < -2.5);
@@ -12322,7 +12429,7 @@
                         if (movingTowardGoal && Math.abs(puckPhysics.velocity.z) > 0.5) {
                             const timeToLine = (homeGoalZ - puck.position.z) / puckPhysics.velocity.z;
                             if (timeToLine > 0 && timeToLine < 1.5) {
-                                const inaccuracy = (Math.random() - 0.5) * (isOpponent ? 1.15 : 0.65);
+                                const inaccuracy = (Math.random() - 0.5) * gT.inaccuracy;
                                 desiredX = (puck.position.x + puckPhysics.velocity.x * timeToLine) * 0.78 + inaccuracy;
                             }
                         }
@@ -12354,8 +12461,8 @@
 
                     const dx = s.goalieTargetX - s.mesh.position.x;
                     const dz = targetZ - s.mesh.position.z;
-                    const lateralGain = isOpponent ? 4.4 : 5.6;
-                    const maxGoalieSpd = (isOpponent ? 5.1 : 6.4) * (1 - 0.5 * (s.butterfly || 0));   // in ginocchio scivola più piano
+                    const lateralGain = gT.lateral;
+                    const maxGoalieSpd = gT.maxSpeed * (1 - 0.5 * (s.butterfly || 0));   // in ginocchio scivola più piano
                     s.velocity.set(dx * lateralGain, 0, dz * 5.0);
                     if (s.velocity.length() > maxGoalieSpd) s.velocity.setLength(maxGoalieSpd);
 
@@ -12595,7 +12702,7 @@
                     const gOut = s.team === 'home' ? -1 : 1;
                     const pc = currentPuckCarrier;
                     const carriedByOpp = pc && pc !== s && !pc.isGoalie && pc.team !== s.team && carrierHoldTimer > 0 && puckReleaseCooldown <= 0;
-                    const pokeReach = carriedByOpp && gameState === 'playing' && puck.position.y < 0.5 && distBody < 1.55
+                    const pokeReach = carriedByOpp && gameState === 'playing' && puck.position.y < 0.5 && distBody < goalieTune(s.team).pokeReach
                         && gOut * (puck.position.z - gGoalZ) > -0.3 && Math.abs(puck.position.x) < 3.2;
                     if (s.saveCooldown <= 0 && (pokeReach || (carriedByOpp && bodyHit))) {
                         if (Math.random() < 0.4) {
@@ -14336,8 +14443,17 @@
                     <button type="button" id="stats-rematch-btn" class="sx-btn is-primary">Rivincita ↻</button>
                 `;
                 document.getElementById('stats-rematch-btn').addEventListener('click', () => {
-                    document.getElementById('match-stats-modal').classList.add('hidden');
-                    launchMatchFromCurrentConfig();
+                    // nuova amichevole: si sceglie di nuovo il livello (proposto quello appena giocato)
+                    window.pickDifficulty({
+                        title: 'Rivincita',
+                        sub: 'Livello della squadra avversaria',
+                        current: matchConfig.difficulty,
+                        onPick: id => {
+                            setFreeMatchDifficulty(id);
+                            document.getElementById('match-stats-modal').classList.add('hidden');
+                            launchMatchFromCurrentConfig();
+                        }
+                    });
                 });
                 document.getElementById('stats-menu-btn').addEventListener('click', () => {
                     document.getElementById('match-stats-modal').classList.add('hidden');
@@ -14550,6 +14666,24 @@
         // --- APERTURA / CHIUSURA ---
         function canPauseGame() {
             return !gamePaused && PAUSABLE_STATES.has(gameState) && !uiLayer.classList.contains('hidden');
+        }
+        // app in background (tasto Home della TV o del telefono, cambio scheda): audio sospeso, riprende al
+        // ritorno (la pausa della partita la mette il gestore in setupPauseMenu)
+        document.addEventListener('visibilitychange', () => {
+            const ga = window.gameAudio;
+            if (document.hidden) { if (ga && ga.suspend) ga.suspend(); }
+            else if (ga && ga.resume) ga.resume();
+        });
+        // grafica non supportata (manca WebGL 2): messaggio a tutto schermo al posto della schermata nera
+        function showUnsupportedGraphics() {
+            if (document.getElementById('gfx-unsupported')) return;
+            const d = document.createElement('div');
+            d.id = 'gfx-unsupported';
+            d.style.cssText = 'position:fixed;inset:0;z-index:99999;display:grid;place-items:center;background:#050913;color:#fff;font:18px/1.5 system-ui,sans-serif;padding:32px;text-align:center';
+            d.innerHTML = '<div style="max-width:640px"><div style="font-size:28px;font-weight:800;margin-bottom:12px">Grafica 3D non supportata</div>'
+                + 'Questo dispositivo non offre WebGL 2, necessario per la grafica di HIL 2026.<br>'
+                + 'Su Android e Android TV aggiorna <b>Android System WebView</b> (o Chrome) dal Play Store e riapri il gioco.</div>';
+            document.body.appendChild(d);
         }
         function openPauseMenu(page = null) {
             if (!canPauseGame()) return;
@@ -15185,11 +15319,27 @@
                     };
                     // finto caricamento con un fun fact prima di entrare nella modalità scelta
                     const modeLabel = (item.querySelector('.splash-tile-title') || {}).textContent || '';
-                    if (window.showFunFactLoading) window.showFunFactLoading(modeLabel.trim(), proceed, hideSplash);
-                    else proceed();
+                    const go = () => {
+                        if (window.showFunFactLoading) window.showFunFactLoading(modeLabel.trim(), proceed, hideSplash);
+                        else proceed();
+                    };
                     // keyboard highlight
                     document.querySelectorAll('.nhl-menu-item').forEach(el => el.classList.remove('active'));
                     item.classList.add('active');
+                    // partita rapida: livello della CPU scelto a ogni avvio. L'amichevole lo chiede su "Scendi in
+                    // pista" (dopo la partita si torna alla scelta squadre); competizione e manager quando si
+                    // crea la stagione o la carriera
+                    if (action === 'quick') {
+                        window.pickDifficulty({
+                            title: 'Scegli la difficoltà',
+                            sub: 'Partita rapida • squadra avversaria',
+                            current: matchConfig.difficulty,
+                            onPick: id => { setFreeMatchDifficulty(id); go(); },
+                            onCancel: () => { if (window.focusSplashTile) setTimeout(window.focusSplashTile, 0); }
+                        });
+                        return;
+                    }
+                    go();
                 });
             });
 
@@ -15378,7 +15528,14 @@
             const startBtn = document.getElementById('start-btn');
             if (startBtn) {
                 startBtn.addEventListener('click', () => {
-                    launchMatchFromCurrentConfig();
+                    // amichevole: livello della CPU scelto a ogni partita (proposto l'ultimo usato)
+                    window.pickDifficulty({
+                        title: 'Scegli la difficoltà',
+                        sub: 'Amichevole • squadra avversaria',
+                        current: matchConfig.difficulty,
+                        onPick: id => { setFreeMatchDifficulty(id); launchMatchFromCurrentConfig(); },
+                        onCancel: () => { if (window.UIKit) window.UIKit.focus(startBtn); }
+                    });
                 });
             }
 
@@ -15416,6 +15573,8 @@
                     if (e.key === 'Escape') { e.preventDefault(); playUiSoundFor('back'); if (pausePage) closePausePage(); else closeSettingsScreen(); }
                     return;
                 }
+                // scelta del livello di difficoltà aperta: tasti tutti a src/ui/uikit.js, niente scorciatoie sotto
+                if (document.querySelector('.df-overlay')) return;
                 if (!titleSplashScreen.classList.contains('hidden')) {
                     // scelta della modalità: frecce, Invio e Spazio li gestisce src/ui/uikit.js (spostano il fuoco tra
                     // tessere e pulsanti della testata e premono quello selezionato); qui solo le scorciatoie

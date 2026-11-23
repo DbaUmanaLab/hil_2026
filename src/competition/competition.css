@@ -297,3 +297,24 @@
 .cp-table tr.is-rel td.pos { color: #f87171; }
 .cp-table tr.is-rel td { background: rgba(239, 68, 68, .08); }
 .cp-legend b.rel { color: #f87171; }
+
+/* ---------- scelta del livello di difficoltà (window.pickDifficulty in index.html) ---------- */
+.df-dialog { width: min(860px, 100%); }
+.df-kicker { font-size: 12px; letter-spacing: .26em; text-transform: uppercase; color: var(--bx-gold, #f6b511); font-weight: 700; }
+.df-options { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; width: 100%; }
+.df-option { appearance: none; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center;
+    padding: 18px 14px; border-radius: 12px; color: #fff; font-family: 'Oswald', sans-serif;
+    background: rgba(255,255,255,.06); border: 2px solid rgba(255,255,255,.12); transition: transform .15s, background .15s, border-color .15s, box-shadow .15s; }
+.df-option b { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: clamp(18px, 2.2vw, 26px); text-transform: uppercase; letter-spacing: .04em; }
+.df-option small { font-size: 13px; line-height: 1.35; color: rgba(255,255,255,.72); letter-spacing: .02em; }
+.df-icon { font-size: 30px; line-height: 1; }
+.df-option:hover, .df-option:focus-visible, .df-option.uk-focus { transform: translateY(-2px); outline: none; background: rgba(255,255,255,.12); }
+.df-easy:hover, .df-easy:focus-visible, .df-easy.uk-focus { border-color: #4ade80; box-shadow: 0 0 0 3px rgba(74,222,128,.25); }
+.df-normal:hover, .df-normal:focus-visible, .df-normal.uk-focus { border-color: #facc15; box-shadow: 0 0 0 3px rgba(250,204,21,.25); }
+.df-hard:hover, .df-hard:focus-visible, .df-hard.uk-focus { border-color: #f87171; box-shadow: 0 0 0 3px rgba(248,113,113,.25); }
+.df-option.is-current::after { content: attr(data-tag); font-size: 10px; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+@media (max-width: 640px) {
+    .df-options { grid-template-columns: 1fr; }
+    .df-option { flex-direction: row; text-align: left; padding: 12px 14px; }
+    .df-option small { display: none; }
+}

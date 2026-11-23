@@ -316,6 +316,10 @@
     }
 
     // ------------------------------------------------------------------ salvataggi
+    function difficultyLabel(s) {
+        const L = typeof DIFFICULTY_LEVELS !== 'undefined' && DIFFICULTY_LEVELS[(s && s.difficulty) || 'normal'];
+        return 'Difficoltà ' + (L ? L.label : 'Normale');
+    }
     function readSaves() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '[]'); } catch (e) { return []; } }
     function writeSaves(list) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } }
     function progressLabel(s) {
@@ -457,7 +461,7 @@
                     <div class="cp-save-row">
                         <img src="${logo(s.data.user)}" alt="">
                         <div style="min-width:0"><div class="n">${esc(s.name)}</div>
-                            <div class="s">${esc(progressLabel(s.data))} • ${new Date(s.savedAt).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}</div></div>
+                            <div class="s">${esc(progressLabel(s.data))} • ${esc(difficultyLabel(s.data))} • ${new Date(s.savedAt).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}</div></div>
                         <div class="a"><button class="cp-btn is-small is-primary" data-load="${s.id}">Carica</button><button class="cp-btn is-small is-danger" data-del="${s.id}">Elimina</button></div>
                     </div>`).join('') : '<div class="cp-empty">Nessuna stagione salvata</div>'}</div>
             </div>`;
@@ -551,9 +555,22 @@
             };
         });
     }
+    // livello della CPU: scelto una volta all'inizio della stagione (o della coppa) e salvato con lei
     function startSeason(user) {
         const comp = COMPS[compIdx];
-        if (comp.id === 'coppa_italia') { startCup(user); return; }
+        if (typeof window.pickDifficulty !== 'function') { createSeason(user, 'normal'); return; }
+        window.pickDifficulty({
+            title: 'Scegli la difficoltà',
+            sub: `${comp.short || comp.name} • vale per tutta la ${comp.id === 'coppa_italia' ? 'coppa' : 'stagione'}`,
+            current: 'normal',
+            currentTag: 'Consigliato',
+            onPick: id => createSeason(user, id),
+            onCancel: () => { const f = root.querySelector('[data-screen="teams"] [data-focus]'); if (f) f.focus({ preventScroll: true }); }
+        });
+    }
+    function createSeason(user, difficulty) {
+        const comp = COMPS[compIdx];
+        if (comp.id === 'coppa_italia') { startCup(user, difficulty); return; }
         const teams = leagueTeams(comp.league);
         state = {
             id: 'c' + Date.now().toString(36),
@@ -568,14 +585,15 @@
             phase: 'regular',
             playoffs: null,
             champion: null,
-            lastTurn: null
+            lastTurn: null,
+            difficulty
         };
         hubTab = 'table';
         saveCurrent(true);
         showScreen('hub');
-        toast('Nuova stagione • salvata come "' + state.name + '"');
+        toast('Nuova stagione • ' + difficultyLabel(state) + ' • salvata come "' + state.name + '"');
     }
-    function startCup(user) {
+    function startCup(user, difficulty) {
         const cup = createCup(user);
         state = {
             id: 'c' + Date.now().toString(36),
@@ -588,12 +606,13 @@
             phase: 'cup',
             champion: null,
             runnerUp: null,
-            lastTurn: null
+            lastTurn: null,
+            difficulty: difficulty || 'normal'
         };
         hubTab = 'bracket';
         saveCurrent(true);
         showScreen('hub');
-        toast('Sorteggio fatto • salvata come "' + state.name + '"');
+        toast('Sorteggio fatto • ' + difficultyLabel(state) + ' • salvata come "' + state.name + '"');
     }
 
     // --- 3. hub della stagione
@@ -719,6 +738,7 @@
                 <div class="cp-head-titles"><span class="cp-kicker">${phaseTxt}</span><span class="cp-title">${L(state).name} ${esc(state.season)}</span></div>
                 <div class="cp-head-right">
                     <span class="cp-pill"><img src="${logo(state.user)}" alt="">${esc(clubName(state.user))}</span>
+                    <span class="cp-pill">${esc(difficultyLabel(state))}</span>
                     <span class="cp-pill">${esc(progressLabel(state).split(' • ').slice(-1)[0])}</span>
                 </div>
             </div>
@@ -811,6 +831,7 @@
                 <div class="cp-head-titles"><span class="cp-kicker">${state.phase === 'done' ? 'Coppa conclusa' : 'Eliminazione diretta • gare secche'}</span><span class="cp-title">Coppa Italia ${esc(state.season)}</span></div>
                 <div class="cp-head-right">
                     <span class="cp-pill"><img src="${logo(state.user)}" alt="">${esc(clubName(state.user))}</span>
+                    <span class="cp-pill">${esc(difficultyLabel(state))}</span>
                     <span class="cp-pill">${state.phase === 'done' ? 'Finale giocata' : esc(cupRoundLabel(state.cup.round))}${alive || state.phase === 'done' ? '' : ' • eliminati'}</span>
                 </div>
             </div>
@@ -899,6 +920,7 @@
         matchConfig.guestKit = awayKit;
         matchConfig.arena = arenaOf(f.home);
         matchConfig.userTeam = f.home === state.user ? 'home' : 'guest';   // non tocca la preferenza salvata
+        matchConfig.difficulty = state.difficulty || 'normal';              // livello scelto a inizio stagione (salvataggi vecchi: normale)
         pendingFixture = f;
         matchActive = true;
         const ko = fixtureKickoff(f);

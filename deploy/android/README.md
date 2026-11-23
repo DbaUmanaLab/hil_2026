@@ -72,6 +72,21 @@ Per installare su un telefono collegato via USB: `.\gradlew.bat installDebug`.
 - Tutto schermo immersivo, schermo sempre acceso, rotazione libera (rispetta il blocco rotazione).
 - **Indietro** = tasto Esc del gioco (pausa / chiudi menu); due volte entro 2 secondi per uscire.
 - I link esterni si aprono nel browser di sistema.
+- In background (tasto Home) la partita va in pausa e l'audio si sospende; riprende al ritorno.
+
+## Android TV
+
+- Compare nella home della TV (`LEANBACK_LAUNCHER`, banner 320×180 in `res/drawable-*/tv_banner.png`);
+  touchscreen e controller non sono obbligatori, quindi si installa su TV, telefoni e tablet.
+- Serve **OpenGL ES 3.0** (WebGL 2, richiesto da three.js): i box che hanno solo ES 2.0 non lo
+  vedono nel Play Store. Se la WebView del dispositivo non offre WebGL 2 il gioco mostra un messaggio
+  che invita ad aggiornare *Android System WebView*.
+- **Telecomando**: frecce per muoversi nei menu e in partita, OK per confermare; in partita OK breve =
+  passaggio, OK tenuto = tiro caricato, Indietro = pausa, Play/Pausa = pausa. Carica e cambio linea non
+  hanno un tasto sul telecomando: linee e telecamera si cambiano dal menu di pausa.
+- **Controller** (Bluetooth o USB): mappa completa, vedi `src/input/Gamepad.js`.
+- L'app dice alla pagina se gira su una TV (`window.HILApp.isTv()`): gli aiuti a schermo mostrano i
+  tasti del telecomando (OK, Indietro) o del controller (A, B) invece di quelli della tastiera.
 - Icona: il badge del gioco (`assets/logos/game badge.png`) su fondo bianco.
 - Nella build di debug la WebView si può ispezionare da `chrome://inspect` sul PC.
 

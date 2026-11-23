@@ -171,7 +171,7 @@
                         <div class="cp-save-row">
                             <img src="${logo(s.data.user)}" alt="">
                             <div style="min-width:0"><div class="n">${esc(s.name)}</div>
-                                <div class="s">${s.data.over ? '<em class="mg-bad">Fallita</em> • ' : ''}Stagione ${esc(MC().seasonLabelOf(s.data.seasonYear))} • ${esc(MC().dateLabel(s.data.date))} • ${eur(s.data.balance)}</div></div>
+                                <div class="s">${s.data.over ? '<em class="mg-bad">Fallita</em> • ' : ''}Stagione ${esc(MC().seasonLabelOf(s.data.seasonYear))} • ${esc(MC().dateLabel(s.data.date))} • ${eur(s.data.balance)} • ${esc(difficultyLabel(s.data))}</div></div>
                             <div class="a">${s.data.over ? '' : `<button class="cp-btn is-small is-primary" data-load="${s.id}">Carica</button>`}<button class="cp-btn is-small is-danger" data-del="${s.id}">Elimina</button></div>
                         </div>`).join('') : '<div class="cp-empty">Nessuna carriera salvata</div>'}</div>
                 </div>
@@ -200,15 +200,32 @@
             renderStart();
         });
     }
+    // livello della CPU nelle partite giocate: scelto una volta all'inizio della carriera e salvato con lei
+    function difficultyLabel(c) {
+        const L = typeof DIFFICULTY_LEVELS !== 'undefined' && DIFFICULTY_LEVELS[(c && c.difficulty) || 'normal'];
+        return L ? L.label : 'Normale';
+    }
     function startCareer(team) {
+        if (typeof window.pickDifficulty !== 'function') { createCareer(team, 'normal'); return; }
+        window.pickDifficulty({
+            title: 'Scegli la difficoltà',
+            sub: 'Hockey Manager • vale per tutta la carriera',
+            current: 'normal',
+            currentTag: 'Consigliato',
+            onPick: id => createCareer(team, id),
+            onCancel: () => { const f = root.querySelector('[data-act="new"]'); if (f) f.focus({ preventScroll: true }); }
+        });
+    }
+    function createCareer(team, difficulty) {
         MC().restoreWorld();
         const y = new Date().getMonth() >= 6 ? new Date().getFullYear() : new Date().getFullYear() - 1;
         career = MC().newCareer(team, y);
         career.name = autoName(team);
+        career.difficulty = difficulty || 'normal';
         tab = 'office';
         save(true);
         showScreen('hub');
-        toast(`Carriera salvata come "${career.name}"`);
+        toast(`Difficoltà ${difficultyLabel(career)} • carriera salvata come "${career.name}"`);
     }
 
     // ------------------------------------------------------------------ 2. hub
@@ -239,6 +256,7 @@
                 <div class="cp-head-titles"><span class="cp-kicker">Hockey Manager • ${MC().CFG.DIV[MC().userDiv(c)].name} • Stagione ${esc(MC().seasonLabelOf(c.seasonYear))}</span><span class="cp-title">${esc(MC().clubName(c.user))}</span></div>
                 <div class="cp-head-right mg-status">
                     <span class="cp-pill mg-pill-date">📅 ${esc(MC().dateLabel(c.date, true))}</span>
+                    <span class="cp-pill" title="Difficoltà delle partite">🎚️ ${esc(difficultyLabel(c))}</span>
                     <button type="button" class="cp-pill mg-pill-btn${low ? ' is-alert' : ''}" data-tab="finance" title="Saldo del club">💶 <b>${eur(c.balance)}</b></button>
                     <button type="button" class="cp-pill mg-pill-btn mg-pill-fans" data-tab="office" title="Gradimento dei tifosi">📣 ${fansGauge(c.fans)}</button>
                     <button type="button" class="cp-pill mg-pill-btn" data-tab="messages" title="Messaggi non letti">✉️ <b>${n}</b>${n ? '<i class="mg-dot"></i>' : ''}</button>
@@ -377,6 +395,7 @@
         matchConfig.guestKit = awayKit;
         matchConfig.arena = HOME_CLUB_ARENAS[f.home] || f.home;
         matchConfig.userTeam = f.home === career.user ? 'home' : 'guest';
+        matchConfig.difficulty = career.difficulty || 'normal';            // livello scelto a inizio carriera (salvataggi vecchi: normale)
         liveMatch = { s: ev.comp === 'cup' ? career.cup : career.league, f };
         const ko = kickoffOf(ev, f);
         matchConfig.timeOfDay = ko.daytime ? 'day' : 'night';      // partita pomeridiana o serale

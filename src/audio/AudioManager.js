@@ -600,6 +600,11 @@ export class AudioManager {
     resume() {
         if (this._ctx && this._ctx.state === 'suspended') this._ctx.resume();
     }
+
+    /** App in background (tasto Home della TV, cambio scheda): silenzia tutto senza fermare i loop. */
+    suspend() {
+        if (this._ctx && this._ctx.state === 'running') this._ctx.suspend();
+    }
 }
 
 /** Istanza singleton globale */

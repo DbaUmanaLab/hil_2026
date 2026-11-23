@@ -171,17 +171,24 @@
     }
     requestAnimationFrame(frame);
 
+    // controller in uso: gli aiuti a schermo mostrano i suoi tasti (classe has-pad, index.html)
+    function markPad() {
+        nativeActive = true;
+        document.documentElement.classList.add('has-pad');
+    }
+
     // ponte con l'app Android
     window.HILPad = {
         // dall'app Android: gestiti subito, senza aspettare il prossimo fotogramma
         native(name, down) {
-            nativeActive = true;
+            // 'pause' arriva anche dal tasto Play/Pausa del telecomando: non è un controller
+            if (name === 'pause') nativeActive = true; else markPad();
             if (!VALID.has(name)) return;
             nativeBtn[name] = !!down;
             apply(nativeState(), performance.now());
         },
         nativeAxes(x, y) {
-            nativeActive = true;
+            markPad();
             nativeAx = { x: +x || 0, y: +y || 0 };
             apply(nativeState(), performance.now());
         },
@@ -192,4 +199,8 @@
         }
     };
     window.addEventListener('gamepadconnected', () => { document.documentElement.classList.add('has-pad'); });
+    // controller scollegato (browser): tornano gli aiuti della tastiera, se non ne resta collegato un altro
+    window.addEventListener('gamepaddisconnected', () => {
+        if (!nativeActive && !window.HILPad.connected()) document.documentElement.classList.remove('has-pad');
+    });
 })();

@@ -2,8 +2,11 @@ package it.hil2026.game;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.UiModeManager;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
@@ -53,6 +56,7 @@ public class MainActivity extends Activity {
     private long lastBackAt = 0;
     private TextToSpeech tts;
     private boolean ttsReady = false;
+    private boolean tv = false;
 
     @SuppressLint("SetJavaScriptEnabled")
     @Override
@@ -111,6 +115,9 @@ public class MainActivity extends Activity {
         });
 
         setupTextToSpeech();
+        // Android TV: la pagina mostra gli aiuti per telecomando (OK, Indietro) invece dei tasti della tastiera
+        tv = detectTv();
+        webView.addJavascriptInterface(new AppInfo(), "HILApp");
 
         // build di debug: WebView ispezionabile da chrome://inspect sul PC
         if ((getApplicationInfo().flags & ApplicationInfo.FLAG_DEBUGGABLE) != 0) WebView.setWebContentsDebuggingEnabled(true);
@@ -124,6 +131,18 @@ public class MainActivity extends Activity {
 
         if (savedInstanceState != null) webView.restoreState(savedInstanceState);
         else webView.loadUrl(START_URL);
+    }
+
+    private boolean detectTv() {
+        UiModeManager ui = (UiModeManager) getSystemService(UI_MODE_SERVICE);
+        if (ui != null && ui.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) return true;
+        return getPackageManager().hasSystemFeature(PackageManager.FEATURE_LEANBACK);
+    }
+
+    /** Informazioni sull'app per la pagina: window.HILApp. */
+    private class AppInfo {
+        @JavascriptInterface
+        public boolean isTv() { return tv; }
     }
 
     /** Tasto indietro = Esc (pausa / chiudi menu); due volte di fila entro 2 s per uscire. */
