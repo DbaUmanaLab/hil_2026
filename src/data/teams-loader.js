@@ -10,7 +10,10 @@
     'use strict';
     const URL = 'src/data/teams.json';
     let data = null;
-    try {
+    // app iOS (deploy/ios): il JSON arriva già nella pagina (window.HIL_TEAMS_DATA), perché le richieste
+    // sincrone non passano dal gestore degli asset della WKWebView
+    if (window.HIL_TEAMS_DATA && Array.isArray(window.HIL_TEAMS_DATA.teams)) data = window.HIL_TEAMS_DATA;
+    else try {
         const xhr = new XMLHttpRequest();
         xhr.open('GET', URL, false);
         xhr.send(null);

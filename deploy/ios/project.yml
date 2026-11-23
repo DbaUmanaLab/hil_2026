@@ -1,0 +1,41 @@
+# Progetto Xcode dell'app iOS di HIL 2026, generato con XcodeGen (https://github.com/yonaskolb/XcodeGen):
+#   cd deploy/ios && xcodegen generate      (oppure, dalla radice: npm run ios:project)
+# Il file HIL2026.xcodeproj è generato: non va modificato a mano né messo nel repository.
+name: HIL2026
+options:
+  bundleIdPrefix: it.hil2026
+  deploymentTarget:
+    iOS: "15.0"          # WebGL 2 (richiesto da three.js) c'è da iOS 15
+  createIntermediateGroups: true
+settings:
+  base:
+    SWIFT_VERSION: "5.0"
+    # lo script che copia il gioco legge fuori dalla cartella del progetto (index.html, src/, assets/)
+    ENABLE_USER_SCRIPT_SANDBOXING: NO
+targets:
+  HIL2026:
+    type: application
+    platform: iOS
+    # scheme condiviso: serve a xcodebuild (npm run ios:*) anche se il progetto non è mai stato aperto in Xcode
+    scheme: {}
+    sources:
+      - path: HIL2026
+    settings:
+      base:
+        PRODUCT_NAME: HIL2026
+        PRODUCT_BUNDLE_IDENTIFIER: it.hil2026.game
+        INFOPLIST_FILE: HIL2026/Info.plist
+        TARGETED_DEVICE_FAMILY: "1,2"          # iPhone e iPad
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        MARKETING_VERSION: 1.0.0
+        CURRENT_PROJECT_VERSION: 1
+        CODE_SIGN_STYLE: Automatic
+        # Team ID dell'account Apple Developer (Xcode › Settings › Accounts). Si può anche scegliere
+        # in Xcode (Signing & Capabilities), ma rigenerando il progetto la scelta si perde.
+        DEVELOPMENT_TEAM: ""
+        SUPPORTS_MACCATALYST: NO
+    preBuildScripts:
+      # copia index.html, src/ e assets/ dentro l'app (cartella web/) a ogni build, con le librerie offline
+      - name: Copia il gioco web
+        script: /usr/bin/python3 "${PROJECT_DIR}/scripts/sync-web.py"
+        basedOnDependencyAnalysis: false

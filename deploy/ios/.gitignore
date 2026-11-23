@@ -1,0 +1,8 @@
+# progetto Xcode generato da XcodeGen (project.yml)
+*.xcodeproj/
+*.xcworkspace/
+xcuserdata/
+DerivedData/
+build/
+# librerie e font scaricati per la versione offline (scripts/sync-web.py)
+vendor/

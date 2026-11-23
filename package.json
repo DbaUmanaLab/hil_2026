@@ -8,7 +8,15 @@
     "apk": "node deploy/android/gradle-run.js assembleDebug",
     "apk:release": "node deploy/android/gradle-run.js assembleRelease",
     "apk:install": "node deploy/android/gradle-run.js installDebug",
-    "apk:clean": "node deploy/android/gradle-run.js clean"
+    "apk:clean": "node deploy/android/gradle-run.js clean",
+    "ios": "node deploy/ios/xcode-run.js build",
+    "ios:run": "node deploy/ios/xcode-run.js run",
+    "ios:device": "node deploy/ios/xcode-run.js device",
+    "ios:archive": "node deploy/ios/xcode-run.js archive",
+    "ios:ipa": "node deploy/ios/xcode-run.js ipa",
+    "ios:project": "node deploy/ios/xcode-run.js project",
+    "ios:open": "node deploy/ios/xcode-run.js open",
+    "ios:clean": "node deploy/ios/xcode-run.js clean"
   },
   "devDependencies": {
     "esbuild": "0.28.2",
