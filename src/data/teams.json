@@ -7101,6 +7101,182 @@
           }
         ]
       ]
+    },
+    {
+      "id": "rubi",
+      "league": "RFEP",
+      "name": "RUBÍ CENT PATINS",
+      "shortName": "CENT PATINS",
+      "abbr": "RCP",
+      "note": "Roster fornito dal club (1 portiere, 11 giocatori di movimento senza ruolo indicato), senza statistiche. Il portiere Arnau Díaz Ruiz non ha numero: il 1 è provvisorio; non c'è un portiere di riserva. Con 11 giocatori per 12 posti Adrián Budià Segués gioca in due linee; ruoli C/LW/RW/D e linee scelti provvisoriamente. Marius Godano è allenatore-giocatore (n. 85); staff tecnico: Jordi Najar Pons.",
+      "jerseyClubId": "rubi",
+      "homeArena": "rubi",
+      "logo": "rubi.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/rubi_1.png",
+        "assets/jerseys/rubi_2.png"
+      ],
+      "ratings": {
+        "off": 71,
+        "def": 70,
+        "goa": 68
+      },
+      "colors": {
+        "primary": "#141416",
+        "secondary": "#c8a46a",
+        "staffJacket": "#141416",
+        "coachJacket": "#c8a46a"
+      },
+      "rosterScreen": {
+        "photo": "rubi.jpg",
+        "focus": "50% 25%"
+      },
+      "coach": {
+        "first": "Marius",
+        "last": "Godano",
+        "role": "Allenatore-giocatore",
+        "note": "In campo anche con il numero 85; staff tecnico con Jordi Najar Pons"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "DÍAZ RUIZ",
+        "first": "Arnau"
+      },
+      "backupGoalies": [],
+      "reserves": [],
+      "kits": {
+        "black": {
+          "label": "Divisa Nera",
+          "primary": "#141416",
+          "pants": "#141416",
+          "helmet": "#f4f4f4",
+          "glove": "#141416"
+        },
+        "grey": {
+          "label": "Divisa Grigia",
+          "primary": "#c4c6c8",
+          "pants": "#141416",
+          "helmet": "#f4f4f4",
+          "glove": "#141416"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "85",
+            "name": "GODANO",
+            "first": "Marius",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "CORONAS RUIZ",
+            "first": "David",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "19",
+            "name": "OLIVERA SALES",
+            "first": "Pol",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "BUDIÀ SEGUÉS",
+            "first": "Adrián",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "70",
+            "name": "TORRAS PUNZANO",
+            "first": "Lluís",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "22",
+            "name": "NAJAR SANTAMARÍA",
+            "first": "Marc",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "68",
+            "name": "TRIVIÑO LÓPEZ",
+            "first": "Juan Pablo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "65",
+            "name": "BUDIÀ SEGUÉS",
+            "first": "Sergi",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "56",
+            "name": "MEDINA HOLGADO",
+            "first": "Iván",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "76",
+            "name": "MEDINA HOLGADO",
+            "first": "Sergio",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "5",
+            "name": "VILLAMIZAR MARÍN",
+            "first": "Cristhian Camilo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "BUDIÀ SEGUÉS",
+            "first": "Adrián",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
     }
   ]
 }

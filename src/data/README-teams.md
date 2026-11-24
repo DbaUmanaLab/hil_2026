@@ -20,7 +20,7 @@ il file non si può leggere.
 | `league` | uno degli `id` in `leagues` (`SERIE A`, `SERIE B`, `UISP`, `LIGUE ELITE`, `RFEP`, `SERIE A VINTAGE`). Campionati, Coppa Italia e Hockey Manager usano solo `SERIE A` e `SERIE B`; `SERIE A VINTAGE` è una categoria fittizia per le squadre che giocano solo amichevoli e partite rapide |
 | `name`, `shortName`, `abbr` | nome completo, nome breve, sigla di 3 lettere per il tabellone |
 | `jerseyClubId` | di solito uguale a `id` (diverso solo se usa le maglie di un altro club, come il Pike) |
-| `homeArena` | palazzetto di casa: `cittadella`, `vicenza`, `milano`, `asiago`, `cus_verona`, `forli`, `fox_legnaro`, `edera_trieste`, `kraken_camaiore`, `villeneuve`, `roma`, `treviso`, `novi`, `empoli`, `time42`, `molina`, `ferrara`, `piacenza`, `kemarin`, `torre_pellice`, `parma`, `padova`, `rethel`, `valladolid`, `monleale`, `tres_cantos`, `arona`, `espanya`, `sagunto`, `metropolitano`, `castellon`, `aranda` |
+| `homeArena` | palazzetto di casa: `cittadella`, `vicenza`, `milano`, `asiago`, `cus_verona`, `forli`, `fox_legnaro`, `edera_trieste`, `kraken_camaiore`, `villeneuve`, `roma`, `treviso`, `novi`, `empoli`, `time42`, `molina`, `ferrara`, `piacenza`, `kemarin`, `torre_pellice`, `parma`, `padova`, `rethel`, `valladolid`, `monleale`, `tres_cantos`, `arona`, `espanya`, `sagunto`, `metropolitano`, `castellon`, `aranda`, `rubi` |
 | `logo` | nome del file in `assets/logos/` |
 | `logoOnScoreboard` | `png` usa il logo anche sul tabellone 3D (per le squadre nuove lascia `png`) |
 | `jerseys` | immagini delle maglie, una per divisa, nello stesso ordine di `kits` |
