@@ -6213,6 +6213,186 @@
           }
         ]
       ]
+    },
+    {
+      "id": "espanya",
+      "league": "RFEP",
+      "name": "ESPANYA HOCKEY CLUB",
+      "shortName": "ESPANYA",
+      "abbr": "EHC",
+      "note": "Roster fornito dal club (2 portieri, 4 difensori, 4 attaccanti, 2 giocatori di movimento), senza statistiche. Con 10 giocatori per 12 posti la terza linea ripete gli attaccanti della prima; Bejarano Delgado (difensore) è tra le riserve. C/LW/RW fra gli attaccanti e ruolo di Pons Bauzá de Mirabo e Jerez Martín scelti provvisoriamente. Staff tecnico: Miguel Ángel Melchor Cotano e Jorge Juan Seguí Pons.",
+      "jerseyClubId": "espanya",
+      "homeArena": "espanya",
+      "logo": "espanya.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/espanya_1.png"
+      ],
+      "ratings": {
+        "off": 72,
+        "def": 71,
+        "goa": 72
+      },
+      "colors": {
+        "primary": "#d71f26",
+        "secondary": "#f5c518",
+        "staffJacket": "#141416",
+        "coachJacket": "#d71f26"
+      },
+      "rosterScreen": {
+        "photo": "espanya.jpg",
+        "focus": "50% 20%"
+      },
+      "coach": {
+        "first": "Miguel Ángel",
+        "last": "Melchor Cotano",
+        "role": "Allenatore",
+        "note": "Nello staff tecnico anche Jorge Juan Seguí Pons"
+      },
+      "goalie": {
+        "num": "12",
+        "name": "TRAVER FERRAGUT",
+        "first": "Joan"
+      },
+      "backupGoalies": [
+        {
+          "num": "31",
+          "name": "MORA MANRESA",
+          "first": "Gabriel"
+        }
+      ],
+      "reserves": [
+        {
+          "num": "41",
+          "name": "BEJARANO DELGADO",
+          "first": "Jean Paul"
+        }
+      ],
+      "kits": {
+        "red": {
+          "label": "Divisa Rossa",
+          "primary": "#d71f26",
+          "pants": "#141416",
+          "helmet": "#141416",
+          "glove": "#141416"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "17",
+            "name": "BOUDREAULT MCNICOLL",
+            "first": "Philippe",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "10",
+            "name": "CABALIN MANRESA",
+            "first": "Eduard",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "65",
+            "name": "SANSALONI CARBONELL",
+            "first": "Adrià",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "7",
+            "name": "VALERO LAHUERTA",
+            "first": "Alex",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "76",
+            "name": "MELCHOR VELLIBRE",
+            "first": "Adrián",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "79",
+            "name": "PONS BAUZÁ DE MIRABO",
+            "first": "Álvaro",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "80",
+            "name": "JEREZ MARTÍN",
+            "first": "Jaime",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "11",
+            "name": "SERRANO TRUYOLS",
+            "first": "Fernando",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "17",
+            "name": "BOUDREAULT MCNICOLL",
+            "first": "Philippe",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "10",
+            "name": "CABALIN MANRESA",
+            "first": "Eduard",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "65",
+            "name": "SANSALONI CARBONELL",
+            "first": "Adrià",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "25",
+            "name": "JIMÉNEZ MARTÍ",
+            "first": "Mauro",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
     }
   ]
 }
