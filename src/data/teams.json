@@ -6575,6 +6575,180 @@
           }
         ]
       ]
+    },
+    {
+      "id": "metropolitano",
+      "league": "RFEP",
+      "name": "METROPOLITANO HOCKEY CLUB",
+      "shortName": "METROPOLITANO",
+      "abbr": "MET",
+      "note": "Roster fornito dal club (2 portieri, 8 giocatori di movimento senza ruolo indicato), senza statistiche. Aimar López Miguel compare due volte, con il 16 e con il 29: riportato com'è. Beñat Elejalde Ibáñez de Gauna, senza numero, non è nelle linee. Con 7 giocatori numerati per 12 posti alcuni giocano in due linee; ruoli C/LW/RW/D, linee e portiere titolare scelti provvisoriamente. Ibai Aranzamendi Díaz è allenatore-giocatore (n. 42); staff tecnico: Jaime Elejalde Arana e Federico Albizu Puente.",
+      "jerseyClubId": "metropolitano",
+      "homeArena": "metropolitano",
+      "logo": "metropolitano.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/metropolitano.png"
+      ],
+      "ratings": {
+        "off": 68,
+        "def": 67,
+        "goa": 70
+      },
+      "colors": {
+        "primary": "#1f3a9e",
+        "secondary": "#d62b2b",
+        "staffJacket": "#14204a",
+        "coachJacket": "#1f3a9e"
+      },
+      "rosterScreen": {
+        "photo": "metropolitano.jpg",
+        "focus": "50% 45%"
+      },
+      "coach": {
+        "first": "Ibai",
+        "last": "Aranzamendi Díaz",
+        "role": "Allenatore-giocatore",
+        "note": "In campo anche con il numero 42; staff tecnico con Jaime Elejalde Arana e Federico Albizu Puente"
+      },
+      "goalie": {
+        "num": "89",
+        "name": "OTADUI SANZ",
+        "first": "Josu"
+      },
+      "backupGoalies": [
+        {
+          "num": "8",
+          "name": "GARCÍA OLIVENZA",
+          "first": "Pablo"
+        }
+      ],
+      "reserves": [],
+      "kits": {
+        "blue": {
+          "label": "Divisa Blu",
+          "primary": "#1f3a9e",
+          "pants": "#141a3a",
+          "helmet": "#141416",
+          "glove": "#1f3a9e"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "42",
+            "name": "ARANZAMENDI DÍAZ",
+            "first": "Ibai",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "36",
+            "name": "DARKISTADE GARCÍA",
+            "first": "Eneko",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "43",
+            "name": "DARKISTADE GARCÍA",
+            "first": "Gorka",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "GARCÍA OLIVENZA",
+            "first": "Israel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "16",
+            "name": "LÓPEZ MIGUEL",
+            "first": "Aimar",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "29",
+            "name": "LÓPEZ MIGUEL",
+            "first": "Aimar",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "36",
+            "name": "DARKISTADE GARCÍA",
+            "first": "Eneko",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "1",
+            "name": "ARPÓN BIKANDI",
+            "first": "Asier",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "42",
+            "name": "ARANZAMENDI DÍAZ",
+            "first": "Ibai",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "43",
+            "name": "DARKISTADE GARCÍA",
+            "first": "Gorka",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "16",
+            "name": "LÓPEZ MIGUEL",
+            "first": "Aimar",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "GARCÍA OLIVENZA",
+            "first": "Israel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
     }
   ]
 }
