@@ -5845,6 +5845,189 @@
           "glove": "#1e88e5"
         }
       }
+    },
+    {
+      "id": "tres_cantos",
+      "league": "RFEP",
+      "name": "KAMIKAZES TRES CANTOS",
+      "shortName": "KAMIKAZES",
+      "abbr": "KAM",
+      "note": "Roster fornito dal club (1 portiere, 16 giocatori di movimento senza ruolo indicato), senza statistiche. Ruoli C/LW/RW/D, linee e riserve scelti provvisoriamente. Numero provvisorio per Sebastián Andrés León Parada (7, nel roster N/D). Allenatore non indicato.",
+      "jerseyClubId": "tres_cantos",
+      "homeArena": "tres_cantos",
+      "logo": "tres_cantos.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/tres_cantos_1.png"
+      ],
+      "ratings": {
+        "off": 76,
+        "def": 74,
+        "goa": 75
+      },
+      "colors": {
+        "primary": "#d71920",
+        "secondary": "#141416",
+        "staffJacket": "#141416",
+        "coachJacket": "#d71920"
+      },
+      "rosterScreen": {
+        "photo": "tres_cantos.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "9",
+        "name": "SEIJAS DE FRUTOS",
+        "first": "Ignacio"
+      },
+      "reserves": [
+        {
+          "num": "24",
+          "name": "JIMÉNEZ RABINAL",
+          "first": "Guillermo"
+        },
+        {
+          "num": "25",
+          "name": "CALDERÓN ARANZABAL",
+          "first": "Sergio"
+        },
+        {
+          "num": "45",
+          "name": "DE LA HOZ GIMÉNEZ",
+          "first": "Raúl"
+        },
+        {
+          "num": "7",
+          "name": "LEÓN PARADA",
+          "first": "Sebastián Andrés"
+        }
+      ],
+      "kits": {
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#f6f6f4",
+          "pants": "#f2f2f0",
+          "helmet": "#f4f4f4",
+          "glove": "#d71920"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "RAMPON",
+            "first": "Gustavo Gabriel René",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "0",
+            "name": "CONTRERAS LÓPEZ",
+            "first": "Álvaro",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "10",
+            "name": "CONTRERAS LÓPEZ",
+            "first": "Aitor",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "13",
+            "name": "GARCÍA-ZARANDIETA DUCLOS",
+            "first": "Antón",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "8",
+            "name": "MAS LU",
+            "first": "Leonardo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "12",
+            "name": "JUESAS MANSILLA",
+            "first": "Alberto",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "14",
+            "name": "MORENO RUIZ",
+            "first": "Lucas",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "1",
+            "name": "IGLESIAS CARBALLEIRA",
+            "first": "Pablo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "15",
+            "name": "PICÓN MOSTAZA",
+            "first": "Lucas",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "16",
+            "name": "SÁNCHEZ SÁEZ",
+            "first": "Daniel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "17",
+            "name": "PÉREZ ACUÑA",
+            "first": "David Alejandro",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "21",
+            "name": "CABA AGUIRRE",
+            "first": "Miguel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
     }
   ]
 }
