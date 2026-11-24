@@ -176,7 +176,7 @@
             targetGroup.add(root);
             crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: true });
         };
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         // lato ovest (cronometristi): due file, più gente al centro; lato est solo oltre le panchine
         [[-21.6, 0.4], [-22.6, 0.28]].forEach(([x, dens]) => {
             for (let z = -30; z <= 30; z += 0.75) {

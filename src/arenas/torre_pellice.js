@@ -232,7 +232,7 @@
             targetGroup.add(root);
             crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: true });
         };
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         const jit = () => (Math.random() - 0.5) * 0.2;
         [-21.8, -22.7].forEach((x, row) => {                     // a bordo pista, dietro la rete
             for (let z = -32; z <= 32; z += 0.75) if (Math.random() < keep * (0.45 - row * 0.15)) fan(x + jit(), 0, z + jit(), Math.atan2(z, 40) * 0.3);

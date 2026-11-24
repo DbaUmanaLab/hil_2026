@@ -250,7 +250,7 @@
             targetGroup.add(root);
             crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: true });
         };
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         for (let k = 0; k < TIERS; k++) {
             const h = (k + 1) * STEP_H + 0.04, x = X0 - k * STEP_D - STEP_D / 2 + 0.1;
             for (let z = ZS0 + 0.5; z <= ZS1 - 0.5; z += 0.75) if (Math.random() < keep * 0.5) fan(x + (Math.random() - 0.5) * 0.15, h, z + (Math.random() - 0.5) * 0.2);

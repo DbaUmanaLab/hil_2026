@@ -135,7 +135,7 @@
             targetGroup.add(root);
             crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: true });
         };
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         [ZG - 0.55, ZG - 1.35, ZG - 2.15].forEach((z, row) => {
             for (let x = XW + 1.2; x <= XE - 1.2; x += 0.62) if (Math.random() < keep * (0.85 - row * 0.2)) fan(x + (Math.random() - 0.5) * 0.25, 0.4, z + (Math.random() - 0.5) * 0.2);
         });

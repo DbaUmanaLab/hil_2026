@@ -299,7 +299,7 @@
             targetGroup.add(root);
             crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: false });
         };
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         for (let r = 0; r < ROWS; r++) {
             const top = RISE * (r + 1), fx = FX - r * DEPTH;
             for (let z = Z0 + 0.6; z <= Z1 - 0.6; z += 0.72) {

@@ -54,6 +54,7 @@ export class AudioManager {
         this._fileBuffers = {};
         /** Brusio di fondo del pubblico: molto basso e filtrato, non deve disturbare */
         this._crowdBedLevel = 0.065;
+        this._crowdAttendance = 1;    // volume del tifo di fondo secondo l'affluenza (setCrowdAttendance): 0,5x vuoto – 1,4x tutto esaurito
         this._crowdBedNode = null;
         this._crowdGoalNode = null;
         this._crowdGoalAt = 0;
@@ -431,6 +432,11 @@ export class AudioManager {
         this._whenReady(() => this._crowdSwell(0.55 + gain * 0.4, 1.4));
     }
 
+    /** Il pubblico esulta a lungo (inquadratura del pubblico a inizio partita): il brusio sale e poi torna giù */
+    playCrowdRoar(peak = 1, hold = 4) {
+        this._whenReady(() => this._crowdSwell(Math.max(0, Math.min(1, peak)), hold));
+    }
+
     /** Compatibilità: clic generico dell'interfaccia */
     playUiClick() { this.playUiSound('select'); }
 
@@ -581,11 +587,18 @@ export class AudioManager {
     _setCrowdIntensity(targetGain, rampTime = 0.5) {
         if (!this._ctx || !this._crowdGain) return;
         this._crowdIntensity = targetGain;
-        const scaled = this._crowdBedLevel * (0.6 + 0.8 * Math.max(0, Math.min(1, targetGain))) * this.crowdLevel;
+        const scaled = this._crowdBedLevel * (0.6 + 0.8 * Math.max(0, Math.min(1, targetGain))) * this.crowdLevel * this._crowdAttendance;
         const g = this._crowdGain.gain, t = this._ctx.currentTime;
         g.cancelScheduledValues(t);
         g.setValueAtTime(g.value, t);
         g.linearRampToValueAtTime(scaled, t + rampTime);
+    }
+
+    /** Affluenza della partita (riempimento 0-1 del palazzetto): il tifo di fondo è più forte col pienone */
+    setCrowdAttendance(fill) {
+        const f = Math.max(0, Math.min(1, +fill || 0));
+        this._crowdAttendance = 0.5 + 0.9 * f;             // metà palazzetto ≈ volume di sempre
+        if (this._ctx && this._crowdGain && this._crowdIntensity != null) this._setCrowdIntensity(this._crowdIntensity, 0.4);
     }
 
     setCrowdIntensity(targetGain, rampTime = 1.0) {

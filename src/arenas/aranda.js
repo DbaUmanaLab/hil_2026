@@ -263,7 +263,7 @@
             targetGroup.add(root);
             crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: !sitting });
         };
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         // la tribunetta è una panca a gradoni: si siede sul bordo del gradino (seduta a 0,42 m dal piano di sotto)
         benchSpots.forEach(([x, h], k) => {
             for (let z = -ZT + 0.6; z <= ZT - 0.6; z += 0.6) {

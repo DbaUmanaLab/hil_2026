@@ -135,7 +135,7 @@
             }
         });
 
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         const fanStyles = [0xc8102e, 0xf8fafc, 0x14235a, 0x1f2937, 0xc8102e, 0x2563eb];
         const pantsMatF = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.8 });
         const handMatF = new THREE.MeshStandardMaterial({ color: 0xe6b9a2, roughness: 0.6 });

@@ -334,6 +334,8 @@
             roof: arena.roof ? String(arena.roof).toLowerCase() : '',
             surface: arena.surface ? String(arena.surface).toLowerCase() : '',
             ctx,
+            // affluenza della partita (index.html, matchAttendance): { fill 0-1, soldOut, kind }
+            crowd: (() => { try { const f = G('matchAttendance'); return typeof f === 'function' ? f() : null; } catch (e) { return null; } })(),
             ratings: { home: R[mc.homeClub] || { off: 70, def: 70, goa: 70 }, guest: R[mc.guestClub] || { off: 70, def: 70, goa: 70 } },
             facts: [], factsUsed: new Set(),
             goalsBy: {}, maxDeficit: { home: 0, guest: 0 },
@@ -395,6 +397,9 @@
             if (sk && sk.kind === 'W' && sk.k >= 3) f.push({ id: 'sk' + side, fn: () => ['fact.streak', { t: teamName(side), k: sk.k }] });
         });
         if (M.cap) f.push({ id: 'cap', fn: () => ['fact.capacity', { arena: M.arenaFull, cap: M.cap }] });
+        // durante le pause: si torna a parlare del pubblico quando il palazzetto è pieno
+        if (M.crowd && M.crowd.soldOut) f.push({ id: 'crowd', fn: () => ['fact.soldOut', { arena: M.arenaFull }] });
+        else if (M.crowd && M.crowd.fill >= 0.75) f.push({ id: 'crowd', fn: () => ['fact.crowdPacked', { arena: M.arenaFull }] });
         if (lang === 'it' && M.roof) f.push({ id: 'roof', fn: () => ['fact.roof', { arena: M.arenaFull, roof: M.roof }] });
         if (lang === 'it' && M.surface) f.push({ id: 'surf', fn: () => ['fact.surface', { surface: M.surface }] });
         // regole e curiosità generali sull'in-line
@@ -469,7 +474,12 @@
         const add = (key, vars) => { const t = phrase(key, vars); if (t) lines.push(t); };
         const chat = settings.chatter;
         add('intro.welcome', { arena: M.arena, city: M.city });
-        if (M.cap && chat >= 1 && Math.random() < 0.6) add('intro.capacity', { cap: M.cap });
+        // il pubblico: tutto esaurito, pienone, palazzetto mezzo vuoto (la capienza solo se c'è gente)
+        // col palazzetto pieno lo dice durante l'inquadratura del pubblico (evento 'crowdShot'), non qui
+        const cr = M.crowd;
+        if (cr && cr.fill >= 0.75) { /* crowdShot */ }
+        else if (cr && cr.fill < 0.35 && chat >= 1) add('intro.crowdSparse', { arena: M.arena });
+        else if (M.cap && chat >= 1 && Math.random() < 0.6) add('intro.capacity', { cap: M.cap });
         const sv = scoreVars();
         add('intro.match', { home: sv.home, guest: sv.guest });
         const ctx = M.ctx;
@@ -639,6 +649,19 @@
                     if (again && !again.text.includes(v.pf)) queue.unshift(again);
                 }
                 enqueue(phrase((p.g || 0) > 0 ? 'warmup.playerStats' : 'warmup.player', v), { prio: 1.5, ttl: 3, tag: 'warmup', front: true });
+                break;
+            }
+            case 'crowdShot': {
+                // inquadratura del pubblico a inizio partita: va detta mentre la camera scorre sulla tribuna
+                const key = d.soldOut
+                    ? (d.kind === 'final' ? 'intro.soldOutFinal' : d.kind === 'decider' ? 'intro.soldOutDecider' : d.kind === 'topClash' ? 'intro.soldOutTop' : 'intro.soldOut')
+                    : 'intro.crowdPacked';
+                if (current && current.tag === 'intro') {
+                    const again = now() - (current.started || 0) < 1.2 ? Object.assign({}, current, { t: now() }) : null;
+                    interrupt();
+                    if (again) queue.unshift(again);
+                }
+                enqueue(phrase(key, { arena: M.arena }), { prio: 1.5, ttl: 4, tag: 'crowd', front: true, mood: 'hot' });
                 break;
             }
             case 'penaltyEnd': {

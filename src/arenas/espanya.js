@@ -249,7 +249,7 @@
             targetGroup.add(root);
             crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: !sitting });
         };
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         // sedute: la panca è a 0,45 m sopra il piano della fila; il tifoso guarda verso +x (la pista)
         [[X1 - 0.3, 0.04, 0.55], [X1 - D1 - 0.3, STEP + 0.04, 0.42]].forEach(([x, y, dens]) => {
             for (let z = -ZT + 0.8; z <= ZT - 0.8; z += 0.62) {

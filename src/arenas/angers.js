@@ -258,7 +258,7 @@
             targetGroup.add(root);
             crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: !sitting });
         };
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         seatSpots.forEach(([x, y, z]) => {
             const k = Math.round(y / STEP_H) - 1;
             if (Math.random() < keep * (0.42 - k * 0.07) * (1 - Math.abs(z) / 45)) fan(x - 0.05, y + 0.04, z, 0, true);

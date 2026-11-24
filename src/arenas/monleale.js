@@ -249,7 +249,7 @@
             targetGroup.add(root);
             crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: true });
         };
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         // con rotation.y = 0 il tifoso guarda verso +x (la pista); al centro c'è il tavolo cronometristi
         for (let z = -26; z <= 26; z += 0.75) {
             if (Math.abs(z) < 7.6) continue;

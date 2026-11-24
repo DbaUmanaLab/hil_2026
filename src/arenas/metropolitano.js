@@ -200,7 +200,7 @@
             targetGroup.add(root);
             crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: !sitting });
         };
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         benchSpots.forEach(([x, h], k) => {
             for (let z = -ZT + 0.6; z <= ZT - 0.6; z += 0.6) {
                 // più gente nelle file basse e al centro, come nelle foto

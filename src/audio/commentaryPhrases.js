@@ -26,6 +26,36 @@
             'Buon pomeriggio dal {arena}: il sole entra dalle vetrate e si gioca!',
             'Ben ritrovati, in questo pomeriggio di hockey dal {arena}.'
         ],
+        // affluenza (index.html, matchAttendance): tutto esaurito, pienone, palazzetto semivuoto
+        'intro.soldOut': [
+            "Tutto esaurito qui al {arena}: non c'è un posto libero!",
+            "Sold out stasera: il {arena} è pieno fino all'ultima fila.",
+            "Che colpo d'occhio: tribune piene, il pubblico delle grandi occasioni.",
+            "Biglietti finiti da giorni: il {arena} è una bolgia."
+        ],
+        'intro.soldOutFinal': [
+            "Per la finale il {arena} è tutto esaurito: spettacolo sugli spalti!",
+            "Tutto esaurito per l'atto conclusivo: c'è gente anche in piedi sulle scale.",
+            "Una finale con il pubblico delle grandi notti: non entra più nessuno!"
+        ],
+        'intro.soldOutDecider': [
+            "Gara decisiva e palazzetto stracolmo: tutto esaurito al {arena}.",
+            "Chi vince va avanti, chi perde va a casa: e il {arena} è tutto esaurito."
+        ],
+        'intro.soldOutTop': [
+            "Scontro al vertice e tutto esaurito: il {arena} ha risposto alla grande.",
+            "Prima contro seconda, e non c'è un posto libero: è la partita della stagione."
+        ],
+        'intro.crowdPacked': [
+            "Gran pubblico stasera: il {arena} è quasi pieno.",
+            "Tribune piene o quasi, si sente che è una partita importante.",
+            "Bella cornice di pubblico: in tanti per questa sfida."
+        ],
+        'intro.crowdSparse': [
+            "Pubblico delle occasioni tranquille sugli spalti, ma chi c'è si farà sentire.",
+            "Non è il pienone stasera: qualche posto libero in tribuna.",
+            "Spalti un po' vuoti, ma in pista non ci si risparmia."
+        ],
         'intro.capacity': [
             'Un impianto da {cap} posti, e stasera si sente il calore del pubblico.',
             '{cap} posti a sedere e una tribuna che non vede l\'ora di cominciare.',
@@ -543,6 +573,15 @@
         ],
 
         // ------------------------------------------------------------ aneddoti e statistiche
+        'fact.soldOut': [
+            "Ricordiamolo: stasera il {arena} è tutto esaurito.",
+            "Senti che tifo: tutto esaurito al {arena}, ed è un piacere raccontarla.",
+            "Il pubblico del tutto esaurito spinge ogni azione."
+        ],
+        'fact.crowdPacked': [
+            "Gran pubblico al {arena} stasera: si sente.",
+            "Tribune quasi piene: un'atmosfera che fa bene all'hockey in-line."
+        ],
         'fact.capacity': [
             'Il {arena} può contenere {cap} spettatori.',
             'Curiosità: il {arena} ha una capienza di {cap} posti.'
@@ -653,6 +692,35 @@
             'Greetings from {arena}! The lights are on, the fans are in: let\'s play some hockey!',
             'Good afternoon, and welcome to {arena}!',
             'Good afternoon from {arena}: the sun is pouring in and we\'re ready to go!'
+        ],
+        'intro.soldOut': [
+            "It's a sell-out here at {arena}: not a single seat to spare!",
+            "Sold out tonight: {arena} is full to the rafters.",
+            "What a sight: packed stands, a big-occasion crowd.",
+            "Tickets have been gone for days: {arena} is rocking."
+        ],
+        'intro.soldOutFinal': [
+            "It's the final and {arena} is completely sold out!",
+            "A sell-out crowd for the final: there are people standing on the stairs.",
+            "Final night, and you couldn't squeeze anyone else in here."
+        ],
+        'intro.soldOutDecider': [
+            "A deciding game and a sell-out crowd at {arena}.",
+            "Win and you're through, lose and you're out: and {arena} is sold out."
+        ],
+        'intro.soldOutTop': [
+            "Top of the table clash and a sell-out crowd: {arena} has turned up.",
+            "First against second, and not a seat to spare: it's the game of the season."
+        ],
+        'intro.crowdPacked': [
+            "A big crowd tonight: {arena} is almost full.",
+            "The stands are just about full: you can tell this one matters.",
+            "Great turnout for this one."
+        ],
+        'intro.crowdSparse': [
+            "A quiet night in the stands, but those who came will make themselves heard.",
+            "Not a full house tonight: a few empty seats around the building.",
+            "The stands are a bit sparse, but nobody's holding back on the rink."
         ],
         'intro.capacity': [
             'A {cap}-seat venue, and you can feel the buzz tonight.',
@@ -1077,6 +1145,15 @@
             'The penalty expires: {t} are back to four.'
         ],
 
+        'fact.soldOut': [
+            "Just a reminder: {arena} is sold out tonight.",
+            "Listen to that: a sell-out crowd at {arena}.",
+            "The sell-out crowd is pushing every attack."
+        ],
+        'fact.crowdPacked': [
+            "A big crowd at {arena} tonight, and you can hear it.",
+            "The stands are almost full: great atmosphere for inline hockey."
+        ],
         'fact.capacity': [
             '{arena} holds {cap} spectators.',
             'Fun fact: {arena} has a capacity of {cap}.'

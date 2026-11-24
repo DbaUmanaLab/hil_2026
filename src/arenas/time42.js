@@ -265,7 +265,7 @@
             targetGroup.add(root);
             crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: true });
         };
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         for (let z = -26; z <= 26; z += 0.75) {
             if (Math.abs(z) < 7.6) continue;   // tavolo cronometristi e panche puniti                     // tavolo cronometristi
             if (Math.random() < keep * 0.4) fan(-19.6 + (Math.random() - 0.5) * 0.3, 0, z + (Math.random() - 0.5) * 0.2);

@@ -244,7 +244,7 @@
             targetGroup.add(root);
             crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: !sitting });
         };
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         tierFront.forEach(([xf, h], k) => {
             for (let z = -ZT + 1.2; z <= ZT - 1.2; z += 0.6) {
                 if (Math.random() < keep * (0.42 - k * 0.05) * (1 - Math.abs(z) / 50)) fan(xf - 0.15, h - STEP_H + 0.04, z, 0, true);

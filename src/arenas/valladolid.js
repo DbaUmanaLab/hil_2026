@@ -297,7 +297,7 @@
             targetGroup.add(root);
             crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: !sitting });
         };
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         const onStair = z => stairs.some(s => Math.abs(z - s) < STAIR_W / 2 + 0.2);
         for (let k = 0; k < TIERS; k++) {
             const h = FRONT_H + k * STEP_H, x = X0 - 0.12 - k * STEP_D - STEP_D * 0.4;

@@ -3172,6 +3172,82 @@
             return null;
         }
         function isCompetitionMatch() { return !!competitionHost(); }
+
+        // --- AFFLUENZA DEL PUBBLICO ---
+        // Riempimento del palazzetto (0-1) secondo l'importanza della partita:
+        //  - amichevole/partita rapida: forza media delle due squadre e quanto sono vicine;
+        //  - campionato: posizione in classifica delle due squadre, scontro al vertice, momento della stagione;
+        //  - play-off e coppa: turno (finale = tutto esaurito), gara decisiva di una serie.
+        // Il valore resta lo stesso per tutta la partita (anche se il palazzetto viene ricostruito al cambio
+        // di qualità grafica): un piccolo scarto fisso, ricavato dalla partita, evita che sia sempre identico.
+        let matchAttendanceCache = null;
+        function computeMatchAttendance() {
+            const home = matchConfig.homeClub, guest = matchConfig.guestClub;
+            const host = competitionHost();
+            let ctx = null;
+            try { ctx = host && host.matchContext ? host.matchContext() : null; } catch (e) { ctx = null; }
+            const clamp01 = v => Math.max(0, Math.min(1, v));
+            const rat = id => { const r = CLUB_RATINGS[id] || { off: 70, def: 70, goa: 70 }; return (r.off + r.def + r.goa) / 3; };
+            const rh = rat(home), rg = rat(guest);
+            const quality = clamp01(((rh + rg) / 2 - 66) / 18);           // 66 di media → 0, 84 → 1
+            const balance = clamp01(1 - Math.abs(rh - rg) / 12);
+            let fill, kind = 'friendly';
+            if (!ctx) {
+                fill = 0.22 + 0.5 * quality + 0.12 * balance * quality;   // da un quarto pieno fino a quasi pieno
+            } else if (ctx.kind === 'playoff') {
+                kind = ctx.roundId === 'F' ? 'final' : 'playoff';
+                fill = ({ QF: 0.8, SF: 0.9, F: 1.0, PO: 0.78 })[ctx.roundId] || 0.85;
+                fill += 0.06 * quality;
+                const s = ctx.series;
+                if (s && s.wins) {
+                    const need = Math.ceil((s.bestOf || 3) / 2);
+                    const w = Object.values(s.wins);
+                    if (w.length === 2 && w[0] === need - 1 && w[1] === need - 1) { fill += 0.12; kind = kind === 'final' ? 'final' : 'decider'; }
+                }
+            } else if (ctx.kind === 'cup') {
+                kind = ctx.roundId === 'F' ? 'final' : 'cup';
+                fill = (({ QF: 0.6, SF: 0.78, F: 1.0 })[ctx.roundId] || 0.6) + 0.1 * quality;
+            } else {
+                kind = 'league';
+                const th = (ctx.teams || {})[home] || {}, tg = (ctx.teams || {})[guest] || {};
+                const total = Math.max(2, ctx.total || 2);
+                const played = (th.pg || 0) > 0 && (tg.pg || 0) > 0;
+                const progress = ctx.rounds ? (ctx.round || 1) / ctx.rounds : 0;
+                // a inizio stagione la classifica dice poco: conta più la forza delle squadre
+                const tableNow = played ? 1 - ((th.pos + tg.pos - 2) / 2) / (total - 1) : quality;
+                const table = quality + (tableNow - quality) * progress;
+                fill = 0.28 + 0.26 * table + 0.18 * quality + 0.06 * balance;
+                // scontro al vertice: tutto esaurito nella seconda metà della stagione
+                if (played && th.pos <= 2 && tg.pos <= 2) { fill += 0.04 + 0.22 * progress; kind = 'topClash'; }
+                if (progress > 0.8) fill += 0.06;                          // volata finale
+                if (played && th.pos <= 3) fill += 0.04;                   // i tifosi di casa seguono chi va forte
+            }
+            // scarto fisso per questa partita (±0,03)
+            const key = [home, guest, matchConfig.arena, ctx ? ctx.kind + (ctx.roundId || ctx.round || '') : 'f'].join('|');
+            let h = 0;
+            for (let i = 0; i < key.length; i++) h = (h * 31 + key.charCodeAt(i)) | 0;
+            fill += ((Math.abs(h) % 1000) / 1000 - 0.5) * 0.06;
+            fill = clamp01(fill);
+            const soldOut = fill >= 0.96;
+            if (soldOut) fill = 1;
+            return { key, fill, soldOut, kind };
+        }
+        function matchAttendance() {
+            const a = computeMatchAttendance();
+            if (matchAttendanceCache && matchAttendanceCache.key === a.key) return matchAttendanceCache;
+            matchAttendanceCache = a;
+            return a;
+        }
+        // Moltiplicatore del pubblico per i moduli dei palazzetti (preset.crowdKeepRatio * questo valore).
+        // I moduli sono tarati per un riempimento di circa metà palazzetto (moltiplicatore 1); il tutto esaurito
+        // arriva a 2,8, limitato dalla qualità grafica per non appesantire i dispositivi più lenti.
+        const CROWD_KEEP_CAP = { low: 0.7, medium: 1.3, high: 2.0 };
+        function crowdAttendanceScale() {
+            const preset = getActiveQualityPreset();
+            const s = 0.2 + 2.6 * Math.pow(matchAttendance().fill, 1.3);
+            const cap = (CROWD_KEEP_CAP[preset.id] || 1.5) / Math.max(0.01, preset.crowdKeepRatio);
+            return Math.min(s, cap);
+        }
         let matchStats = {
             homeShots: 0,
             guestShots: 0,
@@ -5959,6 +6035,8 @@
             arenaGroup = new THREE.Group();
             scene.add(arenaGroup);
             crowdMembers = [];
+            // affluenza della partita: quanta gente sugli spalti (moduli dei palazzetti) e quanto forte il tifo
+            if (window.gameAudio && window.gameAudio.setCrowdAttendance) window.gameAudio.setCrowdAttendance(matchAttendance().fill);
             arenaDaylight = null;
 
             const isVicenza = arenaId === 'vicenza';
@@ -7052,7 +7130,8 @@
             const hairMat = new THREE.MeshStandardMaterial({ color: 0x181210, roughness: 0.75 });
             const pantsMatCrowd = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.75 });
             const handMat = new THREE.MeshStandardMaterial({ color: 0xecc4b0, roughness: 0.6 });
-            const crowdKeepRatio = getActiveQualityPreset().crowdKeepRatio;
+            // spalti di Cittadella, Vicenza, Milano...: tarati già quasi pieni, l'affluenza li svuota o li riempie del tutto
+            const crowdKeepRatio = getActiveQualityPreset().crowdKeepRatio * Math.min(1.25, 0.35 + 1.2 * matchAttendance().fill);
 
             const outfitStyles = arenaId === 'vicenza'
                 ? [
@@ -10145,6 +10224,7 @@
             gameState = 'arena_tour';
             tourTimer = 0;
             mascotShot = null;
+            crowdShot = null;
             if (arenaMascot) arenaMascot.waving = false;
             const arenaInfo = ARENA_CATALOG[matchConfig.arena];
             document.getElementById('tour-arena-tag').textContent = 'IN DIRETTA DA';
@@ -10246,8 +10326,76 @@
             if (warmupShot.t >= WARMUP_SHOT_DURATION) nextWarmupShot();
         }
 
+        // Pubblico delle grandi occasioni: se il palazzetto è pieno (affluenza ≥ 75%, matchAttendance), dopo la
+        // panoramica la camera scorre lungo la tribuna più affollata mentre il pubblico esulta; sottopancia
+        // TUTTO ESAURITO / GRAN PUBBLICO e la telecronaca lo sottolinea (Commentary, evento 'crowdShot').
+        // La tribuna si trova dalle posizioni vere dei tifosi, così funziona in tutti i palazzetti.
+        const CROWD_SHOT_DURATION = 4.6, CROWD_SHOT_MIN_FILL = 0.75;
+        let crowdShot = null;           // { from: [pos, look], to: [pos, look], t }
+        function buildCrowdShotPath() {
+            const pts = [];
+            const wp = new THREE.Vector3();
+            crowdMembers.forEach(m => {
+                if (!m || !m.mesh || m.isTimekeeper) return;
+                m.mesh.getWorldPosition(wp);
+                const outX = Math.abs(wp.x) > rinkWidth / 2 + 1.2, outZ = Math.abs(wp.z) > rinkLength / 2 + 1.0;
+                if (!outX && !outZ) return;
+                if (wp.x > rinkWidth / 2 - 1 && Math.abs(wp.z) < 17 && wp.y < 0.5) return;   // panchine e staff
+                pts.push({ x: wp.x, y: wp.y, z: wp.z, side: outX ? (wp.x > 0 ? 'x+' : 'x-') : (wp.z > 0 ? 'z+' : 'z-') });
+            });
+            if (pts.length < 12) return null;
+            const count = {};
+            pts.forEach(p => { count[p.side] = (count[p.side] || 0) + 1; });
+            const side = Object.keys(count).sort((a, b) => count[b] - count[a])[0];
+            const sel = pts.filter(p => p.side === side);
+            const along = side[0] === 'x' ? 'z' : 'x', across = side[0] === 'x' ? 'x' : 'z', sgn = side[1] === '+' ? 1 : -1;
+            const q = (arr, k) => { const s = arr.slice().sort((a, b) => a - b); return s[Math.min(s.length - 1, Math.floor(k * s.length))]; };
+            let a0 = q(sel.map(p => p[along]), 0.12), a1 = q(sel.map(p => p[along]), 0.88);
+            if (a1 - a0 < 8) { const c = (a0 + a1) / 2; a0 = c - 4; a1 = c + 4; }
+            const deep = q(sel.map(p => p[across]), 0.5), ym = q(sel.map(p => p.y), 0.5);
+            const half = across === 'x' ? rinkWidth / 2 : rinkLength / 2;
+            const camAcross = sgn * (half - 3.5);                       // dentro la pista, a pochi metri dalla balaustra
+            const mk = (al, acr, y) => across === 'x' ? new THREE.Vector3(acr, y, al) : new THREE.Vector3(al, y, acr);
+            const span = (a1 - a0) * 0.42;
+            const mid = (a0 + a1) / 2;
+            return {
+                from: [mk(mid - span, camAcross, ym + 2.9), mk(mid - span * 0.55, deep, ym + 1.3)],
+                to: [mk(mid + span, camAcross - sgn * 0.8, ym + 2.5), mk(mid + span * 0.75, deep, ym + 1.4)]
+            };
+        }
+        function startCrowdShot() {
+            const att = matchAttendance();
+            if (!att || att.fill < CROWD_SHOT_MIN_FILL) return false;
+            const path = buildCrowdShotPath();
+            if (!path) return false;
+            crowdShot = Object.assign(path, { t: 0 });
+            const occasion = { final: 'La finale', decider: 'Gara decisiva', topClash: 'Scontro al vertice', playoff: 'Play-off', cup: 'Coppa' }[att.kind];
+            document.getElementById('tour-arena-tag').textContent = 'IL PUBBLICO';
+            tourArenaTitle.textContent = att.soldOut ? 'TUTTO ESAURITO' : 'GRAN PUBBLICO';
+            tourArenaLoc.textContent = [ARENA_CATALOG[matchConfig.arena].shortTitle, occasion].filter(Boolean).join(' • ');
+            restartAnim(arenaTourOverlay.querySelector('.bx-l3'));
+            crowdCheerTimer = CROWD_SHOT_DURATION;
+            if (window.gameAudio && window.gameAudio.playCrowdRoar) window.gameAudio.playCrowdRoar(att.soldOut ? 1 : 0.85, CROWD_SHOT_DURATION - 0.6);
+            if (window.Commentary) window.Commentary.event('crowdShot', { fill: att.fill, soldOut: att.soldOut, kind: att.kind });
+            updateCrowdShot(0, true);
+            return true;
+        }
+        function updateCrowdShot(dt, cut = false) {
+            crowdShot.t += dt;
+            const e = smooth01(Math.min(1, crowdShot.t / CROWD_SHOT_DURATION));
+            const pos = new THREE.Vector3().lerpVectors(crowdShot.from[0], crowdShot.to[0], e);
+            const look = new THREE.Vector3().lerpVectors(crowdShot.from[1], crowdShot.to[1], e);
+            if (cut) camera.position.copy(pos); else camera.position.lerp(pos, 0.2);
+            camera.lookAt(look);
+            if (crowdShot.t >= CROWD_SHOT_DURATION) {
+                crowdShot = null;
+                if (!startWarmupShots()) finishArenaTour();
+            }
+        }
+
         function updateArenaTour(dt) {
             if (window.HIL_WARMUP) window.HIL_WARMUP.update(dt);
+            if (crowdShot) { updateCrowdShot(dt); return; }
             if (warmupShot) { updateWarmupShot(dt); return; }
             if (mascotShot) { updateMascotShot(dt); return; }
             tourTimer += dt;
@@ -10264,11 +10412,12 @@
             const lookX = t < 0.45 ? -4.0 : 3.5;
             camera.lookAt(lookX, lookY, camZ - 14);
 
-            if (tourTimer >= duration && !startWarmupShots()) finishArenaTour();
+            if (tourTimer >= duration && !startCrowdShot() && !startWarmupShots()) finishArenaTour();
         }
 
         function finishArenaTour() {
-            warmupShot = null;              // "salta" durante i primi piani: si passa oltre
+            warmupShot = null;
+            crowdShot = null;              // "salta" durante i primi piani: si passa oltre
             // la mascotte viene sempre inquadrata, anche se la panoramica è stata saltata
             if (arenaMascot && !mascotShot) { startMascotShot(); return; }
             if (arenaMascot) arenaMascot.waving = false;

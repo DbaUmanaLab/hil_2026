@@ -244,7 +244,7 @@
             targetGroup.add(root);
             crowdMembers.push({ mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: y + childLift, phase: Math.random() * Math.PI * 2, standing: !sitting });
         };
-        const keep = preset.crowdKeepRatio;
+        const keep = preset.crowdKeepRatio * crowdAttendanceScale();   // pubblico in base all'importanza della partita (index.html)
         // seduti sul bordo di ogni gradone, le gambe sul gradino sotto
         tierFront.forEach(([xf, h], k) => {
             for (let z = -ZT + 1.2; z <= ZT - 1.2; z += 0.6) {
