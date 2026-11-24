@@ -6749,6 +6749,176 @@
           }
         ]
       ]
+    },
+    {
+      "id": "castellon",
+      "league": "RFEP",
+      "name": "HOCKEY CLUB CASTELLÓN",
+      "shortName": "CASTELLÓN",
+      "abbr": "HCC",
+      "note": "Roster fornito dal club (1 portiere, 9 giocatori di movimento senza ruolo indicato), senza statistiche. Il portiere Claudio Garaycott Puntriano non ha numero: il 1 è provvisorio; non c'è un portiere di riserva. Carlos Adell Cantavella, senza numero, non è nelle linee. Con 8 giocatori numerati per 12 posti alcuni giocano in due linee; ruoli C/LW/RW/D e linee scelti provvisoriamente. Nazionalità FI per Aaltonen dedotta dal nome; Kluzek e Morrison con la nazione della lega. Isaac García Edo è allenatore-giocatore (n. 5); staff tecnico: César García Guía.",
+      "jerseyClubId": "castellon",
+      "homeArena": "castellon",
+      "logo": "castellon.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/castellon.png"
+      ],
+      "ratings": {
+        "off": 74,
+        "def": 72,
+        "goa": 70
+      },
+      "colors": {
+        "primary": "#a8e61d",
+        "secondary": "#141416",
+        "staffJacket": "#141416",
+        "coachJacket": "#a8e61d"
+      },
+      "rosterScreen": {
+        "photo": "castellon.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": {
+        "first": "Isaac",
+        "last": "García Edo",
+        "role": "Allenatore-giocatore",
+        "note": "In campo anche con il numero 5; staff tecnico con César García Guía"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "GARAYCOTT PUNTRIANO",
+        "first": "Claudio"
+      },
+      "backupGoalies": [],
+      "reserves": [],
+      "kits": {
+        "black": {
+          "label": "Divisa Nera",
+          "primary": "#141416",
+          "pants": "#141416",
+          "helmet": "#f4f4f4",
+          "glove": "#141416"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "67",
+            "name": "AALTONEN",
+            "first": "Joel Kalevi",
+            "nat": "FI",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "13",
+            "name": "KLUZEK",
+            "first": "Griffin Daniel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "73",
+            "name": "MORRISON",
+            "first": "Justin Mark Christopher",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "GARCÍA EDO",
+            "first": "Isaac",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "17",
+            "name": "VESES PÉREZ",
+            "first": "Pablo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "88",
+            "name": "CARRASCO CORTÉS",
+            "first": "Javier",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "96",
+            "name": "BORJA HUESO",
+            "first": "Alejandro",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "27",
+            "name": "GARCÍA EDO",
+            "first": "Nicolás",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "67",
+            "name": "AALTONEN",
+            "first": "Joel Kalevi",
+            "nat": "FI",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "88",
+            "name": "CARRASCO CORTÉS",
+            "first": "Javier",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "13",
+            "name": "KLUZEK",
+            "first": "Griffin Daniel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "GARCÍA EDO",
+            "first": "Isaac",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
     }
   ]
 }
