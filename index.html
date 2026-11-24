@@ -1305,7 +1305,8 @@
             text-shadow: 0 4px 0 rgba(0,0,0,.25);
         }
         .rs-sub { margin-top: .5em; font-weight: 500; letter-spacing: .2em; text-transform: uppercase; font-size: clamp(10px, 1.9vh, 17px); color: #bfdbfe; }
-        .rs-list-wrap { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; padding: clamp(6px, 1.6vh, 20px) clamp(14px, 3vw, 56px); }
+        /* elenco attaccato al titolo (centrato in verticale lasciava una fascia vuota prima dei nomi) */
+        .rs-list-wrap { flex: 1 1 auto; min-height: 0; display: flex; align-items: flex-start; justify-content: center; overflow-y: auto; padding: clamp(6px, 1.6vh, 20px) clamp(14px, 3vw, 56px); }
         .rs-list { width: 100%; max-width: 900px; font-size: clamp(14px, min(2.05vw, 3.55vh), 38px); }
         .rs-row {
             display: grid; grid-template-columns: 3.1em minmax(0, 1.9fr) minmax(0, .85fr) 4.6em; column-gap: .9em;
@@ -1362,7 +1363,12 @@
             .rs-stage { flex-direction: column; }
             .rs-strip { flex: 0 0 31vh; }
             .rs-strip-content { justify-content: center; padding: 5vh 5vw 2.5vh; }
-            .rs-strip-main { flex-direction: row; gap: 5vw; }
+            /* logo e nome in riga: la riga non supera la fascia e il nome si restringe (fitTeamNameToBox),
+               così con i nomi lunghi il logo non esce più dal bordo sinistro */
+            .rs-strip-main { flex-direction: row; gap: 5vw; width: 100%; min-width: 0; justify-content: center; }
+            .rs-strip-main > .rs-badge-wrap { flex: 0 0 auto; }
+            .rs-strip-text { flex: 0 1 auto; min-width: 0; }
+            .rs-team-name { overflow: hidden; text-overflow: ellipsis; }
             .rs-strip-content > .rs-side-chip { position: absolute; top: 2vh; left: 50%; transform: translateX(-50%); }
             .rs-game-plate { display: none; }
             .rs-badge-wrap { width: min(36vw, 20vh); }
@@ -1669,6 +1675,9 @@
                          alt="HIL 2026 - Hockey in line"
                          style="height:clamp(30px,4.6vw,52px);width:auto;display:block;">
                 </div>
+            </div>
+            <!-- musica e opzioni a destra: al centro, sui telefoni, finirebbero sotto la fotocamera -->
+            <div class="flex items-center gap-3 sm:gap-4">
                 <button type="button" id="splash-music-btn" class="splash-music-btn" aria-label="Musica on/off" title="Musica">
                     <svg id="splash-music-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                     <svg id="splash-music-off" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M3 3l18 18"/></svg>
