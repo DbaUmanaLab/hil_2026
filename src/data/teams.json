@@ -6393,6 +6393,188 @@
           }
         ]
       ]
+    },
+    {
+      "id": "sagunto",
+      "league": "RFEP",
+      "name": "ALAS DE SAGUNTO",
+      "shortName": "SAGUNTO",
+      "abbr": "ALA",
+      "note": "Roster fornito dal club (2 portieri, 13 giocatori di movimento senza ruolo indicato), senza statistiche. Juan Escudero Ramírez è allenatore-giocatore (n. 13). Fernando Tamarit Benedito, giocatore senza numero e nello staff tecnico, non è nelle linee. Ruoli C/LW/RW/D, linee e portiere titolare scelti provvisoriamente.",
+      "jerseyClubId": "sagunto",
+      "homeArena": "sagunto",
+      "logo": "sagunto.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/sagunto_1.png",
+        "assets/jerseys/sagunto_2.png"
+      ],
+      "ratings": {
+        "off": 74,
+        "def": 73,
+        "goa": 74
+      },
+      "colors": {
+        "primary": "#86d81f",
+        "secondary": "#141416",
+        "staffJacket": "#141416",
+        "coachJacket": "#86d81f"
+      },
+      "rosterScreen": {
+        "photo": "sagunto.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": {
+        "first": "Juan",
+        "last": "Escudero Ramírez",
+        "role": "Allenatore-giocatore",
+        "note": "In campo anche con il numero 13; staff tecnico con Fernando Tamarit Benedito"
+      },
+      "goalie": {
+        "num": "72",
+        "name": "AYMERICH VENTURA",
+        "first": "Raúl"
+      },
+      "backupGoalies": [
+        {
+          "num": "31",
+          "name": "GARCÍA FERNÁNDEZ",
+          "first": "Mario"
+        }
+      ],
+      "reserves": [],
+      "kits": {
+        "black": {
+          "label": "Divisa Nera",
+          "primary": "#141416",
+          "pants": "#141416",
+          "helmet": "#141416",
+          "glove": "#86d81f"
+        },
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#f8fafc",
+          "pants": "#141416",
+          "helmet": "#f4f4f4",
+          "glove": "#141416"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "13",
+            "name": "ESCUDERO RAMÍREZ",
+            "first": "Juan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "77",
+            "name": "SILVESTRE MARTÍN",
+            "first": "David",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "98",
+            "name": "DOMÍNGUEZ ARNAL",
+            "first": "Alex",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "REDONDO SÁEZ",
+            "first": "Carles",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "70",
+            "name": "RUBIA DE LA TORRE",
+            "first": "Miguel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "14",
+            "name": "LÓPEZ RUS",
+            "first": "Javier",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "87",
+            "name": "CEREZO CAMPOS",
+            "first": "David",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "28",
+            "name": "SOTO GARCÍA",
+            "first": "Ramón",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "61",
+            "name": "MASOT GARCÍA",
+            "first": "Joel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "60",
+            "name": "LEIGHTON CLARK",
+            "first": "Maurage",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "71",
+            "name": "GONZÁLEZ GARCÍA",
+            "first": "Ángel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "39",
+            "name": "GARCÍA FERNÁNDEZ",
+            "first": "Daniel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
     }
   ]
 }
