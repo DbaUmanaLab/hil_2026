@@ -2634,6 +2634,190 @@
       ]
     },
     {
+      "id": "angers",
+      "league": "LIGUE ELITE",
+      "name": "HAWKS D'ANGERS",
+      "shortName": "HAWKS",
+      "abbr": "HAW",
+      "note": "Roster fornito dal club (2 portieri, 5 difensori, 9 attaccanti), senza statistiche. Pradel aveva il numero 03, riportato come 3. L. Lefevre (difensore) non ha numero e non è nelle linee; F. Venin con la sola iniziale. C/LW/RW fra gli attaccanti, linee e portiere titolare scelti provvisoriamente. Allenatore non indicato.",
+      "jerseyClubId": "angers",
+      "homeArena": "angers",
+      "logo": "angers.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/angers_1.png",
+        "assets/jerseys/angers_2.png"
+      ],
+      "ratings": {
+        "off": 76,
+        "def": 74,
+        "goa": 75
+      },
+      "colors": {
+        "primary": "#1b2a6b",
+        "secondary": "#e02b36",
+        "staffJacket": "#1b2a6b",
+        "coachJacket": "#e02b36"
+      },
+      "rosterScreen": {
+        "photo": "angers.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "10",
+        "name": "GRICOURT",
+        "first": "Léo"
+      },
+      "backupGoalies": [
+        {
+          "num": "51",
+          "name": "VENIN",
+          "first": "F."
+        }
+      ],
+      "reserves": [
+        {
+          "num": "61",
+          "name": "ROUYER",
+          "first": "Paco"
+        }
+      ],
+      "kits": {
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#f8fafc",
+          "pants": "#1b2a6b",
+          "helmet": "#f4f4f4",
+          "glove": "#1b2a6b"
+        },
+        "red": {
+          "label": "Divisa Rossa",
+          "primary": "#e02b36",
+          "pants": "#1b2a6b",
+          "helmet": "#f4f4f4",
+          "glove": "#1b2a6b"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "28",
+            "name": "DESOPPIS",
+            "first": "Mathieu",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "24",
+            "name": "DESOPPIS",
+            "first": "Adrien",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "3",
+            "name": "PRADEL",
+            "first": "Jérémy",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "97",
+            "name": "GABORIAU",
+            "first": "Alexandre",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "26",
+            "name": "TROCMET",
+            "first": "Oscar",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "HALLARD",
+            "first": "Charly",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "53",
+            "name": "RAVE",
+            "first": "William",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "16",
+            "name": "VOILE",
+            "first": "Melvin",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "22",
+            "name": "PERROT",
+            "first": "Yves",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "67",
+            "name": "PEREZ",
+            "first": "Joao",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "25",
+            "name": "BERNARD",
+            "first": "Pauline",
+            "gender": "F",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "72",
+            "name": "PEREZ",
+            "first": "Pablo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "asiago_newts",
       "league": "SERIE B",
       "name": "ASIAGO NEWTS",
