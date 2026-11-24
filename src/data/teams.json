@@ -2818,6 +2818,199 @@
       ]
     },
     {
+      "id": "grenoble",
+      "league": "LIGUE ELITE",
+      "name": "YÉTIS DE GRENOBLE",
+      "shortName": "YÉTIS",
+      "abbr": "GRE",
+      "note": "Roster fornito dal club (2 portieri, 4 difensori, 7 attaccanti, 5 giocatori di movimento), senza statistiche. Isnard e Ramaye Minien hanno entrambi il 44: riportato com'è, tutti e due fra le riserve. Baptiste Didier e Adrien Romanaz, senza numero, non sono nelle linee. Richard e Mattéo Caspani (giocatori di movimento) completano gli attaccanti; C/LW/RW, linee e portiere titolare scelti provvisoriamente.",
+      "jerseyClubId": "grenoble",
+      "homeArena": "grenoble",
+      "logo": "grenoble.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/grenoble_1.png",
+        "assets/jerseys/grenoble_2.png"
+      ],
+      "ratings": {
+        "off": 77,
+        "def": 75,
+        "goa": 76
+      },
+      "colors": {
+        "primary": "#2446a6",
+        "secondary": "#e0302f",
+        "staffJacket": "#14204a",
+        "coachJacket": "#2446a6"
+      },
+      "rosterScreen": {
+        "photo": "grenoble.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": {
+        "first": "Hugo",
+        "last": "Rebuffet",
+        "role": "Allenatore",
+        "note": "Allenatore degli Yétis"
+      },
+      "goalie": {
+        "num": "30",
+        "name": "DEMARS",
+        "first": "Simon"
+      },
+      "backupGoalies": [
+        {
+          "num": "1",
+          "name": "MOUSSEAUX",
+          "first": "Marion"
+        }
+      ],
+      "reserves": [
+        {
+          "num": "44",
+          "name": "ISNARD",
+          "first": "Théo"
+        },
+        {
+          "num": "44",
+          "name": "RAMAYE MINIEN",
+          "first": "Guillaume"
+        }
+      ],
+      "kits": {
+        "blue": {
+          "label": "Divisa Blu",
+          "primary": "#2446a6",
+          "pants": "#14204a",
+          "helmet": "#f4f4f4",
+          "glove": "#14204a"
+        },
+        "red": {
+          "label": "Divisa Rossa",
+          "primary": "#e0302f",
+          "pants": "#14204a",
+          "helmet": "#f4f4f4",
+          "glove": "#14204a"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "88",
+            "name": "CASPANI",
+            "first": "Maxime",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "9",
+            "name": "KERKHOVE",
+            "first": "Joan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "96",
+            "name": "LASCOUX",
+            "first": "Lucas",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "3",
+            "name": "FAUCHERAND",
+            "first": "Théo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "27",
+            "name": "LAPRESA",
+            "first": "Jérémy",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "ROCHEREAU",
+            "first": "Théo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "19",
+            "name": "MOGNAT-DUCLOS",
+            "first": "Jolan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "8",
+            "name": "HAMON",
+            "first": "Lambert",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "35",
+            "name": "CAILLAT",
+            "first": "Jules",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "7",
+            "name": "RICHARD",
+            "first": "Evan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "81",
+            "name": "CASPANI",
+            "first": "Mattéo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "63",
+            "name": "MACHY",
+            "first": "Elliot",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "asiago_newts",
       "league": "SERIE B",
       "name": "ASIAGO NEWTS",
