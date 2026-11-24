@@ -2452,6 +2452,188 @@
       }
     },
     {
+      "id": "anglet",
+      "league": "LIGUE ELITE",
+      "name": "ARTZAK D'ANGLET",
+      "shortName": "ARTZAK",
+      "abbr": "ANG",
+      "note": "Roster fornito dal club (3 portieri, 7 giocatori di movimento), senza statistiche e quasi senza numeri. Numeri PROVVISORI da correggere: portieri Enguerrand 1, Saenz 30, Pasquier 35; Baptiste Boitard 22 (nel roster aveva l'11 come Ange Boitard); Chazalon 7, Aphecetche 9, Barrere 14, Plutus 19. Numeri forniti dal club: Ange Boitard 11, Dorian Toulouze 12 (difensore). Con 7 giocatori per 12 posti alcuni giocano in due linee; ruoli C/LW/RW, linee e portiere titolare scelti provvisoriamente. Allenatore non indicato.",
+      "jerseyClubId": "anglet",
+      "homeArena": "anglet",
+      "logo": "anglet.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/anglet_1.png",
+        "assets/jerseys/anglet_2.png"
+      ],
+      "ratings": {
+        "off": 75,
+        "def": 73,
+        "goa": 74
+      },
+      "colors": {
+        "primary": "#14583a",
+        "secondary": "#d32f2f",
+        "staffJacket": "#14583a",
+        "coachJacket": "#d32f2f"
+      },
+      "rosterScreen": {
+        "photo": "anglet.jpg",
+        "focus": "50% 25%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "1",
+        "name": "ENGUERRAND",
+        "first": "Thomas"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "SAENZ",
+          "first": "Mickael"
+        },
+        {
+          "num": "35",
+          "name": "PASQUIER",
+          "first": "Sébastien"
+        }
+      ],
+      "reserves": [],
+      "kits": {
+        "green": {
+          "label": "Divisa Verde",
+          "primary": "#14583a",
+          "pants": "#141416",
+          "helmet": "#f4f4f4",
+          "glove": "#d32f2f"
+        },
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#f8fafc",
+          "pants": "#f8fafc",
+          "helmet": "#f4f4f4",
+          "glove": "#b91c1c"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "BOITARD",
+            "first": "Ange",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "7",
+            "name": "CHAZALON",
+            "first": "Kevin",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "9",
+            "name": "APHECETCHE",
+            "first": "Lucas",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "12",
+            "name": "TOULOUZE",
+            "first": "Dorian",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "22",
+            "name": "BOITARD",
+            "first": "Baptiste",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "19",
+            "name": "PLUTUS",
+            "first": "Sasha",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "7",
+            "name": "CHAZALON",
+            "first": "Kevin",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "14",
+            "name": "BARRERE",
+            "first": "Quentin",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "BOITARD",
+            "first": "Ange",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "9",
+            "name": "APHECETCHE",
+            "first": "Lucas",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "22",
+            "name": "BOITARD",
+            "first": "Baptiste",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "12",
+            "name": "TOULOUZE",
+            "first": "Dorian",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "asiago_newts",
       "league": "SERIE B",
       "name": "ASIAGO NEWTS",
