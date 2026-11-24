@@ -482,7 +482,7 @@
                 if (ctx.roundId === 'F') add('intro.cupFinal', {});
                 else add('intro.cup', { stage: (T.stage || {})['C' + ctx.roundId] || '' });
             } else if (ctx.kind === 'playoff') {
-                if (ctx.roundId === 'F') add('intro.final', { stage: (T.stage || {})[ctx.league === 'SERIE B' ? 'FB' : 'FA'] || '' });
+                if (ctx.roundId === 'F') add('intro.final', { stage: (T.stage || {})[ctx.league === 'SERIE B' ? 'FB' : (ctx.league === 'RFEP' ? 'FE' : 'FA')] || '' });
                 else add('intro.playoff', { comp, stage: (T.stage || {})[ctx.roundId] || '' });
                 const s = ctx.series;
                 if (s) {

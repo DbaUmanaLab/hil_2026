@@ -1152,24 +1152,24 @@
             score: (h, g) => `${h} a ${g}`,
             tie: h => (h === 0 ? 'zero a zero' : `${h} pari`),
             scoreNamed: (home, h, guest, g) => `${home} ${h}, ${guest} ${g}`,
-            stage: { QF: 'quarti di finale', SF: 'semifinali', F: 'finale', FA: 'finale scudetto', FB: 'finale promozione', CQF: 'quarti di finale', CSF: 'semifinali', CF: 'finale' },
+            stage: { QF: 'quarti di finale', SF: 'semifinali', F: 'finale', FA: 'finale scudetto', FB: 'finale promozione', FE: 'finale per il titolo spagnolo', PO: 'play-out salvezza', CQF: 'quarti di finale', CSF: 'semifinali', CF: 'finale' },
             penalty: { 'Colpo di bastone': 'colpo di bastone', 'Ostruzione': 'ostruzione', 'Carica': 'carica scorretta', 'Trattenuta': 'trattenuta' },
             line: ['prima', 'seconda', 'terza'],
             ord: ['primo', 'secondo', 'terzo', 'quarto', 'quinto', 'sesto', 'settimo', 'ottavo', 'nono', 'decimo', 'undicesimo', 'dodicesimo', 'tredicesimo', 'quattordicesimo', 'quindicesimo', 'sedicesimo'],
             ordf: ['prima', 'seconda', 'terza', 'quarta', 'quinta', 'sesta', 'settima', 'ottava', 'nona', 'decima', 'undicesima', 'dodicesima', 'tredicesima', 'quattordicesima', 'quindicesima', 'sedicesima'],
             league: { 'SERIE A': 'Serie A', 'SERIE B': 'Serie B', 'UISP': 'Lega UISP', 'LIGUE ELITE': 'Ligue Élite francese', 'RFEP': 'Liga Élite spagnola', 'SERIE A VINTAGE': 'Serie A Vintage' },
-            comp: { 'SERIE A': 'Serie A', 'SERIE B': 'Serie B' }
+            comp: { 'SERIE A': 'Serie A', 'SERIE B': 'Serie B', 'RFEP': 'Liga Élite' }
         },
         en: {
             score: (h, g) => `${h} to ${g}`,
             tie: h => (h === 0 ? 'nil-nil' : `${h} all`),
             scoreNamed: (home, h, guest, g) => `${home} ${h}, ${guest} ${g}`,
-            stage: { QF: 'quarter-finals', SF: 'semi-finals', F: 'final', FA: 'championship final', FB: 'promotion final', CQF: 'quarter-finals', CSF: 'semi-finals', CF: 'final' },
+            stage: { QF: 'quarter-finals', SF: 'semi-finals', F: 'final', FA: 'championship final', FB: 'promotion final', FE: 'Spanish title final', PO: 'relegation play-out', CQF: 'quarter-finals', CSF: 'semi-finals', CF: 'final' },
             penalty: { 'Colpo di bastone': 'slashing', 'Ostruzione': 'interference', 'Carica': 'charging', 'Trattenuta': 'holding' },
             line: ['first', 'second', 'third'],
             ord: ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh', 'eighth', 'ninth', 'tenth', 'eleventh', 'twelfth', 'thirteenth', 'fourteenth', 'fifteenth', 'sixteenth'],
             league: { 'SERIE A': 'the Italian Serie A', 'SERIE B': 'the Italian Serie B', 'UISP': 'the UISP league', 'LIGUE ELITE': 'the French Ligue Élite', 'RFEP': 'the Spanish Liga Élite', 'SERIE A VINTAGE': 'Serie A Vintage' },
-            comp: { 'SERIE A': 'Italian Serie A', 'SERIE B': 'Italian Serie B' }
+            comp: { 'SERIE A': 'Italian Serie A', 'SERIE B': 'Italian Serie B', 'RFEP': 'Spanish Liga Élite' }
         }
     };
 

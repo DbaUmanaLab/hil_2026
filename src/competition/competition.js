@@ -1,5 +1,5 @@
 // --- src/competition/competition.js ---
-// Modalità Competizione: Serie A, Serie B e Coppa Italia.
+// Modalità Competizione: Serie A, Serie B, Liga Élite (Spagna) e Coppa Italia.
 // Script classico caricato dopo lo script principale di index.html: usa i suoi globali
 // (CLUB_ROSTERS, CLUB_RATINGS, ARENA_CATALOG, HOME_CLUB_ARENAS, matchConfig,
 //  launchMatchFromCurrentConfig, logoSrcOf, titleSplashScreen, showFunFactLoading, ...).
@@ -10,6 +10,14 @@
 //    regolamentari, 2 a quella al supplementare/rigori, 1 alla sconfitta al supplementare/rigori.
 //  - Play-off: con almeno 8 squadre quarti (al meglio delle 3), semifinali e finale (al meglio delle 5);
 //    con 4-7 squadre semifinali al meglio delle 3 e finale al meglio delle 5 (es. Serie B).
+//
+// LIGA ÉLITE RFEP (Spagna) — regolamento federale adattato al numero di squadre presenti
+//  - Regular season: girone all'italiana con andata e ritorno (con 10 squadre 18 giornate), stessi punti.
+//  - Play-off per il titolo: le prime 4, semifinali 1ª-4ª e 2ª-3ª e finale, tutte al meglio delle 3.
+//  - Play-out salvezza (con almeno 6 squadre, così non tocca chi va ai play-off): le ultime due al meglio
+//    delle 3, negli stessi weekend delle semifinali; chi perde retrocede in Liga Oro.
+//  - Fattore campo nelle serie: gara 1 (1º weekend) in casa della peggio piazzata, gara 2 (sabato del 2º
+//    weekend) ed eventuale gara 3 (domenica) in casa della meglio piazzata.
 //
 // COPPA ITALIA
 //  - 8 squadre: quella dell'utente più le 7 migliori per rating; sorteggio libero.
@@ -23,7 +31,15 @@
     // campionati a girone: nomi, loghi e titoli
     const LEAGUES = {
         'SERIE A': { comp: 'serie_a', name: 'Serie A', logo: 'assets/logos/serie_a.png', final: 'Finale scudetto', po: 'Play-off scudetto', champ: "Campione d'Italia", title: "Campione d'Italia" },
-        'SERIE B': { comp: 'serie_b', name: 'Serie B', logo: 'assets/logos/serie_b.png', final: 'Finale promozione', po: 'Play-off promozione', champ: 'Campione di Serie B', title: 'Campione di Serie B • promossa in Serie A' }
+        'SERIE B': { comp: 'serie_b', name: 'Serie B', logo: 'assets/logos/serie_b.png', final: 'Finale promozione', po: 'Play-off promozione', champ: 'Campione di Serie B', title: 'Campione di Serie B • promossa in Serie A' },
+        // Liga Élite: tutte le serie al meglio delle 3, gara 1 in casa della peggio piazzata, play-out delle ultime due
+        'RFEP': {
+            comp: 'liga_rfep', name: 'Liga Élite', logo: 'assets/logos/rfep.png', final: 'Finale per il titolo', po: 'Play-off per il titolo',
+            champ: 'Campione di Spagna', title: 'Campione di Spagna',
+            rounds: [{ id: 'SF', label: 'Semifinali', bestOf: 3 }, { id: 'F', label: 'Finale per il titolo', bestOf: 3 }],
+            lowSeedFirst: true,                                   // gara 1 dalla peggio piazzata, poi due in casa della meglio piazzata
+            playout: { teams: 2, minTeams: 6, bestOf: 3, label: 'Play-out salvezza', down: 'Liga Oro' }
+        }
     };
     const leagueOf = s => (s && s.league) || 'SERIE A';         // le stagioni salvate prima della Serie B sono di Serie A
     const L = s => LEAGUES[leagueOf(s)] || LEAGUES['SERIE A'];
@@ -31,11 +47,14 @@
     function poRounds(s) {
         s = s || state;
         const n = s && s.teams ? s.teams.length : 8, fin = L(s).final;
+        if (L(s).rounds) return n >= 4 ? L(s).rounds : L(s).rounds.slice(-1);
         if (n >= 8) return [{ id: 'QF', label: 'Quarti di finale', bestOf: 3 }, { id: 'SF', label: 'Semifinali', bestOf: 5 }, { id: 'F', label: fin, bestOf: 5 }];
         if (n >= 4) return [{ id: 'SF', label: 'Semifinali', bestOf: 3 }, { id: 'F', label: fin, bestOf: 5 }];
         return [{ id: 'F', label: fin, bestOf: 3 }];
     }
     const playoffTeams = s => Math.pow(2, poRounds(s).length);
+    // play-out salvezza (solo dove previsto e con abbastanza squadre da non toccare chi va ai play-off)
+    const playoutCfg = s => { s = s || state; const po = L(s).playout; return po && s && s.teams && s.teams.length >= po.minTeams ? po : null; };
     const CUP_TEAMS = 8;
     const CUP_ROUNDS = [
         { id: 'QF', label: 'Quarti di finale' },
@@ -66,10 +85,11 @@
             facts: () => [[String(CLUB_IDS.filter(id => club(id) && club(id).league === 'LIGUE ELITE').length), 'Squadre'], ['FFRS', 'Federazione'], ['Francia', 'Paese']]
         },
         {
-            // campionato spagnolo: non ancora giocabile, per ora c'è solo il Molina Sport ACEGC
-            id: 'liga_rfep', name: 'Liga Élite RFEP (Spagna)', short: 'Liga Élite', logo: 'assets/logos/rfep.png', active: false,
-            desc: 'Il massimo campionato spagnolo di hockey in linea (Real Federación Española de Patinaje). Per ora c\'è solo il Molina Sport ACEGC di Las Palmas de Gran Canaria: si giocherà quando arriveranno le altre squadre spagnole.',
-            facts: () => [[String(CLUB_IDS.filter(id => club(id) && club(id).league === 'RFEP').length), 'Squadre'], ['RFEP', 'Federazione'], ['Spagna', 'Paese']]
+            // campionato spagnolo: giocabile con le squadre della Liga Élite presenti in configurazione (almeno 4)
+            id: 'liga_rfep', league: 'RFEP', name: 'Liga Élite RFEP (Spagna)', short: 'Liga Élite', logo: 'assets/logos/rfep.png',
+            get active() { return leagueTeams('RFEP').length >= 4; },
+            desc: 'Il massimo campionato spagnolo di hockey in linea. Girone all\'italiana con andata e ritorno, poi i play-off per il titolo con semifinali e finale al meglio delle 3; con almeno 6 squadre le ultime due si giocano la salvezza al play-out.',
+            facts: () => leagueFacts('RFEP')
         }
     ];
     let compIdx = 0;
@@ -103,7 +123,10 @@
     function serieATeams() { return leagueTeams('SERIE A'); }
     function leagueFacts(lg) {
         const n = leagueTeams(lg).length;
-        return [[String(n), 'Squadre'], [String((n - (n % 2 ? 0 : 1)) * 2), 'Giornate'], ['Top ' + playoffTeams({ teams: leagueTeams(lg), league: lg }), 'Play-off']];
+        const s = { teams: leagueTeams(lg), league: lg };
+        const facts = [[String(n), 'Squadre'], [String((n - (n % 2 ? 0 : 1)) * 2), 'Giornate'], ['Top ' + playoffTeams(s), 'Play-off']];
+        if (playoutCfg(s)) facts.push(['Ultime ' + playoutCfg(s).teams, 'Play-out']);
+        return facts;
     }
 
     // ------------------------------------------------------------------ calendario (metodo del cerchio)
@@ -189,7 +212,14 @@
     function createPlayoffs() {
         const nPo = playoffTeams();
         const seeds = standings().slice(0, nPo).map(r => r.id);
-        state.playoffs = { seeds, round: 0, series: [], turnNo: 0 };
+        const table = standings().map(r => r.id);
+        state.playoffs = { seeds, positions: table, round: 0, series: [], turnNo: 0, playout: null };
+        // play-out salvezza: le ultime due (la meglio piazzata è "hi"), negli stessi weekend delle semifinali
+        const pc = playoutCfg();
+        if (pc) {
+            const last = table.slice(-pc.teams);
+            state.playoffs.playout = { hi: last[0], lo: last[1], bestOf: pc.bestOf, games: [], playout: true };
+        }
         // tabellone fisso: 1-8 / 4-5 e 2-7 / 3-6 (con 4 squadre 1-4 / 2-3)
         const pairs = nPo === 8 ? [[0, 7], [3, 4], [1, 6], [2, 5]] : (nPo === 4 ? [[0, 3], [1, 2]] : [[0, 1]]);
         state.playoffs.series.push(pairs.map(([a, b]) => newSeries(seeds[a], seeds[b], 0)));
@@ -208,7 +238,22 @@
         if (g) return g;
         return seriesWinner(s) ? null : nextSeriesGame(s);
     }
-    function seedOf(id) { return state.playoffs ? state.playoffs.seeds.indexOf(id) + 1 : 0; }
+    // posizione in classifica a fine regular season (i salvataggi più vecchi hanno solo le teste di serie)
+    function seedOf(id) {
+        const po = state.playoffs;
+        if (!po) return 0;
+        return (po.positions || po.seeds).indexOf(id) + 1;
+    }
+    const playoutOf = () => (state.playoffs && state.playoffs.playout) || null;
+    // serie in cui gioca una squadra nel turno corrente: play-off o play-out
+    function seriesOfTeam(id) {
+        const s = state.playoffs ? currentPoSeries().find(x => x.hi === id || x.lo === id) : null;
+        if (s) return s;
+        const pl = playoutOf();
+        return pl && (pl.hi === id || pl.lo === id) && !seriesWinner(pl) ? pl : null;
+    }
+    // chi perde il play-out retrocede
+    const playoutLoser = () => { const pl = playoutOf(); const w = pl && seriesWinner(pl); return w ? (w === pl.hi ? pl.lo : pl.hi) : null; };
     // la prossima gara di una serie: la miglior classificata gioca in casa le gare dispari
     function nextSeriesGame(s) {
         if (seriesWinner(s)) return null;
@@ -217,7 +262,10 @@
         let g = s.games.find(x => x.turn === turn) || s.games.find(x => !x.result);
         if (!g) {
             const n = s.games.length + 1;
-            g = n % 2 ? { home: s.hi, away: s.lo, result: null, n, turn } : { home: s.lo, away: s.hi, result: null, n, turn };
+            // di norma la meglio piazzata gioca in casa le gare dispari; nella Liga Élite gara 1 si gioca in casa
+            // della peggio piazzata e le successive in casa della meglio piazzata
+            const hiHome = L(state).lowSeedFirst ? n > 1 : n % 2 === 1;
+            g = hiHome ? { home: s.hi, away: s.lo, result: null, n, turn } : { home: s.lo, away: s.hi, result: null, n, turn };
             s.games.push(g);
         }
         return g;
@@ -226,6 +274,8 @@
     function advancePlayoffRoundIfDone() {
         const po = state.playoffs, cur = currentPoSeries();
         if (!cur.every(s => seriesWinner(s))) return;
+        // il play-out si chiude negli stessi weekend del primo turno: si aspetta anche lui
+        if (po.round === 0 && po.playout && !seriesWinner(po.playout)) return;
         const winners = cur.map(seriesWinner);
         if (po.round === poRounds().length - 1) {
             state.champion = winners[0];
@@ -284,7 +334,7 @@
             return r ? r.fixtures.find(f => f.home === state.user || f.away === state.user) || null : null;
         }
         if (state.phase === 'playoff') {
-            const s = currentPoSeries().find(x => x.hi === state.user || x.lo === state.user);
+            const s = seriesOfTeam(state.user);
             return s ? nextSeriesGame(s) : null;
         }
         return null;
@@ -308,6 +358,14 @@
                 if (!g.result) g.result = simulateMatch(g.home, g.away);
                 played.push({ si, n: g.n });
             });
+            const pl = playoutOf();
+            if (pl && !seriesWinner(pl)) {
+                const g = turnGame(pl);
+                if (g) {
+                    if (!g.result) g.result = simulateMatch(g.home, g.away);
+                    played.push({ si: 'playout', n: g.n });
+                }
+            }
             state.lastTurn = { kind: 'playoff', round: roundAtStart, played };
             state.playoffs.turnNo++;
             advancePlayoffRoundIfDone();
@@ -635,17 +693,18 @@
     function tableHtml() {
         const rows = standings();
         const nPo = playoffTeams();
+        const pout = playoutCfg();
         return `<div class="cp-table-wrap" data-pager="y" data-pager-items="tbody tr"><table class="cp-table">
             <thead><tr><th>#</th><th class="l">Squadra</th><th>PG</th><th>V</th><th title="Vittorie al supplementare o ai rigori">VS</th><th title="Sconfitte al supplementare o ai rigori">PS</th><th>P</th><th class="hide-sm">GF</th><th class="hide-sm">GS</th><th>DR</th><th>PT</th></tr></thead>
             <tbody>${rows.map((r, i) => `
-                <tr class="${r.id === state.user ? 'is-user ' : ''}${i < nPo ? 'is-po ' : ''}${i === nPo - 1 ? 'cut ' : ''}${state.relegate && i >= rows.length - state.relegate ? 'is-rel' : ''}">
+                <tr class="${r.id === state.user ? 'is-user ' : ''}${i < nPo ? 'is-po ' : ''}${i === nPo - 1 ? 'cut ' : ''}${(state.relegate && i >= rows.length - state.relegate) || (pout && i >= rows.length - pout.teams) ? 'is-rel' : ''}">
                     <td class="pos">${i + 1}</td>
                     <td class="l"><span class="team"><img src="${logo(r.id)}" alt="">${esc(club(r.id).shortName || clubName(r.id))}</span></td>
                     <td>${r.pg}</td><td>${r.v}</td><td>${r.vs}</td><td>${r.ps}</td><td>${r.p}</td>
                     <td class="hide-sm">${r.gf}</td><td class="hide-sm">${r.gs}</td><td>${r.gf - r.gs > 0 ? '+' : ''}${r.gf - r.gs}</td>
                     <td class="pts">${r.pts}</td>
                 </tr>`).join('')}</tbody></table></div>
-            <div class="cp-legend"><span><b>■</b> Zona play-off (prime ${nPo})</span>${state.relegate ? `<span><b class="rel">■</b> Retrocessione in Serie B</span>` : ''}${state.promote ? `<span>La vincente dei play-off sale in Serie A</span>` : ''}<span>Vittoria 3 pt • al supplementare/rigori 2 pt • sconfitta al supplementare/rigori 1 pt</span></div>`;
+            <div class="cp-legend"><span><b>■</b> Zona play-off (prime ${nPo})</span>${state.relegate ? `<span><b class="rel">■</b> Retrocessione in Serie B</span>` : ''}${state.promote ? `<span>La vincente dei play-off sale in Serie A</span>` : ''}${pout ? `<span><b class="rel">■</b> ${esc(pout.label)} (ultime ${pout.teams}): chi perde va in ${esc(pout.down)}</span>` : ''}<span>Vittoria 3 pt • al supplementare/rigori 2 pt • sconfitta al supplementare/rigori 1 pt</span></div>`;
     }
     function bracketHtml() {
         if (!state.playoffs) return `<div class="cp-empty" style="margin:auto">Il tabellone dei play-off sarà pronto alla fine della regular season</div>`;
@@ -663,7 +722,18 @@
                 html += `<div class="cp-series${s.hi === state.user || s.lo === state.user ? ' is-user' : ''}">${row(s.hi, w[0])}${row(s.lo, w[1])}</div>`;
             }
             return html + '</div></div>';
-        }).join('')}</div>`;
+        }).join('')}${playoutBoxHtml()}</div>`;
+    }
+    // play-out salvezza nel tabellone: le due squadre con la posizione in classifica e le vittorie
+    function playoutBoxHtml() {
+        const pl = playoutOf(), pc = playoutCfg();
+        if (!pl || !pc) return '';
+        const w = seriesWins(pl), win = seriesWinner(pl);
+        const row = (id, n) => `<div class="row${win ? (win === id ? ' won' : ' out') : ''}"><span class="seed">${seedOf(id)}</span><img src="${logo(id)}" alt=""><span>${esc(club(id).shortName || clubName(id))}</span><b>${n}</b></div>`;
+        const note = win ? `Retrocede in ${esc(pc.down)}: ${esc(club(playoutLoser()).shortName || clubName(playoutLoser()))}` : `Chi perde retrocede in ${esc(pc.down)}`;
+        return `<div class="cp-round cp-playout"><h4>${esc(pc.label)} • al meglio di ${pl.bestOf}</h4><div class="cp-round-body">
+            <div class="cp-series${pl.hi === state.user || pl.lo === state.user ? ' is-user' : ''}">${row(pl.hi, w[0])}${row(pl.lo, w[1])}</div>
+            <div class="cp-res-rest">${note}</div></div></div>`;
     }
     function nextMatchHtml() {
         if (state.phase === 'done') {
@@ -672,13 +742,16 @@
         }
         const f = userFixture();
         let meta;
+        const userSeries = state.phase === 'playoff' ? seriesOfTeam(state.user) : null;
         if (state.phase === 'regular') meta = `Giornata ${state.roundIdx + 1} di ${state.rounds.length}`;
-        else meta = poRounds()[state.playoffs.round].label;
+        else meta = userSeries && userSeries.playout ? playoutCfg().label : poRounds()[state.playoffs.round].label;
         if (!f) {
             let why = 'Turno di riposo';
             if (state.phase === 'playoff') {
                 const s = currentPoSeries().find(x => x.hi === state.user || x.lo === state.user);
+                const pl = playoutOf();
                 if (s && seriesWinner(s) === state.user) why = 'Serie vinta • in attesa';
+                else if (pl && (pl.hi === state.user || pl.lo === state.user)) why = playoutLoser() === state.user ? `Retrocessi in ${playoutCfg().down}` : 'Salvezza conquistata';
                 else why = state.playoffs.seeds.includes(state.user) ? 'Eliminati dai play-off' : 'Fuori dai play-off';
             }
             return `<div class="cp-next-meta"><span>${meta}</span><span>${esc(clubName(state.user))}</span></div>
@@ -687,7 +760,7 @@
         }
         let extra = '';
         if (state.phase === 'playoff') {
-            const s = currentPoSeries().find(x => x.hi === state.user || x.lo === state.user);
+            const s = userSeries;
             const w = seriesWins(s);
             extra = `Gara ${f.n} • serie ${w[s.hi === state.user ? 0 : 1]}-${w[s.hi === state.user ? 1 : 0]}`;
         }
@@ -713,7 +786,11 @@
         const list = state.playoffs.series[lt.round];
         return {
             title: `Risultati • ${poRounds()[lt.round].label}`,
-            body: lt.played.map(p => { const s = list[p.si]; const g = s.games.find(x => x.n === p.n); return g ? resultRow(g) : ''; }).join('')
+            body: lt.played.map(p => {
+                const s = p.si === 'playout' ? playoutOf() : list[p.si];
+                const g = s && s.games.find(x => x.n === p.n);
+                return g ? (p.si === 'playout' ? `<div class="cp-res-rest">${esc(playoutCfg() ? playoutCfg().label : 'Play-out')} • gara ${g.n}</div>` : '') + resultRow(g) : '';
+            }).join('')
         };
     }
     // partite della giornata in corso (escluse quelle della squadra dell'utente)
@@ -870,7 +947,10 @@
         if (wasRegular && state.phase === 'playoff') {
             hubTab = 'bracket';
             const pos = standings().findIndex(r => r.id === state.user) + 1;
-            toast(`Regular season conclusa • ${clubName(state.user)} ${pos}° ${pos <= playoffTeams() ? '• qualificata ai play-off' : '• fuori dai play-off'}`);
+            const pl = playoutOf();
+            const verdict = pos <= playoffTeams() ? '• qualificata ai play-off'
+                : (pl && (pl.hi === state.user || pl.lo === state.user) ? `• al ${playoutCfg().label.toLowerCase()}` : (playoutCfg() ? '• salva' : '• fuori dai play-off'));
+            toast(`Regular season conclusa • ${clubName(state.user)} ${pos}° ${verdict}`);
         }
         if (wasCupAlive && state.phase !== 'done') {
             const won = state.cup.rounds[state.cup.round - 1].some(g => winnerOf(g) === state.user);
@@ -887,12 +967,14 @@
         const msg = cup
             ? (isUser ? 'La Coppa Italia è vostra! Gara secca dopo gara secca, fino in fondo.'
                 : (state.runnerUp === state.user ? `${esc(clubName(state.user))} chiude al 2° posto: finale persa, ma che cammino!` : `${esc(clubName(state.user))} esce dalla coppa. Ci si riprova l'anno prossimo!`))
-            : (isUser ? 'Scudetto! Una stagione da ricordare.' : `${esc(clubName(state.user))} chiude la stagione. Ci si riprova l'anno prossimo!`);
+            : (isUser ? (leagueOf(state) === 'RFEP' ? 'Campioni di Spagna! Una stagione da ricordare.' : 'Scudetto! Una stagione da ricordare.')
+                : (playoutLoser() === state.user ? `${esc(clubName(state.user))} perde il play-out e retrocede. Si riparte dalla ${esc(playoutCfg().down)}!` : `${esc(clubName(state.user))} chiude la stagione. Ci si riprova l'anno prossimo!`));
         o.innerHTML = `<div class="cp-panel cp-dialog">
             <span class="cp-kicker">${cup ? `Coppa Italia ${esc(state.season)} • Finale 1°-2° posto` : `${L(state).name} ${esc(state.season)} • ${L(state).final}`}</span>
             <img class="cp-champ-crest" src="${logo(state.champion)}" alt="">
             <h2>${esc(clubName(state.champion))}<br>${cup ? 'Vince la Coppa Italia' : esc(L(state).title)}</h2>
             ${cup ? `<p>2° posto: ${esc(clubName(state.runnerUp))}</p>` : ''}
+            ${!cup && playoutLoser() ? `<p>${esc(playoutCfg().label)}: ${esc(clubName(playoutLoser()))} retrocede in ${esc(playoutCfg().down)}</p>` : ''}
             <p>${msg}</p>
             <div class="cp-next-actions"><button class="cp-btn" data-x="hub">${cup ? 'Tabellone' : 'Classifica'}</button><button class="cp-btn is-primary" data-x="menu">Torna al menu ▶</button></div>
         </div>`;
@@ -1000,7 +1082,12 @@
     function turnFixtures() {
         if (isCup()) return state.phase === 'cup' ? state.cup.rounds[state.cup.round].slice() : [];
         if (state.phase === 'regular') { const r = state.rounds[state.roundIdx]; return r ? r.fixtures.slice() : []; }
-        if (state.phase === 'playoff') return currentPoSeries().map(turnGame).filter(Boolean);
+        if (state.phase === 'playoff') {
+            const list = currentPoSeries().map(turnGame);
+            const pl = playoutOf();
+            if (pl && !seriesWinner(pl)) list.push(turnGame(pl));
+            return list.filter(Boolean);
+        }
         return [];
     }
     // finalista sconfitto della Serie A (null finché la finale non è decisa)
@@ -1051,7 +1138,8 @@
         return [9, 10, 11, 0, 1, 2][Math.min(5, Math.floor(fr * 6))];
     }
     function fixtureKickoff(f) {
-        return kickoff([state.comp, state.season, f.home, f.away, f.n || '', isCup() ? state.cup.round : state.roundIdx].join('|'), fixtureMonth(), null);
+        const day = !isCup() && state.phase === 'playoff' && L(state).lowSeedFirst && f.n ? (f.n === 3 ? 0 : 6) : null;
+        return kickoff([state.comp, state.season, f.home, f.away, f.n || '', isCup() ? state.cup.round : state.roundIdx].join('|'), fixtureMonth(), day);
     }
     const kickoffText = ko => `${ko.icon} ${ko.label}`;
 
@@ -1063,6 +1151,7 @@
         else {
             (state.rounds || []).forEach(r => r.fixtures.forEach(f => games.push(f)));
             if (state.playoffs) state.playoffs.series.forEach(rs => rs.forEach(s => s.games.forEach(g => games.push(g))));
+            if (playoutOf()) playoutOf().games.forEach(g => games.push(g));
         }
         return games.filter(f => f.result && (f.home === id || f.away === id)).map(f => (winnerOf(f) === id ? 'W' : 'L')).slice(-n);
     }
@@ -1073,9 +1162,11 @@
             ctx.roundId = (CUP_ROUNDS[state.cup.round] || {}).id || '';
         } else if (state.phase === 'playoff') {
             const r = poRounds()[state.playoffs.round];
+            const pl = playoutOf();
+            const inPlayout = pl && ((pl.hi === home && pl.lo === away) || (pl.hi === away && pl.lo === home));
             ctx.kind = 'playoff';
-            ctx.roundId = r.id;
-            const ser = currentPoSeries().find(x => (x.hi === home && x.lo === away) || (x.hi === away && x.lo === home));
+            ctx.roundId = inPlayout ? 'PO' : r.id;
+            const ser = inPlayout ? pl : currentPoSeries().find(x => (x.hi === home && x.lo === away) || (x.hi === away && x.lo === home));
             if (ser) {
                 const w = seriesWins(ser);
                 ctx.series = { wins: { [ser.hi]: w[0], [ser.lo]: w[1] }, game: w[0] + w[1] + 1, bestOf: ser.bestOf };
