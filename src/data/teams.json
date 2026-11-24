@@ -6919,6 +6919,188 @@
           }
         ]
       ]
+    },
+    {
+      "id": "aranda",
+      "league": "RFEP",
+      "name": "CHL ARANDA DE DUERO",
+      "shortName": "ARANDA",
+      "abbr": "ARA",
+      "note": "Roster fornito dal club (2 portieri, 11 giocatori di movimento senza ruolo indicato), senza statistiche. Jorge Gubia Martín e Marcos Arribas Peinador, senza numero, non sono nelle linee. Con 9 giocatori numerati per 12 posti alcuni giocano in due linee; ruoli C/LW/RW/D, linee e portiere titolare scelti provvisoriamente. Daniel Collantes Miguel è allenatore-giocatore (n. 20); staff tecnico: Carlos González Barrasus.",
+      "jerseyClubId": "aranda",
+      "homeArena": "aranda",
+      "logo": "aranda.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/aranda_1.png",
+        "assets/jerseys/aranda_2.png"
+      ],
+      "ratings": {
+        "off": 70,
+        "def": 69,
+        "goa": 70
+      },
+      "colors": {
+        "primary": "#2350b8",
+        "secondary": "#141416",
+        "staffJacket": "#141416",
+        "coachJacket": "#2350b8"
+      },
+      "rosterScreen": {
+        "photo": "aranda.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": {
+        "first": "Daniel",
+        "last": "Collantes Miguel",
+        "role": "Allenatore-giocatore",
+        "note": "In campo anche con il numero 20; staff tecnico con Carlos González Barrasus"
+      },
+      "goalie": {
+        "num": "29",
+        "name": "CIFUENTES",
+        "first": "Luis Carlos"
+      },
+      "backupGoalies": [
+        {
+          "num": "31",
+          "name": "GONZÁLEZ SANZ",
+          "first": "Guillermo"
+        }
+      ],
+      "reserves": [],
+      "kits": {
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#f8fafc",
+          "pants": "#141416",
+          "helmet": "#141416",
+          "glove": "#2350b8"
+        },
+        "black": {
+          "label": "Divisa Nera",
+          "primary": "#141416",
+          "pants": "#141416",
+          "helmet": "#141416",
+          "glove": "#141416"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "20",
+            "name": "COLLANTES MIGUEL",
+            "first": "Daniel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "DEL VAL MUÑOZ",
+            "first": "Alex",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "52",
+            "name": "ARRABAL BELLELLA",
+            "first": "Iván",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "13",
+            "name": "GONZÁLEZ SANZ",
+            "first": "Marcos",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "42",
+            "name": "ESGUEVA GONZÁLEZ",
+            "first": "Alejandro",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "22",
+            "name": "MARKIEGI BAZKARAN",
+            "first": "Aitor",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "77",
+            "name": "MAS RABELL",
+            "first": "Bern",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "38",
+            "name": "MELGAR SEGOVIA",
+            "first": "Daniel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "8",
+            "name": "MERCERE",
+            "first": "Lisandro",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "DEL VAL MUÑOZ",
+            "first": "Alex",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "52",
+            "name": "ARRABAL BELLELLA",
+            "first": "Iván",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "13",
+            "name": "GONZÁLEZ SANZ",
+            "first": "Marcos",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
     }
   ]
 }
