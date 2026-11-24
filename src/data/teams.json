@@ -6028,6 +6028,191 @@
           }
         ]
       ]
+    },
+    {
+      "id": "arona",
+      "league": "RFEP",
+      "name": "ARONA TENERIFE GUANCHES",
+      "shortName": "GUANCHES",
+      "abbr": "GUA",
+      "note": "Roster fornito dal club (2 portieri, 13 giocatori di movimento senza ruolo indicato), senza statistiche. Asier Gayoso Sansiñena è allenatore-giocatore (n. 26). Ruoli C/LW/RW/D, linee e riserva scelti provvisoriamente. Nazionalità dedotte dai nomi: CZ per Školoud, Loskot, Jaroš e il portiere Brabec, IT per il portiere Colucci; gli altri con la nazione della lega.",
+      "jerseyClubId": "arona",
+      "homeArena": "arona",
+      "logo": "arona.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/arona_1.png"
+      ],
+      "ratings": {
+        "off": 77,
+        "def": 75,
+        "goa": 76
+      },
+      "colors": {
+        "primary": "#1f6fd1",
+        "secondary": "#6ec4f0",
+        "staffJacket": "#14285e",
+        "coachJacket": "#1f6fd1"
+      },
+      "rosterScreen": {
+        "photo": "arona.jpg",
+        "focus": "50% 25%"
+      },
+      "coach": {
+        "first": "Asier",
+        "last": "Gayoso Sansiñena",
+        "role": "Allenatore-giocatore",
+        "note": "In campo anche con il numero 26"
+      },
+      "goalie": {
+        "num": "29",
+        "name": "BRABEC",
+        "first": "Daniel",
+        "nat": "CZ"
+      },
+      "backupGoalies": [
+        {
+          "num": "32",
+          "name": "COLUCCI",
+          "first": "Francesco",
+          "nat": "IT"
+        }
+      ],
+      "reserves": [
+        {
+          "num": "63",
+          "name": "MORALES CASANOVA",
+          "first": "Ignacio"
+        }
+      ],
+      "kits": {
+        "blue": {
+          "label": "Divisa Blu",
+          "primary": "#1f6fd1",
+          "pants": "#1a3c8c",
+          "helmet": "#f4f4f4",
+          "glove": "#1f6fd1"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "19",
+            "name": "ŠKOLOUD",
+            "first": "Petr",
+            "nat": "CZ",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "78",
+            "name": "LOSKOT",
+            "first": "Marek",
+            "nat": "CZ",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "91",
+            "name": "JAROŠ",
+            "first": "Ladislav",
+            "nat": "CZ",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "81",
+            "name": "VIKTORA MAJER",
+            "first": "Tomáš",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "8",
+            "name": "TASSINO VECINO",
+            "first": "Facundo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "24",
+            "name": "BUCHMAN",
+            "first": "Roan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "33",
+            "name": "MBEINJOCK THIÓ",
+            "first": "Eric",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "26",
+            "name": "GAYOSO SANSIÑENA",
+            "first": "Asier",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "13",
+            "name": "MORALES DELGADO",
+            "first": "Marcos",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "18",
+            "name": "FELIU VARELA",
+            "first": "Diego",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "97",
+            "name": "GARGALLO MARINER",
+            "first": "Héctor",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "23",
+            "name": "DE LA CRUZ ZOTES",
+            "first": "Manel",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
     }
   ]
 }
