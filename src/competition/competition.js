@@ -1,5 +1,5 @@
 // --- src/competition/competition.js ---
-// Modalità Competizione: Serie A, Serie B, Liga Élite (Spagna) e Coppa Italia.
+// Modalità Competizione: Serie A, Serie B, Liga Élite (Spagna), Ligue Élite (Francia) e Coppa Italia.
 // Script classico caricato dopo lo script principale di index.html: usa i suoi globali
 // (CLUB_ROSTERS, CLUB_RATINGS, ARENA_CATALOG, HOME_CLUB_ARENAS, matchConfig,
 //  launchMatchFromCurrentConfig, logoSrcOf, titleSplashScreen, showFunFactLoading, ...).
@@ -18,6 +18,16 @@
 //    delle 3, negli stessi weekend delle semifinali; chi perde retrocede in Liga Oro.
 //  - Fattore campo nelle serie: gara 1 (1º weekend) in casa della peggio piazzata, gara 2 (sabato del 2º
 //    weekend) ed eventuale gara 3 (domenica) in casa della meglio piazzata.
+//
+// LIGUE ÉLITE (Francia, FFRS) — formula federale adattata al numero di squadre presenti
+//  - Regular season: girone all'italiana con andata e ritorno (con 10 squadre 18 giornate), stessi punti.
+//  - Play-off per il titolo di Campione di Francia, tutte le serie al meglio delle 3:
+//      con almeno 8 squadre le prime 8 (quarti 1-8, 4-5, 2-7, 3-6, poi semifinali e finale);
+//      con 6-7 squadre le prime 6: 1ª e 2ª direttamente in semifinale, quarti 3ª-6ª e 4ª-5ª
+//      (in semifinale la 1ª incontra la peggio piazzata delle vincenti, la 2ª l'altra);
+//      con 4-5 squadre semifinali e finale fra le prime 4.
+//  - Play-out salvezza (con almeno 10 squadre, così non tocca chi va ai play-off): 9ª e 10ª al meglio
+//    delle 3; chi perde retrocede in Nationale 1.
 //
 // COPPA ITALIA
 //  - 8 squadre: quella dell'utente più le 7 migliori per rating; sorteggio libero.
@@ -39,20 +49,42 @@
             rounds: [{ id: 'SF', label: 'Semifinali', bestOf: 3 }, { id: 'F', label: 'Finale per il titolo', bestOf: 3 }],
             lowSeedFirst: true,                                   // gara 1 dalla peggio piazzata, poi due in casa della meglio piazzata
             playout: { teams: 2, minTeams: 6, bestOf: 3, label: 'Play-out salvezza', down: 'Liga Oro' }
+        },
+        // Ligue Élite: serie al meglio delle 3; con 6-7 squadre le prime due vanno direttamente in semifinale
+        'LIGUE ELITE': {
+            comp: 'ligue_elite', name: 'Ligue Élite', logo: 'assets/logos/ligue_elite_france.png', final: 'Finale per il titolo', po: 'Play-off per il titolo',
+            champ: 'Campione di Francia', title: 'Campione di Francia',
+            plan(n) {
+                const QF = { id: 'QF', label: 'Quarti di finale', bestOf: 3 }, SF = { id: 'SF', label: 'Semifinali', bestOf: 3 }, F = { id: 'F', label: 'Finale per il titolo', bestOf: 3 };
+                if (n >= 8) return { rounds: [QF, SF, F], teams: 8, pairs: [[0, 7], [3, 4], [1, 6], [2, 5]], byes: [], slots: [4, 2, 1] };
+                if (n >= 6) return { rounds: [QF, SF, F], teams: 6, pairs: [[2, 5], [3, 4]], byes: [0, 1], slots: [2, 2, 1] };
+                if (n >= 4) return { rounds: [SF, F], teams: 4, pairs: [[0, 3], [1, 2]], byes: [], slots: [2, 1] };
+                return { rounds: [F], teams: 2, pairs: [[0, 1]], byes: [], slots: [1] };
+            },
+            playout: { teams: 2, minTeams: 10, bestOf: 3, label: 'Play-out salvezza', down: 'Nationale 1' }
         }
     };
     const leagueOf = s => (s && s.league) || 'SERIE A';         // le stagioni salvate prima della Serie B sono di Serie A
     const L = s => LEAGUES[leagueOf(s)] || LEAGUES['SERIE A'];
     // turni dei play-off in base al numero di squadre del girone
-    function poRounds(s) {
+    function poRounds(s) { return poPlan(s).rounds; }
+    // piano dei play-off: turni, squadre qualificate, accoppiamenti del primo turno (indici in classifica),
+    // ammesse direttamente al secondo turno (byes) e numero di serie per turno nel tabellone
+    function poPlan(s) {
         s = s || state;
         const n = s && s.teams ? s.teams.length : 8, fin = L(s).final;
-        if (L(s).rounds) return n >= 4 ? L(s).rounds : L(s).rounds.slice(-1);
-        if (n >= 8) return [{ id: 'QF', label: 'Quarti di finale', bestOf: 3 }, { id: 'SF', label: 'Semifinali', bestOf: 5 }, { id: 'F', label: fin, bestOf: 5 }];
-        if (n >= 4) return [{ id: 'SF', label: 'Semifinali', bestOf: 3 }, { id: 'F', label: fin, bestOf: 5 }];
-        return [{ id: 'F', label: fin, bestOf: 3 }];
+        if (L(s).plan) return L(s).plan(n);
+        let rounds;
+        if (L(s).rounds) rounds = n >= 4 ? L(s).rounds : L(s).rounds.slice(-1);
+        else if (n >= 8) rounds = [{ id: 'QF', label: 'Quarti di finale', bestOf: 3 }, { id: 'SF', label: 'Semifinali', bestOf: 5 }, { id: 'F', label: fin, bestOf: 5 }];
+        else if (n >= 4) rounds = [{ id: 'SF', label: 'Semifinali', bestOf: 3 }, { id: 'F', label: fin, bestOf: 5 }];
+        else rounds = [{ id: 'F', label: fin, bestOf: 3 }];
+        const teams = Math.pow(2, rounds.length);
+        // tabellone fisso: 1-8 / 4-5 e 2-7 / 3-6 (con 4 squadre 1-4 / 2-3)
+        const pairs = teams === 8 ? [[0, 7], [3, 4], [1, 6], [2, 5]] : (teams === 4 ? [[0, 3], [1, 2]] : [[0, 1]]);
+        return { rounds, teams, pairs, byes: [], slots: rounds.map((r, i) => Math.pow(2, rounds.length - 1 - i)) };
     }
-    const playoffTeams = s => Math.pow(2, poRounds(s).length);
+    const playoffTeams = s => poPlan(s).teams;
     // play-out salvezza (solo dove previsto e con abbastanza squadre da non toccare chi va ai play-off)
     const playoutCfg = s => { s = s || state; const po = L(s).playout; return po && s && s.teams && s.teams.length >= po.minTeams ? po : null; };
     const CUP_TEAMS = 8;
@@ -79,10 +111,11 @@
             facts: () => [[String(CUP_TEAMS), 'Squadre'], ['3', 'Turni'], ['Secca', 'Gara']]
         },
         {
-            // campionato francese: si sblocca quando in configurazione ci sono abbastanza squadre della lega
-            id: 'ligue_elite', name: 'Ligue Élite (Francia)', short: 'Ligue Élite', logo: 'assets/logos/ligue_elite_france.png', active: false,
-            desc: 'Il massimo campionato francese di roller hockey (FFRS). Per ora c\'è solo FDB Villeneuve: si giocherà quando arriveranno le altre squadre francesi.',
-            facts: () => [[String(CLUB_IDS.filter(id => club(id) && club(id).league === 'LIGUE ELITE').length), 'Squadre'], ['FFRS', 'Federazione'], ['Francia', 'Paese']]
+            // campionato francese: giocabile con le squadre della Ligue Élite presenti in configurazione (almeno 4)
+            id: 'ligue_elite', league: 'LIGUE ELITE', name: 'Ligue Élite (Francia)', short: 'Ligue Élite', logo: 'assets/logos/ligue_elite_france.png',
+            get active() { return leagueTeams('LIGUE ELITE').length >= 4; },
+            desc: "Il massimo campionato francese di roller hockey. Girone all'italiana con andata e ritorno, poi i play-off per il titolo di Campione di Francia, tutte le serie al meglio delle 3: con 6 squadre le prime due vanno direttamente in semifinale, la 3ª-6ª e la 4ª-5ª si giocano i quarti.",
+            facts: () => leagueFacts('LIGUE ELITE')
         },
         {
             // campionato spagnolo: giocabile con le squadre della Liga Élite presenti in configurazione (almeno 4)
@@ -210,19 +243,18 @@
 
     // ------------------------------------------------------------------ play-off
     function createPlayoffs() {
-        const nPo = playoffTeams();
-        const seeds = standings().slice(0, nPo).map(r => r.id);
+        const plan = poPlan();
+        const seeds = standings().slice(0, plan.teams).map(r => r.id);
         const table = standings().map(r => r.id);
-        state.playoffs = { seeds, positions: table, round: 0, series: [], turnNo: 0, playout: null };
+        // byes: ammesse direttamente al secondo turno (Ligue Élite con 6-7 squadre: 1ª e 2ª in semifinale)
+        state.playoffs = { seeds, positions: table, round: 0, series: [], turnNo: 0, playout: null, byes: plan.byes.map(i => seeds[i]) };
         // play-out salvezza: le ultime due (la meglio piazzata è "hi"), negli stessi weekend delle semifinali
         const pc = playoutCfg();
         if (pc) {
             const last = table.slice(-pc.teams);
             state.playoffs.playout = { hi: last[0], lo: last[1], bestOf: pc.bestOf, games: [], playout: true };
         }
-        // tabellone fisso: 1-8 / 4-5 e 2-7 / 3-6 (con 4 squadre 1-4 / 2-3)
-        const pairs = nPo === 8 ? [[0, 7], [3, 4], [1, 6], [2, 5]] : (nPo === 4 ? [[0, 3], [1, 2]] : [[0, 1]]);
-        state.playoffs.series.push(pairs.map(([a, b]) => newSeries(seeds[a], seeds[b], 0)));
+        state.playoffs.series.push(plan.pairs.map(([a, b]) => newSeries(seeds[a], seeds[b], 0)));
         state.phase = 'playoff';
     }
     function newSeries(hi, lo, roundIdx) { return { hi, lo, bestOf: poRounds()[roundIdx].bestOf, games: [] }; }
@@ -283,9 +315,15 @@
             return;
         }
         const next = [];
-        for (let i = 0; i < winners.length; i += 2) {
-            const a = winners[i], b = winners[i + 1];
-            next.push(seedOf(a) < seedOf(b) ? newSeries(a, b, po.round + 1) : newSeries(b, a, po.round + 1));
+        if (po.round === 0 && po.byes && po.byes.length) {
+            // le ammesse direttamente: la meglio piazzata incontra la peggio piazzata delle vincenti
+            const wins = winners.slice().sort((a, b) => seedOf(a) - seedOf(b));
+            po.byes.forEach((b, i) => next.push(newSeries(b, wins[wins.length - 1 - i], po.round + 1)));
+        } else {
+            for (let i = 0; i < winners.length; i += 2) {
+                const a = winners[i], b = winners[i + 1];
+                next.push(seedOf(a) < seedOf(b) ? newSeries(a, b, po.round + 1) : newSeries(b, a, po.round + 1));
+            }
         }
         po.round++;
         po.series.push(next);
@@ -709,10 +747,10 @@
     function bracketHtml() {
         if (!state.playoffs) return `<div class="cp-empty" style="margin:auto">Il tabellone dei play-off sarà pronto alla fine della regular season</div>`;
         const po = state.playoffs;
-        const rounds = poRounds();
+        const plan = poPlan(), rounds = plan.rounds;
         return `<div class="cp-bracket" data-pager="x" data-pager-items=".cp-round">${rounds.map((rd, ri) => {
             const list = po.series[ri];
-            const slots = Math.pow(2, rounds.length - 1 - ri);
+            const slots = plan.slots[ri];
             let html = `<div class="cp-round"><h4>${rd.label} • al meglio di ${rd.bestOf}</h4><div class="cp-round-body">`;
             for (let k = 0; k < slots; k++) {
                 const s = list && list[k];
@@ -720,6 +758,11 @@
                 const w = seriesWins(s), win = seriesWinner(s);
                 const row = (id, n) => `<div class="row${win ? (win === id ? ' won' : ' out') : ''}"><span class="seed">${seedOf(id)}</span><img src="${logo(id)}" alt=""><span>${esc(club(id).shortName || clubName(id))}</span><b>${n}</b></div>`;
                 html += `<div class="cp-series${s.hi === state.user || s.lo === state.user ? ' is-user' : ''}">${row(s.hi, w[0])}${row(s.lo, w[1])}</div>`;
+            }
+            // primo turno: chi è già al turno successivo
+            if (ri === 0 && po.byes && po.byes.length) {
+                html += `<div class="cp-series${po.byes.includes(state.user) ? ' is-user' : ''}">${po.byes.map(id => `<div class="row won"><span class="seed">${seedOf(id)}</span><img src="${logo(id)}" alt=""><span>${esc(club(id).shortName || clubName(id))}</span><b>✓</b></div>`).join('')}</div>
+                    <div class="cp-res-rest">Già in ${esc(((rounds[1] || {}).label || 'semifinale').toLowerCase())}</div>`;
             }
             return html + '</div></div>';
         }).join('')}${playoutBoxHtml()}</div>`;
@@ -751,6 +794,7 @@
                 const s = currentPoSeries().find(x => x.hi === state.user || x.lo === state.user);
                 const pl = playoutOf();
                 if (s && seriesWinner(s) === state.user) why = 'Serie vinta • in attesa';
+                else if (state.playoffs.round === 0 && (state.playoffs.byes || []).includes(state.user)) why = `Già in ${((poRounds()[1] || {}).label || 'semifinale').toLowerCase()} • in attesa`;
                 else if (pl && (pl.hi === state.user || pl.lo === state.user)) why = playoutLoser() === state.user ? `Retrocessi in ${playoutCfg().down}` : 'Salvezza conquistata';
                 else why = state.playoffs.seeds.includes(state.user) ? 'Eliminati dai play-off' : 'Fuori dai play-off';
             }
@@ -948,7 +992,8 @@
             hubTab = 'bracket';
             const pos = standings().findIndex(r => r.id === state.user) + 1;
             const pl = playoutOf();
-            const verdict = pos <= playoffTeams() ? '• qualificata ai play-off'
+            const verdict = (state.playoffs.byes || []).includes(state.user) ? '• direttamente in semifinale'
+                : pos <= playoffTeams() ? '• qualificata ai play-off'
                 : (pl && (pl.hi === state.user || pl.lo === state.user) ? `• al ${playoutCfg().label.toLowerCase()}` : (playoutCfg() ? '• salva' : '• fuori dai play-off'));
             toast(`Regular season conclusa • ${clubName(state.user)} ${pos}° ${verdict}`);
         }
@@ -967,7 +1012,7 @@
         const msg = cup
             ? (isUser ? 'La Coppa Italia è vostra! Gara secca dopo gara secca, fino in fondo.'
                 : (state.runnerUp === state.user ? `${esc(clubName(state.user))} chiude al 2° posto: finale persa, ma che cammino!` : `${esc(clubName(state.user))} esce dalla coppa. Ci si riprova l'anno prossimo!`))
-            : (isUser ? (leagueOf(state) === 'RFEP' ? 'Campioni di Spagna! Una stagione da ricordare.' : 'Scudetto! Una stagione da ricordare.')
+            : (isUser ? (({ RFEP: 'Campioni di Spagna! Una stagione da ricordare.', 'LIGUE ELITE': 'Campioni di Francia! Una stagione da ricordare.' })[leagueOf(state)] || 'Scudetto! Una stagione da ricordare.')
                 : (playoutLoser() === state.user ? `${esc(clubName(state.user))} perde il play-out e retrocede. Si riparte dalla ${esc(playoutCfg().down)}!` : `${esc(clubName(state.user))} chiude la stagione. Ci si riprova l'anno prossimo!`));
         o.innerHTML = `<div class="cp-panel cp-dialog">
             <span class="cp-kicker">${cup ? `Coppa Italia ${esc(state.season)} • Finale 1°-2° posto` : `${L(state).name} ${esc(state.season)} • ${L(state).final}`}</span>
