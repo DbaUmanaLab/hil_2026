@@ -3011,6 +3011,175 @@
       ]
     },
     {
+      "id": "caen",
+      "league": "LIGUE ELITE",
+      "name": "CONQUÉRANTS DE CAEN",
+      "shortName": "CONQUÉRANTS",
+      "abbr": "CAE",
+      "note": "Roster fornito dal club (1 portiere, 4 difensori, 4 attaccanti), senza statistiche. Numeri PROVVISORI da correggere: Devin 2, Duchemin 10, Janil 17, Maréchau 21 (nel roster senza numero). Con 4 attaccanti per 9 posti gli attaccanti giocano in più linee; Devin (difensore) è tra le riserve. C/LW/RW scelti provvisoriamente. Nessun portiere di riserva; allenatore non indicato.",
+      "jerseyClubId": "caen",
+      "homeArena": "caen",
+      "logo": "caen.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/caen.png"
+      ],
+      "ratings": {
+        "off": 70,
+        "def": 70,
+        "goa": 71
+      },
+      "colors": {
+        "primary": "#e0262b",
+        "secondary": "#d9b45a",
+        "staffJacket": "#141416",
+        "coachJacket": "#e0262b"
+      },
+      "rosterScreen": {
+        "photo": "caen.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "51",
+        "name": "VENIN",
+        "first": "Faust"
+      },
+      "backupGoalies": [],
+      "reserves": [
+        {
+          "num": "2",
+          "name": "DEVIN",
+          "first": "Pierre-Antoine"
+        }
+      ],
+      "kits": {
+        "red": {
+          "label": "Divisa Rossa",
+          "primary": "#e0262b",
+          "pants": "#141416",
+          "helmet": "#141416",
+          "glove": "#141416"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "28",
+            "name": "APHECETCHE",
+            "first": "Yoan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "10",
+            "name": "DUCHEMIN",
+            "first": "Sébastien",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "17",
+            "name": "JANIL",
+            "first": "Jonathan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "SABLEAU FICHTER",
+            "first": "Quentin",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "21",
+            "name": "MARÉCHAU",
+            "first": "Aloys",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "JANIL",
+            "first": "Jonathan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "10",
+            "name": "DUCHEMIN",
+            "first": "Sébastien",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "12",
+            "name": "RAGE",
+            "first": "Antoine",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "28",
+            "name": "APHECETCHE",
+            "first": "Yoan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "21",
+            "name": "MARÉCHAU",
+            "first": "Aloys",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "10",
+            "name": "DUCHEMIN",
+            "first": "Sébastien",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "36",
+            "name": "RAYAPIN",
+            "first": "Antoine",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "asiago_newts",
       "league": "SERIE B",
       "name": "ASIAGO NEWTS",
