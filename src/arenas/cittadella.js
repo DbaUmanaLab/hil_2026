@@ -746,11 +746,11 @@
         g.fillStyle = paper; g.fillRect(0, 0, 256, 362);
         g.textAlign = 'center';
         const line = (txt, y, size, color = '#1c1917', weight = '700', font = 'Arial') => {
-            g.fillStyle = color; g.font = `${weight} ${size}px ${font}`; g.fillText(txt, 128, y);
+            g.fillStyle = color; g.font = `${weight} ${size}px ${font}`; g.fillText(_t(txt), 128, y);
         };
         const row = (a, b, y) => {
             g.fillStyle = '#292524'; g.font = '600 19px Arial';
-            g.textAlign = 'left'; g.fillText(a, 22, y);
+            g.textAlign = 'left'; g.fillText(_t(a), 22, y);
             g.textAlign = 'right'; g.fillText(b, 234, y);
             g.textAlign = 'center';
             g.strokeStyle = 'rgba(0,0,0,0.15)'; g.setLineDash([2, 4]); g.beginPath(); g.moveTo(22, y + 7); g.lineTo(234, y + 7); g.stroke(); g.setLineDash([]);
@@ -781,8 +781,9 @@
             line('E SATISPAY', 188, 28, '#dc2626', '800', 'Comic Sans MS');
             line('grazie! ☺', 262, 24, '#1c1917', '600', 'Comic Sans MS');
         } else {
-            line('TORNEO', 64, 34, '#1e3a8a', '900');
-            line('GIOVANILE', 104, 30, '#1e3a8a', '900');
+            const [tw1, tw2] = _t('TORNEO GIOVANILE').split(' ');      // due righe: "TORNEO / GIOVANILE"
+            line(tw1, 64, 34, '#1e3a8a', '900');
+            line(tw2, 104, 30, '#1e3a8a', '900');
             line('U12 • U14 • U16', 150, 20, '#0369a1', '700');
             line('iscrizioni al bar', 210, 20, '#1c1917', '600');
             line('o in segreteria', 238, 20, '#1c1917', '600');

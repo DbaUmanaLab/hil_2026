@@ -93,15 +93,22 @@
         if (!cache[c]) cache[c] = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">${FLAGS[c].svg()}</svg>`;
         return cache[c];
     }
-    function name(code) {
+    // nome in italiano (chiave del dizionario: vedi src/i18n/en/data.js)
+    function itName(code) {
         const f = FLAGS[String(code || '').toUpperCase()];
         return f ? f.name : String(code || '');
     }
+    // nome nella lingua attiva (per i testi composti, es. "Francia • Club")
+    function name(code) {
+        const n = itName(code);
+        return window._t ? window._t(n) : n;
+    }
     // <span> con la bandiera; size: altezza CSS (default 0.8em)
+    // title/aria-label restano in italiano: li traduce l'osservatore della pagina (anche al cambio lingua)
     function html(code, extraClass, size) {
         const s = svg(code);
         if (!s) return '';
-        const n = name(code);
+        const n = itName(code);
         const style = size ? ` style="height:${size}"` : '';
         return `<span class="hil-flag${extraClass ? ' ' + extraClass : ''}" title="${n}" role="img" aria-label="${n}"${style}>${s}</span>`;
     }

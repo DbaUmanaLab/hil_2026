@@ -1,1 +1,3 @@
 node_modules/
+# asset alleggeriti per le app (tools/bundle_assets.py)
+deploy/bundle-assets/

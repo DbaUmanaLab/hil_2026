@@ -33,6 +33,7 @@
     const fullName = p => `${p.first ? p.first + ' ' : ''}${p.name}`;
     const ovrCls = v => (v >= 80 ? 'is-elite' : v >= 72 ? 'is-good' : v >= 64 ? 'is-mid' : 'is-low');
     const ROLE_SHORT = { G: 'P', D: 'D', F: 'A' };
+    const roleShort = p => (I18N.lang === 'en' ? p.pos : ROLE_SHORT[p.pos]);     // in inglese G / D / F
     const ROLE_DETAIL = { G: 'Portiere', D: 'Difensore', C: 'Centro', LW: 'Ala sinistra', RW: 'Ala destra' };
     const CAT_ICON = { gare: '🏒', mercato: '🔁', infortuni: '🩹', sponsor: '🤝', finanze: '💶', tifosi: '📣', club: '🏛️' };
     function toast(t) {
@@ -147,11 +148,11 @@
             <div class="cp-head">
                 <img class="cp-head-logo" src="assets/logos/game%20badge.png" alt="" onerror="this.style.display='none'">
                 <div class="cp-head-titles"><span class="cp-kicker">Hockey Manager • Carriera</span><span class="cp-title">Scegli il tuo club</span></div>
-                <div class="cp-head-right"><span class="cp-pill">Budget iniziale ${eur(inB ? MC().CFG.START_BUDGET.B : MC().CFG.START_BUDGET.A)}</span></div>
+                <div class="cp-head-right"><span class="cp-pill">${_t('Budget iniziale {0}', eur(inB ? MC().CFG.START_BUDGET.B : MC().CFG.START_BUDGET.A))}</span></div>
             </div>
             <div class="mg-start">
                 <div class="cp-panel mg-start-teams">
-                    <div class="cp-panel-title"><span>Serie A • Serie B</span><b>${teamsA.length} + ${teamsB.length} club</b></div>
+                    <div class="cp-panel-title"><span>Serie A • Serie B</span><b>${_t('{0} + {1} club', teamsA.length, teamsB.length)}</b></div>
                     <div class="cp-team-grid" data-pager="y">
                         <div class="mg-div-label">Serie A</div>${teamsA.map(tile).join('')}
                         <div class="mg-div-label">Serie B</div>${teamsB.map(tile).join('')}</div>
@@ -159,10 +160,10 @@
                 <div class="cp-panel mg-start-side">
                     <img class="crest" src="${logo(selectedTeam)}" alt="">
                     <div class="name">${esc(MC().clubName(selectedTeam))}</div>
-                    <div class="arena">${esc(MC().arenaName(selectedTeam))} • ${cap} posti</div>
+                    <div class="arena">${esc(_t('{0} • {1} posti', MC().arenaName(selectedTeam), cap))}</div>
                     <div class="cp-ratings"><div><small>OFF</small><b>${r.off}</b></div><div><small>DEF</small><b>${r.def}</b></div><div><small>GOA</small><b>${r.goa}</b></div></div>
                     <div class="mg-diff"><b>${diff[0]}</b><span>${diff[1]}</span></div>
-                    <div class="mg-facts"><div><small>Divisione</small><b>${inB ? 'Serie B' : 'Serie A'}</b></div><div><small>Affitto palazzetto</small><b>${eur(MC().arenaFee(selectedTeam) * (inB ? MC().CFG.DIV.B.arena : 1))}/sett.</b></div></div>
+                    <div class="mg-facts"><div><small>Divisione</small><b>${inB ? 'Serie B' : 'Serie A'}</b></div><div><small>Affitto palazzetto</small><b>${_t('{0}/sett.', eur(MC().arenaFee(selectedTeam) * (inB ? MC().CFG.DIV.B.arena : 1)))}</b></div></div>
                     <button class="cp-btn is-primary" data-act="new">Inizia la carriera ▶</button>
                 </div>
                 <div class="cp-panel mg-start-saves">
@@ -171,8 +172,8 @@
                         <div class="cp-save-row">
                             <img src="${logo(s.data.user)}" alt="">
                             <div style="min-width:0"><div class="n">${esc(s.name)}</div>
-                                <div class="s">${s.data.over ? '<em class="mg-bad">Fallita</em> • ' : ''}Stagione ${esc(MC().seasonLabelOf(s.data.seasonYear))} • ${esc(MC().dateLabel(s.data.date))} • ${eur(s.data.balance)} • ${esc(difficultyLabel(s.data))}</div></div>
-                            <div class="a">${s.data.over ? '' : `<button class="cp-btn is-small is-primary" data-load="${s.id}">Carica</button>`}<button class="cp-btn is-small is-danger" data-del="${s.id}">Elimina</button></div>
+                                <div class="s">${s.data.over ? '<em class="mg-bad">Fallita</em> • ' : ''}${esc(_t('Stagione {0} • {1} • {2} • {3}', MC().seasonLabelOf(s.data.seasonYear), MC().dateLabel(s.data.date), eur(s.data.balance), difficultyLabel(s.data)))}</div></div>
+                            <div class="a">${s.data.over ? '' : `<button class="cp-btn is-small is-primary" data-load="${s.id}">Riprendi</button>`}<button class="cp-btn is-small is-danger" data-del="${s.id}">Elimina</button></div>
                         </div>`).join('') : '<div class="cp-empty">Nessuna carriera salvata</div>'}</div>
                 </div>
             </div>
@@ -203,15 +204,15 @@
     // livello della CPU nelle partite giocate: scelto una volta all'inizio della carriera e salvato con lei
     function difficultyLabel(c) {
         const L = typeof DIFFICULTY_LEVELS !== 'undefined' && DIFFICULTY_LEVELS[(c && c.difficulty) || 'normal'];
-        return L ? L.label : 'Normale';
+        return _t(L ? L.label : 'Normale');
     }
     function startCareer(team) {
         if (typeof window.pickDifficulty !== 'function') { createCareer(team, 'normal'); return; }
         window.pickDifficulty({
-            title: 'Scegli la difficoltà',
-            sub: 'Hockey Manager • vale per tutta la carriera',
+            title: _t('Scegli la difficoltà'),
+            sub: _t('Hockey Manager • vale per tutta la carriera'),
             current: 'normal',
-            currentTag: 'Consigliato',
+            currentTag: _t('Consigliato'),
             onPick: id => createCareer(team, id),
             onCancel: () => { const f = root.querySelector('[data-act="new"]'); if (f) f.focus({ preventScroll: true }); }
         });
@@ -225,7 +226,7 @@
         tab = 'office';
         save(true);
         showScreen('hub');
-        toast(`Difficoltà ${difficultyLabel(career)} • carriera salvata come "${career.name}"`);
+        toast(_t('Difficoltà {0} • carriera salvata come "{1}"', difficultyLabel(career), career.name));
     }
 
     // ------------------------------------------------------------------ 2. hub
@@ -238,9 +239,9 @@
 
     function fansGauge(v, big) {
         const mood = MC().fansMood(v);
-        return `<div class="mg-fans${big ? ' is-big' : ''}" title="Gradimento dei tifosi: ${Math.round(v)} su 100">
+        return `<div class="mg-fans${big ? ' is-big' : ''}" title="${esc(_t('Gradimento dei tifosi: {0} su 100', Math.round(v)))}">
             <div class="mg-fans-bar"><i style="width:${Math.round(v)}%"></i></div>
-            <span><b>${Math.round(v)}</b> ${esc(mood)}</span></div>`;
+            <span><b>${Math.round(v)}</b> ${esc(_t(mood))}</span></div>`;
     }
     function renderHub() {
         if (!career) return;
@@ -253,7 +254,7 @@
         el.innerHTML = `
             <div class="cp-head mg-head">
                 <img class="mg-crest" src="${logo(c.user)}" alt="">
-                <div class="cp-head-titles"><span class="cp-kicker">Hockey Manager • ${MC().CFG.DIV[MC().userDiv(c)].name} • Stagione ${esc(MC().seasonLabelOf(c.seasonYear))}</span><span class="cp-title">${esc(MC().clubName(c.user))}</span></div>
+                <div class="cp-head-titles"><span class="cp-kicker">${esc(_t('Hockey Manager • {0} • Stagione {1}', MC().CFG.DIV[MC().userDiv(c)].name, MC().seasonLabelOf(c.seasonYear)))}</span><span class="cp-title">${esc(MC().clubName(c.user))}</span></div>
                 <div class="cp-head-right mg-status">
                     <span class="cp-pill mg-pill-date">📅 ${esc(MC().dateLabel(c.date, true))}</span>
                     <span class="cp-pill" title="Difficoltà delle partite">🎚️ ${esc(difficultyLabel(c))}</span>
@@ -271,7 +272,7 @@
             </div>
             <div class="cp-foot">
                 <button class="cp-btn" data-act="exit">◀ Esci</button>
-                <span class="cp-hint">${ev ? `Prossimo: <b>${esc(ev.label)}</b> • ${esc(MC().dateLabel(ev.date))}` : 'Carriera terminata'}</span>
+                <span class="cp-hint">${ev ? `${esc(_t('Prossimo:'))} <b>${esc(MC().evLabel(ev.label))}</b> • ${esc(MC().dateLabel(ev.date))}` : esc(_t('Carriera terminata'))}</span>
                 <span class="cp-spacer"></span>
                 <button class="cp-btn" data-act="save">Salva</button>
                 ${c.over ? '<button class="cp-btn is-danger" data-act="over">Carriera terminata</button>' : `<button class="cp-btn is-primary" data-act="continue">${ev && MC().userFixture(c, ev) ? 'Vai alla partita ▶' : 'Continua ▶'}</button>`}
@@ -328,6 +329,13 @@
         show();
     }
     compactMq.addEventListener('change', () => { if (career && root && !root.classList.contains('cp-hidden')) renderHub(); });
+    // cambio lingua: si ridisegna la schermata aperta (testi composti con _t(), date, importi)
+    window.addEventListener('hil:lang', () => {
+        if (!root || root.classList.contains('cp-hidden')) return;
+        const cur = root.querySelector('.cp-screen:not(.cp-hidden)');
+        if (cur && cur.dataset.screen === 'start') renderStart();
+        else if (career) renderHub();
+    });
 
     // ------------------------------------------------------------------ avanzamento del calendario
     function onContinue() {
@@ -351,7 +359,7 @@
     }
     function availabilityLine() {
         const inj = MC().teamPlayers(career, career.user).filter(p => p.inj);
-        return inj.length ? `Indisponibili: ${inj.map(p => esc(p.name)).join(', ')}` : 'Tutta la rosa a disposizione';
+        return inj.length ? _t('Indisponibili: {0}', inj.map(p => esc(p.name)).join(', ')) : esc(_t('Tutta la rosa a disposizione'));
     }
     // orario della partita dal calendario della carriera (giorno della settimana e mese veri): decide se si
     // gioca col sole o di sera (motore orari in competition.js)
@@ -364,9 +372,9 @@
         const opp = f.home === career.user ? f.away : f.home;
         const mine = r[career.user], theirs = r[opp];
         overlay(`
-            <span class="cp-kicker">${esc(ev.label)} • ${esc(MC().dateLabel(ev.date, true))} • ore ${esc(kickoffOf(ev, f).time)}</span>
+            <span class="cp-kicker">${esc(_t('{0} • {1} • ore {2}', MC().evLabel(ev.label), MC().dateLabel(ev.date, true), kickoffOf(ev, f).time))}</span>
             ${versusHtml(f)}
-            <div class="cp-next-arena">${esc(MC().arenaName(f.home))}${f.home === career.user ? ' • incasso di biglietti e bar' : ''}</div>
+            <div class="cp-next-arena">${esc(f.home === career.user ? _t('{0} • incasso di biglietti e bar', MC().arenaName(f.home)) : MC().arenaName(f.home))}</div>
             <div class="mg-compare"><span>OFF ${mine.off} • DEF ${mine.def} • GOA ${mine.goa}</span><b>vs</b><span>OFF ${theirs.off} • DEF ${theirs.def} • GOA ${theirs.goa}</span></div>
             <p>${availabilityLine()}</p>
             <div class="cp-next-actions">
@@ -402,7 +410,7 @@
         matchActive = true;
         // il Manager si chiude quando il caricamento lo copre (niente palazzetto nella dissolvenza)
         const hideMgr = () => root.classList.add('cp-hidden');
-        if (typeof showFunFactLoading === 'function') showFunFactLoading(`${ev.label} • ${ko.label}`, launchMatchFromCurrentConfig, hideMgr);
+        if (typeof showFunFactLoading === 'function') showFunFactLoading(`${MC().evLabel(ev.label)} • ${ko.label}`, launchMatchFromCurrentConfig, hideMgr);
         else { hideMgr(); launchMatchFromCurrentConfig(); }
     }
     function onUserMatchFinished(res) {
@@ -427,25 +435,25 @@
         let matchHtml = '';
         if (rep.match) {
             const f = rep.match.fixture, r = f.result;
-            const tag = r.type === 'OT' ? 'dopo il supplementare' : r.type === 'SO' ? `ai rigori ${r.so[0]}-${r.so[1]}` : '';
+            const tag = r.type === 'OT' ? _t('dopo il supplementare') : r.type === 'SO' ? _t('ai rigori {0}-{1}', r.so[0], r.so[1]) : '';
             matchHtml = `<div class="mg-score ${rep.match.won ? 'is-win' : 'is-loss'}">
                 <div><img src="${logo(f.home)}" alt=""><span>${esc(short(f.home))}</span></div>
                 <b>${r.hg} - ${r.ag}</b>
                 <div><img src="${logo(f.away)}" alt=""><span>${esc(short(f.away))}</span></div></div>
-                <div class="mg-score-tag">${rep.match.won ? 'Vittoria' : 'Sconfitta'}${tag ? ' ' + tag : ''}${rep.match.people ? ` • ${rep.match.people} spettatori` : ''}</div>`;
+                <div class="mg-score-tag">${esc(_t(rep.match.won ? 'Vittoria' : 'Sconfitta'))}${tag ? ' ' + esc(tag) : ''}${rep.match.people ? ' • ' + esc(_t('{0} spettatori', rep.match.people)) : ''}</div>`;
         }
         const injured = rep.injuries.map(id => career.players[id]).filter(Boolean);
         const lines = Object.keys(sums).map(k => `<li><span>${esc(cats[k] || k)}</span><b class="${sums[k] >= 0 ? 'mg-pos' : 'mg-neg'}">${sums[k] >= 0 ? '+' : ''}${eur(sums[k])}</b></li>`).join('');
         overlay(`
-            <span class="cp-kicker">${esc(rep.ev.label)} • ${esc(MC().dateLabel(rep.ev.date, true))}</span>
+            <span class="cp-kicker">${esc(MC().evLabel(rep.ev.label))} • ${esc(MC().dateLabel(rep.ev.date, true))}</span>
             <h2>Riepilogo</h2>
             ${matchHtml}
             <div class="mg-report">
                 <div><small>Movimenti</small><ul class="mg-sumlist">${lines || '<li><span>Nessun movimento</span></li>'}</ul>
                     <div class="mg-report-total"><span>Saldo</span><b>${eur(rep.balanceAfter)}</b><em class="${delta >= 0 ? 'mg-pos' : 'mg-neg'}">${delta >= 0 ? '+' : ''}${eur(delta)}</em></div></div>
                 <div><small>Tifosi</small>${fansGauge(career.fans, true)}<em class="${rep.fans >= 0 ? 'mg-pos' : 'mg-neg'}">${rep.fans >= 0 ? '+' : ''}${rep.fans.toFixed(1)}</em>
-                    ${injured.length ? `<small>Nuovi infortuni</small><ul class="mg-sumlist">${injured.map(p => `<li><span>🩹 ${esc(p.name)}</span><b>${p.inj ? p.inj.days + ' giorni' : ''}</b></li>`).join('')}</ul>` : ''}
-                    ${rep.messages.length ? `<small>${rep.messages.length} nuovi messaggi</small>` : ''}</div>
+                    ${injured.length ? `<small>Nuovi infortuni</small><ul class="mg-sumlist">${injured.map(p => `<li><span>🩹 ${esc(p.name)}</span><b>${p.inj ? esc(_t('{0} giorni', p.inj.days)) : ''}</b></li>`).join('')}</ul>` : ''}
+                    ${rep.messages.length ? `<small>${esc(_t('{0} nuovi messaggi', rep.messages.length))}</small>` : ''}</div>
             </div>
             <div class="cp-next-actions">
                 ${rep.messages.length ? '<button class="cp-btn" data-x="msgs">Apri messaggi</button>' : ''}
@@ -462,21 +470,21 @@
         if (!s) return;
         const champ = s.champion === career.user, cupW = s.cupWinner === career.user;
         const inA = (s.div || 'A') === 'A';
-        const title = champ ? (inA ? 'Campioni d\'Italia!' : 'Serie B vinta!') : `${inA ? 'Scudetto' : 'Serie B'} a ${esc(MC().clubName(s.champion))}`;
+        const title = esc(champ ? _t(inA ? 'Campioni d\'Italia!' : 'Serie B vinta!') : _t(inA ? 'Scudetto a {0}' : 'Serie B a {0}', MC().clubName(s.champion)));
         overlay(`
-            <span class="cp-kicker">Stagione ${esc(s.label)} conclusa</span>
+            <span class="cp-kicker">${esc(_t('Stagione {0} conclusa', s.label))}</span>
             <img class="cp-champ-crest" src="${logo(champ ? career.user : s.champion)}" alt="">
             <h2>${title}</h2>
-            ${s.moved ? `<p class="mg-move ${/Promossa/.test(s.moved) ? 'is-up' : 'is-down'}">${/Promossa/.test(s.moved) ? '▲' : '▼'} ${esc(s.moved)}</p>` : ''}
+            ${s.moved ? `<p class="mg-move ${/Promossa/.test(s.moved) ? 'is-up' : 'is-down'}">${/Promossa/.test(s.moved) ? '▲' : '▼'} ${esc(_t(s.moved))}</p>` : ''}
             <div class="mg-facts mg-facts-grid">
-                <div><small>${esc(s.divName || 'Serie A')}</small><b>${s.pos ? s.pos + '° posto' : '—'}</b></div>
-                <div><small>Play-off</small><b>${esc(s.playoff)}</b></div>
-                <div><small>Coppa Italia</small><b>${esc(cupW ? 'Vinta' : s.cup)}</b></div>
+                <div><small>${esc(s.divName || 'Serie A')}</small><b>${s.pos ? esc(_t('{0} posto', I18N.ord(s.pos))) : '—'}</b></div>
+                <div><small>Play-off</small><b>${esc(_t(s.playoff))}</b></div>
+                <div><small>Coppa Italia</small><b>${esc(_t(cupW ? 'Vinta' : s.cup))}</b></div>
                 <div><small>Bilancio stagione</small><b class="${s.income + s.expense >= 0 ? 'mg-pos' : 'mg-neg'}">${s.income + s.expense >= 0 ? '+' : ''}${eur(s.income + s.expense)}</b></div>
                 <div><small>Saldo</small><b>${eur(s.balance)}</b></div>
-                <div><small>Tifosi</small><b>${s.fans} • ${esc(MC().fansMood(s.fans))}</b></div>
+                <div><small>Tifosi</small><b>${s.fans} • ${esc(_t(MC().fansMood(s.fans)))}</b></div>
             </div>
-            <p>Si apre il mercato estivo: rinforza la squadra, rinnova gli sponsor e preparati alla stagione ${esc(MC().seasonLabelOf(career.seasonYear))} in ${esc(MC().CFG.DIV[MC().userDiv(career)].name)}.</p>
+            <p>${esc(_t('Si apre il mercato estivo: rinforza la squadra, rinnova gli sponsor e preparati alla stagione {0} in {1}.', MC().seasonLabelOf(career.seasonYear), MC().CFG.DIV[MC().userDiv(career)].name))}</p>
             <div class="cp-next-actions"><button class="cp-btn is-primary" data-x="ok" data-keyback data-focus>Avanti ▶</button></div>`, (o, close) => {
             o.querySelector('[data-x="ok"]').onclick = close;
         });
@@ -488,7 +496,7 @@
             <span class="cp-kicker">${esc(MC().dateLabel(c.over.date, true))}</span>
             <img class="cp-champ-crest mg-gray" src="${logo(c.user)}" alt="">
             <h2>Fallimento</h2>
-            <p>Il saldo è sceso a <b class="mg-neg">${eur(c.over.balance)}</b>: ${esc(MC().clubName(c.user))} non può pagare stipendi e affitto e viene dichiarata fallita. La carriera termina qui.</p>
+            <p>${_t('Il saldo è sceso a {0}: {1} non può pagare stipendi e affitto e viene dichiarata fallita. La carriera termina qui.', `<b class="mg-neg">${eur(c.over.balance)}</b>`, esc(MC().clubName(c.user)))}</p>
             <div class="mg-facts mg-facts-grid">
                 <div><small>Stagioni completate</small><b>${c.seasons.length}</b></div>
                 <div><small>Trofei</small><b>${c.trophies.length}</b></div>
@@ -514,17 +522,17 @@
             const injured = M.teamPlayers(c, c.user).filter(p => p.inj).length;
             const offersIn = c.market.incoming.filter(o => o.status === 'open').length;
             const alerts = [];
-            if (c.window) alerts.push(`<button type="button" class="mg-alert is-info" data-go="market">🔁 Mercato ${c.window === 'summer' ? 'estivo' : 'di gennaio'} aperto</button>`);
-            if (c.sponsors.offers.length) alerts.push(`<button type="button" class="mg-alert" data-go="sponsors">🤝 ${c.sponsors.offers.length} ${c.sponsors.offers.length > 1 ? 'proposte' : 'proposta'} di sponsor</button>`);
-            if (offersIn) alerts.push(`<button type="button" class="mg-alert" data-go="market">💼 ${offersIn} ${offersIn > 1 ? 'offerte' : 'offerta'} per i tuoi giocatori</button>`);
-            if (injured) alerts.push(`<button type="button" class="mg-alert is-warn" data-go="infirmary">🩹 ${injured} ${injured > 1 ? 'infortunati' : 'infortunato'}</button>`);
-            if (c.balance < monthly * 2) alerts.push(`<button type="button" class="mg-alert is-bad" data-go="finance">⚠️ Cassa quasi vuota</button>`);
+            if (c.window) alerts.push(`<button type="button" class="mg-alert is-info" data-go="market">🔁 ${esc(_t(c.window === 'summer' ? 'Mercato estivo aperto' : 'Mercato di gennaio aperto'))}</button>`);
+            if (c.sponsors.offers.length) alerts.push(`<button type="button" class="mg-alert" data-go="sponsors">🤝 ${esc(_t(c.sponsors.offers.length > 1 ? '{0} proposte di sponsor' : '{0} proposta di sponsor', c.sponsors.offers.length))}</button>`);
+            if (offersIn) alerts.push(`<button type="button" class="mg-alert" data-go="market">💼 ${esc(_t(offersIn > 1 ? '{0} offerte per i tuoi giocatori' : '{0} offerta per i tuoi giocatori', offersIn))}</button>`);
+            if (injured) alerts.push(`<button type="button" class="mg-alert is-warn" data-go="infirmary">🩹 ${esc(_t(injured > 1 ? '{0} infortunati' : '{0} infortunato', injured))}</button>`);
+            if (c.balance < monthly * 2) alerts.push(`<button type="button" class="mg-alert is-bad" data-go="finance">⚠️ ${esc(_t('Cassa quasi vuota'))}</button>`);
             const fs = M.freeSlots(c);
-            if (fs.main + fs.sec > 0 && !c.sponsors.offers.length) alerts.push(`<button type="button" class="mg-alert is-info" data-go="sponsors">🤝 ${fs.main + fs.sec} spazi sponsor liberi</button>`);
+            if (fs.main + fs.sec > 0 && !c.sponsors.offers.length) alerts.push(`<button type="button" class="mg-alert is-info" data-go="sponsors">🤝 ${esc(_t(fs.main + fs.sec > 1 ? '{0} spazi sponsor liberi' : '{0} spazio sponsor libero', fs.main + fs.sec))}</button>`);
             const next = !ev ? '<div class="cp-rest"><b>Carriera terminata</b></div>' : f
-                ? `<div class="cp-next-meta"><span>${esc(ev.label)}</span><span>${esc(M.dateLabel(ev.date, true))} • ore ${esc(kickoffOf(ev, f).time)}</span></div>${versusHtml(f)}<div class="cp-next-arena">${esc(M.arenaName(f.home))} • ${kickoffOf(ev, f).daytime ? '☀ di pomeriggio' : '☾ in serata'}</div>
+                ? `<div class="cp-next-meta"><span>${esc(M.evLabel(ev.label))}</span><span>${esc(_t('{0} • ore {1}', M.dateLabel(ev.date, true), kickoffOf(ev, f).time))}</span></div>${versusHtml(f)}<div class="cp-next-arena">${esc(M.arenaName(f.home))} • ${esc(_t(kickoffOf(ev, f).daytime ? '☀ di pomeriggio' : '☾ in serata'))}</div>
                    <div class="cp-next-actions"><button class="cp-btn" data-act="sim">Simula</button><button class="cp-btn is-primary" data-act="play" data-focus>Gioca ▶</button></div>`
-                : `<div class="cp-next-meta"><span>${esc(M.dateLabel(ev.date, true))}</span></div><div class="cp-rest"><b>${esc(ev.label)}</b>${esc(eventHint(ev))}</div>
+                : `<div class="cp-next-meta"><span>${esc(M.dateLabel(ev.date, true))}</span></div><div class="cp-rest"><b>${esc(M.evLabel(ev.label))}</b>${esc(eventHint(ev))}</div>
                    <div class="cp-next-actions"><button class="cp-btn is-primary" data-act="go" data-focus>Continua ▶</button></div>`;
             const form = c.form.slice(-5);
             return `<div class="mg-grid mg-office">
@@ -539,15 +547,15 @@
                         <div><small>Saldo</small><b>${eur(c.balance)}</b></div>
                         <div><small>Spese al mese</small><b>${eur(monthly)}</b></div>
                         <div><small>Sponsor al mese</small><b>${eur(M.sponsorMonthly(c))}</b></div>
-                        <div><small>${M.CFG.DIV[M.userDiv(c)].name}</small><b>${pos ? pos + '° posto' : '—'}</b></div>
+                        <div><small>${M.CFG.DIV[M.userDiv(c)].name}</small><b>${pos ? esc(_t('{0} posto', I18N.ord(pos))) : '—'}</b></div>
                         <div><small>Rosa</small><b>${M.counts(c, c.user).total} / ${M.CFG.MAX_ROSTER}</b></div>
-                        <div><small>Forma</small><b class="mg-form">${form.length ? form.map(x => `<i class="${x === 'W' ? 'w' : 'l'}">${x === 'W' ? 'V' : 'S'}</i>`).join('') : '—'}</b></div>
+                        <div><small>Forma</small><b class="mg-form">${form.length ? form.map(x => `<i class="${x === 'W' ? 'w' : 'l'}">${I18N.lang === 'en' ? x : (x === 'W' ? 'V' : 'S')}</i>`).join('') : '—'}</b></div>
                     </div>
                 </div>
                 <div class="cp-panel mg-fill"><div class="cp-panel-title"><span>Da fare</span></div>
                     <div class="mg-alerts">${alerts.length ? alerts.join('') : '<div class="cp-empty">Tutto in ordine</div>'}</div>
                 </div>
-                <div class="cp-panel mg-fill"><div class="cp-panel-title"><span>Ultimi messaggi</span><b>${unread()} da leggere</b></div>
+                <div class="cp-panel mg-fill"><div class="cp-panel-title"><span>Ultimi messaggi</span><b>${esc(_t('{0} da leggere', unread()))}</b></div>
                     <div class="mg-msglist" data-pager="y">${c.messages.slice(0, 12).map(msgRow).join('') || '<div class="cp-empty">Nessun messaggio</div>'}</div>
                 </div>
             </div>`;
@@ -563,7 +571,7 @@
         }
     };
     function eventHint(ev) {
-        return {
+        const h = {
             market: ' • Settimana di trattative: arrivano offerte e proposte di sponsor',
             season_start: ' • Chiude il mercato estivo e parte il campionato',
             winter_open: ' • Si apre il mercato di gennaio',
@@ -572,7 +580,8 @@
             league: ' • Turno di riposo per la tua squadra',
             playoff: ' • La tua squadra non gioca in questo turno',
             cup: career && career.cup && !career.cup.teams.includes(career.user) ? ' • La Coppa Italia è riservata alla Serie A' : ' • La tua squadra non è più in coppa'
-        }[ev.kind] || '';
+        }[ev.kind];
+        return h ? ' • ' + _t(h.slice(3)) : '';
     }
     function fansNote(c) {
         const v = c.fans;
@@ -591,22 +600,22 @@
             const where = {};
             where[L.goalie.id] = 'Titolare';
             L.backups.forEach(p => { where[p.id] = 'Riserva'; });
-            L.lines.forEach((l, i) => [l.C, l.LW, l.RW, l.D].forEach(p => { where[p.id] = `Linea ${i + 1}`; }));
+            L.lines.forEach((l, i) => [l.C, l.LW, l.RW, l.D].forEach(p => { where[p.id] = _t('Linea {0}', i + 1); }));
             const ps = M.teamPlayers(c, c.user).sort((a, b) => ({ G: 0, D: 1, F: 2 }[a.pos] - { G: 0, D: 1, F: 2 }[b.pos]) || b.ovr - a.ovr);
             const k = M.counts(c, c.user);
             return `<div class="cp-panel mg-fill">
-                <div class="cp-panel-title"><span>Rosa • ${k.total}/${M.CFG.MAX_ROSTER} (min ${M.CFG.MIN_ROSTER})</span><b>${k.goalies} portieri • ${k.skaters} di movimento • monte ingaggi ${eur(M.payroll(c))}/mese</b></div>
+                <div class="cp-panel-title"><span>${esc(_t('Rosa • {0}/{1} (min {2})', k.total, M.CFG.MAX_ROSTER, M.CFG.MIN_ROSTER))}</span><b>${esc(_t('{0} portieri • {1} di movimento • monte ingaggi {2}/mese', k.goalies, k.skaters, eur(M.payroll(c))))}</b></div>
                 <div class="cp-table-wrap" data-pager="y" data-pager-items="tbody tr"><table class="cp-table mg-table">
                     <thead><tr><th>N°</th><th class="l">Giocatore</th><th>Ruolo</th><th>Età</th><th>Val</th><th class="hide-sm">Valore</th><th>Stipendio</th><th class="l">Stato</th><th></th></tr></thead>
                     <tbody>${ps.map(p => `<tr class="${p.inj ? 'is-inj' : ''}">
                         <td class="pos">${esc(p.num)}</td>
                         <td class="l"><b>${esc(p.name)}</b> <small>${esc(p.first)}</small></td>
-                        <td title="${esc(ROLE_DETAIL[p.role] || '')}">${ROLE_SHORT[p.pos]}<small>${p.pos === 'F' ? ' ' + p.role : ''}</small></td>
+                        <td title="${esc(_t(ROLE_DETAIL[p.role] || ''))}">${roleShort(p)}<small>${p.pos === 'F' ? ' ' + p.role : ''}</small></td>
                         <td>${p.age}</td>
                         <td><span class="mg-ovr ${ovrCls(p.ovr)}">${p.ovr}</span></td>
                         <td class="hide-sm">${eur(M.valueOf(p))}</td>
                         <td>${eur(p.salary)}</td>
-                        <td class="l">${p.inj ? `<span class="mg-tag is-bad">🩹 ${Math.max(0, M.dDiff(c.date, p.inj.until))} gg</span>` : `<span class="mg-tag">${where[p.id] || 'Riserva'}</span>`}${p.forSale ? ' <span class="mg-tag is-warn">In vendita</span>' : ''}</td>
+                        <td class="l">${p.inj ? `<span class="mg-tag is-bad">🩹 ${esc(_t('{0} gg', Math.max(0, M.dDiff(c.date, p.inj.until))))}</span>` : `<span class="mg-tag">${esc(where[p.id] || _t('Riserva'))}</span>`}${p.forSale ? ' <span class="mg-tag is-warn">In vendita</span>' : ''}</td>
                         <td class="mg-actions"><button class="cp-btn is-small" data-sale="${p.id}">${p.forSale ? 'Togli' : 'Vendi'}</button><button class="cp-btn is-small is-danger" data-rel="${p.id}" ${c.window ? '' : 'disabled title="Solo a mercato aperto"'}>Svincola</button></td>
                     </tr>`).join('')}</tbody></table></div>
                 <div class="cp-legend"><span>Formazione automatica: i migliori sani giocano • "Vendi" mette il giocatore sul mercato e attira offerte • Svincolo: buonuscita di 2 mensilità</span></div>
@@ -620,7 +629,7 @@
             });
             el.querySelectorAll('[data-rel]').forEach(b => b.onclick = () => {
                 const p = career.players[b.dataset.rel];
-                confirmDialog(`Svincolare ${fullName(p)}?`, `Buonuscita di ${eur(p.salary * 2)}. Il giocatore diventa svincolato e potrà firmare con altre squadre.`, 'Svincola', () => {
+                confirmDialog(_t('Svincolare {0}?', fullName(p)), _t('Buonuscita di {0}. Il giocatore diventa svincolato e potrà firmare con altre squadre.', eur(p.salary * 2)), _t('Svincola'), () => {
                     const r = MC().releasePlayer(career, p.id);
                     toast(r.msg); save(true); renderHub();
                 });
@@ -653,27 +662,27 @@
             if (f.maxFee) list = list.filter(p => (p.team ? M.valueOf(p) : 0) <= f.maxFee);
             const sorters = { ovr: (a, b) => b.ovr - a.ovr, value: (a, b) => (a.team ? M.valueOf(a) : 0) - (b.team ? M.valueOf(b) : 0), age: (a, b) => a.age - b.age };
             list.sort(sorters[f.sort]);
-            const teamLabel = t => (t === 'all' ? 'Tutte le squadre' : t === 'fa' ? 'Svincolati' : short(t));
+            const teamLabel = t => (t === 'all' ? _t('Tutte le squadre') : t === 'fa' ? _t('Svincolati') : short(t));
             const incoming = c.market.incoming.filter(o => o.status === 'open');
-            const winTxt = c.window ? `Mercato ${c.window === 'summer' ? 'estivo' : 'di gennaio'} aperto` : 'Mercato chiuso • riapre a fine stagione e a gennaio';
+            const winTxt = _t(c.window ? (c.window === 'summer' ? 'Mercato estivo aperto' : 'Mercato di gennaio aperto') : 'Mercato chiuso • riapre a fine stagione e a gennaio');
             const chip = (key, label) => `<button type="button" class="mg-chip" data-f="${key}" data-keynav-own="x" title="Invio o clic per cambiare, ◀ ▶ per scorrere">${esc(label)} <i>▾</i></button>`;
             return `<div class="mg-grid mg-market">
                 <div class="cp-panel mg-fill mg-span2">
                     <div class="cp-panel-title"><span>Ricerca giocatori</span><b class="${c.window ? 'mg-pos' : 'mg-dim'}">${winTxt}</b></div>
                     <div class="mg-filters">
-                        ${chip('pos', POS_OPTS.find(o => o[0] === f.pos)[1])}
+                        ${chip('pos', _t(POS_OPTS.find(o => o[0] === f.pos)[1]))}
                         ${chip('team', teamLabel(f.team))}
-                        ${chip('minOvr', f.minOvr ? `Val ≥ ${f.minOvr}` : 'Qualsiasi valutazione')}
-                        ${chip('maxFee', f.maxFee ? `Prezzo ≤ ${eur(f.maxFee)}` : 'Qualsiasi prezzo')}
-                        ${chip('sort', 'Ordina: ' + SORT_OPTS.find(o => o[0] === f.sort)[1])}
-                        <span class="mg-count">${list.length} risultati</span>
+                        ${chip('minOvr', f.minOvr ? _t('Val ≥ {0}', f.minOvr) : _t('Qualsiasi valutazione'))}
+                        ${chip('maxFee', f.maxFee ? _t('Prezzo ≤ {0}', eur(f.maxFee)) : _t('Qualsiasi prezzo'))}
+                        ${chip('sort', _t('Ordina: {0}', _t(SORT_OPTS.find(o => o[0] === f.sort)[1])))}
+                        <span class="mg-count">${esc(_t('{0} risultati', list.length))}</span>
                     </div>
                     <div class="cp-table-wrap" data-pager="y" data-pager-items="tbody tr"><table class="cp-table mg-table">
                         <thead><tr><th class="l">Giocatore</th><th class="l">Squadra</th><th>Ruolo</th><th>Età</th><th>Val</th><th>Valore</th><th class="hide-sm">Stipendio</th><th></th></tr></thead>
                         <tbody>${list.slice(0, 120).map(p => `<tr class="${p.inj ? 'is-inj' : ''}">
                             <td class="l"><b>${esc(p.name)}</b> <small>${esc(p.first)}</small>${p.inj ? ' 🩹' : ''}</td>
                             <td class="l">${p.team ? `<span class="team"><img src="${logo(p.team)}" alt="">${esc(short(p.team))}</span>` : '<span class="mg-tag">Svincolato</span>'}</td>
-                            <td>${ROLE_SHORT[p.pos]}</td><td>${p.age}</td>
+                            <td>${roleShort(p)}</td><td>${p.age}</td>
                             <td><span class="mg-ovr ${ovrCls(p.ovr)}">${p.ovr}</span></td>
                             <td>${p.team ? eur(M.valueOf(p)) : '—'}</td>
                             <td class="hide-sm">${eur(p.salary)}</td>
@@ -686,11 +695,11 @@
                         const p = c.players[o.pid];
                         return p ? `<div class="mg-offer">
                             <img src="${logo(o.buyer)}" alt="">
-                            <div><b>${esc(short(o.buyer))}</b> offre <b>${eur(o.fee)}</b><small>per ${esc(fullName(p))} (${p.ovr}) • valore ${eur(M.valueOf(p))} • scade il ${esc(M.dateLabel(o.expires))}</small></div>
+                            <div><b>${esc(short(o.buyer))}</b> ${esc(_t('offre'))} <b>${eur(o.fee)}</b><small>${esc(_t('per {0} ({1}) • valore {2} • scade il {3}', fullName(p), p.ovr, eur(M.valueOf(p)), M.dateLabel(o.expires)))}</small></div>
                             <div class="a"><button class="cp-btn is-small is-primary" data-inc-yes="${o.id}">Accetta</button><button class="cp-btn is-small" data-inc-no="${o.id}">Rifiuta</button></div>
                         </div>` : '';
                     }).join('') : '<div class="cp-empty">Nessuna offerta. Metti in vendita qualcuno dalla Rosa per attirarne.</div>'}</div>
-                    <div class="cp-legend"><span>Rosa: ${M.counts(c, c.user).total} giocatori (min ${M.CFG.MIN_ROSTER}, max ${M.CFG.MAX_ROSTER}) • Saldo ${eur(c.balance)}</span></div>
+                    <div class="cp-legend"><span>${esc(_t('Rosa: {0} giocatori (min {1}, max {2}) • Saldo {3}', M.counts(c, c.user).total, M.CFG.MIN_ROSTER, M.CFG.MAX_ROSTER, eur(c.balance)))}</span></div>
                 </div>
             </div>`;
         },
@@ -734,15 +743,15 @@
         let fee = p.team ? Math.round(value / 500) * 500 : 0;
         let salary = Math.max(50, Math.round(Math.max(p.salary, M.salaryFor(p.ovr)) / 10) * 10);
         overlay(`
-            <span class="cp-kicker">${p.team ? `Trattativa con ${esc(M.clubName(p.team))}` : 'Giocatore svincolato'}</span>
+            <span class="cp-kicker">${esc(p.team ? _t('Trattativa con {0}', M.clubName(p.team)) : _t('Giocatore svincolato'))}</span>
             <div class="mg-player-card">
                 <img src="${p.team ? logo(p.team) : logo(c.user)}" alt="" class="${p.team ? '' : 'mg-gray'}">
-                <div><h2>${esc(fullName(p))}</h2><small>${esc(ROLE_DETAIL[p.role] || M.ROLE_LABEL[p.pos])} • ${p.age} anni${p.inj ? ` • 🩹 ${esc(p.inj.t)}` : ''}</small></div>
+                <div><h2>${esc(fullName(p))}</h2><small>${esc(_t(ROLE_DETAIL[p.role] || M.ROLE_LABEL[p.pos]))} • ${esc(_t('{0} anni', p.age))}${p.inj ? ` • 🩹 ${esc(_t(p.inj.t))}` : ''}</small></div>
                 <span class="mg-ovr is-big ${ovrCls(p.ovr)}">${p.ovr}</span>
             </div>
             <div class="mg-facts mg-facts-grid">
-                <div><small>Valore stimato</small><b>${p.team ? eur(value) : 'Gratis'}</b></div>
-                <div><small>Stipendio attuale</small><b>${eur(p.salary)}/mese</b></div>
+                <div><small>Valore stimato</small><b>${p.team ? eur(value) : esc(_t('Gratis'))}</b></div>
+                <div><small>Stipendio attuale</small><b>${esc(_t('{0}/mese', eur(p.salary)))}</b></div>
                 <div><small>Tentativi</small><b>${neg ? neg.tries : 0} / 3</b></div>
             </div>
             ${block ? `<p class="mg-warnbox">${esc(block)}</p>` : `
@@ -750,7 +759,7 @@
                 ${p.team ? `<label><span>Cartellino al club</span><div class="mg-stepper"><button type="button" class="cp-btn is-small" data-st="fee" data-d="-500">−</button><input type="number" min="0" step="500" data-in="fee" value="${fee}" data-keynav-own="y" inputmode="numeric"><button type="button" class="cp-btn is-small" data-st="fee" data-d="500">+</button></div></label>` : ''}
                 <label><span>Stipendio mensile</span><div class="mg-stepper"><button type="button" class="cp-btn is-small" data-st="salary" data-d="-20">−</button><input type="number" min="0" step="10" data-in="salary" value="${salary}" data-keynav-own="y" inputmode="numeric"><button type="button" class="cp-btn is-small" data-st="salary" data-d="20">+</button></div></label>
             </div>
-            <p class="mg-note" data-out>Saldo disponibile ${eur(c.balance)} • Monte ingaggi attuale ${eur(M.payroll(c))}/mese</p>`}
+            <p class="mg-note" data-out>${esc(_t('Saldo disponibile {0} • Monte ingaggi attuale {1}/mese', eur(c.balance), eur(M.payroll(c))))}</p>`}
             <div class="cp-next-actions"><button class="cp-btn" data-x="close" data-keyback>Chiudi</button>${block ? '' : '<button class="cp-btn is-primary" data-x="send" data-focus>Invia offerta ▶</button>'}</div>`, (o, close) => {
             o.querySelector('[data-x="close"]').onclick = close;
             if (block) return;
@@ -791,18 +800,18 @@
                 if (!a) return `<div class="mg-sp is-empty"><span class="mg-sp-slot">${slotLabel}</span><div class="mg-sp-logo">＋</div><b>Spazio libero</b><small>In attesa di proposte</small></div>`;
                 const s = M.sponsorById(a.sid);
                 return `<div class="mg-sp"><span class="mg-sp-slot">${slotLabel}</span><div class="mg-sp-logo"><img src="${esc(s.logo)}" alt="${esc(s.name)}"></div>
-                    <b>${esc(s.name)}</b><small>${esc(s.sector)} • livello ${'★'.repeat(s.tier)}</small>
+                    <b>${esc(s.name)}</b><small>${esc(_t(s.sector))} • ${esc(_t('livello {0}', '★'.repeat(s.tier)))}</small>
                     <div class="mg-sp-money">${eur(a.monthly)}<small>/mese</small></div>
-                    <small>Fino alla stagione ${esc(M.seasonLabelOf(a.until))} • vittoria +${eur(a.winBonus)} • trofeo +${eur(a.trophyBonus)}</small></div>`;
+                    <small>${esc(_t('Fino alla stagione {0} • vittoria +{1} • trofeo +{2}', M.seasonLabelOf(a.until), eur(a.winBonus), eur(a.trophyBonus)))}</small></div>`;
             };
             const main = c.sponsors.active.find(a => a.slot === 'main');
             const secs = c.sponsors.active.filter(a => a.slot === 'sec');
             const top = M.maxTier(c.rep);
             return `<div class="mg-grid mg-sponsors">
                 <div class="cp-panel mg-span2 mg-fill">
-                    <div class="cp-panel-title"><span>Contratti attivi</span><b>${eur(M.sponsorMonthly(c))} al mese</b></div>
+                    <div class="cp-panel-title"><span>Contratti attivi</span><b>${esc(_t('{0} al mese', eur(M.sponsorMonthly(c))))}</b></div>
                     <div class="mg-sp-grid" data-pager="y">${card(main, 'Sponsor di maglia')}${[0, 1, 2, 3].map(i => card(secs[i], 'Secondario')).join('')}</div>
-                    <div class="cp-legend"><span>Reputazione ${Math.round(c.rep)}: interessa sponsor fino al livello ${'★'.repeat(top)}. Più vinci (e più i tifosi sono contenti), più grandi sono gli sponsor; con risultati deludenti i grandi marchi possono recedere.</span></div>
+                    <div class="cp-legend"><span>${esc(_t('Reputazione {0}: interessa sponsor fino al livello {1}. Più vinci (e più i tifosi sono contenti), più grandi sono gli sponsor; con risultati deludenti i grandi marchi possono recedere.', Math.round(c.rep), '★'.repeat(top)))}</span></div>
                 </div>
                 <div class="cp-panel mg-fill">
                     <div class="cp-panel-title"><span>Proposte</span><b>${c.sponsors.offers.length}</b></div>
@@ -811,7 +820,7 @@
                         const free = M.freeSlots(c)[o.slot] > 0;
                         return `<div class="mg-offer mg-sp-offer">
                             <div class="mg-sp-logo is-small"><img src="${esc(s.logo)}" alt=""></div>
-                            <div><b>${esc(s.name)}</b> • ${o.slot === 'main' ? 'maglia' : 'secondario'}<small>${eur(o.monthly)}/mese per ${o.seasons} ${o.seasons > 1 ? 'stagioni' : 'stagione'} • scade il ${esc(M.dateLabel(o.expires))}${free ? '' : ' • <em class="mg-neg">spazio occupato</em>'}</small></div>
+                            <div><b>${esc(s.name)}</b> • ${esc(_t(o.slot === 'main' ? 'maglia' : 'secondario'))}<small>${esc(_t('{0}/mese per {1} • scade il {2}', eur(o.monthly), _t(o.seasons > 1 ? '{0} stagioni' : '{0} stagione', o.seasons), M.dateLabel(o.expires)))}${free ? '' : ' • <em class="mg-neg">spazio occupato</em>'}</small></div>
                             <div class="a"><button class="cp-btn is-small is-primary" data-sp-yes="${o.id}" ${free ? '' : 'disabled'}>Accetta</button><button class="cp-btn is-small" data-sp-no="${o.id}">Rifiuta</button></div>
                         </div>`;
                     }).join('') : '<div class="cp-empty">Nessuna proposta in sospeso: ne arrivano soprattutto durante il mercato.</div>'}</div>
@@ -837,9 +846,9 @@
                 const pct = Math.round(100 * (1 - left / Math.max(1, p.inj.days)));
                 return `<div class="mg-inj">
                     <div class="mg-inj-head"><b>${esc(fullName(p))}</b><span class="mg-ovr ${ovrCls(p.ovr)}">${p.ovr}</span></div>
-                    <small>${esc(M.ROLE_LABEL[p.pos])} • ${esc(p.inj.t)}</small>
+                    <small>${esc(_t(M.ROLE_LABEL[p.pos]))} • ${esc(_t(p.inj.t))}</small>
                     <div class="mg-inj-bar"><i style="width:${pct}%"></i></div>
-                    <small>Rientro previsto ${esc(M.dateLabel(p.inj.until, true))} • ${left} giorni</small>
+                    <small>${esc(_t('Rientro previsto {0} • {1} giorni', M.dateLabel(p.inj.until, true), left))}</small>
                 </div>`;
             };
             return `<div class="mg-grid mg-infirmary">
@@ -856,7 +865,7 @@
                     <div class="cp-panel-title"><span>Infortunati nelle altre squadre</span><b>${others.length}</b></div>
                     <div class="cp-table-wrap" data-pager="y" data-pager-items="tbody tr"><table class="cp-table mg-table">
                         <thead><tr><th class="l">Giocatore</th><th class="l">Squadra</th><th class="l hide-sm">Infortunio</th><th>Rientro</th></tr></thead>
-                        <tbody>${others.map(p => `<tr><td class="l"><b>${esc(p.name)}</b> <span class="mg-ovr ${ovrCls(p.ovr)}">${p.ovr}</span></td><td class="l"><span class="team"><img src="${logo(p.team)}" alt="">${esc(short(p.team))}</span></td><td class="l hide-sm">${esc(p.inj.t)}</td><td>${esc(M.dateLabel(p.inj.until))}</td></tr>`).join('') || '<tr><td colspan="4">Nessuno</td></tr>'}</tbody>
+                        <tbody>${others.map(p => `<tr><td class="l"><b>${esc(p.name)}</b> <span class="mg-ovr ${ovrCls(p.ovr)}">${p.ovr}</span></td><td class="l"><span class="team"><img src="${logo(p.team)}" alt="">${esc(short(p.team))}</span></td><td class="l hide-sm">${esc(_t(p.inj.t))}</td><td>${esc(M.dateLabel(p.inj.until))}</td></tr>`).join('') || '<tr><td colspan="4">Nessuno</td></tr>'}</tbody>
                     </table></div>
                     <div class="cp-legend"><span>Mai più di 2 infortunati per squadra (3 con rosa da 18+): ogni squadra può sempre schierare 3 linee e un portiere.</span></div>
                 </div>
@@ -889,8 +898,8 @@
                 <div class="cp-col">
                     <div class="cp-panel mg-fill"><div class="cp-panel-title"><span>${lr ? esc(lr.title) : 'Risultati'}</span></div>
                         <div class="cp-results" data-pager="y">${ui.comp === 'cup' && c.cup ? En.lastResults(c.cup).body : (lr ? lr.body : '<div class="cp-empty">Nessuna partita giocata</div>')}</div></div>
-                    <div class="cp-panel mg-fill"><div class="cp-panel-title"><span>Albo della carriera</span><b>${c.trophies.length} trofei</b></div>
-                        <div class="mg-hist" data-pager="y">${hist.length ? hist.map(s => `<div class="mg-hist-row"><b>${esc(s.label)}</b><span>${esc((s.divName || 'Serie A').replace('Serie ', ''))} ${s.pos ? s.pos + '°' : '—'}${s.moved ? (/Promossa/.test(s.moved) ? ' ▲' : ' ▼') : ''} • PO: ${esc(s.playoff)} • Coppa: ${esc(s.cupWinner === c.user ? 'Vinta' : s.cup)}</span><em class="${s.income + s.expense >= 0 ? 'mg-pos' : 'mg-neg'}">${eur(s.income + s.expense)}</em></div>`).join('') : '<div class="cp-empty">La prima stagione è in corso</div>'}</div></div>
+                    <div class="cp-panel mg-fill"><div class="cp-panel-title"><span>Albo della carriera</span><b>${esc(_t('{0} trofei', c.trophies.length))}</b></div>
+                        <div class="mg-hist" data-pager="y">${hist.length ? hist.map(s => `<div class="mg-hist-row"><b>${esc(s.label)}</b><span>${esc((s.divName || 'Serie A').replace('Serie ', ''))} ${s.pos ? I18N.ord(s.pos) : '—'}${s.moved ? (/Promossa/.test(s.moved) ? ' ▲' : ' ▼') : ''} • ${esc(_t('PO: {0} • Coppa: {1}', _t(s.playoff), _t(s.cupWinner === c.user ? 'Vinta' : s.cup)))}</span><em class="${s.income + s.expense >= 0 ? 'mg-pos' : 'mg-neg'}">${eur(s.income + s.expense)}</em></div>`).join('') : '<div class="cp-empty">La prima stagione è in corso</div>'}</div></div>
                 </div>
             </div>`;
         },
@@ -920,7 +929,7 @@
                     <div><small>Entrate stagione</small><b>${eur(inc)}</b></div>
                     <div><small>Uscite stagione</small><b>${eur(-exp)}</b></div>
                     <div><small>Risultato</small><b class="${inc + exp >= 0 ? 'mg-pos' : 'mg-neg'}">${inc + exp >= 0 ? '+' : ''}${eur(inc + exp)}</b></div>
-                    <div><small>Fisse al mese</small><b>${eur(monthlyIn - monthlyOut)}</b><em>sponsor ${eur(monthlyIn)} − stipendi ${eur(M.payroll(c))} − palazzetto ${eur(M.arenaFee(c.user, c))}/sett.</em></div>
+                    <div><small>Fisse al mese</small><b>${eur(monthlyIn - monthlyOut)}</b><em>${esc(_t('sponsor {0} − stipendi {1} − palazzetto {2}/sett.', eur(monthlyIn), eur(M.payroll(c)), eur(M.arenaFee(c.user, c))))}</em></div>
                 </div></div>
                 <div class="cp-panel mg-span2 mg-fill">
                     <div class="cp-panel-title"><span>Andamento del saldo</span><div class="cp-tabs"><button class="cp-tab${ui.finRange === 'season' ? ' is-active' : ''}" data-range="season">Stagione</button><button class="cp-tab${ui.finRange === 'all' ? ' is-active' : ''}" data-range="all">Carriera</button></div></div>
@@ -928,13 +937,13 @@
                     <div class="cp-legend"><span>Il saldo non deve mai andare sotto zero: la linea tratteggiata è il fallimento. Stipendi, palazzetto e sponsor si regolano il 1° di ogni mese.</span></div>
                 </div>
                 <div class="cp-panel mg-fill">
-                    <div class="cp-panel-title"><span>Stagione ${esc(M.seasonLabelOf(c.seasonYear))}</span></div>
+                    <div class="cp-panel-title"><span>${esc(_t('Stagione {0}', M.seasonLabelOf(c.seasonYear)))}</span></div>
                     <small class="mg-sub">Entrate</small>${bars(incs, 'is-in')}
                     <small class="mg-sub">Uscite</small>${bars(exps, 'is-out')}
                 </div>
                 <div class="cp-panel mg-span3 mg-fill mg-ledger-panel">
                     <div class="cp-panel-title"><span>Ultimi movimenti</span></div>
-                    <div class="mg-ledger" data-pager="y">${recent.map(l => `<div class="mg-led"><span>${esc(M.dateLabel(l.d))}</span><span>${esc(cats[l.cat] || l.cat)}</span><span class="n">${esc(l.note)}</span><b class="${l.amt >= 0 ? 'mg-pos' : 'mg-neg'}">${l.amt >= 0 ? '+' : ''}${eur(l.amt)}</b></div>`).join('') || '<div class="cp-empty">Nessun movimento</div>'}</div>
+                    <div class="mg-ledger" data-pager="y">${recent.map(l => `<div class="mg-led"><span>${esc(M.dateLabel(l.d))}</span><span>${esc(cats[l.cat] || l.cat)}</span><span class="n">${esc(M.ledgerNote(l))}</span><b class="${l.amt >= 0 ? 'mg-pos' : 'mg-neg'}">${l.amt >= 0 ? '+' : ''}${eur(l.amt)}</b></div>`).join('') || '<div class="cp-empty">Nessun movimento</div>'}</div>
                 </div>
             </div>`;
         },
@@ -968,7 +977,7 @@
         const line = pts.map((p, i) => `${i ? 'L' : 'M'}${x(p.d).toFixed(1)},${y(p.b).toFixed(1)}`).join('');
         const area = `${line}L${x(pts[pts.length - 1].d).toFixed(1)},${y(Math.max(lo, 0)).toFixed(1)}L${x(pts[0].d).toFixed(1)},${y(Math.max(lo, 0)).toFixed(1)}Z`;
         const last = pts[pts.length - 1];
-        box.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="Andamento del saldo: ultimo valore ${MC().eur(last.b)}">
+        box.innerHTML = `<svg width="${W}" height="${H}" role="img" aria-label="${esc(_t('Andamento del saldo: ultimo valore {0}', MC().eur(last.b)))}">
             ${ticks.map(v => `<line x1="${pad.l}" x2="${W - pad.r}" y1="${y(v)}" y2="${y(v)}" class="grid"/><text x="${pad.l - 8}" y="${y(v) + 4}" text-anchor="end" class="ax">€ ${kfmt(v)}</text>`).join('')}
             ${months.map(m => `<text x="${x(m)}" y="${H - 8}" text-anchor="middle" class="ax">${MC().dateLabel(m).split(' ')[1]}${ui.finRange === 'all' ? ' ' + m.slice(2, 4) : ''}</text>`).join('')}
             <line x1="${pad.l}" x2="${W - pad.r}" y1="${y(0)}" y2="${y(0)}" class="zero"/>
@@ -1007,7 +1016,7 @@
         const pending = m.act && !m.act.done;
         return `<button type="button" class="mg-msg${m.read ? '' : ' is-unread'}${ui.msgSel === m.id ? ' is-active' : ''}" data-msg="${m.id}">
             <span class="ic" title="${esc(MC().CAT[m.cat] || '')}">${CAT_ICON[m.cat] || '•'}</span>
-            <span class="t"><b>${esc(m.title)}</b><small>${esc(MC().dateLabel(m.d))} • ${esc(MC().CAT[m.cat] || '')}${pending ? ' • <em>risposta richiesta</em>' : ''}</small></span>
+            <span class="t"><b>${esc(MC().msgTitle(m))}</b><small>${esc(MC().dateLabel(m.d))} • ${esc(_t(MC().CAT[m.cat] || ''))}${pending ? ' • <em>risposta richiesta</em>' : ''}</small></span>
         </button>`;
     }
     function bindMsgRows(el) {
@@ -1031,9 +1040,9 @@
     }
     function msgViewHtml(m) {
         const M = MC();
-        return `<span class="cp-kicker">${CAT_ICON[m.cat] || ''} ${esc(M.CAT[m.cat] || '')} • ${esc(M.dateLabel(m.d, true))}</span>
-            <h2>${esc(m.title)}</h2>
-            <p>${esc(m.body)}</p>
+        return `<span class="cp-kicker">${CAT_ICON[m.cat] || ''} ${esc(_t(M.CAT[m.cat] || ''))} • ${esc(M.dateLabel(m.d, true))}</span>
+            <h2>${esc(M.msgTitle(m))}</h2>
+            <p>${esc(M.msgBody(m))}</p>
             ${m.act && m.act.kind === 'sponsor' ? sponsorPreview(m.act.ref) : ''}
             <div class="cp-next-actions">${msgActionsHtml(m)}</div>`;
     }
@@ -1085,7 +1094,7 @@
         const o = career.sponsors.offers.find(x => x.id === offerId);
         if (!o) return '';
         const s = MC().sponsorById(o.sid);
-        return `<div class="mg-sp-preview"><div class="mg-sp-logo"><img src="${esc(s.logo)}" alt="${esc(s.name)}"></div><div><b>${esc(s.name)}</b><small>${esc(s.sector)} • livello ${'★'.repeat(s.tier)}</small><b>${eur(o.monthly)}/mese</b></div></div>`;
+        return `<div class="mg-sp-preview"><div class="mg-sp-logo"><img src="${esc(s.logo)}" alt="${esc(s.name)}"></div><div><b>${esc(s.name)}</b><small>${esc(_t(s.sector))} • ${esc(_t('livello {0}', '★'.repeat(s.tier)))}</small><b>${esc(_t('{0}/mese', eur(o.monthly)))}</b></div></div>`;
     }
 
     // classifica, forma e serie della partita in corso (per la telecronaca)

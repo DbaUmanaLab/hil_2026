@@ -144,6 +144,9 @@
     const ratingOf = id => (typeof CLUB_RATINGS !== 'undefined' && CLUB_RATINGS[id]) || { off: 70, def: 70, goa: 70 };
     const arenaOf = id => (HOME_CLUB_ARENAS[id] || id);
     const arenaTitle = id => { const a = ARENA_CATALOG[arenaOf(id)]; return a ? a.shortTitle : ''; };
+    // sigle delle colonne di classifica: chiavi con contesto ('V (classifica)'), perché 'P', 'V', 'VS' da sole
+    // sono troppo corte o ambigue per il dizionario; in italiano resta la sigla
+    const abbr = it => { const k = it + ' (classifica)', s = _t(k); return s === k ? it : s; };
     const esc = s => String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     function seasonLabel() {
         const d = new Date();
@@ -158,7 +161,7 @@
         const n = leagueTeams(lg).length;
         const s = { teams: leagueTeams(lg), league: lg };
         const facts = [[String(n), 'Squadre'], [String((n - (n % 2 ? 0 : 1)) * 2), 'Giornate'], ['Top ' + playoffTeams(s), 'Play-off']];
-        if (playoutCfg(s)) facts.push(['Ultime ' + playoutCfg(s).teams, 'Play-out']);
+        if (playoutCfg(s)) facts.push([_t('Ultime {0}', playoutCfg(s).teams), 'Play-out']);
         return facts;
     }
 
@@ -414,18 +417,18 @@
     // ------------------------------------------------------------------ salvataggi
     function difficultyLabel(s) {
         const L = typeof DIFFICULTY_LEVELS !== 'undefined' && DIFFICULTY_LEVELS[(s && s.difficulty) || 'normal'];
-        return 'Difficoltà ' + (L ? L.label : 'Normale');
+        return _t('Difficoltà {0}', _t(L ? L.label : 'Normale'));
     }
     function readSaves() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '[]'); } catch (e) { return []; } }
     function writeSaves(list) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } }
     function progressLabel(s) {
         if (s.comp === 'coppa_italia') {
-            if (s.phase === 'cup') return `Coppa Italia • ${cupRoundLabel(s.cup.round)}`;
-            return `Coppa conclusa • Vincitrice: ${clubName(s.champion)}`;
+            if (s.phase === 'cup') return `Coppa Italia • ${_t(cupRoundLabel(s.cup.round))}`;
+            return _t('Coppa conclusa • Vincitrice: {0}', clubName(s.champion));
         }
-        if (s.phase === 'regular') return `Regular season • giornata ${Math.min(s.roundIdx + 1, s.rounds.length)} di ${s.rounds.length}`;
-        if (s.phase === 'playoff') return `Play-off • ${poRounds(s)[s.playoffs.round].label}`;
-        return `Stagione conclusa • Campione: ${clubName(s.champion)}`;
+        if (s.phase === 'regular') return _t('Regular season • giornata {0} di {1}', Math.min(s.roundIdx + 1, s.rounds.length), s.rounds.length);
+        if (s.phase === 'playoff') return _t('Play-off • {0}', _t(poRounds(s)[s.playoffs.round].label));
+        return _t('Stagione conclusa • Campione: {0}', clubName(s.champion));
     }
     function saveCurrent(silent) {
         if (!state || embedded) return;
@@ -507,6 +510,15 @@
         bar.querySelector('.cp-switch-label').innerHTML = `<b>${esc(panels[hubPanelIdx].dataset.label || '')}</b><span>${panels.map((p, i) => `<i class="${i === hubPanelIdx ? 'on' : ''}"></i>`).join('')}</span>`;
     }
     compactMq.addEventListener('change', () => { if (root && !root.classList.contains('cp-hidden')) setupHubSwitcher(); });
+    // cambio lingua: ridisegna la schermata aperta (i testi composti con _t() non li ritraduce l'osservatore)
+    window.addEventListener('hil:lang', () => {
+        if (!root || root.classList.contains('cp-hidden')) return;
+        const cur = root.querySelector('.cp-screen:not(.cp-hidden)');
+        const name = cur && cur.dataset.screen;
+        if (name === 'select') renderSelect();
+        else if (name === 'teams') renderTeams();
+        else if (name === 'hub' && state) { renderHub(); setupHubSwitcher(); }
+    });
     function hideRoot() { if (root) root.classList.add('cp-hidden'); }
     function toast(msg) {
         const t = document.createElement('div');
@@ -543,7 +555,7 @@
                 </div>
                 <div class="cp-car-label">
                     <button type="button" class="cp-mini-arrow" data-dir="-1" aria-hidden="true" tabindex="-1">&#9664;</button>
-                    <div><small>Competizione ${compIdx + 1} di ${COMPS.length}</small><b>${esc(c.name)}</b></div>
+                    <div><small>${_t('Competizione {0} di {1}', compIdx + 1, COMPS.length)}</small><b>${esc(c.name)}</b></div>
                     <button type="button" class="cp-mini-arrow" data-dir="1" aria-hidden="true" tabindex="-1">&#9654;</button>
                 </div>
                 <p class="cp-car-desc">${esc(c.desc)}</p>
@@ -557,8 +569,8 @@
                     <div class="cp-save-row">
                         <img src="${logo(s.data.user)}" alt="">
                         <div style="min-width:0"><div class="n">${esc(s.name)}</div>
-                            <div class="s">${esc(progressLabel(s.data))} • ${esc(difficultyLabel(s.data))} • ${new Date(s.savedAt).toLocaleString('it-IT', { dateStyle: 'short', timeStyle: 'short' })}</div></div>
-                        <div class="a"><button class="cp-btn is-small is-primary" data-load="${s.id}">Carica</button><button class="cp-btn is-small is-danger" data-del="${s.id}">Elimina</button></div>
+                            <div class="s">${esc(progressLabel(s.data))} • ${esc(difficultyLabel(s.data))} • ${new Date(s.savedAt).toLocaleString(I18N.locale,{ dateStyle: 'short', timeStyle: 'short' })}</div></div>
+                        <div class="a"><button class="cp-btn is-small is-primary" data-load="${s.id}">Riprendi</button><button class="cp-btn is-small is-danger" data-del="${s.id}">Elimina</button></div>
                     </div>`).join('') : '<div class="cp-empty">Nessuna stagione salvata</div>'}</div>
             </div>`;
         el.querySelector('[data-act="back"]').onclick = exitToMenu;
@@ -608,8 +620,8 @@
         const r = ratingOf(selectedTeam);
         const comp = COMPS[compIdx];
         const cpuNote = comp.id === 'coppa_italia'
-            ? `In coppa con le ${CUP_TEAMS - 1} squadre col rating più alto • sorteggio libero`
-            : `Le altre ${teams.length - 1} squadre sono guidate dalla CPU`;
+            ? _t('In coppa con le {0} squadre col rating più alto • sorteggio libero', CUP_TEAMS - 1)
+            : _t('Le altre {0} squadre sono guidate dalla CPU', teams.length - 1);
         el.innerHTML = `
             <div class="cp-head">
                 <img class="cp-head-logo" src="${comp.logo}" alt="">
@@ -657,7 +669,7 @@
         if (typeof window.pickDifficulty !== 'function') { createSeason(user, 'normal'); return; }
         window.pickDifficulty({
             title: 'Scegli la difficoltà',
-            sub: `${comp.short || comp.name} • vale per tutta la ${comp.id === 'coppa_italia' ? 'coppa' : 'stagione'}`,
+            sub: _t(comp.id === 'coppa_italia' ? '{0} • vale per tutta la coppa' : '{0} • vale per tutta la stagione', comp.short || comp.name),
             current: 'normal',
             currentTag: 'Consigliato',
             onPick: id => createSeason(user, id),
@@ -687,7 +699,7 @@
         hubTab = 'table';
         saveCurrent(true);
         showScreen('hub');
-        toast('Nuova stagione • ' + difficultyLabel(state) + ' • salvata come "' + state.name + '"');
+        toast(_t('Nuova stagione • {0} • salvata come "{1}"', difficultyLabel(state), state.name));
     }
     function startCup(user, difficulty) {
         const cup = createCup(user);
@@ -708,14 +720,14 @@
         hubTab = 'bracket';
         saveCurrent(true);
         showScreen('hub');
-        toast('Sorteggio fatto • ' + difficultyLabel(state) + ' • salvata come "' + state.name + '"');
+        toast(_t('Sorteggio fatto • {0} • salvata come "{1}"', difficultyLabel(state), state.name));
     }
 
     // --- 3. hub della stagione
     function scoreCell(f) {
         if (!f.result) return '<span class="sc tbd">—</span>';
         const r = f.result;
-        const tag = r.type === 'OT' ? 'supplementare' : (r.type === 'SO' ? `rigori ${r.so[0]}-${r.so[1]}` : '');
+        const tag = r.type === 'OT' ? _t('supplementare') : (r.type === 'SO' ? _t('rigori {0}-{1}', r.so[0], r.so[1]) : '');
         return `<span class="sc">${r.hg} - ${r.ag}${tag ? `<em>${tag}</em>` : ''}</span>`;
     }
     function resultRow(f) {
@@ -733,7 +745,7 @@
         const nPo = playoffTeams();
         const pout = playoutCfg();
         return `<div class="cp-table-wrap" data-pager="y" data-pager-items="tbody tr"><table class="cp-table">
-            <thead><tr><th>#</th><th class="l">Squadra</th><th>PG</th><th>V</th><th title="Vittorie al supplementare o ai rigori">VS</th><th title="Sconfitte al supplementare o ai rigori">PS</th><th>P</th><th class="hide-sm">GF</th><th class="hide-sm">GS</th><th>DR</th><th>PT</th></tr></thead>
+            <thead><tr><th>#</th><th class="l">Squadra</th><th translate="no">${abbr('PG')}</th><th translate="no">${abbr('V')}</th><th translate="no" title="${esc(_t('Vittorie al supplementare o ai rigori'))}">${abbr('VS')}</th><th translate="no" title="${esc(_t('Sconfitte al supplementare o ai rigori'))}">${abbr('PS')}</th><th translate="no">${abbr('P')}</th><th class="hide-sm">GF</th><th class="hide-sm" translate="no">${abbr('GS')}</th><th translate="no">${abbr('DR')}</th><th translate="no">${abbr('PT')}</th></tr></thead>
             <tbody>${rows.map((r, i) => `
                 <tr class="${r.id === state.user ? 'is-user ' : ''}${i < nPo ? 'is-po ' : ''}${i === nPo - 1 ? 'cut ' : ''}${(state.relegate && i >= rows.length - state.relegate) || (pout && i >= rows.length - pout.teams) ? 'is-rel' : ''}">
                     <td class="pos">${i + 1}</td>
@@ -742,7 +754,7 @@
                     <td class="hide-sm">${r.gf}</td><td class="hide-sm">${r.gs}</td><td>${r.gf - r.gs > 0 ? '+' : ''}${r.gf - r.gs}</td>
                     <td class="pts">${r.pts}</td>
                 </tr>`).join('')}</tbody></table></div>
-            <div class="cp-legend"><span><b>■</b> Zona play-off (prime ${nPo})</span>${state.relegate ? `<span><b class="rel">■</b> Retrocessione in Serie B</span>` : ''}${state.promote ? `<span>La vincente dei play-off sale in Serie A</span>` : ''}${pout ? `<span><b class="rel">■</b> ${esc(pout.label)} (ultime ${pout.teams}): chi perde va in ${esc(pout.down)}</span>` : ''}<span>Vittoria 3 pt • al supplementare/rigori 2 pt • sconfitta al supplementare/rigori 1 pt</span></div>`;
+            <div class="cp-legend"><span><b>■</b> ${_t('Zona play-off (prime {0})', nPo)}</span>${state.relegate ? `<span><b class="rel">■</b> Retrocessione in Serie B</span>` : ''}${state.promote ? `<span>La vincente dei play-off sale in Serie A</span>` : ''}${pout ? `<span><b class="rel">■</b> ${_t('{0} (ultime {1}): chi perde va in {2}', esc(_t(pout.label)), pout.teams, esc(pout.down))}</span>` : ''}<span>Vittoria 3 pt • al supplementare/rigori 2 pt • sconfitta al supplementare/rigori 1 pt</span></div>`;
     }
     function bracketHtml() {
         if (!state.playoffs) return `<div class="cp-empty" style="margin:auto">Il tabellone dei play-off sarà pronto alla fine della regular season</div>`;
@@ -751,7 +763,7 @@
         return `<div class="cp-bracket" data-pager="x" data-pager-items=".cp-round">${rounds.map((rd, ri) => {
             const list = po.series[ri];
             const slots = plan.slots[ri];
-            let html = `<div class="cp-round"><h4>${rd.label} • al meglio di ${rd.bestOf}</h4><div class="cp-round-body">`;
+            let html = `<div class="cp-round"><h4>${esc(_t('{0} • al meglio di {1}', _t(rd.label), rd.bestOf))}</h4><div class="cp-round-body">`;
             for (let k = 0; k < slots; k++) {
                 const s = list && list[k];
                 if (!s) { html += `<div class="cp-series"><div class="tbd">Da definire</div></div>`; continue; }
@@ -762,7 +774,7 @@
             // primo turno: chi è già al turno successivo
             if (ri === 0 && po.byes && po.byes.length) {
                 html += `<div class="cp-series${po.byes.includes(state.user) ? ' is-user' : ''}">${po.byes.map(id => `<div class="row won"><span class="seed">${seedOf(id)}</span><img src="${logo(id)}" alt=""><span>${esc(club(id).shortName || clubName(id))}</span><b>✓</b></div>`).join('')}</div>
-                    <div class="cp-res-rest">Già in ${esc(((rounds[1] || {}).label || 'semifinale').toLowerCase())}</div>`;
+                    <div class="cp-res-rest">${esc(_t('Già in {0}', _t((rounds[1] || {}).label || 'semifinale').toLowerCase()))}</div>`;
             }
             return html + '</div></div>';
         }).join('')}${playoutBoxHtml()}</div>`;
@@ -773,29 +785,29 @@
         if (!pl || !pc) return '';
         const w = seriesWins(pl), win = seriesWinner(pl);
         const row = (id, n) => `<div class="row${win ? (win === id ? ' won' : ' out') : ''}"><span class="seed">${seedOf(id)}</span><img src="${logo(id)}" alt=""><span>${esc(club(id).shortName || clubName(id))}</span><b>${n}</b></div>`;
-        const note = win ? `Retrocede in ${esc(pc.down)}: ${esc(club(playoutLoser()).shortName || clubName(playoutLoser()))}` : `Chi perde retrocede in ${esc(pc.down)}`;
-        return `<div class="cp-round cp-playout"><h4>${esc(pc.label)} • al meglio di ${pl.bestOf}</h4><div class="cp-round-body">
+        const note = win ? _t('Retrocede in {0}: {1}', esc(pc.down), esc(club(playoutLoser()).shortName || clubName(playoutLoser()))) : _t('Chi perde retrocede in {0}', esc(pc.down));
+        return `<div class="cp-round cp-playout"><h4>${esc(_t('{0} • al meglio di {1}', _t(pc.label), pl.bestOf))}</h4><div class="cp-round-body">
             <div class="cp-series${pl.hi === state.user || pl.lo === state.user ? ' is-user' : ''}">${row(pl.hi, w[0])}${row(pl.lo, w[1])}</div>
             <div class="cp-res-rest">${note}</div></div></div>`;
     }
     function nextMatchHtml() {
         if (state.phase === 'done') {
-            return `<div class="cp-rest"><b>Stagione conclusa</b>${esc(L(state).champ)}: ${esc(clubName(state.champion))}</div>
+            return `<div class="cp-rest"><b>Stagione conclusa</b>${esc(_t(L(state).champ))}: ${esc(clubName(state.champion))}</div>
                 <div class="cp-next-actions"><button class="cp-btn is-primary" data-act="champion">Premiazione ▶</button></div>`;
         }
         const f = userFixture();
         let meta;
         const userSeries = state.phase === 'playoff' ? seriesOfTeam(state.user) : null;
-        if (state.phase === 'regular') meta = `Giornata ${state.roundIdx + 1} di ${state.rounds.length}`;
-        else meta = userSeries && userSeries.playout ? playoutCfg().label : poRounds()[state.playoffs.round].label;
+        if (state.phase === 'regular') meta = _t('Giornata {0} di {1}', state.roundIdx + 1, state.rounds.length);
+        else meta = _t(userSeries && userSeries.playout ? playoutCfg().label : poRounds()[state.playoffs.round].label);
         if (!f) {
             let why = 'Turno di riposo';
             if (state.phase === 'playoff') {
                 const s = currentPoSeries().find(x => x.hi === state.user || x.lo === state.user);
                 const pl = playoutOf();
                 if (s && seriesWinner(s) === state.user) why = 'Serie vinta • in attesa';
-                else if (state.playoffs.round === 0 && (state.playoffs.byes || []).includes(state.user)) why = `Già in ${((poRounds()[1] || {}).label || 'semifinale').toLowerCase()} • in attesa`;
-                else if (pl && (pl.hi === state.user || pl.lo === state.user)) why = playoutLoser() === state.user ? `Retrocessi in ${playoutCfg().down}` : 'Salvezza conquistata';
+                else if (state.playoffs.round === 0 && (state.playoffs.byes || []).includes(state.user)) why = _t('Già in {0} • in attesa', _t((poRounds()[1] || {}).label || 'semifinale').toLowerCase());
+                else if (pl && (pl.hi === state.user || pl.lo === state.user)) why = playoutLoser() === state.user ? _t('Retrocessi in {0}', playoutCfg().down) : 'Salvezza conquistata';
                 else why = state.playoffs.seeds.includes(state.user) ? 'Eliminati dai play-off' : 'Fuori dai play-off';
             }
             return `<div class="cp-next-meta"><span>${meta}</span><span>${esc(clubName(state.user))}</span></div>
@@ -806,7 +818,7 @@
         if (state.phase === 'playoff') {
             const s = userSeries;
             const w = seriesWins(s);
-            extra = `Gara ${f.n} • serie ${w[s.hi === state.user ? 0 : 1]}-${w[s.hi === state.user ? 1 : 0]}`;
+            extra = _t('Gara {0} • serie {1}-{2}', f.n, w[s.hi === state.user ? 0 : 1], w[s.hi === state.user ? 1 : 0]);
         }
         const side = (id, lbl) => `<div class="side${id === state.user ? ' is-user' : ''}"><img src="${logo(id)}" alt=""><span>${esc(club(id).shortName || clubName(id))}</span><small>${lbl}</small></div>`;
         return `<div class="cp-next-meta"><span>${meta}</span><span>${extra}</span></div>
@@ -819,21 +831,23 @@
     }
     function lastResultsHtml() {
         const lt = state.lastTurn;
-        if (!lt) return { title: 'Risultati', body: '<div class="cp-empty">Nessuna partita giocata</div>' };
+        if (!lt) return { title: _t('Risultati'), body: '<div class="cp-empty">Nessuna partita giocata</div>' };
         if (lt.kind === 'regular') {
             const r = state.rounds[lt.idx];
             return {
-                title: `Risultati • giornata ${lt.idx + 1}`,
-                body: r.fixtures.map(resultRow).join('') + (r.bye ? `<div class="cp-res-rest">Riposa: ${esc(clubName(r.bye))}</div>` : '')
+                title: _t('Risultati • giornata {0}', lt.idx + 1),
+                tab: _t('giornata {0}', lt.idx + 1),     // etichetta corta per la linguetta dell'hub
+                body: r.fixtures.map(resultRow).join('') + (r.bye ? `<div class="cp-res-rest">${_t('Riposa: {0}', esc(clubName(r.bye)))}</div>` : '')
             };
         }
         const list = state.playoffs.series[lt.round];
         return {
-            title: `Risultati • ${poRounds()[lt.round].label}`,
+            title: _t('Risultati • {0}', _t(poRounds()[lt.round].label)),
+            tab: _t(poRounds()[lt.round].label),
             body: lt.played.map(p => {
                 const s = p.si === 'playout' ? playoutOf() : list[p.si];
                 const g = s && s.games.find(x => x.n === p.n);
-                return g ? (p.si === 'playout' ? `<div class="cp-res-rest">${esc(playoutCfg() ? playoutCfg().label : 'Play-out')} • gara ${g.n}</div>` : '') + resultRow(g) : '';
+                return g ? (p.si === 'playout' ? `<div class="cp-res-rest">${esc(_t('{0} • gara {1}', _t(playoutCfg() ? playoutCfg().label : 'Play-out'), g.n))}</div>` : '') + resultRow(g) : '';
             }).join('')
         };
     }
@@ -843,7 +857,7 @@
         const r = state.rounds[state.roundIdx];
         if (!r) return null;
         const others = r.fixtures.filter(f => f.home !== state.user && f.away !== state.user);
-        return { title: `Giornata ${state.roundIdx + 1}`, body: others.map(resultRow).join('') + (r.bye ? `<div class="cp-res-rest">Riposa: ${esc(clubName(r.bye))}</div>` : '') };
+        return { title: _t('Giornata {0}', state.roundIdx + 1), body: others.map(resultRow).join('') + (r.bye ? `<div class="cp-res-rest">${_t('Riposa: {0}', esc(clubName(r.bye)))}</div>` : '') };
     }
     let resTab = 'last';   // riquadro risultati: 'last' = ultimo turno giocato, 'next' = giornata in corso
     function renderHub() {
@@ -874,14 +888,14 @@
                 <div class="cp-col">
                     <div class="cp-panel" data-label="Prossima partita"><div class="cp-panel-title"><span>Prossima partita</span></div><div class="cp-next">${nextMatchHtml()}</div></div>
                     <div class="cp-panel" data-label="Risultati" style="display:flex;flex-direction:column;min-height:0;flex:1">
-                        <div class="cp-panel-title">${up ? `<div class="cp-tabs"><button class="cp-tab${resTab === 'last' ? ' is-active' : ''}" data-res="last">${esc(lr.title.replace('Risultati • ', ''))}</button><button class="cp-tab${resTab === 'next' ? ' is-active' : ''}" data-res="next">${esc(up.title)}</button></div><span>${resTab === 'next' ? 'Da giocare' : 'Risultati'}</span>` : `<span>${lr.title}</span>`}</div>
+                        <div class="cp-panel-title">${up ? `<div class="cp-tabs"><button class="cp-tab${resTab === 'last' ? ' is-active' : ''}" data-res="last">${esc(lr.tab || lr.title)}</button><button class="cp-tab${resTab === 'next' ? ' is-active' : ''}" data-res="next">${esc(up.title)}</button></div><span>${resTab === 'next' ? 'Da giocare' : 'Risultati'}</span>` : `<span>${lr.title}</span>`}</div>
                         <div class="cp-results" data-pager="y">${up && resTab === 'next' ? up.body : lr.body}</div>
                     </div>
                 </div>
             </div>
             <div class="cp-foot">
                 <button class="cp-btn" data-act="exit">◀ Esci</button>
-                <span class="cp-hint">Salvataggio automatico dopo ogni turno • "${esc(state.name)}"</span>
+                <span class="cp-hint">${_t('Salvataggio automatico dopo ogni turno • "{0}"', esc(state.name))}</span>
                 <span class="cp-spacer"></span>
                 <button class="cp-btn" data-act="save">Salva</button>
             </div>`;
@@ -907,14 +921,14 @@
                 if (!g) { html += `<div class="cp-series"><div class="tbd">Da definire</div></div>`; continue; }
                 const w = winnerOf(g), r = g.result;
                 const goals = id => (r ? (id === g.home ? r.hg : r.ag) : '');
-                const row = id => `<div class="row${w ? (w === id ? ' won' : ' out') : ''}"><span class="seed">${id === g.home ? 'C' : 'O'}</span><img src="${logo(id)}" alt=""><span>${esc(club(id).shortName || clubName(id))}</span><b>${goals(id)}</b></div>`;
-                const tag = r && r.type !== 'REG' ? `<div class="cp-tag">${r.type === 'OT' ? 'dopo supplementare' : `rigori ${r.so[0]}-${r.so[1]}`}</div>` : '';
+                const row = id => `<div class="row${w ? (w === id ? ' won' : ' out') : ''}"><span class="seed">${_t(id === g.home ? 'Casa' : 'Ospite').charAt(0)}</span><img src="${logo(id)}" alt=""><span>${esc(club(id).shortName || clubName(id))}</span><b>${goals(id)}</b></div>`;
+                const tag = r && r.type !== 'REG' ? `<div class="cp-tag">${r.type === 'OT' ? _t('dopo supplementare') : _t('rigori {0}-{1}', r.so[0], r.so[1])}</div>` : '';
                 html += `<div class="cp-series${g.home === state.user || g.away === state.user ? ' is-user' : ''}">${row(g.home)}${row(g.away)}${tag}</div>`;
             }
             if (ri === CUP_ROUNDS.length - 1) {
                 html += state.champion
-                    ? `<div class="cp-cup-podium"><div><span>1°</span><img src="${logo(state.champion)}" alt=""><b>${esc(club(state.champion).shortName || clubName(state.champion))}</b></div>
-                        <div><span>2°</span><img src="${logo(state.runnerUp)}" alt=""><b>${esc(club(state.runnerUp).shortName || clubName(state.runnerUp))}</b></div></div>`
+                    ? `<div class="cp-cup-podium"><div><span>${I18N.ord(1)}</span><img src="${logo(state.champion)}" alt=""><b>${esc(club(state.champion).shortName || clubName(state.champion))}</b></div>
+                        <div><span>${I18N.ord(2)}</span><img src="${logo(state.runnerUp)}" alt=""><b>${esc(club(state.runnerUp).shortName || clubName(state.runnerUp))}</b></div></div>`
                     : `<div class="cp-cup-trophy"><img src="${compOf('coppa_italia').logo}" alt=""></div>`;
             }
             return html + '</div></div>';
@@ -922,7 +936,7 @@
     }
     function cupNextHtml() {
         if (state.phase === 'done') {
-            return `<div class="cp-rest"><b>Coppa assegnata</b>Vince ${esc(clubName(state.champion))}</div>
+            return `<div class="cp-rest"><b>Coppa assegnata</b>${_t('Vince {0}', esc(clubName(state.champion)))}</div>
                 <div class="cp-next-actions"><button class="cp-btn is-primary" data-act="champion">Premiazione ▶</button></div>`;
         }
         const meta = cupRoundLabel(state.cup.round);
@@ -953,25 +967,25 @@
                 <div class="cp-head-right">
                     <span class="cp-pill"><img src="${logo(state.user)}" alt="">${esc(clubName(state.user))}</span>
                     <span class="cp-pill">${esc(difficultyLabel(state))}</span>
-                    <span class="cp-pill">${state.phase === 'done' ? 'Finale giocata' : esc(cupRoundLabel(state.cup.round))}${alive || state.phase === 'done' ? '' : ' • eliminati'}</span>
+                    <span class="cp-pill">${state.phase === 'done' ? _t('Finale giocata') : esc(_t(cupRoundLabel(state.cup.round)))}${alive || state.phase === 'done' ? '' : ' • ' + _t('eliminati')}</span>
                 </div>
             </div>
             <div class="cp-hub">
                 <div class="cp-panel" data-label="Tabellone" style="display:flex;flex-direction:column;min-height:0">
-                    <div class="cp-panel-title"><span>Tabellone</span><b>${state.cup.teams.length} squadre</b></div>
+                    <div class="cp-panel-title"><span>Tabellone</span><b>${_t('{0} squadre', state.cup.teams.length)}</b></div>
                     ${cupBracketHtml()}
                 </div>
                 <div class="cp-col">
                     <div class="cp-panel" data-label="Prossima partita"><div class="cp-panel-title"><span>Prossima partita</span></div><div class="cp-next">${cupNextHtml()}</div></div>
                     <div class="cp-panel" data-label="Risultati" style="display:flex;flex-direction:column;min-height:0;flex:1">
-                        <div class="cp-panel-title"><span>${lt ? 'Risultati • ' + cupRoundLabel(lt.round) : 'Risultati'}</span></div>
+                        <div class="cp-panel-title"><span>${lt ? _t('Risultati • {0}', _t(cupRoundLabel(lt.round))) : 'Risultati'}</span></div>
                         <div class="cp-results" data-pager="y">${res}</div>
                     </div>
                 </div>
             </div>
             <div class="cp-foot">
                 <button class="cp-btn" data-act="exit">◀ Esci</button>
-                <span class="cp-hint">Salvataggio automatico dopo ogni turno • "${esc(state.name)}"</span>
+                <span class="cp-hint">${_t('Salvataggio automatico dopo ogni turno • "{0}"', esc(state.name))}</span>
                 <span class="cp-spacer"></span>
                 <button class="cp-btn" data-act="save">Salva</button>
             </div>`;
@@ -992,14 +1006,14 @@
             hubTab = 'bracket';
             const pos = standings().findIndex(r => r.id === state.user) + 1;
             const pl = playoutOf();
-            const verdict = (state.playoffs.byes || []).includes(state.user) ? '• direttamente in semifinale'
-                : pos <= playoffTeams() ? '• qualificata ai play-off'
-                : (pl && (pl.hi === state.user || pl.lo === state.user) ? `• al ${playoutCfg().label.toLowerCase()}` : (playoutCfg() ? '• salva' : '• fuori dai play-off'));
-            toast(`Regular season conclusa • ${clubName(state.user)} ${pos}° ${verdict}`);
+            const verdict = (state.playoffs.byes || []).includes(state.user) ? _t('direttamente in semifinale')
+                : pos <= playoffTeams() ? _t('qualificata ai play-off')
+                : (pl && (pl.hi === state.user || pl.lo === state.user) ? _t('al {0}', _t(playoutCfg().label).toLowerCase()) : (playoutCfg() ? _t('salva') : _t('fuori dai play-off')));
+            toast(_t('Regular season conclusa • {0} {1} • {2}', clubName(state.user), I18N.ord(pos), verdict));
         }
         if (wasCupAlive && state.phase !== 'done') {
             const won = state.cup.rounds[state.cup.round - 1].some(g => winnerOf(g) === state.user);
-            toast(won ? `Passaggio del turno • ${clubName(state.user)} in ${cupRoundLabel(state.cup.round).toLowerCase()}` : `${clubName(state.user)} eliminata dalla coppa`);
+            toast(won ? _t('Passaggio del turno • {0} in {1}', clubName(state.user), _t(cupRoundLabel(state.cup.round)).toLowerCase()) : _t('{0} eliminata dalla coppa', clubName(state.user)));
         }
         showScreen('hub');
         if (state.phase === 'done') showChampion();
@@ -1011,15 +1025,15 @@
         const cup = isCup();
         const msg = cup
             ? (isUser ? 'La Coppa Italia è vostra! Gara secca dopo gara secca, fino in fondo.'
-                : (state.runnerUp === state.user ? `${esc(clubName(state.user))} chiude al 2° posto: finale persa, ma che cammino!` : `${esc(clubName(state.user))} esce dalla coppa. Ci si riprova l'anno prossimo!`))
+                : (state.runnerUp === state.user ? _t('{0} chiude al 2° posto: finale persa, ma che cammino!', esc(clubName(state.user))) : _t("{0} esce dalla coppa. Ci si riprova l'anno prossimo!", esc(clubName(state.user)))))
             : (isUser ? (({ RFEP: 'Campioni di Spagna! Una stagione da ricordare.', 'LIGUE ELITE': 'Campioni di Francia! Una stagione da ricordare.' })[leagueOf(state)] || 'Scudetto! Una stagione da ricordare.')
-                : (playoutLoser() === state.user ? `${esc(clubName(state.user))} perde il play-out e retrocede. Si riparte dalla ${esc(playoutCfg().down)}!` : `${esc(clubName(state.user))} chiude la stagione. Ci si riprova l'anno prossimo!`));
+                : (playoutLoser() === state.user ? _t('{0} perde il play-out e retrocede. Si riparte dalla {1}!', esc(clubName(state.user)), esc(playoutCfg().down)) : _t("{0} chiude la stagione. Ci si riprova l'anno prossimo!", esc(clubName(state.user)))));
         o.innerHTML = `<div class="cp-panel cp-dialog">
-            <span class="cp-kicker">${cup ? `Coppa Italia ${esc(state.season)} • Finale 1°-2° posto` : `${L(state).name} ${esc(state.season)} • ${L(state).final}`}</span>
+            <span class="cp-kicker">${cup ? _t('Coppa Italia {0} • Finale 1°-2° posto', esc(state.season)) : `${L(state).name} ${esc(state.season)} • ${esc(_t(L(state).final))}`}</span>
             <img class="cp-champ-crest" src="${logo(state.champion)}" alt="">
             <h2>${esc(clubName(state.champion))}<br>${cup ? 'Vince la Coppa Italia' : esc(L(state).title)}</h2>
-            ${cup ? `<p>2° posto: ${esc(clubName(state.runnerUp))}</p>` : ''}
-            ${!cup && playoutLoser() ? `<p>${esc(playoutCfg().label)}: ${esc(clubName(playoutLoser()))} retrocede in ${esc(playoutCfg().down)}</p>` : ''}
+            ${cup ? `<p>${_t('2° posto: {0}', esc(clubName(state.runnerUp)))}</p>` : ''}
+            ${!cup && playoutLoser() ? `<p>${_t('{0}: {1} retrocede in {2}', esc(_t(playoutCfg().label)), esc(clubName(playoutLoser())), esc(playoutCfg().down))}</p>` : ''}
             <p>${msg}</p>
             <div class="cp-next-actions"><button class="cp-btn" data-x="hub">${cup ? 'Tabellone' : 'Classifica'}</button><button class="cp-btn is-primary" data-x="menu">Torna al menu ▶</button></div>
         </div>`;
@@ -1052,8 +1066,8 @@
         matchActive = true;
         const ko = fixtureKickoff(f);
         matchConfig.timeOfDay = ko.daytime ? 'day' : 'night';      // partita pomeridiana o serale
-        const label = isCup() ? `Coppa Italia • ${cupRoundLabel(state.cup.round)}`
-            : (state.phase === 'regular' ? `${L(state).name} • Giornata ${state.roundIdx + 1}` : `${L(state).name} • ${poRounds()[state.playoffs.round].label}`);
+        const label = isCup() ? `Coppa Italia • ${_t(cupRoundLabel(state.cup.round))}`
+            : (state.phase === 'regular' ? `${L(state).name} • ${_t('Giornata {0}', state.roundIdx + 1)}` : `${L(state).name} • ${_t(poRounds()[state.playoffs.round].label)}`);
         // la schermata della competizione si chiude quando il caricamento la copre (niente palazzetto nella dissolvenza)
         if (typeof showFunFactLoading === 'function') showFunFactLoading(`${label} • ${ko.label}`, launchMatchFromCurrentConfig, hideRoot);
         else { hideRoot(); launchMatchFromCurrentConfig(); }
@@ -1094,7 +1108,7 @@
         let i = 0;
         const step = () => {
             if (i >= so.kicks.length) {
-                o.querySelector('[data-so-msg]').textContent = `Vince ai rigori ${clubName(so.winner === 'home' ? home : guest)} (${so.home}-${so.guest})`;
+                o.querySelector('[data-so-msg]').textContent = _t('Vince ai rigori {0} ({1}-{2})', clubName(so.winner === 'home' ? home : guest), so.home, so.guest);
                 const btn = o.querySelector('[data-x="ok"]');
                 btn.disabled = false; btn.focus();
                 btn.onclick = () => { o.remove(); done({ home: so.home, guest: so.guest, winner: so.winner }); };
@@ -1157,7 +1171,8 @@
         0: [[15.5, 2], [17, 1], [18, 2]],                     // domenica
         other: [[20.75, 3], [21, 1]]                          // infrasettimanale
     };
-    const WEEKDAY = ['Dom', 'Lun', 'Mar', 'Mer', 'Gio', 'Ven', 'Sab'];
+    const WEEKDAY = ['Domenica', 'Lunedì', 'Martedì', 'Mercoledì', 'Giovedì', 'Venerdì', 'Sabato'];
+    const dayShort = (w, tr) => (tr ? _t(WEEKDAY[w]) : WEEKDAY[w]).slice(0, 3);   // Sab / Sat
     function hashKey(str) {
         let h = 2166136261;
         for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; }
@@ -1173,7 +1188,7 @@
         const hh = Math.floor(hour), mm = Math.round((hour - hh) * 60);
         const time = `${hh}:${String(mm).padStart(2, '0')}`;
         const daytime = hour + 0.75 < SUNSET[((month % 12) + 12) % 12];
-        return { weekday, dayName: WEEKDAY[weekday], hour, time, label: `${WEEKDAY[weekday]} ${time}`, daytime, icon: daytime ? '☀' : '☾' };
+        return { weekday, dayName: dayShort(weekday), hour, time, label: `${dayShort(weekday, true)} ${time}`, daytime, icon: daytime ? '☀' : '☾' };
     }
     // competizione senza calendario: mese stimato dalla fase (campionato ottobre-marzo, play-off aprile-maggio, coppa gennaio)
     function fixtureMonth() {
@@ -1231,6 +1246,7 @@
         return ctx;
     }
 
+    // NB: resta in italiano (Hockey Manager la salva nei messaggi della carriera): tradurre dove la si mostra
     function turnLabel() {
         if (isCup()) return state.phase === 'cup' ? `Coppa Italia • ${cupRoundLabel(state.cup.round)}` : 'Coppa Italia';
         if (state.phase === 'regular') return `${L(state).name} • Giornata ${state.roundIdx + 1} di ${state.rounds.length}`;
@@ -1272,7 +1288,7 @@
         cupBracketHtml: s => onState(s, cupBracketHtml)(),
         resultRow: (s, f) => onState(s, resultRow)(f),
         lastResults: s => onState(s, () => isCup()
-            ? (state.lastTurn ? { title: 'Risultati • ' + cupRoundLabel(state.lastTurn.round), body: state.cup.rounds[state.lastTurn.round].map(resultRow).join('') } : { title: 'Risultati', body: '<div class="cp-empty">Nessuna partita giocata</div>' })
+            ? (state.lastTurn ? { title: _t('Risultati • {0}', _t(cupRoundLabel(state.lastTurn.round))), body: state.cup.rounds[state.lastTurn.round].map(resultRow).join('') } : { title: _t('Risultati'), body: '<div class="cp-empty">Nessuna partita giocata</div>' })
             : lastResultsHtml())(),
         ensureCss() {
             if (document.querySelector('link[data-comp-css]')) return;

@@ -8,6 +8,12 @@ dell'app tramite un gestore di schema (`AssetSchemeHandler`, origine `hil://app/
 Il gioco **non è duplicato** qui: a ogni build lo script `scripts/sync-web.py` copia dalla radice
 del repository `index.html`, `src/` e `assets/` nella cartella `web/` dell'app (solo i file cambiati).
 
+Gli asset non vanno nell'app così come sono: `tools/bundle_assets.py` (lanciato dalla build, serve Python
+con Pillow) ne prepara in `deploy/bundle-assets/` una copia alleggerita, senza le foto originali dei
+palazzetti e dei roster e coi file inutilizzati esclusi, con le texture ricompresse. Con
+`pip install imagequant` riduce anche i PNG a 256 colori; con `ffmpeg` nel PATH porta la musica a 128 kbps.
+Se lo script non riesce si copiano gli asset originali.
+
 ## Requisiti
 
 - Un **Mac** con **Xcode** (15 o successivo): le app iOS si compilano solo su macOS

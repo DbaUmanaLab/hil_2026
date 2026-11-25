@@ -20,7 +20,7 @@
     // enabled: deciso dal test prestazioni del primo avvio (alta/media sì, bassa no) finché l'utente
     // non lo cambia a mano (userSet). I sottotitoli partono spenti: li accende l'utente.
     const PREFS_VERSION = 2;
-    const settings = { v: PREFS_VERSION, enabled: true, userSet: false, lang: 'it', volume: 0.9, captions: false, chatter: 1, voice: { it: '', en: '' } };
+    const settings = { v: PREFS_VERSION, enabled: true, userSet: false, lang: (window.I18N && window.I18N.lang) || 'it', volume: 0.9, captions: false, chatter: 1, voice: { it: '', en: '' } };
     try {
         const s = JSON.parse(localStorage.getItem(PREFS_KEY) || '{}');
         const current = s.v === PREFS_VERSION;            // preferenze salvate prima di questa versione: si riparte dai default

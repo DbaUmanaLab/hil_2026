@@ -8,6 +8,12 @@ Il gioco **non è duplicato** qui: a ogni build Gradle copia dalla radice del re
 `index.html`, `src/` e `assets/` dentro `app/build/generated/hilweb/web/`.
 Basta quindi rifare la build per avere nell'APK l'ultima versione del gioco.
 
+Gli asset non vanno nell'app così come sono: `tools/bundle_assets.py` (lanciato dalla build, serve Python
+con Pillow) ne prepara in `deploy/bundle-assets/` una copia alleggerita, senza le foto originali dei
+palazzetti e dei roster e coi file inutilizzati esclusi, con le texture ricompresse. Con
+`pip install imagequant` riduce anche i PNG a 256 colori; con `ffmpeg` nel PATH porta la musica a 128 kbps.
+Se lo script non riesce si copiano gli asset originali.
+
 ## Versione offline
 
 Con `hil.offline=true` (default, in `gradle.properties`) la prima build scarica in `vendor/`

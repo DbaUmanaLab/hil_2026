@@ -72,9 +72,13 @@
         for (const x of list) { r -= w(x); if (r <= 0) return x; }
         return list[list.length - 1];
     }
-    function eur(n) {
+    // lingua (src/i18n/i18n.js): fuori dal browser, o con it = true, si resta in italiano
+    const isEn = it => !it && !!G.I18N && G.I18N.lang === 'en';
+    const fillArgs = (s, a) => String(s).replace(/\{(\d+)\}/g, (m, i) => (a[+i] === undefined || a[+i] === null ? m : String(a[+i])));
+    const tr = (k, ...a) => (G._t ? G._t(k, ...a) : fillArgs(k, a));
+    function eur(n, it) {
         const v = Math.round(n);
-        return (v < 0 ? '-' : '') + '€ ' + String(Math.abs(v)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return (v < 0 ? '-' : '') + '€ ' + String(Math.abs(v)).replace(/\B(?=(\d{3})+(?!\d))/g, isEn(it) ? ',' : '.');
     }
     // date come 'AAAA-MM-GG'
     const dParse = s => new Date(s + 'T12:00:00Z');
@@ -86,12 +90,61 @@
     const MONTHS = ['gennaio', 'febbraio', 'marzo', 'aprile', 'maggio', 'giugno', 'luglio', 'agosto', 'settembre', 'ottobre', 'novembre', 'dicembre'];
     const MONTHS_S = ['gen', 'feb', 'mar', 'apr', 'mag', 'giu', 'lug', 'ago', 'set', 'ott', 'nov', 'dic'];
     const DAYS = ['dom', 'lun', 'mar', 'mer', 'gio', 'ven', 'sab'];
-    function dateLabel(s, long) {
+    function dateLabel(s, long, it) {
         const d = dParse(s);
         const m = d.getUTCMonth();
+        if (isEn(it)) return d.toLocaleDateString(G.I18N.locale, long ? { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' } : { day: 'numeric', month: 'short', timeZone: 'UTC' });
         return long ? `${DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[m]} ${d.getUTCFullYear()}` : `${d.getUTCDate()} ${MONTHS_S[m]}`;
     }
+    const monthName = (m, it) => (isEn(it) ? new Date(Date.UTC(2000, m, 1)).toLocaleDateString(G.I18N.locale, { month: 'long', timeZone: 'UTC' }) : MONTHS[m]);
     const seasonLabelOf = y => `${y}/${String((y + 1) % 100).padStart(2, '0')}`;
+
+    // ------------------------------------------------------------------ testi generati traducibili
+    // Messaggi e note dei movimenti restano nel salvataggio: si scrivono in italiano (title / body / note,
+    // come nei salvataggi vecchi) e, se hanno parti variabili, anche come [chiave, ...argomenti]
+    // (tk / bk / nk), tradotti solo quando si mostrano (chiavi in src/i18n/en/manager.js).
+    // Argomenti: numeri e stringhe restano come sono (nomi); [chiave, ...] = testo annidato da tradurre;
+    // { e: n } importo, { d: 'AAAA-MM-GG' } data, { m: 0-11 } mese, { o: n } ordinale (1° / 1st),
+    // { r: 'G' | 'D' | 'F' } ruolo, { lc: [chiave, ...] } testo tradotto in minuscolo.
+    function txt(x, it) {
+        if (x == null) return '';
+        if (!Array.isArray(x)) return String(x);
+        const a = x.slice(1).map(v => txtArg(v, it));
+        return it ? fillArgs(x[0], a) : tr(x[0], ...a);
+    }
+    function txtArg(v, it) {
+        if (Array.isArray(v)) return txt(v, it);
+        if (!v || typeof v !== 'object') return v;
+        if ('e' in v) return eur(v.e, it);
+        if ('d' in v) return dateLabel(v.d, false, it);
+        if ('m' in v) return monthName(v.m, it);
+        if ('o' in v) return it || !G.I18N ? Math.round(v.o) + '°' : G.I18N.ord(v.o);
+        if ('r' in v) return it ? ROLE_LABEL[v.r] : tr(ROLE_LABEL[v.r]);
+        if ('lc' in v) return txt(Array.isArray(v.lc) ? v.lc : [v.lc], it).toLowerCase();
+        if ('l' in v) return it ? v.l : evLabel(v.l);
+        return '';
+    }
+    // etichetta di un evento del calendario (nextEvent / turnLabel di competition.js, sempre in italiano):
+    // tradotta intera se è una voce del dizionario, altrimenti pezzo per pezzo tra i ' • '
+    const LABEL_PATTERNS = [
+        [/^Giornata (\d+) di (\d+)$/, 'Giornata {0} di {1}'],
+        [/^Inizio della stagione (\S+)$/, 'Inizio della stagione {0}'],
+        [/^Fine della stagione (\S+)$/, 'Fine della stagione {0}']
+    ];
+    function evLabel(s) {
+        s = String(s == null ? '' : s);
+        if (!G.I18N || G.I18N.lang === 'it') return s;
+        if (G.I18N.has(s)) return tr(s);
+        return s.split(' • ').map(part => {
+            if (G.I18N.has(part)) return tr(part);
+            for (const [re, key] of LABEL_PATTERNS) { const m = part.match(re); if (m) return tr(key, ...m.slice(1)); }
+            return part;
+        }).join(' • ');
+    }
+    // testo da mostrare: chiave salvata se c'è, altrimenti il testo italiano (tradotto se è una frase fissa)
+    const msgTitle = m => (m.tk ? txt(m.tk) : tr(m.title || ''));
+    const msgBody = m => (m.bk ? txt(m.bk) : tr(m.body || ''));
+    const ledgerNote = l => (l.nk ? txt(l.nk) : tr(l.note || ''));
 
     const engine = () => G.Competition.engine;
     const rosters = () => G.CLUB_ROSTERS || (typeof CLUB_ROSTERS !== 'undefined' ? CLUB_ROSTERS : {});
@@ -275,7 +328,9 @@
 
     // ------------------------------------------------------------------ messaggi e movimenti
     function msg(c, cat, title, body, act) {
-        const m = { id: 'm' + (c.nextMid++), d: c.date, cat, title, body, read: false };
+        const m = { id: 'm' + (c.nextMid++), d: c.date, cat, title: txt(title, true), body: txt(body, true), read: false };
+        if (Array.isArray(title)) m.tk = title;
+        if (Array.isArray(body)) m.bk = body;
         if (act) m.act = act;
         c.messages.unshift(m);
         if (c.messages.length > CFG.MAX_MESSAGES) {
@@ -293,8 +348,10 @@
     function money(c, cat, amt, note) {
         if (!amt) return;
         c.balance += amt;
-        c.ledger.push({ d: c.date, s: c.seasonYear, cat, amt: Math.round(amt), note: note || '' });
-        if (c.report) c.report.money.push({ cat, amt: Math.round(amt), note: note || '' });
+        const l = { d: c.date, s: c.seasonYear, cat, amt: Math.round(amt), note: txt(note, true) };
+        if (Array.isArray(note)) l.nk = note;
+        c.ledger.push(l);
+        if (c.report) c.report.money.push({ cat, amt: Math.round(amt), note: l.note });
     }
     function pushHistory(c) {
         const last = c.history[c.history.length - 1];
@@ -316,9 +373,8 @@
             if (first > from) {
                 const saved = c.date;
                 c.date = first;
-                const mon = MONTHS[m];
-                c.sponsors.active.forEach(s => money(c, 'sponsor', s.monthly, `${sponsorById(s.sid) ? sponsorById(s.sid).name : 'Sponsor'} • ${mon}`));
-                money(c, 'stipendi', -payroll(c), `Stipendi di ${mon}`);
+                c.sponsors.active.forEach(s => money(c, 'sponsor', s.monthly, ['{0} • {1}', sponsorById(s.sid) ? sponsorById(s.sid).name : 'Sponsor', { m }]));
+                money(c, 'stipendi', -payroll(c), ['Stipendi di {0}', { m }]);
                 pushHistory(c);
                 c.date = saved;
             }
@@ -330,7 +386,7 @@
         if (weeks) {
             const saved = c.date;
             c.date = to;
-            money(c, 'palazzetto', -arenaFee(c.user, c) * weeks, `${arenaName(c.user) || 'Palazzetto'} • ${weeks} ${weeks > 1 ? 'settimane' : 'settimana'}`);
+            money(c, 'palazzetto', -arenaFee(c.user, c) * weeks, [weeks > 1 ? '{0} • {1} settimane' : '{0} • {1} settimana', arenaName(c.user) || ['Palazzetto'], weeks]);
             c.date = saved;
         }
     }
@@ -343,7 +399,7 @@
         const before = c.fans;
         c.fans = clamp(c.fans + delta, 0, 100);
         if (c.report) c.report.fans += c.fans - before;
-        if (why && Math.abs(delta) >= 4) msg(c, 'tifosi', delta > 0 ? 'Tifosi in festa' : 'Tifosi scontenti', `${why} Gradimento ${Math.round(before)} → ${Math.round(c.fans)}.`);
+        if (why && Math.abs(delta) >= 4) msg(c, 'tifosi', delta > 0 ? 'Tifosi in festa' : 'Tifosi scontenti', ['{0} Gradimento {1} → {2}.', Array.isArray(why) ? why : [why], Math.round(before), Math.round(c.fans)]);
     }
     // posizione attesa per rating, posizione reale: base della reputazione
     function expectedRank(c) {
@@ -402,22 +458,24 @@
         };
         pending.push(o);
         if (!quiet) {
-            msg(c, 'sponsor', `Proposta da ${s.name}`,
-                `${s.name} (${s.sector}) vuole diventare ${slot === 'main' ? 'sponsor di maglia' : 'sponsor secondario'}: ${eur(o.monthly)} al mese per ${o.seasons} ${o.seasons > 1 ? 'stagioni' : 'stagione'}, ${eur(o.winBonus)} per ogni vittoria e ${eur(o.trophyBonus)} per ogni trofeo. Valida fino al ${dateLabel(o.expires)}.`,
+            msg(c, 'sponsor', ['Proposta da {0}', s.name],
+                ['{0} ({1}) vuole diventare {2}: {3} al mese per {4}, {5} per ogni vittoria e {6} per ogni trofeo. Valida fino al {7}.',
+                    s.name, [s.sector], [slot === 'main' ? 'sponsor di maglia' : 'sponsor secondario'], { e: o.monthly },
+                    [o.seasons > 1 ? '{0} stagioni' : '{0} stagione', o.seasons], { e: o.winBonus }, { e: o.trophyBonus }, { d: o.expires }],
                 { kind: 'sponsor', ref: o.id });
         }
         return o;
     }
     function acceptSponsor(c, offerId) {
         const i = c.sponsors.offers.findIndex(o => o.id === offerId);
-        if (i < 0) return { ok: false, msg: 'Proposta non più disponibile' };
+        if (i < 0) return { ok: false, msg: tr('Proposta non più disponibile') };
         const o = c.sponsors.offers[i];
-        if (freeSlots(c)[o.slot] <= 0) return { ok: false, msg: o.slot === 'main' ? 'Hai già uno sponsor di maglia' : 'Tutti gli spazi per sponsor secondari sono occupati' };
+        if (freeSlots(c)[o.slot] <= 0) return { ok: false, msg: tr(o.slot === 'main' ? 'Hai già uno sponsor di maglia' : 'Tutti gli spazi per sponsor secondari sono occupati') };
         c.sponsors.offers.splice(i, 1);
         c.sponsors.active.push({ sid: o.sid, slot: o.slot, monthly: o.monthly, winBonus: o.winBonus, trophyBonus: o.trophyBonus, until: c.seasonYear + o.seasons - 1, since: c.date });
         closeAction(c, 'sponsor', o.id, 'Accettata');
         const s = sponsorById(o.sid);
-        msg(c, 'sponsor', `Firmato con ${s.name}`, `Contratto ${o.slot === 'main' ? 'di maglia' : 'secondario'} da ${eur(o.monthly)} al mese. La prima rata arriva il primo del mese.`);
+        msg(c, 'sponsor', ['Firmato con {0}', s.name], ['Contratto {0} da {1} al mese. La prima rata arriva il primo del mese.', [o.slot === 'main' ? 'di maglia' : 'secondario'], { e: o.monthly }]);
         return { ok: true };
     }
     function rejectSponsor(c, offerId) {
@@ -437,7 +495,7 @@
         c.sponsors.active = c.sponsors.active.filter(a => {
             const s = sponsorById(a.sid);
             if (!s || c.rep >= minRepFor(s.tier) || Math.random() > 0.07) return true;
-            msg(c, 'sponsor', `${s.name} recede dal contratto`, `Per i risultati deludenti (reputazione ${Math.round(c.rep)}) ${s.name} interrompe la sponsorizzazione da ${eur(a.monthly)} al mese.`);
+            msg(c, 'sponsor', ['{0} recede dal contratto', s.name], ['Per i risultati deludenti (reputazione {0}) {1} interrompe la sponsorizzazione da {2} al mese.', Math.round(c.rep), s.name, { e: a.monthly }]);
             return false;
         });
         const free = freeSlots(c);
@@ -451,7 +509,7 @@
         Object.values(c.players).forEach(p => {
             if (!p.inj || p.inj.until > c.date) return;
             p.inj = null;
-            if (p.team === c.user) msg(c, 'infortuni', `${p.name} è di nuovo disponibile`, `${p.first} ${p.name} ha recuperato ed è tornato ad allenarsi con il gruppo.`);
+            if (p.team === c.user) msg(c, 'infortuni', ['{0} è di nuovo disponibile', p.name], ['{0} {1} ha recuperato ed è tornato ad allenarsi con il gruppo.', p.first, p.name]);
         });
     }
     function maybeInjure(c, team) {
@@ -470,7 +528,7 @@
         const days = rint(t.d[0], t.d[1]);
         p.inj = { t: t.t, days, since: c.date, until: dAdd(c.date, days) };
         if (team === c.user) {
-            msg(c, 'infortuni', `Infortunio: ${p.name}`, `${p.first} ${p.name} (${ROLE_LABEL[p.pos]}) • ${t.t}. Prognosi ${days} giorni, rientro previsto il ${dateLabel(p.inj.until)}.`);
+            msg(c, 'infortuni', ['Infortunio: {0}', p.name], ['{0} {1} ({2}) • {3}. Prognosi {4} giorni, rientro previsto il {5}.', p.first, p.name, { r: p.pos }, [t.t], days, { d: p.inj.until }]);
             if (c.report) c.report.injuries.push(p.id);
         }
         return p;
@@ -498,11 +556,11 @@
         return Math.max(10, round(base * negotiation(c, p.id).player, 5));
     }
     function marketBlock(c, p) {
-        if (!windowOpen(c)) return 'Il mercato è chiuso: riapre a fine stagione e a gennaio.';
-        if (p.team === c.user) return 'Il giocatore è già nella tua rosa.';
-        if (counts(c, c.user).total >= CFG.MAX_ROSTER) return `Rosa al completo (${CFG.MAX_ROSTER} giocatori): prima cedi o svincola qualcuno.`;
-        if (negotiation(c, p.id).closed) return 'Trattativa chiusa: il club non vuole più sentirne parlare fino alla prossima sessione.';
-        if (p.team && !canRemove(c, p)) return `${clubName(p.team)} non può privarsene: rosa al minimo.`;
+        if (!windowOpen(c)) return tr('Il mercato è chiuso: riapre a fine stagione e a gennaio.');
+        if (p.team === c.user) return tr('Il giocatore è già nella tua rosa.');
+        if (counts(c, c.user).total >= CFG.MAX_ROSTER) return tr('Rosa al completo ({0} giocatori): prima cedi o svincola qualcuno.', CFG.MAX_ROSTER);
+        if (negotiation(c, p.id).closed) return tr('Trattativa chiusa: il club non vuole più sentirne parlare fino alla prossima sessione.');
+        if (p.team && !canRemove(c, p)) return tr('{0} non può privarsene: rosa al minimo.', clubName(p.team));
         return null;
     }
     function transfer(c, p, to, fee) {
@@ -517,52 +575,54 @@
     // offerta dell'utente: prima il club (cartellino), poi il giocatore (stipendio)
     function makeOffer(c, pid, fee, salary) {
         const p = c.players[pid];
-        if (!p) return { ok: false, msg: 'Giocatore non trovato' };
+        if (!p) return { ok: false, msg: tr('Giocatore non trovato') };
         const block = marketBlock(c, p);
         if (block) return { ok: false, msg: block };
         fee = Math.max(0, Math.round(fee || 0)); salary = Math.max(0, Math.round(salary || 0));
-        if (fee > c.balance) return { ok: false, msg: `Saldo insufficiente: disponibili ${eur(c.balance)}.` };
+        if (fee > c.balance) return { ok: false, msg: tr('Saldo insufficiente: disponibili {0}.', eur(c.balance)) };
         const neg = negotiation(c, pid);
         const from = p.team;
         const fail = (stage, text, ask) => {
             neg.tries++;
-            if (neg.tries >= 3) { neg.closed = true; text += ' La trattativa è chiusa.'; }
-            msg(c, 'mercato', `Offerta per ${p.name}: ${stage === 'club' ? 'il club dice no' : 'il giocatore dice no'}`, text);
-            return { ok: false, stage, msg: text, ask, closed: neg.closed };
+            if (neg.tries >= 3) { neg.closed = true; text = ['{0} La trattativa è chiusa.', text]; }
+            msg(c, 'mercato', ['Offerta per {0}: {1}', p.name, [stage === 'club' ? 'il club dice no' : 'il giocatore dice no']], text);
+            return { ok: false, stage, msg: txt(text), ask, closed: neg.closed };
         };
         if (from) {
             const ask = clubAsk(c, p);
             if (fee < ask) {
-                if (fee >= ask * 0.8) return fail('club', `${clubName(from)} rifiuta ${eur(fee)} per ${p.name}, ma tratterebbe a partire da ${eur(ask)}.`, ask);
-                return fail('club', `${clubName(from)} giudica l'offerta di ${eur(fee)} per ${p.name} troppo bassa.`, null);
+                if (fee >= ask * 0.8) return fail('club', ['{0} rifiuta {1} per {2}, ma tratterebbe a partire da {3}.', clubName(from), { e: fee }, p.name, { e: ask }], ask);
+                return fail('club', ["{0} giudica l'offerta di {1} per {2} troppo bassa.", clubName(from), { e: fee }, p.name], null);
             }
         }
         const pask = playerAsk(c, p);
-        if (salary < pask) return fail('player', `${p.first} ${p.name} rifiuta uno stipendio di ${eur(salary)} al mese: ne chiede almeno ${eur(pask)}.`, pask);
+        if (salary < pask) return fail('player', ['{0} {1} rifiuta uno stipendio di {2} al mese: ne chiede almeno {3}.', p.first, p.name, { e: salary }, { e: pask }], pask);
         // affare fatto
         transfer(c, p, c.user);
         p.salary = salary;
-        if (fee) money(c, 'acquisti', -fee, `${p.name} da ${clubShort(from)}`);
+        if (fee) money(c, 'acquisti', -fee, ['{0} da {1}', p.name, clubShort(from)]);
         const rk = topRank(c, c.user, p);
-        msg(c, 'mercato', `Ufficiale: ${p.name} è un nuovo giocatore`, `${p.first} ${p.name} (${ROLE_LABEL[p.pos]}, ${p.ovr}) arriva ${from ? `da ${clubName(from)} per ${eur(fee)}` : 'da svincolato'}. Stipendio ${eur(salary)} al mese, maglia n° ${p.num}.`);
-        if (rk === 0) addFans(c, 5, `Colpo di mercato: arriva ${p.name}!`);
+        msg(c, 'mercato', ['Ufficiale: {0} è un nuovo giocatore', p.name], ['{0} {1} ({2}, {3}) arriva {4}. Stipendio {5} al mese, maglia n° {6}.',
+            p.first, p.name, { r: p.pos }, p.ovr, from ? ['da {0} per {1}', clubName(from), { e: fee }] : ['da svincolato'], { e: salary }, p.num]);
+        if (rk === 0) addFans(c, 5, ['Colpo di mercato: arriva {0}!', p.name]);
         else if (rk < 3) addFans(c, 3, null);
         delete c.market.neg[pid];
-        return { ok: true, msg: `${p.name} è tuo! Maglia n° ${p.num}.` };
+        return { ok: true, msg: tr('{0} è tuo! Maglia n° {1}.', p.name, p.num) };
     }
+    const minRosterMsg = () => tr('Non puoi scendere sotto {0} giocatori (almeno {1} di movimento e {2} portiere).', CFG.MIN_ROSTER, CFG.MIN_SKATERS, CFG.MIN_GOALIES);
     function releasePlayer(c, pid) {
         const p = c.players[pid];
-        if (!p || p.team !== c.user) return { ok: false, msg: 'Giocatore non in rosa' };
-        if (!windowOpen(c)) return { ok: false, msg: 'Si può svincolare solo durante il mercato.' };
-        if (!canRemove(c, p)) return { ok: false, msg: `Non puoi scendere sotto ${CFG.MIN_ROSTER} giocatori (almeno ${CFG.MIN_SKATERS} di movimento e ${CFG.MIN_GOALIES} portiere).` };
+        if (!p || p.team !== c.user) return { ok: false, msg: tr('Giocatore non in rosa') };
+        if (!windowOpen(c)) return { ok: false, msg: tr('Si può svincolare solo durante il mercato.') };
+        if (!canRemove(c, p)) return { ok: false, msg: minRosterMsg() };
         const cost = p.salary * 2;
-        if (cost > c.balance) return { ok: false, msg: 'Saldo insufficiente per la buonuscita.' };
+        if (cost > c.balance) return { ok: false, msg: tr('Saldo insufficiente per la buonuscita.') };
         const rk = topRank(c, c.user, p);
         transfer(c, p, null);
-        money(c, 'buonuscite', -cost, `Svincolo di ${p.name}`);
-        msg(c, 'mercato', `${p.name} svincolato`, `Contratto risolto con ${p.first} ${p.name}: buonuscita di ${eur(cost)} (due mensilità).`);
+        money(c, 'buonuscite', -cost, ['Svincolo di {0}', p.name]);
+        msg(c, 'mercato', ['{0} svincolato', p.name], ['Contratto risolto con {0} {1}: buonuscita di {2} (due mensilità).', p.first, p.name, { e: cost }]);
         if (rk < 3) addFans(c, -4, null);
-        return { ok: true, msg: `${p.name} svincolato (${eur(cost)} di buonuscita)` };
+        return { ok: true, msg: tr('{0} svincolato ({1} di buonuscita)', p.name, eur(cost)) };
     }
     function toggleForSale(c, pid) {
         const p = c.players[pid];
@@ -590,36 +650,37 @@
             const o = { id: 'x' + (c.nextMid++), pid: p.id, buyer, fee, expires: dAdd(c.date, 21), status: 'open' };
             c.market.incoming.push(o);
             open.push(o);
-            msg(c, 'mercato', `Offerta di ${clubShort(buyer)} per ${p.name}`,
-                `${clubName(buyer)} offre ${eur(fee)} per il cartellino di ${p.first} ${p.name} (${ROLE_LABEL[p.pos]}, ${p.ovr}, valore stimato ${eur(valueOf(p))}). Offerta valida fino al ${dateLabel(o.expires)}.`,
+            msg(c, 'mercato', ['Offerta di {0} per {1}', clubShort(buyer), p.name],
+                ['{0} offre {1} per il cartellino di {2} {3} ({4}, {5}, valore stimato {6}). Offerta valida fino al {7}.',
+                    clubName(buyer), { e: fee }, p.first, p.name, { r: p.pos }, p.ovr, { e: valueOf(p) }, { d: o.expires }],
                 { kind: 'cpu_offer', ref: o.id });
         }
     }
     function answerIncoming(c, offerId, accept) {
         const o = c.market.incoming.find(x => x.id === offerId);
-        if (!o || o.status !== 'open') return { ok: false, msg: 'Offerta non più valida' };
+        if (!o || o.status !== 'open') return { ok: false, msg: tr('Offerta non più valida') };
         const p = c.players[o.pid];
         if (!accept) {
             o.status = 'rejected';
             closeAction(c, 'cpu_offer', o.id, 'Rifiutata');
-            return { ok: true, msg: 'Offerta rifiutata' };
+            return { ok: true, msg: tr('Offerta rifiutata') };
         }
-        if (!windowOpen(c)) return { ok: false, msg: 'Il mercato è chiuso' };
-        if (!p || p.team !== c.user) { o.status = 'void'; closeAction(c, 'cpu_offer', o.id, 'Decaduta'); return { ok: false, msg: 'Il giocatore non è più in rosa' }; }
-        if (!canRemove(c, p)) return { ok: false, msg: `Non puoi scendere sotto ${CFG.MIN_ROSTER} giocatori (almeno ${CFG.MIN_SKATERS} di movimento e ${CFG.MIN_GOALIES} portiere).` };
-        if (counts(c, o.buyer).total >= CFG.MAX_ROSTER) { o.status = 'void'; closeAction(c, 'cpu_offer', o.id, 'Decaduta'); return { ok: false, msg: `${clubName(o.buyer)} ha la rosa al completo` }; }
+        if (!windowOpen(c)) return { ok: false, msg: tr('Il mercato è chiuso') };
+        if (!p || p.team !== c.user) { o.status = 'void'; closeAction(c, 'cpu_offer', o.id, 'Decaduta'); return { ok: false, msg: tr('Il giocatore non è più in rosa') }; }
+        if (!canRemove(c, p)) return { ok: false, msg: minRosterMsg() };
+        if (counts(c, o.buyer).total >= CFG.MAX_ROSTER) { o.status = 'void'; closeAction(c, 'cpu_offer', o.id, 'Decaduta'); return { ok: false, msg: tr('{0} ha la rosa al completo', clubName(o.buyer)) }; }
         const rk = topRank(c, c.user, p);
         o.status = 'accepted';
         transfer(c, p, o.buyer);
         p.salary = Math.max(p.salary, salaryFor(p.ovr, divOf(c, o.buyer)));
-        money(c, 'cessioni', o.fee, `${p.name} a ${clubShort(o.buyer)}`);
+        money(c, 'cessioni', o.fee, ['{0} a {1}', p.name, clubShort(o.buyer)]);
         closeAction(c, 'cpu_offer', o.id, 'Accettata');
-        msg(c, 'mercato', `Ceduto ${p.name}`, `${p.first} ${p.name} passa a ${clubName(o.buyer)} per ${eur(o.fee)}.`);
-        if (rk === 0) addFans(c, -8, `I tifosi non perdonano la cessione di ${p.name}, il migliore della squadra.`);
+        msg(c, 'mercato', ['Ceduto {0}', p.name], ['{0} {1} passa a {2} per {3}.', p.first, p.name, clubName(o.buyer), { e: o.fee }]);
+        if (rk === 0) addFans(c, -8, ['I tifosi non perdonano la cessione di {0}, il migliore della squadra.', p.name]);
         else if (rk < 3) addFans(c, -4, null);
         // le altre offerte per lo stesso giocatore decadono
         c.market.incoming.filter(x => x.pid === p.id && x.status === 'open').forEach(x => { x.status = 'void'; closeAction(c, 'cpu_offer', x.id, 'Decaduta'); });
-        return { ok: true, msg: `${p.name} ceduto a ${clubShort(o.buyer)} per ${eur(o.fee)}` };
+        return { ok: true, msg: tr('{0} ceduto a {1} per {2}', p.name, clubShort(o.buyer), eur(o.fee)) };
     }
     function closeAction(c, kind, ref, label) {
         c.messages.forEach(m => { if (m.act && m.act.kind === kind && m.act.ref === ref) { m.act.done = label; } });
@@ -636,7 +697,7 @@
                 if (!p && need === 'G') p = newPlayer(c, { pos: 'G', role: 'G', ovr: rint(56, 68), age: rint(19, 32), team: null });
                 if (!p) break;
                 transfer(c, p, t); p.salary = salaryFor(p.ovr, divOf(c, t));
-                if (news && p.ovr >= 66) msg(c, 'mercato', 'Notizie di mercato', `${clubName(t)} ingaggia lo svincolato ${p.first} ${p.name} (${ROLE_LABEL[p.pos]}, ${p.ovr}).`);
+                if (news && p.ovr >= 66) msg(c, 'mercato', 'Notizie di mercato', ['{0} ingaggia lo svincolato {1} {2} ({3}, {4}).', clubName(t), p.first, p.name, { r: p.pos }, p.ovr]);
                 k = counts(c, t);
             }
             while (k.total > CFG.MAX_ROSTER - 1) {
@@ -654,7 +715,7 @@
                 const p = fa().find(x => x.pos === pos && (!weakest || x.ovr > weakest.ovr + 1));
                 if (p) {
                     transfer(c, p, t); p.salary = salaryFor(p.ovr, divOf(c, t));
-                    msg(c, 'mercato', 'Notizie di mercato', `${clubName(t)} ingaggia lo svincolato ${p.first} ${p.name} (${ROLE_LABEL[p.pos]}, ${p.ovr}).`);
+                    msg(c, 'mercato', 'Notizie di mercato', ['{0} ingaggia lo svincolato {1} {2} ({3}, {4}).', clubName(t), p.first, p.name, { r: p.pos }, p.ovr]);
                 }
             }
             // acquisto da un'altra squadra della CPU
@@ -668,7 +729,7 @@
                     const p = weighted(cand, x => 1 / valueOf(x));
                     const from = p.team, fee = round(valueOf(p) * rnd(1, 1.2), 500);
                     transfer(c, p, t);
-                    msg(c, 'mercato', 'Notizie di mercato', `${p.first} ${p.name} (${ROLE_LABEL[p.pos]}, ${p.ovr}) passa da ${clubName(from)} a ${clubName(t)} per ${eur(fee)}.`);
+                    msg(c, 'mercato', 'Notizie di mercato', ['{0} {1} ({2}, {3}) passa da {4} a {5} per {6}.', p.first, p.name, { r: p.pos }, p.ovr, clubName(from), clubName(t), { e: fee }]);
                 }
             }
         });
@@ -688,7 +749,7 @@
             const pos = k.goalies < CFG.MIN_GOALIES ? 'G' : (Math.random() < 0.35 ? 'D' : 'F');
             const p = newPlayer(c, { pos, role: pos === 'G' ? 'G' : pos === 'D' ? 'D' : pick(['C', 'LW', 'RW']), ovr: rint(50, 58), age: rint(17, 19), team: c.user, salary: 15 });
             p.num = freeNumber(c, c.user);
-            msg(c, 'club', `Dalle giovanili: ${p.name}`, `La rosa era sotto il minimo: ${p.first} ${p.name} (${ROLE_LABEL[p.pos]}, ${p.age} anni, ${p.ovr}) viene aggregato alla prima squadra con uno stipendio di ${eur(p.salary)} al mese.`);
+            msg(c, 'club', ['Dalle giovanili: {0}', p.name], ['La rosa era sotto il minimo: {0} {1} ({2}, {3} anni, {4}) viene aggregato alla prima squadra con uno stipendio di {5} al mese.', p.first, p.name, { r: p.pos }, p.age, p.ovr, { e: p.salary }]);
             k = counts(c, c.user);
         }
     }
@@ -704,7 +765,7 @@
         c.window = null;
         c.market.incoming.filter(o => o.status === 'open').forEach(o => { o.status = 'expired'; closeAction(c, 'cpu_offer', o.id, 'Scaduta'); });
         ensureMinRoster(c);
-        msg(c, 'mercato', 'Mercato chiuso', `La sessione di mercato è terminata. La tua rosa: ${counts(c, c.user).total} giocatori.`);
+        msg(c, 'mercato', 'Mercato chiuso', ['La sessione di mercato è terminata. La tua rosa: {0} giocatori.', counts(c, c.user).total]);
     }
     function marketTick(c) {
         c.market.incoming.forEach(o => {
@@ -780,8 +841,8 @@
         const fill = clamp(0.2 + 0.55 * c.fans / 100 + (big ? 0.15 : 0) + (ev.kind !== 'league' ? 0.1 : 0) + clamp((oppStrength - 70) / 100, -0.05, 0.1) + rnd(-0.05, 0.05), 0.12, 1);
         const people = Math.round(cap * fill);
         const D = CFG.DIV[userDiv(c)];
-        money(c, 'biglietti', people * D.ticket, `${people} spettatori vs ${clubShort(f.away)}`);
-        money(c, 'bar', Math.round(people * D.bar * rnd(0.85, 1.15)), `Bar • ${clubShort(f.away)}`);
+        money(c, 'biglietti', people * D.ticket, ['{0} spettatori vs {1}', people, clubShort(f.away)]);
+        money(c, 'bar', Math.round(people * D.bar * rnd(0.85, 1.15)), ['Bar • {0}', clubShort(f.away)]);
         return people;
     }
     function applyTurn(c, ev, userResult) {
@@ -813,12 +874,13 @@
             if (streak.length === 3 && streak.every(x => x === 'W')) delta += 1;
             if (streak.length === 3 && streak.every(x => x === 'L')) delta -= 1.5;
             addFans(c, delta, null);
-            if (won) c.sponsors.active.forEach(a => money(c, 'bonus', a.winBonus, `Bonus vittoria • ${sponsorById(a.sid) ? sponsorById(a.sid).name : ''}`));
+            if (won) c.sponsors.active.forEach(a => money(c, 'bonus', a.winBonus, ['Bonus vittoria • {0}', sponsorById(a.sid) ? sponsorById(a.sid).name : '']));
             c.report.match = { fixture: JSON.parse(JSON.stringify(uf)), home, opp, won, people, comp: ev.kind };
             const g = home ? uf.result.hg : uf.result.ag, ga = home ? uf.result.ag : uf.result.hg;
-            const tag = uf.result.type === 'OT' ? ' (supplementare)' : uf.result.type === 'SO' ? ` (rigori ${home ? uf.result.so[0] : uf.result.so[1]}-${home ? uf.result.so[1] : uf.result.so[0]})` : '';
-            msg(c, 'gare', `${ev.label}: ${won ? 'vittoria' : 'sconfitta'} ${g}-${ga}${tag}`,
-                `${clubName(uf.home)} - ${clubName(uf.away)} ${uf.result.hg}-${uf.result.ag}${tag}.${people ? ` Spettatori: ${people}.` : ''}`);
+            const so = uf.result.so;
+            const tag = uf.result.type === 'OT' ? ['(supplementare)'] : uf.result.type === 'SO' ? ['(rigori {0}-{1})', home ? so[0] : so[1], home ? so[1] : so[0]] : '';
+            msg(c, 'gare', [tag ? '{0}: {1} {2}-{3} {4}' : '{0}: {1} {2}-{3}', { l: ev.label }, [won ? 'vittoria' : 'sconfitta'], g, ga, tag],
+                ['{0} - {1} {2}-{3}' + (tag ? ' {4}' : '') + '.' + (people ? ' Spettatori: {5}.' : ''), clubName(uf.home), clubName(uf.away), uf.result.hg, uf.result.ag, tag, people]);
         }
         // fine della regular season
         if (regBefore && s.phase === 'playoff') {
@@ -826,8 +888,10 @@
             c.lastRank = pos;
             c.season.regularPos = pos;
             const nPo = E.playoffTeams(s), nT = s.teams.length;
-            if (pos > nPo) addFans(c, -6, `Stagione regolare chiusa al ${pos}° posto: niente play-off.`);
-            msg(c, 'gare', 'Regular season conclusa', `${clubName(c.user)} chiude al ${pos}° posto${pos <= nPo ? ` e si qualifica ai play-off ${userDiv(c) === 'A' ? 'scudetto' : 'promozione'}.` : '.'}${userDiv(c) === 'A' && pos === nT ? ' Ultimo posto: a fine stagione si retrocede in Serie B.' : ''}`);
+            if (pos > nPo) addFans(c, -6, ['Stagione regolare chiusa al {0} posto: niente play-off.', { o: pos }]);
+            let body = [pos > nPo ? '{0} chiude al {1} posto.' : userDiv(c) === 'A' ? '{0} chiude al {1} posto e si qualifica ai play-off scudetto.' : '{0} chiude al {1} posto e si qualifica ai play-off promozione.', clubName(c.user), { o: pos }];
+            if (userDiv(c) === 'A' && pos === nT) body = ['{0} Ultimo posto: a fine stagione si retrocede in Serie B.', body];
+            msg(c, 'gare', 'Regular season conclusa', body);
         }
         if (ev.kind === 'playoff') trackPlayoffs(c, s, before);
         if (ev.kind === 'cup') trackCup(c, s);
@@ -856,7 +920,7 @@
         c.div.A = c.div.A.filter(t => t !== down).concat([up]);
         c.div.B = c.div.B.filter(t => t !== up).concat([down]);
         c.season.moved = down === c.user ? 'Retrocessa in Serie B' : (up === c.user ? 'Promossa in Serie A' : null);
-        msg(c, 'gare', 'Promozione e retrocessione', `${clubName(up)} vince la Serie B e sale in Serie A. ${clubName(down)}, ultima in Serie A, retrocede in Serie B.`);
+        msg(c, 'gare', 'Promozione e retrocessione', ['{0} vince la Serie B e sale in Serie A. {1}, ultima in Serie A, retrocede in Serie B.', clubName(up), clubName(down)]);
         if (down === c.user) {
             addFans(c, -12, 'Retrocessione: i tifosi sono furiosi.');
             msg(c, 'club', 'Retrocessi in Serie B', 'La prossima stagione si gioca in Serie B: incassi, sponsor e ingaggi più bassi. Obiettivo: tornare subito in Serie A vincendo i play-off.');
@@ -885,20 +949,20 @@
                 if (won) {
                     money(c, 'premi', PZ.win, userDiv(c) === 'A' ? 'Scudetto' : 'Serie B vinta');
                     c.trophies.push({ season: c.seasonYear, comp: userDiv(c) === 'A' ? 'serie_a' : 'serie_b' });
-                    c.sponsors.active.forEach(a => money(c, 'bonus', a.trophyBonus, `Bonus trofeo • ${sponsorById(a.sid) ? sponsorById(a.sid).name : ''}`));
+                    c.sponsors.active.forEach(a => money(c, 'bonus', a.trophyBonus, ['Bonus trofeo • {0}', sponsorById(a.sid) ? sponsorById(a.sid).name : '']));
                     addFans(c, 14, userDiv(c) === 'A' ? 'Campioni d\'Italia!' : 'Serie B vinta: si sale in Serie A!');
                     c.season.playoff = 'Campione';
                 } else {
                     addFans(c, 4, null);
                     c.season.playoff = 'Finale';
                 }
-                msg(c, 'finanze', `Premio finale ${PZ.label}`, `Finale disputata: ${eur(PZ.final)}${won ? ` + ${eur(PZ.win)} per la vittoria` : ''}.`);
+                msg(c, 'finanze', `Premio finale ${PZ.label}`, won ? ['Finale disputata: {0} + {1} per la vittoria.', { e: PZ.final }, { e: PZ.win }] : ['Finale disputata: {0}.', { e: PZ.final }]);
             } else if (won) {
-                msg(c, 'gare', `Play-off: passaggio del turno`, `${PO_STAGE[roundJustPlayed]} vinti ${mine[0]}-${mine[1]}.`);
+                msg(c, 'gare', 'Play-off: passaggio del turno', ['{0} vinti {1}-{2}.', [PO_STAGE[roundJustPlayed]], mine[0], mine[1]]);
             } else {
                 c.season.playoff = PO_STAGE[roundJustPlayed];
                 if (roundJustPlayed === 0) addFans(c, -2, null);
-                msg(c, 'gare', 'Eliminati dai play-off', `${PO_STAGE[roundJustPlayed]} persi ${mine[0]}-${mine[1]}.`);
+                msg(c, 'gare', 'Eliminati dai play-off', ['{0} persi {1}-{2}.', [PO_STAGE[roundJustPlayed]], mine[0], mine[1]]);
             }
         }
     }
@@ -915,14 +979,14 @@
             if (won) {
                 money(c, 'premi', CFG.PRIZES.cupWin, 'Coppa Italia vinta');
                 c.trophies.push({ season: c.seasonYear, comp: 'coppa_italia' });
-                c.sponsors.active.forEach(a => money(c, 'bonus', a.trophyBonus, `Bonus trofeo • ${sponsorById(a.sid) ? sponsorById(a.sid).name : ''}`));
+                c.sponsors.active.forEach(a => money(c, 'bonus', a.trophyBonus, ['Bonus trofeo • {0}', sponsorById(a.sid) ? sponsorById(a.sid).name : '']));
                 addFans(c, 9, 'La Coppa Italia è nostra!');
             } else addFans(c, 3, null);
             c.season.cup = won ? 'Vinta' : 'Finale';
-            msg(c, 'finanze', 'Premio Coppa Italia', `Finale disputata: ${eur(CFG.PRIZES.cupFinal)}${won ? ` + ${eur(CFG.PRIZES.cupWin)} per la vittoria` : ''}.`);
+            msg(c, 'finanze', 'Premio Coppa Italia', won ? ['Finale disputata: {0} + {1} per la vittoria.', { e: CFG.PRIZES.cupFinal }, { e: CFG.PRIZES.cupWin }] : ['Finale disputata: {0}.', { e: CFG.PRIZES.cupFinal }]);
         } else if (!won) {
             c.season.cup = E.CUP_ROUNDS[lastIdx].label;
-            msg(c, 'gare', 'Fuori dalla Coppa Italia', `Eliminati ai ${E.CUP_ROUNDS[lastIdx].label.toLowerCase()}.`);
+            msg(c, 'gare', 'Fuori dalla Coppa Italia', ['Eliminati ai {0}.', { lc: [E.CUP_ROUNDS[lastIdx].label] }]);
         }
     }
 
@@ -938,7 +1002,7 @@
         Object.values(c.players).forEach(p => {
             const prob = p.age >= 35 ? 0.3 + (p.age - 35) * 0.2 : p.age === 34 ? 0.1 : 0;
             if (Math.random() >= prob) return;
-            if (p.team === c.user) msg(c, 'club', `${p.name} si ritira`, `${p.first} ${p.name} appende i pattini al chiodo a ${p.age} anni. Grazie di tutto!`);
+            if (p.team === c.user) msg(c, 'club', ['{0} si ritira', p.name], ['{0} {1} appende i pattini al chiodo a {2} anni. Grazie di tutto!', p.first, p.name, p.age]);
             delete c.players[p.id];
         });
     }
@@ -964,10 +1028,10 @@
         expired.forEach(a => {
             const sp = sponsorById(a.sid);
             if (sp && c.rep >= minRepFor(sp.tier)) {
-                msg(c, 'sponsor', `Contratto scaduto: ${sp.name}`, `${sp.name} è soddisfatto della collaborazione e propone il rinnovo.`);
+                msg(c, 'sponsor', ['Contratto scaduto: {0}', sp.name], ['{0} è soddisfatto della collaborazione e propone il rinnovo.', sp.name]);
                 sponsorOffer(c, a.slot, a.sid, false);
             } else if (sp) {
-                msg(c, 'sponsor', `Contratto scaduto: ${sp.name}`, `${sp.name} non rinnova la sponsorizzazione.`);
+                msg(c, 'sponsor', ['Contratto scaduto: {0}', sp.name], ['{0} non rinnova la sponsorizzazione.', sp.name]);
             }
         });
         progressPlayers(c);
@@ -978,7 +1042,7 @@
         c.summerWeek = 0;
         c.ledger = c.ledger.filter(l => l.s >= c.seasonYear - 1);
         openWindow(c, 'summer');
-        msg(c, 'club', `Stagione ${seasonLabelOf(c.seasonYear - 1)} archiviata`, `Saldo ${eur(c.balance)} • tifosi ${fansMood(c.fans).toLowerCase()} (${Math.round(c.fans)}). Si prepara la stagione ${seasonLabelOf(c.seasonYear)}.`);
+        msg(c, 'club', ['Stagione {0} archiviata', seasonLabelOf(c.seasonYear - 1)], ['Saldo {0} • tifosi {1} ({2}). Si prepara la stagione {3}.', { e: c.balance }, { lc: [fansMood(c.fans)] }, Math.round(c.fans), seasonLabelOf(c.seasonYear)]);
         for (let i = 0; i < 2; i++) sponsorOffer(c);
     }
 
@@ -1023,9 +1087,10 @@
                 c.season = {};
                 c.form = [];
                 c.stage = 'first_half';
-                msg(c, 'gare', `Al via la ${CFG.DIV[userDiv(c)].name} ${seasonLabelOf(c.seasonYear)}`, userDiv(c) === 'A'
-                    ? `Girone all'italiana con andata e ritorno (${c.league.rounds.length} giornate), poi i play-off scudetto per le prime ${engine().playoffTeams(c.league)}. L'ultima retrocede in Serie B. A gennaio la Coppa Italia.`
-                    : `Girone all'italiana con andata e ritorno (${c.league.rounds.length} giornate), poi i play-off promozione per le prime ${engine().playoffTeams(c.league)}: chi li vince sale in Serie A.`);
+                msg(c, 'gare', ['Al via la {0} {1}', CFG.DIV[userDiv(c)].name, seasonLabelOf(c.seasonYear)], [userDiv(c) === 'A'
+                    ? "Girone all'italiana con andata e ritorno ({0} giornate), poi i play-off scudetto per le prime {1}. L'ultima retrocede in Serie B. A gennaio la Coppa Italia."
+                    : "Girone all'italiana con andata e ritorno ({0} giornate), poi i play-off promozione per le prime {1}: chi li vince sale in Serie A.",
+                    c.league.rounds.length, engine().playoffTeams(c.league)]);
                 break;
             case 'league':
             case 'playoff':
@@ -1039,8 +1104,8 @@
                 c.cup = engine().newCup(c.user, seasonLabelOf(c.seasonYear));
                 openWindow(c, 'winter');
                 msg(c, 'gare', 'Sorteggio della Coppa Italia', c.cup.teams.includes(c.user)
-                    ? `Tabellone a gare secche con le migliori ${c.cup.teams.length} squadre. Ai quarti: ${(() => { const f = c.cup.cup.rounds[0].find(x => x.home === c.user || x.away === c.user); return f ? `${clubName(f.home)} - ${clubName(f.away)}` : '—'; })()}.`
-                    : `La Coppa Italia è riservata alle squadre di Serie A: quest'anno ${clubName(c.user)} la guarda da fuori.`);
+                    ? ['Tabellone a gare secche con le migliori {0} squadre. Ai quarti: {1}.', c.cup.teams.length, (() => { const f = c.cup.cup.rounds[0].find(x => x.home === c.user || x.away === c.user); return f ? `${clubName(f.home)} - ${clubName(f.away)}` : '—'; })()]
+                    : ["La Coppa Italia è riservata alle squadre di Serie A: quest'anno {0} la guarda da fuori.", clubName(c.user)]);
                 break;
             case 'cup':
                 applyTurn(c, ev, userResult);
@@ -1061,10 +1126,10 @@
         pushHistory(c);
         if (c.balance < 0) {
             c.over = { date: c.date, balance: Math.round(c.balance) };
-            msg(c, 'finanze', 'Fallimento', `Il saldo è sceso a ${eur(c.balance)}: la società non può far fronte ai debiti e viene dichiarata fallita.`);
+            msg(c, 'finanze', 'Fallimento', ['Il saldo è sceso a {0}: la società non può far fronte ai debiti e viene dichiarata fallita.', { e: c.balance }]);
         } else if (c.balance < monthlyCosts(c) * 2 && !c.warnedLow) {
             c.warnedLow = true;
-            msg(c, 'finanze', 'Allarme cassa', `Restano ${eur(c.balance)}: bastano per meno di due mesi di spese (${eur(monthlyCosts(c))} al mese). Se il saldo va sotto zero la società fallisce.`);
+            msg(c, 'finanze', 'Allarme cassa', ['Restano {0}: bastano per meno di due mesi di spese ({1} al mese). Se il saldo va sotto zero la società fallisce.', { e: c.balance }, { e: monthlyCosts(c) }]);
         } else if (c.balance > monthlyCosts(c) * 4) c.warnedLow = false;
         const rep = c.report;
         rep.balanceAfter = c.balance;
@@ -1103,8 +1168,9 @@
         updateReputation(c);
         syncWorld(c);
         openWindow(c, 'summer');
-        msg(c, 'club', `Benvenuto alla guida di ${clubName(user)}`,
-            `Il presidente ti affida la squadra con un budget di ${eur(c.balance)}. Ogni mese paghi gli stipendi (${eur(payroll(c))}) e ogni settimana l'affitto del palazzetto (${eur(arenaFee(user, c))}). Si parte in ${CFG.DIV[userDiv(c)].name}: l'ultima di Serie A retrocede, la vincente dei play-off di Serie B sale. Biglietti, bar, sponsor e premi portano entrate. Se il saldo va sotto zero la società fallisce.`);
+        msg(c, 'club', ['Benvenuto alla guida di {0}', clubName(user)],
+            ["Il presidente ti affida la squadra con un budget di {0}. Ogni mese paghi gli stipendi ({1}) e ogni settimana l'affitto del palazzetto ({2}). Si parte in {3}: l'ultima di Serie A retrocede, la vincente dei play-off di Serie B sale. Biglietti, bar, sponsor e premi portano entrate. Se il saldo va sotto zero la società fallisce.",
+                { e: c.balance }, { e: payroll(c) }, { e: arenaFee(user, c) }, CFG.DIV[userDiv(c)].name]);
         sponsorOffer(c, 'main');
         sponsorOffer(c, 'sec');
         sponsorOffer(c, 'sec');
@@ -1121,6 +1187,7 @@
         acceptSponsor, rejectSponsor, freeSlots, sponsorById, maxTier,
         payroll, sponsorMonthly, arenaFee, arenaMonthly, monthlyCosts, arenaCapacity, arenaName,
         fansMood, expectedRank, currentRank, windowOpen, negotiation,
+        txt, msgTitle, msgBody, ledgerNote, evLabel,
         eur, dateLabel, seasonLabelOf, dAdd, dDiff, clubName, clubShort
     };
 })();

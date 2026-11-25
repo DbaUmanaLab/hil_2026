@@ -78,7 +78,7 @@
                 cands.push({
                     side, skater: sk, num: p.num, name: p.name, isGoalie: false,
                     score: p.goals * 3 + (p.gwg ? 1.5 : 0) + p.last * 0.01,
-                    line: `${p.goals} ${p.goals === 1 ? 'gol' : 'gol'}${p.gwg ? ' • rete decisiva' : ''}`
+                    line: (p.goals === 1 ? _t('1 gol') : _t('{0} gol', p.goals)) + (p.gwg ? ' • ' + _t('rete decisiva') : '')
                 });
             });
             const gk = skaters.find(s => s.team === side && s.isGoalie);
@@ -88,7 +88,7 @@
                 cands.push({
                     side, skater: gk, num: gk.jerseyNum, name: skaterFullName(gk), isGoalie: true,
                     score: saves * 0.3 - against * 0.8 + (against === 0 ? 3 : 0),
-                    line: `${saves} parate • ${against === 0 ? 'porta inviolata' : `${against} ${against === 1 ? 'gol subito' : 'gol subiti'}`}`
+                    line: `${saves === 1 ? _t('1 parata') : _t('{0} parate', saves)} • ${against === 0 ? _t('porta inviolata') : (against === 1 ? _t('1 gol subito') : _t('{0} gol subiti', against))}`
                 });
             }
         });
@@ -155,15 +155,15 @@
         const st = periodStats();
         const row = (label, h, g, th, tg) => {
             const tot = h + g, hp = tot ? Math.round(h / tot * 100) : 50;
-            return `<div class="pb-row"><b>${h}</b><div class="pb-mid"><span>${label}</span><div class="pb-bar"><i style="width:${hp}%;background:${col.home}"></i><i style="width:${100 - hp}%;background:${col.guestBar}"></i></div><small>totale ${th} - ${tg}</small></div><b>${g}</b></div>`;
+            return `<div class="pb-row"><b>${h}</b><div class="pb-mid"><span>${label}</span><div class="pb-bar"><i style="width:${hp}%;background:${col.home}"></i><i style="width:${100 - hp}%;background:${col.guestBar}"></i></div><small>${_t('totale {0} - {1}', th, tg)}</small></div><b>${g}</b></div>`;
         };
-        const ord = n => (n > TOTAL_PERIODS ? 'supplementare' : `${n}° periodo`);
+        const ord = n => (n > TOTAL_PERIODS ? _t('supplementare') : _t('{0} periodo', I18N.ord(n)));
         const scorers = st.goals.length
             ? st.goals.map(s => `<span class="pb-sc" style="--c:${s.team === 'home' ? col.home : col.guestBar}">${esc(s.timeStr)} • #${esc(s.num)} ${esc(s.name)}</span>`).join('')
             : '<span class="pb-none">Nessun gol nel periodo</span>';
         ui.pb.innerHTML = `
             <div class="pb-card" style="--home:${col.home};--guest:${col.guestBar}">
-                <div class="pb-head"><span>${pb.goingToOvertime ? 'Parità al termine dei tempi regolamentari' : `Fine ${ord(currentPeriod)}`}</span><em>Riepilogo del periodo</em></div>
+                <div class="pb-head"><span>${pb.goingToOvertime ? 'Parità al termine dei tempi regolamentari' : _t('Fine {0}', ord(currentPeriod))}</span><em>Riepilogo del periodo</em></div>
                 <div class="pb-score">
                     <div class="pb-team">${getClubLogoSVG(H.id, 'pb-logo')}<span>${esc(H.shortName || H.name)}</span></div>
                     <div class="pb-nums">${scoreHome}<i>-</i>${scoreGuest}</div>
@@ -175,7 +175,7 @@
                     ${row('Parate', st.hv, st.gv, matchStats.homeSaves, matchStats.guestSaves)}
                 </div>
                 <div class="pb-scorers">${scorers}</div>
-                <div class="pb-actions"><button type="button" class="pb-btn" data-pb-go data-focus>${pb.goingToOvertime ? 'Supplementare • golden goal ▶' : `Inizia il ${currentPeriod + 1}° periodo ▶`}</button></div>
+                <div class="pb-actions"><button type="button" class="pb-btn" data-pb-go data-focus>${pb.goingToOvertime ? 'Supplementare • golden goal ▶' : _t('Inizia il {0} periodo ▶', I18N.ord(currentPeriod + 1))}</button></div>
             </div>`;
         ui.pb.querySelector('[data-pb-go]').onclick = endPeriodBreak;
     }
@@ -247,8 +247,8 @@
         requestAnimationFrame(() => { const b = ui.pg.querySelector('[data-pg-go]'); if (b) b.focus({ preventScroll: true }); });
     }
     function resultNote() {
-        if (matchShootout) return `ai rigori ${matchShootout.home}-${matchShootout.guest}`;
-        if (currentPeriod > TOTAL_PERIODS) return 'dopo il supplementare';
+        if (matchShootout) return _t('ai rigori {0}-{1}', matchShootout.home, matchShootout.guest);
+        if (currentPeriod > TOTAL_PERIODS) return _t('dopo il supplementare');
         return '';
     }
     function renderPostOverlay() {
@@ -266,7 +266,7 @@
             ${mvp ? `<div class="pg-mvp" style="--c:${colorsOf(mvp.side)[0]}">
                 <div class="pg-mvp-tag">MVP<small>della partita</small></div>
                 ${getClubLogoSVG(mc.id, 'pg-mvp-logo')}
-                <div class="pg-mvp-txt"><b><i>#${esc(mvp.num)}</i> ${esc(mvp.name)}</b><span>${esc(mc.shortName || mc.name)} • ${mvp.isGoalie ? 'portiere' : 'giocatore di movimento'}</span><em>${esc(mvp.line)}</em></div>
+                <div class="pg-mvp-txt"><b><i>#${esc(mvp.num)}</i> ${esc(mvp.name)}</b><span>${esc(mc.shortName || mc.name)} • ${mvp.isGoalie ? _t('portiere') : _t('giocatore di movimento')}</span><em>${esc(mvp.line)}</em></div>
             </div>` : ''}
             <div class="pg-actions"><button type="button" class="pb-btn" data-pg-go data-focus>Statistiche finali ▶</button></div>`;
         ui.pg.querySelector('[data-pg-go]').onclick = endPostMatch;

@@ -5,6 +5,7 @@ Lanciato da Xcode a ogni build (fase "Copia il gioco web" in project.yml); a man
     python3 deploy/ios/scripts/sync-web.py <cartella di destinazione>
 
 - Copia solo i file cambiati e toglie quelli che non esistono più: le build successive sono veloci.
+- Gli asset sono quelli alleggeriti da tools/bundle_assets.py (in deploy/bundle-assets/, come per Android).
 - Versione offline (default; HIL_OFFLINE=0 per disattivarla): la prima volta scarica in deploy/ios/vendor/
   Phaser 3.60, Tailwind (Play CDN 3.4.17) e i font Google, e nella copia di index.html i link ai CDN
   diventano quelli locali (come la build Android). L'index.html del repository non viene toccato.
@@ -12,6 +13,7 @@ Lanciato da Xcode a ogni build (fase "Copia il gioco web" in project.yml); a man
 import os
 import re
 import shutil
+import subprocess
 import sys
 import urllib.request
 
@@ -108,6 +110,17 @@ def sync_tree(src_root, dst_root):
     return copied
 
 
+def bundled_assets():
+    """Asset alleggeriti (tools/bundle_assets.py, in deploy/bundle-assets/): niente foto originali e file
+    inutilizzati, texture e immagini ricompresse. Se lo script non riesce si usano gli asset originali."""
+    out = os.path.join(ROOT, 'deploy', 'bundle-assets', 'assets')
+    r = subprocess.run([sys.executable, os.path.join(ROOT, 'tools', 'bundle_assets.py'), out])
+    if r.returncode == 0 and os.path.isdir(out):
+        return out
+    print('sync-web: warning: tools/bundle_assets.py non riuscito, copio gli asset originali')
+    return os.path.join(ROOT, 'assets')
+
+
 def main():
     dst = dest_dir()
     os.makedirs(dst, exist_ok=True)
@@ -116,9 +129,8 @@ def main():
             download_vendor()
         except Exception as e:      # senza rete la build continua: l'app userà i CDN
             print('sync-web: warning: librerie offline non scaricate (%s): servirà la rete' % e)
-    copied = 0
-    for sub in ('src', 'assets'):
-        copied += sync_tree(os.path.join(ROOT, sub), os.path.join(dst, sub))
+    copied = sync_tree(os.path.join(ROOT, 'src'), os.path.join(dst, 'src'))
+    copied += sync_tree(bundled_assets(), os.path.join(dst, 'assets'))
     vendor_ok = OFFLINE and os.path.exists(os.path.join(VENDOR, 'fonts.css'))
     if vendor_ok:
         copied += sync_tree(VENDOR, os.path.join(dst, 'vendor'))

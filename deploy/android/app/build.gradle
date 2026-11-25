@@ -119,17 +119,42 @@ tasks.register('downloadWebVendor') {
 }
 
 // ---------------------------------------------------------------------------
+// Asset alleggeriti per l'app (tools/bundle_assets.py): niente foto originali e file inutilizzati,
+// texture e immagini ricompresse. Il risultato sta in deploy/bundle-assets/ (incrementale, ignorato da git).
+// Se Python non c'è, la build usa assets/ così com'è. -Phil.python=... per indicare l'interprete.
+// ---------------------------------------------------------------------------
+def bundleDir = rootProject.file('../bundle-assets/assets')
+def pythonExe = (findProperty('hil.python') ?: (System.getProperty('os.name').toLowerCase().contains('win') ? 'python' : 'python3')).toString()
+
+tasks.register('bundleAssets', Exec) {
+    description = 'Prepara gli asset alleggeriti per l\'APK (tools/bundle_assets.py)'
+    workingDir webRoot
+    commandLine pythonExe, 'tools/bundle_assets.py', bundleDir.absolutePath
+    ignoreExitValue = true
+    doLast {
+        if (executionResult.get().exitValue != 0) {
+            logger.warn('HIL: tools/bundle_assets.py non riuscito: nell\'APK vanno gli asset originali')
+            new File(bundleDir.parentFile, 'manifest.json').delete()
+            bundleDir.deleteDir()
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Copia del gioco dentro gli asset dell'APK (assets/web/...) a ogni build
 // ---------------------------------------------------------------------------
 tasks.register('syncWebAssets', Sync) {
-    description = 'Copia index.html, src/ e assets/ del gioco negli asset dell\'APK'
-    dependsOn 'downloadWebVendor'
+    description = 'Copia index.html, src/ e gli asset alleggeriti del gioco negli asset dell\'APK'
+    dependsOn 'downloadWebVendor', 'bundleAssets'
     filteringCharset = 'UTF-8'   // index.html è UTF-8 (su Windows il default sarebbe cp1252)
     into webOut.map { it.dir('web') }
     from(webRoot) {
         include 'index.html'
         include 'src/**'
-        include 'assets/**'
+    }
+    // gli asset alleggeriti se ci sono, altrimenti quelli originali (scelta fatta al momento della copia)
+    from({ bundleDir.isDirectory() ? bundleDir : new File(webRoot, 'assets') }) {
+        into 'assets'
     }
     if (offline) {
         from(vendorDir) { into 'vendor' }

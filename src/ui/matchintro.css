@@ -1,0 +1,119 @@
+/* --- src/ui/matchintro.css ---
+   Presentazione della partita e scelta del livello (src/ui/MatchIntro.js). */
+
+/* ------------------------------------------------------------------ schermata di presentazione */
+.cp-overlay.mi-screen { z-index: 9400; padding: 0; background: #050913; backdrop-filter: none; display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity .22s ease; --mi-home: #1e293b; --mi-guest: #1e293b; }
+.mi-screen.is-in { opacity: 1; }
+.mi-bg { position: absolute; inset: -24px; background-size: cover; background-position: center; filter: blur(7px) saturate(1.1) brightness(.62); transform: scale(1.04); }
+.mi-shade { position: absolute; inset: 0; pointer-events: none;
+    background:
+        radial-gradient(ellipse 55% 75% at 0% 55%, color-mix(in srgb, var(--mi-home) 55%, transparent), transparent 70%),
+        radial-gradient(ellipse 55% 75% at 100% 55%, color-mix(in srgb, var(--mi-guest) 55%, transparent), transparent 70%),
+        linear-gradient(180deg, rgba(3,6,18,.72) 0%, rgba(3,6,18,.35) 30%, rgba(3,6,18,.45) 70%, rgba(3,6,18,.9) 100%); }
+.mi-wrap { position: relative; width: min(1320px, 100%); padding: clamp(14px, 2.4vh, 28px) clamp(16px, 3vw, 40px); display: flex; flex-direction: column; gap: clamp(10px, 2vh, 22px);
+    transform: translateY(10px); transition: transform .3s cubic-bezier(.2,.8,.2,1); }
+.mi-screen.is-in .mi-wrap { transform: none; }
+
+.mi-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 12px; }
+.mi-kicker { font-family: 'Oswald', sans-serif; font-size: clamp(12px, 1.2vw, 14px); letter-spacing: .32em; text-transform: uppercase; color: var(--bx-gold, #f6b511); font-weight: 700; }
+.mi-arena { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.mi-arena b { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: clamp(18px, 2.2vw, 28px); text-transform: uppercase; letter-spacing: .03em; color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,.6); }
+.mi-arena small { font-size: clamp(11px, 1.05vw, 13px); letter-spacing: .14em; text-transform: uppercase; color: rgba(255,255,255,.72); }
+.mi-time { justify-self: end; font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.82); padding: 6px 12px; border-radius: 999px; background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.14); }
+
+.mi-match { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: stretch; gap: clamp(10px, 2vw, 28px); }
+.mi-vs { display: flex; align-items: flex-start; padding-top: clamp(60px, 11vh, 120px); }
+.mi-vs span { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: clamp(26px, 3.6vw, 52px); color: #fff; letter-spacing: .04em;
+    text-shadow: 0 0 24px rgba(246,181,17,.45); padding: 10px 6px; border-top: 2px solid var(--bx-gold, #f6b511); border-bottom: 2px solid var(--bx-gold, #f6b511); }
+
+.mi-side { display: flex; flex-direction: column; gap: clamp(8px, 1.4vh, 14px); min-width: 0; }
+.mi-badge { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; }
+.mi-who { font-size: 11px; letter-spacing: .26em; text-transform: uppercase; color: rgba(255,255,255,.7); font-weight: 600; }
+.mi-side.is-user .mi-who { color: var(--bx-gold, #f6b511); }
+.mi-logo { width: clamp(84px, 13vh, 150px); height: clamp(84px, 13vh, 150px); display: grid; place-items: center; filter: drop-shadow(0 10px 22px rgba(0,0,0,.55)); }
+.mi-logo img, .mi-logo-svg { max-width: 100%; max-height: 100%; object-fit: contain; }
+.mi-badge h3 { margin: 4px 0 0; font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: clamp(16px, 1.9vw, 26px); text-transform: uppercase; line-height: 1.05; color: #fff; text-shadow: 0 2px 10px rgba(0,0,0,.6); }
+.mi-league { font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: rgba(255,255,255,.6); }
+
+.mi-rats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.mi-rat { display: grid; grid-template-columns: 1fr auto; gap: 3px 6px; align-items: center; }
+.mi-rat small { font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: rgba(255,255,255,.62); }
+.mi-rat b { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: 13px; color: #fff; grid-row: 1; grid-column: 2; }
+.mi-rat-bar { grid-column: 1 / -1; height: 5px; border-radius: 3px; background: rgba(255,255,255,.12); overflow: hidden; }
+.mi-rat-bar i { display: block; height: 100%; border-radius: 3px; background: linear-gradient(90deg, var(--bx-gold, #f6b511), #ffd76a); }
+
+.mi-roster { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 10px; border-radius: 12px;
+    background: rgba(6,10,26,.62); border: 1px solid rgba(255,255,255,.1); backdrop-filter: blur(4px); }
+.mi-side.is-home .mi-roster { box-shadow: inset 3px 0 0 var(--mi-home); }
+.mi-side.is-guest .mi-roster { box-shadow: inset -3px 0 0 var(--mi-guest); }
+.mi-line h5 { margin: 0 0 3px; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--bx-gold, #f6b511); font-weight: 700; }
+.mi-line ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 1px; }
+.mi-line li { display: grid; grid-template-columns: 2.2em 2.1em minmax(0, 1fr); align-items: baseline; font-size: clamp(11px, 1.05vw, 13px); line-height: 1.35; color: #e2e8f0; }
+.mi-num { font-family: 'Montserrat', sans-serif; font-weight: 900; color: #fff; text-align: right; padding-right: 6px; }
+.mi-pos { font-size: .82em; letter-spacing: .08em; color: rgba(255,255,255,.5); }
+.mi-name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: uppercase; letter-spacing: .03em; }
+.mi-line.is-goalie { grid-column: 1 / -1; }
+.mi-coach { grid-column: 1 / -1; display: flex; gap: 8px; align-items: baseline; padding-top: 6px; border-top: 1px solid rgba(255,255,255,.08); font-size: 12px; color: #e2e8f0; }
+.mi-coach small { font-size: 10px; letter-spacing: .22em; text-transform: uppercase; color: rgba(255,255,255,.55); }
+
+.mi-actions { display: flex; justify-content: center; align-items: center; gap: 14px; flex-wrap: wrap; }
+.mi-btn { appearance: none; cursor: pointer; font-family: 'Oswald', sans-serif; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; font-size: clamp(13px, 1.2vw, 15px);
+    padding: 12px 22px; border-radius: 8px; color: #fff; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2); transition: background .15s, transform .15s, box-shadow .15s; }
+.mi-btn:hover, .mi-btn:focus-visible, .mi-btn.uk-focus { background: rgba(255,255,255,.2); transform: translateY(-1px); outline: none; }
+.mi-btn.is-go { padding: 14px 34px; font-size: clamp(15px, 1.45vw, 18px); color: #0b1020; background: var(--bx-gold, #f6b511); border-color: transparent; box-shadow: 0 10px 28px rgba(246,181,17,.3); }
+.mi-btn.is-go:hover, .mi-btn.is-go:focus-visible, .mi-btn.is-go.uk-focus { background: #ffc93a; box-shadow: 0 0 0 3px rgba(255,255,255,.75), 0 10px 28px rgba(246,181,17,.4); }
+
+/* livello attuale: etichetta, pallino colorato e nome, "Cambia" */
+.mi-btn.mi-diff { --lv: #facc15; display: inline-grid; grid-template-columns: auto auto; grid-template-rows: auto auto; column-gap: 12px; align-items: center; text-align: left; padding: 8px 18px; }
+.mi-btn.mi-diff.mi-diff-easy { --lv: #4ade80; }
+.mi-btn.mi-diff.mi-diff-hard { --lv: #f87171; }
+.mi-diff small { grid-column: 1; font-size: 10px; letter-spacing: .24em; color: rgba(255,255,255,.6); }
+.mi-diff b { grid-column: 1; display: flex; align-items: center; gap: 8px; font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: clamp(14px, 1.3vw, 17px); letter-spacing: .04em; }
+.mi-diff b i { width: 10px; height: 10px; border-radius: 50%; background: var(--lv); box-shadow: 0 0 8px var(--lv); }
+.mi-diff em { grid-column: 2; grid-row: 1 / span 2; font-style: normal; font-size: 11px; letter-spacing: .18em; color: var(--lv); padding-left: 12px; border-left: 1px solid rgba(255,255,255,.18); }
+.mi-btn.mi-diff:hover, .mi-btn.mi-diff:focus-visible, .mi-btn.mi-diff.uk-focus { border-color: var(--lv); }
+
+@media (max-width: 760px) {
+    .mi-top { grid-template-columns: 1fr; justify-items: center; }
+    .mi-time { justify-self: center; }
+    .mi-roster { grid-template-columns: 1fr; }
+    .mi-rats { grid-template-columns: 1fr; }
+}
+
+/* ------------------------------------------------------------------ scelta del livello */
+.cp-overlay.mi-levels { z-index: 9550; opacity: 0; transition: opacity .18s ease; }
+.mi-levels.is-in { opacity: 1; }
+.mi-levels.is-sheet { align-items: end; padding: 0; background: linear-gradient(180deg, rgba(3,6,18,.15) 0%, rgba(3,6,18,.82) 45%); backdrop-filter: blur(2px); }
+.mi-lv-panel { width: min(980px, 100%); display: flex; flex-direction: column; gap: clamp(12px, 2vh, 18px); align-items: center; padding: clamp(18px, 3vh, 28px);
+    border-radius: 16px; background: linear-gradient(180deg, rgba(15,26,64,.92), rgba(8,14,38,.96)); border: 1px solid rgba(255,255,255,.12); box-shadow: 0 24px 60px rgba(0,0,0,.5); }
+.mi-levels.is-sheet .mi-lv-panel { width: min(1100px, 100%); border-radius: 18px 18px 0 0; border-bottom: 0; transform: translateY(40px); transition: transform .24s cubic-bezier(.2,.8,.2,1); }
+.mi-levels.is-sheet.is-in .mi-lv-panel { transform: none; }
+.mi-lv-head { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; }
+.mi-lv-head h2 { margin: 0; font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: clamp(22px, 3vw, 36px); text-transform: uppercase; color: #fff; }
+.mi-lv-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; width: 100%; }
+.mi-lv { --lv: #facc15; appearance: none; cursor: pointer; position: relative; overflow: hidden; display: flex; flex-direction: column; gap: 10px; text-align: left;
+    padding: 18px 16px 16px; border-radius: 14px; color: #fff; font-family: 'Oswald', sans-serif;
+    background: linear-gradient(180deg, color-mix(in srgb, var(--lv) 16%, rgba(255,255,255,.04)), rgba(255,255,255,.03) 60%);
+    border: 1.5px solid rgba(255,255,255,.12); transition: transform .16s, border-color .16s, box-shadow .16s, background .16s; }
+.mi-lv::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 4px; background: var(--lv); }
+.mi-lv-easy { --lv: #4ade80; }
+.mi-lv-normal { --lv: #facc15; }
+.mi-lv-hard { --lv: #f87171; }
+.mi-lv:hover, .mi-lv:focus-visible, .mi-lv.uk-focus { outline: none; transform: translateY(-3px); border-color: var(--lv); box-shadow: 0 0 0 3px color-mix(in srgb, var(--lv) 30%, transparent), 0 16px 32px rgba(0,0,0,.35); }
+.mi-lv-top { display: flex; justify-content: space-between; gap: 8px; align-items: center; min-height: 18px; }
+.mi-lv-top em { font-style: normal; font-size: 10px; letter-spacing: .24em; text-transform: uppercase; color: var(--lv); font-weight: 700; }
+.mi-lv-top i { font-style: normal; font-size: 9px; letter-spacing: .18em; text-transform: uppercase; color: #0b1020; background: rgba(255,255,255,.85); padding: 2px 7px; border-radius: 999px; font-weight: 700; }
+.mi-lv b { font-family: 'Montserrat', sans-serif; font-weight: 900; font-size: clamp(22px, 2.6vw, 32px); text-transform: uppercase; letter-spacing: .02em; line-height: 1; }
+.mi-lv-meters { display: flex; flex-direction: column; gap: 6px; }
+.mi-meter { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.mi-meter small { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: rgba(255,255,255,.7); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mi-meter > span { display: flex; gap: 3px; }
+.mi-meter i { width: 14px; height: 7px; border-radius: 2px; background: rgba(255,255,255,.14); }
+.mi-meter i.on { background: var(--lv); box-shadow: 0 0 6px color-mix(in srgb, var(--lv) 60%, transparent); }
+.mi-lv-desc { font-size: 13px; line-height: 1.4; color: rgba(255,255,255,.74); letter-spacing: .02em; }
+
+@media (max-width: 760px) {
+    .mi-lv-list { grid-template-columns: 1fr; }
+    .mi-lv-desc { display: none; }
+}

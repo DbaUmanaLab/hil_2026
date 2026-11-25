@@ -4,6 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>HIL 2026 - Hockey in line</title>
+    <!-- Lingue (italiano/inglese): motore e dizionari, prima di tutto il resto (src/i18n/i18n.js) -->
+    <script src="src/i18n/i18n.js"></script>
+    <script src="src/i18n/en/ui.js"></script>
+    <script src="src/i18n/en/markup.js"></script>
+    <script src="src/i18n/en/game.js"></script>
+    <script src="src/i18n/en/data.js"></script>
+    <script src="src/i18n/en/competition.js"></script>
+    <script src="src/i18n/en/manager.js"></script>
+    <script src="src/i18n/en/misc.js"></script>
+    <script>I18N.start();</script>
     <link rel="icon" type="image/png" href="assets/logos/game%20badge.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,6 +22,7 @@
     <script>try { if (window.HILApp && window.HILApp.isTv()) document.documentElement.classList.add('is-tv'); } catch (e) {}</script>
     <link rel="stylesheet" href="src/ui/uikit.css">
     <link rel="stylesheet" href="src/competition/competition.css" data-comp-css>
+    <link rel="stylesheet" href="src/ui/matchintro.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Three.js 0.187 in bundle classico (npm run build:three) + compatibilità con le tarature r128 -->
     <script src="src/vendor/three.min.js"></script>
@@ -859,6 +870,9 @@
         .pz-card { position: relative; display: flex; flex-direction: column; gap: 6px; padding: 12px; text-align: left; border-radius: 12px; background: rgba(255,255,255,.04); border: 1.5px solid rgba(255,255,255,.1); transition: border-color .2s, background .2s, transform .2s; }
         .pz-card:hover { background: rgba(255,255,255,.08); transform: translateY(-2px); }
         .pz-card.is-active { border-color: var(--pz-gold); background: rgba(246,181,17,.1); }
+        .pz-lang-row { display: flex; align-items: center; gap: 10px; }
+        .pz-lang-row b { font-size: 18px; }
+        .pz-lang-flag { width: 34px; height: 24px; border-radius: 3px; overflow: hidden; box-shadow: 0 0 0 1px rgba(255,255,255,.25); }
         .pz-card.is-active::after { content: '✓'; position: absolute; top: 8px; right: 10px; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font-size: 13px; font-weight: 700; color: var(--bx-ink); background: var(--pz-gold); }
         .pz-card b { font-size: 16px; letter-spacing: .1em; text-transform: uppercase; }
         .pz-card small { font-size: 12px; letter-spacing: .03em; color: #94a3b8; line-height: 1.35; }
@@ -1649,7 +1663,7 @@
                 const wait = document.getElementById('dc-wait'), tStart = Date.now();
                 const tickId = setInterval(() => {
                     const left = Math.ceil((MIN_MS - (Date.now() - tStart)) / 1000);
-                    if (left > 0) { if (wait) wait.textContent = 'Avvio tra ' + left + ' s'; } else clearInterval(tickId);
+                    if (left > 0) { if (wait) wait.textContent = _t('Avvio tra {0} s', left); } else clearInterval(tickId);
                 }, 200);
                 setTimeout(() => {
                     timeUp = true;
@@ -2420,6 +2434,10 @@
                         <span class="pz-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h4l5 4v-13l-5 4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/></svg></span>
                         <span>Audio e telecronaca</span>
                     </button>
+                    <button type="button" class="pz-item" data-pz="lang">
+                        <span class="pz-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.6 3.8 5.6 3.8 9s-1.2 6.4-3.8 9c-2.6-2.6-3.8-5.6-3.8-9s1.2-6.4 3.8-9z"/></svg></span>
+                        <span>Lingua</span><span id="pz-val-lang" class="pz-val" translate="no">Italiano</span>
+                    </button>
                     <button type="button" class="pz-item" data-pz="graphics">
                         <span class="pz-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg></span>
                         <span>Grafica</span><span id="pz-val-gfx" class="pz-val">Auto</span>
@@ -2526,6 +2544,12 @@
                         </div>
                     </div>
                     </div>
+                </div>
+
+                <div class="pz-page hidden" data-page="lang">
+                    <h3>Lingua</h3>
+                    <p class="pz-sub">Lingua dei menu e dei testi del gioco. Cambiandola cambia anche quella della telecronaca, che si può poi scegliere a parte in Audio e telecronaca.</p>
+                    <div id="pz-langs" class="pz-cards"></div>
                 </div>
 
                 <div class="pz-page hidden" data-page="graphics">
@@ -3167,51 +3191,21 @@
         const USER_GOALIE_TUNING = { react: 0.14, inaccuracy: 0.65, lateral: 5.6, maxSpeed: 6.4, pokeReach: 1.55 };
         function goalieTune(team) { return team === getUserTeam() ? USER_GOALIE_TUNING : difficultyLevel().goalie; }
 
-        // Finestra di scelta del livello (amichevole, partita rapida, nuova competizione, nuova carriera).
-        // Mouse, tastiera e controller: è un livello .cp-overlay di src/ui/uikit.js (frecce, Invio, Esc).
-        // opts: { title, sub, current, currentTag (etichetta sotto il livello proposto), onPick(id), onCancel() }
-        window.pickDifficulty = function (opts = {}) {
-            const old = document.querySelector('.df-overlay');
-            if (old) old.remove();
-            const cur = normDifficulty(opts.current || matchConfig.difficulty);
-            const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-            const o = document.createElement('div');
-            o.className = 'cp-overlay df-overlay';
-            o.innerHTML = `<div class="cp-panel cp-dialog df-dialog" role="dialog" aria-modal="true" aria-label="Livello di difficoltà">
-                <span class="df-kicker">${esc(opts.sub || 'Squadra avversaria')}</span>
-                <h2>${esc(opts.title || 'Scegli la difficoltà')}</h2>
-                <div class="df-options">${DIFFICULTY_IDS.map(id => {
-                    const L = DIFFICULTY_LEVELS[id];
-                    return `<button type="button" class="df-option df-${id}${id === cur ? ' is-current' : ''}" data-df="${id}"${id === cur ? ` data-focus data-tag="${esc(opts.currentTag || 'Ultima scelta')}"` : ''}>
-                        <span class="df-icon" aria-hidden="true">${L.icon}</span><b>${esc(L.label)}</b><small>${esc(L.desc)}</small></button>`;
-                }).join('')}</div>
-                <div class="cp-next-actions"><button type="button" class="cp-btn" data-df-cancel data-keyback>◀ Indietro</button></div>
-            </div>`;
-            document.body.appendChild(o);
-            let done = false;
-            const close = () => { done = true; o.remove(); };
-            const cancel = () => { if (done) return; close(); if (opts.onCancel) opts.onCancel(); };
-            o.addEventListener('click', e => { if (e.target === o) cancel(); });
-            o.querySelector('[data-df-cancel]').onclick = cancel;
-            o.querySelectorAll('[data-df]').forEach(b => {
-                b.onclick = () => {
-                    if (done) return;
-                    const id = b.dataset.df;
-                    close();
-                    if (opts.onPick) opts.onPick(id);
-                };
-            });
-            const f = o.querySelector('[data-focus]');
-            if (f) {
-                if (window.UIKit && window.UIKit.focus) window.UIKit.focus(f);
-                else f.focus({ preventScroll: true });
-            }
-            return o;
-        };
+        // Scelta del livello e presentazione della partita: src/ui/MatchIntro.js (window.pickDifficulty, MatchIntro.open)
         // amichevole e partita rapida: livello scelto ogni volta (proposto l'ultimo usato)
         function setFreeMatchDifficulty(id) {
             matchConfig.difficulty = normDifficulty(id);
             try { localStorage.setItem('hil_difficulty', matchConfig.difficulty); } catch (e) {}
+        }
+        // presentazione della partita (amichevole, partita rapida, rivincita): loghi, roster e palazzetto;
+        // dal pulsante in basso la scelta del livello, poi si scende in pista
+        function openMatchIntro(kind, onBack) {
+            preloadArenaModule(matchConfig.arena);
+            window.MatchIntro.open({
+                kind,
+                onBack,
+                onPlay: id => { setFreeMatchDifficulty(id); launchMatchFromCurrentConfig(); }
+            });
         }
 
         function getUserTeam() { return matchConfig.userTeam === 'guest' ? 'guest' : 'home'; }
@@ -3963,14 +3957,14 @@
             const preset = getActiveQualityPreset();
             const splashBadge = document.getElementById('device-profile-badge');
             if (splashBadge) {
-                splashBadge.textContent = `📱 ${gfxQuality.deviceLabel} • Grafica: ${gfxQuality.mode === 'auto' ? `Auto (${preset.label})` : preset.label}`;
+                splashBadge.textContent = _t('📱 {0} • Grafica: {1}', gfxQuality.deviceLabel, gfxQuality.mode === 'auto' ? _t('Auto ({0})', _t(preset.label)) : _t(preset.label));
             }
             const hudLabel = document.getElementById('gfx-quality-label');
             if (hudLabel) {
-                hudLabel.textContent = gfxQuality.mode === 'auto' ? `Auto (${preset.label})` : preset.label;
+                hudLabel.textContent = gfxQuality.mode === 'auto' ? _t('Auto ({0})', _t(preset.label)) : _t(preset.label);
             }
             const pzLabel = document.getElementById('pz-val-gfx');
-            if (pzLabel) pzLabel.textContent = gfxQuality.mode === 'auto' ? `Auto · ${preset.label}` : preset.label;
+            if (pzLabel) pzLabel.textContent = gfxQuality.mode === 'auto' ? _t('Auto · {0}', _t(preset.label)) : _t(preset.label);
         }
 
         function applyGraphicsQuality(targetLevel, rebuildSceneAssets = false) {
@@ -4091,7 +4085,7 @@
                         saveGfxBenchmark(nextDown, { source: 'runtime', runtimeFps: Math.round(avgFps) });
                         const toast = document.getElementById('gfx-auto-toast');
                         if (toast) {
-                            toast.textContent = `⚡ Prestazioni ottimizzate: Grafica impostata su ${QUALITY_PRESETS[nextDown].label}`;
+                            toast.textContent = _t('⚡ Prestazioni ottimizzate: Grafica impostata su {0}', _t(QUALITY_PRESETS[nextDown].label));
                             toast.classList.remove('hidden');
                             setTimeout(() => toast.classList.add('hidden'), 3500);
                         }
@@ -4245,7 +4239,7 @@
             (async () => {
                 try {
                     // 1) Alto: sui PC capaci finisce qui
-                    const rHigh = await runStage('high', 'In prova…', `Prova della grafica ${QUALITY_PRESETS.high.label}…`);
+                    const rHigh = await runStage('high', 'In prova…', _t('Prova della grafica {0}…', _t(QUALITY_PRESETS.high.label)));
                     if (passes('high', rHigh)) {
                         chosen = 'high'; bestFps = rHigh.avgFps;
                     } else {
@@ -4262,7 +4256,7 @@
                         } else {
                             setTier('high', 'is-fail', 'Troppo pesante');
                             // 3) Medio
-                            const rMed = await runStage('medium', 'In prova…', `Prova della grafica ${QUALITY_PRESETS.medium.label}…`);
+                            const rMed = await runStage('medium', 'In prova…', _t('Prova della grafica {0}…', _t(QUALITY_PRESETS.medium.label)));
                             if (passes('medium', rMed)) { chosen = 'medium'; bestFps = rMed.avgFps; }
                             else { setTier('medium', 'is-fail', 'Troppo pesante'); chosen = 'low'; bestFps = rLow.avgFps; }
                         }
@@ -4291,7 +4285,7 @@
                 setFps(bestFps);
                 barEl.style.width = '100%';
                 el.classList.add('is-done');
-                statusEl.textContent = `Grafica impostata su ${QUALITY_PRESETS[chosen].label} ✓${window.Commentary ? (commentaryOn ? ' • Telecronaca attiva' : ' • Telecronaca disattivata') : ''}`;
+                statusEl.textContent = _t('Grafica impostata su {0} ✓', _t(QUALITY_PRESETS[chosen].label)) + (window.Commentary ? _t(commentaryOn ? ' • Telecronaca attiva' : ' • Telecronaca disattivata') : '');
                 await wait(1600);
 
                 el.classList.add('is-out');
@@ -6677,8 +6671,8 @@
             tkGroup.add(tableTop);
 
             const frontPanelTex = createBannerTexture(
-                'TAVOLO CRONOMETRISTI',
-                'F.I.S.R. • UFFICIALI DI GARA & SEGNAPUNTI',
+                _t('TAVOLO CRONOMETRISTI'),
+                _t('F.I.S.R. • UFFICIALI DI GARA & SEGNAPUNTI'),
                 '#0f172a',
                 '#facc15'
             );
@@ -6714,7 +6708,7 @@
             sCtx.fillRect(10, 10, 236, 32);
             sCtx.fillStyle = '#38bdf8';
             sCtx.font = 'bold 16px monospace';
-            sCtx.fillText('FISR LIVE REFERTO 3D', 18, 31);
+            sCtx.fillText(_t('FISR LIVE REFERTO 3D'), 18, 31);
             sCtx.fillStyle = '#22c55e';
             sCtx.fillRect(14, 54, 105, 42);
             sCtx.fillStyle = '#09090b';
@@ -7586,7 +7580,7 @@
 
             scoreboardTex.needsUpdate = true;
             const periodBadgeEl = document.getElementById('hudPeriodBadge');
-            if (periodBadgeEl) periodBadgeEl.textContent = currentPeriod > TOTAL_PERIODS ? 'OT' : `${currentPeriod}° P`;
+            if (periodBadgeEl) periodBadgeEl.textContent = currentPeriod > TOTAL_PERIODS ? 'OT' : _t('{0}° P', currentPeriod);
         }
 
         // --- DISCO PROPORZIONATO CON OMBRA DINAMICA DI ALTEZZA ---
@@ -9803,7 +9797,7 @@
             if (isUser) {
                 const newCenter = lineup.find(s => (s.fillRole || s.role) === 'C') || incoming[0] || lineup[0];
                 setControlledPlayer(newCenter);
-                showHudToast(`LINEA ${newLineIdx + 1} IN PISTA`);
+                showHudToast(_t('LINEA {0} IN PISTA', newLineIdx + 1));
             }
             updateLineHUD();
             if (typeof _refreshHudGuestLinePlayers === 'function') _refreshHudGuestLinePlayers();
@@ -9816,7 +9810,7 @@
         function updateLineHUD() {
             const statusEl = document.getElementById('line-change-status');
             const userLine = getActiveLine(getUserTeam());
-            if (statusEl) statusEl.textContent = `L${userLine + 1} ATTIVA`;
+            if (statusEl) statusEl.textContent = _t('L{0} ATTIVA', userLine + 1);
 
             // Bottoni numerati 1/2/3 — aggiorna stile attivo/inattivo
             for (let i = 0; i < 3; i++) {
@@ -10419,7 +10413,7 @@
             const role = { C: 'Centro', LW: 'Ala sinistra', RW: 'Ala destra', D: 'Difensore' }[f.info.role] || '';
             document.getElementById('tour-arena-tag').textContent = 'RISCALDAMENTO';
             tourArenaTitle.textContent = `#${f.info.num} ${playerFullName(f.info.first, f.info.name)}`;
-            tourArenaLoc.textContent = [club ? club.name : '', role, (f.info.pts || 0) > 0 ? `${f.info.g || 0} gol • ${f.info.pts} punti` : ''].filter(Boolean).join(' • ');
+            tourArenaLoc.textContent = [club ? club.name : '', role && _t(role), (f.info.pts || 0) > 0 ? _t('{0} gol • {1} punti', f.info.g || 0, f.info.pts) : ''].filter(Boolean).join(' • ');
             restartAnim(arenaTourOverlay.querySelector('.bx-l3'));
             updateWarmupShot(0, true);
             if (window.Commentary) window.Commentary.event('warmupPlayer', { team: f.team, info: f.info });
@@ -10487,7 +10481,7 @@
             const occasion = { final: 'La finale', decider: 'Gara decisiva', topClash: 'Scontro al vertice', playoff: 'Play-off', cup: 'Coppa' }[att.kind];
             document.getElementById('tour-arena-tag').textContent = 'IL PUBBLICO';
             tourArenaTitle.textContent = att.soldOut ? 'TUTTO ESAURITO' : 'GRAN PUBBLICO';
-            tourArenaLoc.textContent = [ARENA_CATALOG[matchConfig.arena].shortTitle, occasion].filter(Boolean).join(' • ');
+            tourArenaLoc.textContent = [ARENA_CATALOG[matchConfig.arena].shortTitle, occasion && _t(occasion)].filter(Boolean).join(' • ');
             restartAnim(arenaTourOverlay.querySelector('.bx-l3'));
             crowdCheerTimer = CROWD_SHOT_DURATION;
             if (window.gameAudio && window.gameAudio.playCrowdRoar) window.gameAudio.playCrowdRoar(att.soldOut ? 1 : 0.85, CROWD_SHOT_DURATION - 0.6);
@@ -10559,7 +10553,7 @@
             const guestClub = CLUB_ROSTERS[matchConfig.guestClub];
             const arenaInfo = ARENA_CATALOG[matchConfig.arena];
 
-            introBothArena.textContent = `Saluto al Pubblico • ${arenaInfo.shortTitle}`;
+            introBothArena.textContent = _t('Saluto al Pubblico • {0}', arenaInfo.shortTitle);
             introBothHomeLogo.innerHTML = getClubLogoSVG(homeClub.id, 'w-12 h-12 sm:w-14 sm:h-14');
             setTeamNameWithFlag(introBothHomeName, homeClub.id, homeClub.name);
             introBothGuestLogo.innerHTML = getClubLogoSVG(guestClub.id, 'w-12 h-12 sm:w-14 sm:h-14');
@@ -10816,7 +10810,7 @@
             document.getElementById('goal-abbr-guest').textContent = CLUB_ABBR[matchConfig.guestClub] || 'OSP';
             document.getElementById('goal-num').textContent = `${scoreHome} - ${scoreGuest}`;
             document.getElementById('replay-logo').src = logoSrcOf(club.id);
-            document.getElementById('replay-sub').textContent = `Rete di #${num} ${name} • ${club.shortName || club.name}`;
+            document.getElementById('replay-sub').textContent = _t('Rete di #{0} {1} • {2}', num, name, club.shortName || club.name);
             restartAnim(wrap);
         }
 
@@ -11004,7 +10998,7 @@
             card.style.setProperty('--team', theme.primary);
             document.getElementById('spot-logo').src = (getClubLogoSVG(sk.clubId).match(/src="([^"]+)"/) || [])[1] || '';
             document.getElementById('spot-num').textContent = sk.jerseyNum;
-            document.getElementById('spot-kicker').textContent = (sk.team === 'home' ? 'Squadra di casa' : 'Squadra ospite') + ' • Giocatore chiave' + (sk.pts ? ` • ${sk.goals} G ${sk.pts - sk.goals} A` : '');
+            document.getElementById('spot-kicker').textContent = _t(sk.team === 'home' ? 'Squadra di casa' : 'Squadra ospite') + ' • ' + _t('Giocatore chiave') + (sk.pts ? ` • ${sk.goals} G ${sk.pts - sk.goals} A` : '');
             document.getElementById('spot-name').innerHTML = (sk.firstName ? `<small class="spot-first">${rosterEsc(sk.firstName)}</small>` : '') + rosterEsc(sk.playerName);
             const nat = sk.nationality || clubCountry(sk.clubId);
             document.getElementById('spot-team').innerHTML = `${skaterFlagHTML(sk, '1.05em')} ${window.HIL_FLAGS ? HIL_FLAGS.name(nat) + ' • ' : ''}${club ? club.name : ''} • <b>${ROSTER_ROLE_LABELS[sk.role] || sk.role}</b>`;
@@ -11021,7 +11015,7 @@
             document.getElementById('spot-logo').src = logoSrcOf(it.clubId);
             // icona lavagnetta tattica
             document.getElementById('spot-num').innerHTML = '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M8.5 10l2 2m0-2l-2 2"/><circle cx="15" cy="15" r="1.6"/><path d="M10.5 12.5c1.5 2 2.5 2.5 3 2.5"/></svg>';
-            document.getElementById('spot-kicker').textContent = (it.team === 'home' ? 'Squadra di casa' : 'Squadra ospite') + ' • In panchina • ' + it.coach.note;
+            document.getElementById('spot-kicker').textContent = _t(it.team === 'home' ? 'Squadra di casa' : 'Squadra ospite') + ' • ' + _t('In panchina') + ' • ' + _t(it.coach.note);
             document.getElementById('spot-name').innerHTML = `<small class="spot-first">${rosterEsc(it.coach.first)}</small>${rosterEsc(it.coach.last.toUpperCase())}`;
             document.getElementById('spot-team').innerHTML = `${club ? club.name : ''} • <b>${rosterEsc(it.coach.role)}</b>`;
             card.classList.remove('hidden', 'is-in');
@@ -11054,7 +11048,7 @@
             card.style.setProperty('--team', '#1f2937');
             document.getElementById('spot-logo').src = 'assets/logos/game%20badge.png';
             document.getElementById('spot-num').innerHTML = '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="14" r="5"/><path d="M13 11l8-4v4l-6 2"/><path d="M4 9V6"/></svg>';
-            document.getElementById('spot-kicker').textContent = `Ufficiali di gara • Arbitro ${n} di ${referees.length}`;
+            document.getElementById('spot-kicker').textContent = _t('Ufficiali di gara • Arbitro {0} di {1}', n, referees.length);
             document.getElementById('spot-name').innerHTML = (first ? `<small class="spot-first">${rosterEsc(first)}</small>` : '') + rosterEsc(last.toUpperCase());
             document.getElementById('spot-team').innerHTML = ref.refInternational
                 ? `${refereeFlagHTML(ref, '1.05em')}${window.HIL_FLAGS ? rosterEsc(HIL_FLAGS.name(ref.refNat)) + ' • ' : ''}World Skate • <b>${ref.refRole ? rosterEsc(ref.refRole) : 'Arbitro internazionale'}</b>`
@@ -11246,7 +11240,7 @@
             const club = CLUB_ROSTERS[g.clubId];
             document.getElementById('cut-tag').innerHTML = '<b></b>PARATA';
             document.getElementById('cut-title').innerHTML = skaterTitleHTML(g);
-            document.getElementById('cut-sub').textContent = `Blocca il disco • ${club ? club.name : ''} • Ingaggio in zona`;
+            document.getElementById('cut-sub').textContent = _t('Blocca il disco • {0} • Ingaggio in zona', club ? club.name : '');
             document.getElementById('cut-overlay').classList.remove('hidden');
             restartAnim(document.getElementById('cut-l3'));
         }
@@ -11336,6 +11330,10 @@
         const penaltyBoxZ = team => team === 'home' ? 5 : -5;      // davanti alla metà di ciascuna squadra
         const ROLE_ORDER = ['C', 'D', 'LW', 'RW'];
         const PENALTY_ROLE_TXT = { minor: '2 minuti', expulsion: 'Espulso • 5 minuti di inferiorità' };
+        // nome del fallo da mostrare: il tipo resta in italiano perché lo usa anche la telecronaca
+        // ("Carica" ha un'altra traduzione altrove, per questo i nomi inglesi sono qui e non nel dizionario)
+        const PENALTY_NAMES_EN = { 'Colpo di bastone': 'Slashing', 'Ostruzione': 'Interference', 'Carica': 'Body checking', 'Trattenuta': 'Holding' };
+        function penaltyName(type) { return I18N.lang === 'en' ? (PENALTY_NAMES_EN[type] || _t(type)) : type; }
 
         // penalità in corso della squadra: corrono al massimo due alla volta, le altre aspettano
         function teamPenalties(team) { return penalties.filter(p => p.team === team); }
@@ -11472,9 +11470,9 @@
                 x.fillStyle = '#0b1226'; x.fillRect(0, 0, 512, 128);
                 x.fillStyle = col; x.fillRect(0, 0, 18, 128); x.fillRect(494, 0, 18, 128);
                 x.fillStyle = '#facc15'; x.font = '900 46px Arial, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-                x.fillText('PANCA PUNITI', 256, 50);
+                x.fillText(_t('PANCA PUNITI'), 256, 50);
                 x.fillStyle = '#e2e8f0'; x.font = 'bold 30px Arial, sans-serif';
-                x.fillText(CLUB_ABBR[club && club.id] || (team === 'home' ? 'CASA' : 'OSPITI'), 256, 98);
+                x.fillText(CLUB_ABBR[club && club.id] || _t(team === 'home' ? 'CASA' : 'OSPITI'), 256, 98);
                 const sign = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.55), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c) }));
                 sign.position.set(-20.6, 2.45, cz);
                 sign.rotation.y = Math.PI / 2;
@@ -11564,7 +11562,7 @@
             const club = CLUB_ROSTERS[offender.clubId];
             document.getElementById('cut-tag').innerHTML = '<b></b>' + (kind === 'expulsion' ? 'ESPULSIONE' : 'PENALITÀ');
             document.getElementById('cut-title').innerHTML = skaterTitleHTML(offender);
-            document.getElementById('cut-sub').textContent = `${type} • ${PENALTY_ROLE_TXT[kind]} • ${club ? club.name : ''}`;
+            document.getElementById('cut-sub').textContent = `${penaltyName(type)} • ${_t(PENALTY_ROLE_TXT[kind])} • ${club ? club.name : ''}`;
             document.getElementById('cut-overlay').classList.remove('hidden');
             restartAnim(document.getElementById('cut-l3'));
             updatePenaltyHud();
@@ -11716,8 +11714,8 @@
             const abbr = CLUB_ABBR[club && club.id] || '';
             const back = allowedSkaters(team);
             showHudToast(pn.kind === 'expulsion'
-                ? `${abbr} TORNA IN ${back} • FINE INFERIORITÀ`
-                : `RIENTRA #${s.jerseyNum} ${s.playerName} • ${abbr} IN ${back}${reason === 'goal' ? ' (GOL IN POWER PLAY)' : ''}`);
+                ? _t('{0} TORNA IN {1} • FINE INFERIORITÀ', abbr, back)
+                : _t('RIENTRA #{0} {1} • {2} IN {3}', s.jerseyNum, s.playerName, abbr, back) + (reason === 'goal' ? _t(' (GOL IN POWER PLAY)') : ''));
             penaltyHudFlash = { team, until: performance.now() + 2600 };
             updatePenaltyHud();
         }
@@ -11728,7 +11726,7 @@
             const wrap = document.getElementById('hud-pen');
             if (!strEl || !wrap) return;
             const h = allowedSkaters('home'), g = allowedSkaters('guest');
-            const abbrOf = team => CLUB_ABBR[team === 'home' ? matchConfig.homeClub : matchConfig.guestClub] || (team === 'home' ? 'CASA' : 'OSP');
+            const abbrOf = team => CLUB_ABBR[team === 'home' ? matchConfig.homeClub : matchConfig.guestClub] || _t(team === 'home' ? 'CASA' : 'OSP');
             const strip = strEl.parentElement;
             strip.classList.remove('is-pp-home', 'is-pp-guest');
             if (h !== g) {
@@ -11746,9 +11744,9 @@
                 const pct = Math.max(0, Math.min(100, pn.remaining / pn.total * 100));
                 return `<div class="pen-chip${running ? '' : ' is-wait'}" style="--c:${pn.team === 'home' ? col.home : col.guestBar}">
                     <b>${abbrOf(pn.team)}</b><span class="n">#${rosterEsc(pn.skater.jerseyNum)} ${rosterEsc(pn.skater.playerName)}</span>
-                    <span class="k">${pn.kind === 'expulsion' ? 'ESP' : pn.type}</span><span class="t">${running ? fmtPenTime(pn.remaining) : 'in attesa'}</span>
+                    <span class="k">${pn.kind === 'expulsion' ? 'ESP' : penaltyName(pn.type)}</span><span class="t">${running ? fmtPenTime(pn.remaining) : 'in attesa'}</span>
                     <i style="width:${pct}%"></i></div>`;
-            }).join('') + (flash ? `<div class="pen-chip is-back" style="--c:${flash.team === 'home' ? col.home : col.guestBar}"><b>${abbrOf(flash.team)}</b><span class="n">RIENTRO</span><span class="t">${allowedSkaters(flash.team)} in pista</span></div>` : '');
+            }).join('') + (flash ? `<div class="pen-chip is-back" style="--c:${flash.team === 'home' ? col.home : col.guestBar}"><b>${abbrOf(flash.team)}</b><span class="n">RIENTRO</span><span class="t">${_t('{0} in pista', allowedSkaters(flash.team))}</span></div>` : '');
         }
 
         // --- INTERMEZZI DI REGIA PRIMA DI OGNI INGAGGIO ---
@@ -11775,7 +11773,7 @@
             const guestClub = CLUB_ROSTERS[matchConfig.guestClub];
             const arena = ARENA_CATALOG[matchConfig.arena];
             const V = (x, y, z) => new THREE.Vector3(x, y, z);
-            const periodTxt = `${currentPeriod}° periodo • ${hudTimerEl ? hudTimerEl.textContent : ''}`;
+            const periodTxt = _t('{0} periodo • {1}', I18N.ord(currentPeriod), hudTimerEl ? hudTimerEl.textContent : '');
             const scoreTxt = `${homeClub.shortName || homeClub.name} ${scoreHome} - ${scoreGuest} ${guestClub.shortName || guestClub.name}`;
             const zc = (Math.random() - 0.5) * 24;
             switch (type) {
@@ -11791,11 +11789,11 @@
                     const dir = V(1, 0, -own * 0.35).normalize();          // verso la telecamera (centro pista)
                     const side = V(dir.z, 0, -dir.x);
                     const nGoals = matchStats.scorers.filter(x => x.team === ps.team && x.num === ps.num && x.name === ps.name).length;
-                    const tally = nGoals === 2 ? ' • Doppietta!' : nGoals === 3 ? ' • Tripletta!' : nGoals > 3 ? ` • ${nGoals} reti` : '';
+                    const tally = nGoals === 2 ? _t(' • Doppietta!') : nGoals === 3 ? _t(' • Tripletta!') : nGoals > 3 ? _t(' • {0} reti', nGoals) : '';
                     const head = V(P.x, 1.45, P.z);
                     return {
                         title: `#${ps.num} ${ps.name}`,
-                        sub: `Rete del ${scoreHome}-${scoreGuest} • ${club ? club.name : ''}${tally}`,
+                        sub: _t('Rete del {0}-{1} • {2}', scoreHome, scoreGuest, club ? club.name : '') + tally,
                         tag: 'IL MARCATORE',
                         duration: 3.4,
                         from: [head.clone().addScaledVector(dir, 3.4).addScaledVector(side, 1.4).setY(1.75), head.clone().setY(1.25)],
@@ -11828,7 +11826,7 @@
                     if (!ref) return null;
                     const c = V(-2.3, 1.25, 0);
                     const other = referees.find(r => r !== ref);
-                    return { title: ref.fullName || 'Arbitro', sub: (ref.refInternational ? `Arbitro internazionale${window.HIL_FLAGS && ref.refNat ? ' • ' + HIL_FLAGS.name(ref.refNat) : ''}` : 'Arbitro FISR') + (other && other.fullName ? ` • con ${other.fullName}` : ''), orbit: { c, r: 2.1, a0: 0.75, a1: 1.45, y: 1.55 }, ref };
+                    return { title: ref.fullName || 'Arbitro', sub: (ref.refInternational ? _t('Arbitro internazionale') + (window.HIL_FLAGS && ref.refNat ? ' • ' + HIL_FLAGS.name(ref.refNat) : '') : _t('Arbitro FISR')) + (other && other.fullName ? _t(' • con {0}', other.fullName) : ''), orbit: { c, r: 2.1, a0: 0.75, a1: 1.45, y: 1.55 }, ref };
                 }
                 case 'goalie': {
                     const team = Math.random() < 0.5 ? 'home' : 'guest';
@@ -11836,7 +11834,7 @@
                     if (!g) return null;
                     const club = CLUB_ROSTERS[g.clubId];
                     const gp = g.mesh.position, dir = team === 'home' ? -1 : 1;
-                    return { title: `#${g.jerseyNum} ${skaterFullName(g)}`, sub: `Portiere • ${club.name}`,
+                    return { title: `#${g.jerseyNum} ${skaterFullName(g)}`, sub: _t('Portiere • {0}', club.name),
                         from: [V(gp.x + 1.6, 1.25, gp.z + dir * 3.6), V(gp.x, 0.95, gp.z)], to: [V(gp.x + 0.6, 1.15, gp.z + dir * 2.5), V(gp.x, 1.0, gp.z)], goalie: g };
                 }
                 case 'scoreboard':
@@ -13936,7 +13934,7 @@
             const chip = document.getElementById('s1-other-chip');
             if (chip) {
                 const hc = CLUB_ROSTERS[matchConfig.homeClub];
-                chip.innerHTML = hc ? `<img src="${logoSrcOf(hc.id)}" alt=""><span>Casa: ${hc.shortName || hc.name}</span>` : '';
+                chip.innerHTML = hc ? `<img src="${logoSrcOf(hc.id)}" alt=""><span>${rosterEsc(_t('Casa: {0}', hc.shortName || hc.name))}</span>` : '';
             }
             // il nome appena mostrato va riadattato alla larghezza della colonna
             if (single && currentPreMatchStep === 1) {
@@ -14016,7 +14014,7 @@
 
         function formatLeagueBadgeLabel(filterVal, clubLeague) {
             if (filterVal !== 'TUTTE') return TEAM_DATA.leagueOf(filterVal).badge;
-            return 'Tutte (' + TEAM_DATA.leagueOf(clubLeague).name + ')';
+            return _t('Tutte ({0})', TEAM_DATA.leagueOf(clubLeague).name);
         }
 
         // Rating statici per club (OFF, DEF, GOA)
@@ -14094,7 +14092,7 @@
             const homeArena = ARENA_CATALOG[matchConfig.arena];
             const arenaHintEl = document.getElementById('step1-home-arena-hint');
             if (arenaHintEl && homeArena) {
-                arenaHintEl.textContent = `🏟️ Palazzetto: ${homeArena.shortTitle}`;
+                arenaHintEl.textContent = _t('🏟️ Palazzetto: {0}', homeArena.shortTitle);
             }
 
             // --- Rating pills ---
@@ -14188,7 +14186,7 @@
                 if (animate) imgEl.classList.add(dir > 0 ? 'is-out-l' : 'is-out-r');
                 Promise.all([loaded, new Promise(r => setTimeout(r, animate ? 230 : 0))]).then(([res]) => {
                     if (token !== step2RenderToken && changedSide !== sd.key) return;
-                    imgEl.alt = 'Maglia ' + sd.club.name + ' — ' + sd.club.kits[sd.kit].label;
+                    imgEl.alt = _t('Maglia {0} — {1}', sd.club.name, _t(sd.club.kits[sd.kit].label));
                     showEl.classList.remove('is-loading');
                     if (animate) {
                         imgEl.classList.remove('is-out-l', 'is-out-r');
@@ -14330,8 +14328,8 @@
             const homeClubs = getArenaHomeClubs(matchConfig.arena);
             document.getElementById('step3-arena-logos').innerHTML = homeClubs.map(arenaMiniLogoHTML).join('');
             document.getElementById('step3-arena-selected-pill').textContent = isHomeArena
-                ? 'Impianto di casa • ' + (CLUB_ROSTERS[matchConfig.homeClub].shortName || CLUB_ROSTERS[matchConfig.homeClub].name)
-                : 'Campo neutro • ' + info.clubBadge.replace(/^Casa:\s*/, 'Casa ');
+                ? _t('Impianto di casa • {0}', CLUB_ROSTERS[matchConfig.homeClub].shortName || CLUB_ROSTERS[matchConfig.homeClub].name)
+                : _t('Campo neutro • Casa {0}', info.clubBadge.replace(/^Casa:\s*/, ''));
             document.getElementById('step3-arena-name').textContent = info.shortTitle;
             document.getElementById('step3-arena-location').textContent = info.location;
             document.getElementById('step3-arena-desc').textContent = info.desc;
@@ -14631,7 +14629,7 @@
         function renderRosterRowsHTML(club) {
             const groups = [[{ role: 'G', num: club.goalie.num, name: club.goalie.name, first: club.goalie.first, line: 'Titolare', gold: true, src: club.goalie }]];
             club.lines.forEach((line, li) => {
-                groups.push(line.map(pl => ({ role: pl.role, num: pl.num, name: pl.name, first: pl.first, line: 'Linea ' + (li + 1), gold: li === 0, src: pl })));
+                groups.push(line.map(pl => ({ role: pl.role, num: pl.num, name: pl.name, first: pl.first, line: _t('Linea {0}', li + 1), gold: li === 0, src: pl })));
             });
             let i = 0;
             return groups.map((g, gi) => (gi > 0 ? '<div class="rs-gap"></div>' : '') + g.map(pl => `
@@ -14699,7 +14697,7 @@
                 setTeamNameWithFlag(document.getElementById('rs-team-name'), club.id, club.name);
                 fitTeamNameToBox(document.getElementById('rs-team-name'));
                 document.getElementById('rs-league').textContent = league;
-                document.getElementById('rs-sub').textContent = club.name + ' • ' + (isHome ? 'Squadra di casa' : 'Squadra ospite');
+                document.getElementById('rs-sub').textContent = club.name + ' • ' + _t(isHome ? 'Squadra di casa' : 'Squadra ospite');
                 const rsList = document.getElementById('rs-list');
                 rsList.innerHTML = renderRosterRowsHTML(club);
                 rsList.classList.toggle('is-crowded', rosterExtrasCount(club) > ROSTER_LONG_EXTRAS);
@@ -14733,8 +14731,8 @@
             rosterClubs = [homeClub, guestClub];
             rosterShowIdx = -1;
 
-            document.getElementById('rs-seg-label-0').textContent = 'Casa • ' + (homeClub.shortName || homeClub.name);
-            document.getElementById('rs-seg-label-1').textContent = 'Ospiti • ' + (guestClub.shortName || guestClub.name);
+            document.getElementById('rs-seg-label-0').textContent = _t('Casa • {0}', homeClub.shortName || homeClub.name);
+            document.getElementById('rs-seg-label-1').textContent = _t('Ospiti • {0}', guestClub.shortName || guestClub.name);
             document.getElementById('rs-seg-fill-0').style.width = '0%';
             document.getElementById('rs-seg-fill-1').style.width = '0%';
             // Precarica la foto della squadra ospite per una dissolvenza pulita
@@ -14815,15 +14813,15 @@
             const goingToOvertime = !isFinal && currentPeriod >= TOTAL_PERIODS;
             const resultType = currentMatchResultType();
             const finalNote = resultType === 'SO'
-                ? ` • AI RIGORI ${matchShootout.home}-${matchShootout.guest}`
-                : (resultType === 'OT' ? ' • DOPO SUPPLEMENTARE' : '');
+                ? _t(' • AI RIGORI {0}-{1}', matchShootout.home, matchShootout.guest)
+                : (resultType === 'OT' ? _t(' • DOPO SUPPLEMENTARE') : '');
 
             document.getElementById('stats-modal-badge').textContent = isFinal
-                ? 'FINE PARTITA • RISULTATO FINALE' + finalNote
-                : (goingToOvertime ? 'PARITÀ • SI VA AL SUPPLEMENTARE' : `FINE ${currentPeriod}° PERIODO`);
+                ? _t('FINE PARTITA • RISULTATO FINALE') + finalNote
+                : (goingToOvertime ? 'PARITÀ • SI VA AL SUPPLEMENTARE' : _t('FINE {0} PERIODO', I18N.ord(currentPeriod)).toUpperCase());
             document.getElementById('stats-modal-title').textContent = isFinal
                 ? 'Statistiche finali'
-                : (goingToOvertime ? 'Statistiche dei tempi regolamentari' : `Statistiche ${currentPeriod}° periodo`);
+                : (goingToOvertime ? 'Statistiche dei tempi regolamentari' : _t('Statistiche {0} periodo', I18N.ord(currentPeriod)));
 
             const sxCol = getMatchTeamColors();
             const sxEl = document.getElementById('match-stats-modal');
@@ -14863,7 +14861,7 @@
             } else {
                 scorersListEl.innerHTML = matchStats.scorers.map(sc => `
                     <div class="sx-scorer" style="--c:${sc.team === 'home' ? sxCol.home : sxCol.guestBar}">
-                        <span class="t">${sc.period > TOTAL_PERIODS ? 'OT' : sc.period + '° P'} • ${sc.timeStr}${sc.sit ? ' • ' + sc.sit : ''}</span>
+                        <span class="t">${sc.period > TOTAL_PERIODS ? 'OT' : _t('{0}° P', sc.period)} • ${sc.timeStr}${sc.sit ? ' • ' + sc.sit : ''}</span>
                         <span class="n">#${sc.num} ${sc.name}</span>
                         <span class="c">${sc.clubName}</span>
                     </div>
@@ -14874,7 +14872,7 @@
             if (!isFinal) {
                 actionsEl.innerHTML = goingToOvertime
                     ? `<button type="button" id="start-next-period-btn" class="sx-btn is-primary">Supplementare • golden goal ▶</button>`
-                    : `<button type="button" id="start-next-period-btn" class="sx-btn is-primary">Inizia ${currentPeriod + 1}° periodo ▶</button>`;
+                    : `<button type="button" id="start-next-period-btn" class="sx-btn is-primary">${_t('Inizia {0} periodo ▶', I18N.ord(currentPeriod + 1))}</button>`;
                 document.getElementById('start-next-period-btn').addEventListener('click', () => {
                     document.getElementById('match-stats-modal').classList.add('hidden');
                     currentPeriod++;
@@ -14903,17 +14901,10 @@
                     <button type="button" id="stats-rematch-btn" class="sx-btn is-primary">Rivincita ↻</button>
                 `;
                 document.getElementById('stats-rematch-btn').addEventListener('click', () => {
-                    // nuova amichevole: si sceglie di nuovo il livello (proposto quello appena giocato)
-                    window.pickDifficulty({
-                        title: 'Rivincita',
-                        sub: 'Livello della squadra avversaria',
-                        current: matchConfig.difficulty,
-                        onPick: id => {
-                            setFreeMatchDifficulty(id);
-                            document.getElementById('match-stats-modal').classList.add('hidden');
-                            launchMatchFromCurrentConfig();
-                        }
-                    });
+                    // rivincita: di nuovo la presentazione, da lì il livello (proposto quello appena giocato)
+                    const modal = document.getElementById('match-stats-modal');
+                    modal.classList.add('hidden');
+                    openMatchIntro('rematch', () => modal.classList.remove('hidden'));
                 });
                 document.getElementById('stats-menu-btn').addEventListener('click', () => {
                     document.getElementById('match-stats-modal').classList.add('hidden');
@@ -15021,13 +15012,13 @@
         // --- TASTI CONFIGURABILI (salvati in localStorage, codici fisici KeyboardEvent.code) ---
         const KEYBIND_STORAGE = 'hil_keybinds';
         const KEY_ACTIONS = [
-            { id: 'up', label: 'Avanti', def: 'ArrowUp' },
-            { id: 'down', label: 'Indietro', def: 'ArrowDown' },
+            { id: 'up', label: 'Avanti', en: 'Forward', def: 'ArrowUp' },
+            { id: 'down', label: 'Indietro', en: 'Backward', def: 'ArrowDown' },
             { id: 'left', label: 'Sinistra', def: 'ArrowLeft' },
             { id: 'right', label: 'Destra', def: 'ArrowRight' },
             { id: 'shoot', label: 'Tiro / Ingaggio', def: 'KeyS' },
             { id: 'pass', label: 'Passaggio', def: 'KeyA' },
-            { id: 'check', label: 'Carica', def: 'KeyC' },
+            { id: 'check', label: 'Carica', en: 'Body check', def: 'KeyC' },
             { id: 'camera', label: 'Cambia telecamera', def: 'KeyV' },
             { id: 'line1', label: 'Linea 1', def: 'Digit1' },
             { id: 'line2', label: 'Linea 2', def: 'Digit2' },
@@ -15035,6 +15026,8 @@
             { id: 'lineNext', label: 'Linea successiva', def: 'KeyL' },
             { id: 'pause', label: 'Pausa', def: 'KeyP' }
         ];
+        // "Avanti", "Indietro" e "Carica" hanno altre traduzioni nei menu: qui l'inglese è nell'azione (campo en)
+        function keyActionLabel(a) { return I18N.lang === 'en' && a.en ? a.en : _t(a.label); }
         function defaultKeyBindings() {
             const b = {};
             KEY_ACTIONS.forEach(a => { b[a.id] = a.def; });
@@ -15097,7 +15090,7 @@
         function cycleCameraMode() {
             const i = CAMERA_MODES.findIndex(c => c.id === cameraMode);
             setCameraMode(CAMERA_MODES[(i + 1) % CAMERA_MODES.length].id);
-            if (!gamePaused && PAUSABLE_STATES.has(gameState)) showHudToast('TELECAMERA ' + cameraModeLabel(cameraMode).toUpperCase());
+            if (!gamePaused && PAUSABLE_STATES.has(gameState)) showHudToast(_t('TELECAMERA {0}', _t(cameraModeLabel(cameraMode)).toUpperCase()));
         }
         function toggleCameraMode() { cycleCameraMode(); }
         try { const savedCam = localStorage.getItem('hil_camera'); if (savedCam) cameraMode = CAMERA_MODES.some(c => c.id === savedCam) ? savedCam : 'follow'; } catch (e) {}
@@ -15230,6 +15223,7 @@
             else if (page === 'controls') renderPauseKeys();
             else if (page === 'audio') renderPauseAudio();
             else if (page === 'graphics') renderPauseGraphics();
+            else if (page === 'lang') renderPauseLang();
             else if (page === 'camera') renderPauseCameras();
             else if (page === 'stats') renderPauseStats();
             const first = content.querySelector(`.pz-page[data-page="${page}"] button`);
@@ -15298,7 +15292,7 @@
             document.getElementById('pz-team-home').classList.toggle('is-user', getUserTeam() === 'home');
             document.getElementById('pz-team-guest').classList.toggle('is-user', getUserTeam() === 'guest');
             document.getElementById('pz-score').textContent = `${scoreHome} - ${scoreGuest}`;
-            document.getElementById('pz-clock').textContent = `${currentPeriod}° P • ${hudTimerEl ? hudTimerEl.textContent : ''}`;
+            document.getElementById('pz-clock').textContent = `${_t('{0}° P', currentPeriod)} • ${hudTimerEl ? hudTimerEl.textContent : ''}`;
         }
 
         const PZ_ROLE_SHORT = { C: 'C', LW: 'AS', RW: 'AD', D: 'D' };
@@ -15327,7 +15321,7 @@
 
         function renderPauseKeys() {
             document.getElementById('pz-keys').innerHTML = KEY_ACTIONS.map(a => `
-                <div class="pz-key" data-action="${a.id}"><span>${a.label}</span>
+                <div class="pz-key" data-action="${a.id}"><span>${keyActionLabel(a)}</span>
                     <button type="button" data-rebind="${a.id}" class="${keyRebindAction === a.id ? 'is-listening' : ''}">${keyRebindAction === a.id ? 'Premi un tasto…' : keyCodeLabel(keyBindings[a.id])}</button>
                 </div>`).join('');
             const touch = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
@@ -15410,11 +15404,43 @@
             document.getElementById('pz-cmt-voice').disabled = C.voices().length < 2;
         }
 
+        // --- LINGUA (src/i18n/i18n.js) ---
+        const UI_LANGS = [
+            { id: 'it', name: 'Italiano', flag: 'IT', note: 'Menu, partite e telecronaca in italiano' },
+            { id: 'en', name: 'English', flag: 'GB', note: 'Menus, matches and commentary in English' }
+        ];
+        function updateLangLabel() {
+            const v = document.getElementById('pz-val-lang');
+            if (v) v.textContent = (UI_LANGS.find(l => l.id === I18N.lang) || UI_LANGS[0]).name;
+        }
+        function renderPauseLang() {
+            const flag = c => (window.HIL_FLAGS ? window.HIL_FLAGS.html(c, 'pz-lang-flag') : '');
+            document.getElementById('pz-langs').innerHTML = UI_LANGS.map(l => `
+                <button type="button" class="pz-card pz-lang${I18N.lang === l.id ? ' is-active' : ''}" data-ui-lang="${l.id}" translate="no">
+                    <span class="pz-lang-row">${flag(l.flag)}<b>${l.name}</b></span>
+                    <small>${l.note}</small>
+                </button>`).join('');
+        }
+        function setUiLanguage(l) {
+            if (l === I18N.lang) return;
+            I18N.setLang(l);
+            // la telecronaca segue la lingua dei menu (resta modificabile a parte, in Audio e telecronaca)
+            if (window.Commentary && window.Commentary.setLang) window.Commentary.setLang(l);
+            updateLangLabel();
+            if (pausePage === 'lang') renderPauseLang();
+        }
+        // testi composti con _t() visibili mentre si cambia lingua (badge grafica, testata della pausa, HUD)
+        window.addEventListener('hil:lang', () => {
+            try {
+                updateGraphicsQualityUI();
+                if (gamePaused) { renderPauseHeader(); updateLineHUD(); updatePenaltyHud(); }
+            } catch (e) { console.warn('[i18n]', e); }
+        });
         function renderPauseGraphics() {
             const detected = gfxQuality.detected || gfxQuality.current;
-            const detLabel = (QUALITY_PRESETS[detected] || {}).label || detected;
+            const detLabel = _t((QUALITY_PRESETS[detected] || {}).label || detected);
             const opts = [
-                { id: 'auto', label: 'Auto', bars: 0, desc: `Calibrata sulle prestazioni del dispositivo al primo avvio (${gfxQuality.deviceLabel}: ${detLabel}). Si abbassa da sola se il gioco rallenta.` },
+                { id: 'auto', label: 'Auto', bars: 0, desc: _t('Calibrata sulle prestazioni del dispositivo al primo avvio ({0}: {1}). Si abbassa da sola se il gioco rallenta.', gfxQuality.deviceLabel, detLabel) },
                 { id: 'low', label: (QUALITY_PRESETS.low || {}).label || 'Bassa', bars: 1, desc: 'Massima fluidità: niente ombre, meno luci e pubblico ridotto.' },
                 { id: 'medium', label: (QUALITY_PRESETS.medium || {}).label || 'Media', bars: 2, desc: 'Equilibrio tra dettaglio e prestazioni.' },
                 { id: 'high', label: (QUALITY_PRESETS.high || {}).label || 'Alta', bars: 3, desc: 'Ombre morbide, riflessi e tutti i dettagli del palazzetto.' }
@@ -15426,7 +15452,7 @@
                     <small>${o.desc}</small>
                 </button>`).join('');
             const sub = document.getElementById('pz-gfx-sub');
-            if (sub) sub.textContent = `In uso: ${(getActiveQualityPreset() || {}).label || ''}. Il cambio ricostruisce il palazzetto e può richiedere qualche istante.`;
+            if (sub) sub.textContent = _t('In uso: {0}. Il cambio ricostruisce il palazzetto e può richiedere qualche istante.', _t((getActiveQualityPreset() || {}).label || ''));
         }
         function setGraphicsMode(mode) {
             gfxQuality.mode = mode;
@@ -15481,7 +15507,7 @@
             };
             const scorers = matchStats.scorers.length
                 ? matchStats.scorers.map(sc => `<div class="pz-scorer" style="--c:${sc.team === 'home' ? col.home : col.guestBar}">
-                        <span class="t">${sc.period > TOTAL_PERIODS ? 'OT' : sc.period + '° P'} • ${sc.timeStr}${sc.sit ? ' • ' + sc.sit : ''}</span><span class="n">#${rosterEsc(sc.num)} ${rosterEsc(sc.name)}</span><span class="c">${rosterEsc(sc.clubName)}</span></div>`).join('')
+                        <span class="t">${sc.period > TOTAL_PERIODS ? 'OT' : _t('{0}° P', sc.period)} • ${sc.timeStr}${sc.sit ? ' • ' + sc.sit : ''}</span><span class="n">#${rosterEsc(sc.num)} ${rosterEsc(sc.name)}</span><span class="c">${rosterEsc(sc.clubName)}</span></div>`).join('')
                 : '<div class="pz-empty">Nessuna rete segnata finora.</div>';
             document.getElementById('pz-stats').innerHTML = `
                 <div class="pz-stat-head">
@@ -15491,7 +15517,7 @@
                 </div>
                 ${rows.map(row).join('')}
                 <div class="pz-scorers"><h4>Marcatori</h4>${scorers}</div>`;
-            document.getElementById('pz-stats-sub').textContent = `${currentPeriod}° periodo di ${TOTAL_PERIODS} • ${hudTimerEl ? hudTimerEl.textContent : ''} da giocare`;
+            document.getElementById('pz-stats-sub').textContent = _t('{0} periodo di {1} • {2} da giocare', I18N.ord(currentPeriod), TOTAL_PERIODS, hudTimerEl ? hudTimerEl.textContent : '');
         }
 
         // --- REGIA DELLA PAUSA: riprese cinematografiche in sequenza con dissolvenza ---
@@ -15560,7 +15586,7 @@
             c.fading = false;
             if (shot.skater) document.getElementById('pz-shot-name').innerHTML = skaterTitleHTML(shot.skater);
             else document.getElementById('pz-shot-name').textContent = shot.name;
-            document.getElementById('pz-shot-sub').textContent = shot.sub ? '• ' + shot.sub : '';
+            document.getElementById('pz-shot-sub').textContent = shot.sub ? '• ' + _t(shot.sub) : '';
             const lbl = document.querySelector('#pause-menu .pz-shot');
             if (lbl) restartAnim(lbl);
             const fade = document.getElementById('pz-fade');
@@ -15692,6 +15718,11 @@
                 // lascia disegnare la scelta prima della ricostruzione del palazzetto
                 setTimeout(() => { setGraphicsMode(b.dataset.gfx); if (pausePage === 'graphics') renderPauseGraphics(); }, 40);
             });
+            document.getElementById('pz-langs').addEventListener('click', e => {
+                const b = e.target.closest('[data-ui-lang]');
+                if (b) setUiLanguage(b.dataset.uiLang);
+            });
+            updateLangLabel();
             document.getElementById('pz-cams').addEventListener('click', e => {
                 const b = e.target.closest('[data-cam]');
                 if (b) setCameraMode(b.dataset.cam);
@@ -15765,7 +15796,10 @@
                         if (action === 'quick') {
                             matchOrigin = 'quick';
                             randomizeQuickMatchConfig();
-                            launchMatchFromCurrentConfig();
+                            openMatchIntro('quick', () => {
+                                titleSplashScreen.classList.remove('hidden');
+                                if (window.focusSplashTile) setTimeout(window.focusSplashTile, 0);
+                            });
                         } else if (action === 'competition' && window.Competition) {
                             window.Competition.open();
                         } else if (action === 'manager' && window.Manager) {
@@ -15786,19 +15820,8 @@
                     // keyboard highlight
                     document.querySelectorAll('.nhl-menu-item').forEach(el => el.classList.remove('active'));
                     item.classList.add('active');
-                    // partita rapida: livello della CPU scelto a ogni avvio. L'amichevole lo chiede su "Scendi in
-                    // pista" (dopo la partita si torna alla scelta squadre); competizione e manager quando si
-                    // crea la stagione o la carriera
-                    if (action === 'quick') {
-                        window.pickDifficulty({
-                            title: 'Scegli la difficoltà',
-                            sub: 'Partita rapida • squadra avversaria',
-                            current: matchConfig.difficulty,
-                            onPick: id => { setFreeMatchDifficulty(id); go(); },
-                            onCancel: () => { if (window.focusSplashTile) setTimeout(window.focusSplashTile, 0); }
-                        });
-                        return;
-                    }
+                    // partita rapida e amichevole: il livello della CPU si sceglie dalla presentazione della partita
+                    // (MatchIntro); competizione e manager lo chiedono quando si crea la stagione o la carriera
                     go();
                 });
             });
@@ -15988,14 +16011,8 @@
             const startBtn = document.getElementById('start-btn');
             if (startBtn) {
                 startBtn.addEventListener('click', () => {
-                    // amichevole: livello della CPU scelto a ogni partita (proposto l'ultimo usato)
-                    window.pickDifficulty({
-                        title: 'Scegli la difficoltà',
-                        sub: 'Amichevole • squadra avversaria',
-                        current: matchConfig.difficulty,
-                        onPick: id => { setFreeMatchDifficulty(id); launchMatchFromCurrentConfig(); },
-                        onCancel: () => { if (window.UIKit) window.UIKit.focus(startBtn); }
-                    });
+                    // amichevole: presentazione della partita, da lì il livello della CPU (proposto l'ultimo usato)
+                    openMatchIntro('friendly', () => { if (window.UIKit) window.UIKit.focus(startBtn); });
                 });
             }
 
@@ -16559,6 +16576,7 @@
     <script src="src/manager/manager.js"></script>
     <!-- Impaginazione con frecce, adattamento allo schermo e navigazione da tastiera -->
     <script src="src/ui/uikit.js"></script>
+    <script src="src/ui/MatchIntro.js"></script>
     <script src="src/input/Gamepad.js"></script>
     <script src="src/data/funFacts.js"></script>
     <script src="src/audio/commentaryPhrases.js"></script>
