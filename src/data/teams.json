@@ -3705,6 +3705,182 @@
       ]
     },
     {
+      "id": "valence",
+      "league": "LIGUE ELITE",
+      "name": "AIGLONS DE VALENCE",
+      "shortName": "AIGLONS",
+      "abbr": "VLC",
+      "note": "Roster fornito dal club: 6 giocatori (1 difensore, 2 attaccanti, 3 giocatori di movimento), senza statistiche e SENZA PORTIERE: il portiere è un segnaposto (PORTIERE, numero 1) da sostituire. Numeri: Jancso 87 dal roster; Recrosio 10 e Labreux 36 dalle foto della squadra; De Las Heras 5, Fiedler 15 e Saint-Jacques 19 PROVVISORI. Con 6 giocatori per 12 posti ognuno gioca in due linee; i giocatori di movimento coprono anche la difesa. C/LW/RW scelti provvisoriamente.",
+      "jerseyClubId": "valence",
+      "homeArena": "valence",
+      "logo": "valence.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/valence_1.png",
+        "assets/jerseys/valence_2.png"
+      ],
+      "ratings": {
+        "off": 73,
+        "def": 71,
+        "goa": 70
+      },
+      "colors": {
+        "primary": "#d8232a",
+        "secondary": "#141416",
+        "staffJacket": "#141416",
+        "coachJacket": "#d8232a"
+      },
+      "rosterScreen": {
+        "photo": "valence.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": {
+        "first": "Sébastien",
+        "last": "Reina",
+        "role": "Allenatore",
+        "note": "Allenatore degli Aiglons"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "PORTIERE",
+        "first": ""
+      },
+      "backupGoalies": [],
+      "reserves": [],
+      "kits": {
+        "red": {
+          "label": "Divisa Rossa",
+          "primary": "#d8232a",
+          "pants": "#2a1a18",
+          "helmet": "#d8232a",
+          "glove": "#141416"
+        },
+        "white": {
+          "label": "Divisa Bianca",
+          "primary": "#f6f6f4",
+          "pants": "#d8232a",
+          "helmet": "#d8232a",
+          "glove": "#d8232a"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "RECROSIO",
+            "first": "Maxime",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "15",
+            "name": "FIEDLER",
+            "first": "Ondrej",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "36",
+            "name": "LABREUX",
+            "first": "Yoni",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "87",
+            "name": "JANCSO",
+            "first": "David",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "19",
+            "name": "SAINT-JACQUES",
+            "first": "Simon",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "5",
+            "name": "DE LAS HERAS",
+            "first": "Ivan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "15",
+            "name": "FIEDLER",
+            "first": "Ondrej",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "36",
+            "name": "LABREUX",
+            "first": "Yoni",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "RECROSIO",
+            "first": "Maxime",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "19",
+            "name": "SAINT-JACQUES",
+            "first": "Simon",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "5",
+            "name": "DE LAS HERAS",
+            "first": "Ivan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "87",
+            "name": "JANCSO",
+            "first": "David",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "asiago_newts",
       "league": "SERIE B",
       "name": "ASIAGO NEWTS",
