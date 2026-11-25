@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="src/ui/uikit.css">
     <link rel="stylesheet" href="src/competition/competition.css" data-comp-css>
     <link rel="stylesheet" href="src/ui/matchintro.css">
+    <link rel="stylesheet" href="src/ui/logointro.css">
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Three.js 0.187 in bundle classico (npm run build:three) + compatibilità con le tarature r128 -->
     <script src="src/vendor/three.min.js"></script>
@@ -1587,6 +1588,119 @@
 </head>
 <body>
 
+    <!-- INTRO DEL LOGO: prima schermata in assoluto (6 s, src/ui/logointro.css), con track_logo_intro in sottofondo.
+         Poi l'avviso iniziale. Un tasto o un tocco la salta. -->
+    <div id="logo-intro-screen" aria-hidden="true">
+        <div class="li-stage">
+            <div class="li-streaks"><i></i><i></i><i></i></div>
+            <div class="li-ring r1"></div>
+            <div class="li-ring r2"></div>
+            <div class="li-shadow"></div>
+            <div class="li-puck"><img src="assets/logos/game%20badge.png" alt="" draggable="false"><span class="li-shine"></span></div>
+        </div>
+        <div class="li-tag"><span class="li-line"></span><em>The unofficial hockey in line game</em><span class="li-line"></span></div>
+        <div class="li-hint">Tocca lo schermo o premi un tasto</div>
+        <div class="li-load"></div>
+    </div>
+    <script>
+        // Intro del logo. La musica parte subito nelle app (autoplay consentito da MainActivity / GameViewController);
+        // nel browser, se l'audio automatico è bloccato, il logo aspetta un tocco o un tasto e poi parte con la musica.
+        // Con la musica spenta nelle opzioni parte subito, in silenzio. Alla fine: evento 'hil:logo-intro-done'
+        // (l'avviso iniziale comincia il suo conto da lì) e la musica dei menu riprende (syncGameAudio).
+        (function () {
+            const el = document.getElementById('logo-intro-screen');
+            if (!el) return;
+            window.logoIntroOpen = true;
+            const DURATION = 6000, FADE_AT = 4800;
+            let started = false, finished = false, audio = null, endT = null, fadeT = null;
+            let musicOn = true, vol = 0.8;
+            try {
+                const p = JSON.parse(localStorage.getItem('hil_audio_prefs') || '{}');
+                if (p.music === false) musicOn = false;
+                if (typeof p.musicVol === 'number') vol = Math.max(0, Math.min(1, p.musicVol));
+            } catch (e) {}
+            // dissolvenza dell'audio (setInterval: continua anche se la scheda non è in primo piano)
+            const fadeAudio = ms => {
+                if (!audio) return;
+                const a = audio, v0 = a.volume, t0 = Date.now();
+                clearInterval(fadeT);
+                fadeT = setInterval(() => {
+                    const k = Math.min(1, (Date.now() - t0) / ms);
+                    a.volume = v0 * (1 - k);
+                    if (k >= 1) { clearInterval(fadeT); a.pause(); a.removeAttribute('src'); }
+                }, 40);
+            };
+            const finish = () => {
+                if (finished) return;
+                finished = true;
+                window.logoIntroOpen = false;
+                el.classList.add('hidden');
+                window.removeEventListener('keydown', onInput, true);
+                window.dispatchEvent(new Event('hil:logo-intro-done'));
+            };
+            const run = () => {
+                if (started) return;
+                started = true;
+                el.classList.remove('is-waiting');
+                void el.offsetWidth;
+                el.classList.add('is-play');
+                setTimeout(() => fadeAudio(1200), FADE_AT);
+                endT = setTimeout(finish, DURATION);
+            };
+            const skip = () => {
+                if (!started || finished) return;
+                clearTimeout(endT);
+                el.classList.add('is-skip');
+                fadeAudio(350);
+                setTimeout(finish, 360);
+            };
+            function onInput(e) {
+                if (finished) return;
+                if (!started && !el.classList.contains('is-waiting')) return;   // ancora in caricamento
+                e.stopImmediatePropagation();
+                if (e.cancelable) e.preventDefault();
+                if (!started) {
+                    // primo gesto: ora il browser lascia partire l'audio
+                    if (audio) { try { audio.currentTime = 0; } catch (err) {} audio.play().catch(() => {}); }
+                    run();
+                } else skip();
+            }
+            window.addEventListener('keydown', onInput, true);
+            el.addEventListener('pointerdown', onInput);
+            if (musicOn) {
+                audio = new Audio('assets/audio/track_logo_intro.mp3');
+                audio.preload = 'auto';
+                audio.volume = Math.min(1, 0.8 * vol);
+            }
+            const begin = () => {
+                if (!audio) { run(); return; }
+                const wait = () => { if (!started) el.classList.add('is-waiting'); };
+                const guard = setTimeout(wait, 1500);      // play() che non risponde: come se fosse bloccato
+                let p;
+                try { p = audio.play(); } catch (e) { p = null; }
+                if (p && p.then) p.then(() => { clearTimeout(guard); run(); }).catch(() => { clearTimeout(guard); wait(); });
+                else { clearTimeout(guard); run(); }
+            };
+            // Il caricamento del gioco (script principale, Three.js, palazzetto) tiene occupato il browser per
+            // qualche secondo: lo schermo resta bianco e l'animazione con la musica parte a pagina caricata, quando
+            // i fotogrammi tornano regolari (6 di fila sotto i 40 ms, al massimo 4 s di attesa). Così i 6 secondi
+            // si vedono sempre interi e fluidi.
+            const settle = () => {
+                let last = performance.now(), good = 0;
+                const t0 = last;
+                const tick = now => {
+                    good = now - last < 40 ? good + 1 : 0;
+                    last = now;
+                    if (good >= 6 || now - t0 > 4000) begin();
+                    else requestAnimationFrame(tick);
+                };
+                requestAnimationFrame(tick);
+            };
+            if (document.readyState === 'complete') settle();
+            else window.addEventListener('load', settle, { once: true });
+        })();
+    </script>
+
     <!-- DISCLAIMER: prima schermata, almeno 5 secondi (e finché la pagina non ha finito di caricare) -->
     <div id="disclaimer-screen" role="dialog" aria-modal="true" aria-labelledby="dc-title">
         <div class="dc-wrap">
@@ -1654,7 +1768,7 @@
                 window.dispatchEvent(new Event('hil:disclaimer-closed'));
                 if (window.focusSplashTile) window.focusSplashTile();
             };
-            requestAnimationFrame(() => requestAnimationFrame(() => {
+            const begin = () => requestAnimationFrame(() => requestAnimationFrame(() => {
                 // barra di avanzamento sincronizzata con il conto
                 const fill = document.querySelector('#disclaimer-screen .dc-next i');
                 if (fill) { fill.style.animation = 'none'; void fill.offsetWidth; fill.style.animation = ''; }
@@ -1671,6 +1785,9 @@
                     close();
                 }, MIN_MS);
             }));
+            // prima l'intro del logo, poi l'avviso
+            if (window.logoIntroOpen) window.addEventListener('hil:logo-intro-done', begin, { once: true });
+            else begin();
             window.addEventListener('load', () => { loaded = true; close(); });
         })();
     </script>
@@ -10821,8 +10938,8 @@
             const statsOpen = !document.getElementById('match-stats-modal').classList.contains('hidden') || (window.Ceremony && window.Ceremony.isOverlayOpen());
             // colonna sonora MP3: titoli, scelte di squadre/maglie/palazzetto, caricamenti e riprese cinematiche;
             // in silenzio durante l'azione (ingaggio, gioco, esultanza con il suo stacchetto)
-            const cinematic = gamePaused || statsOpen || gameState === 'menu' || gameState === 'lineup_loading' || gameState === 'logo_intro'
-                || gameState === 'arena_tour' || gameState === 'intro' || gameState === 'cutaway' || gameState === 'replay';
+            const cinematic = !window.logoIntroOpen && (gamePaused || statsOpen || gameState === 'menu' || gameState === 'lineup_loading' || gameState === 'logo_intro'
+                || gameState === 'arena_tour' || gameState === 'intro' || gameState === 'cutaway' || gameState === 'replay');
             // playlist: menu (track 1-3), schermate della competizione (track 4), momenti di partita (track 6)
             if (ga.setBgContext) {
                 const compRoot = document.getElementById('comp-root');
@@ -13784,6 +13901,8 @@
             syncArenaViewOffset();
             syncBroadcastHud();
             syncGameAudio(dt);
+            // intro del logo a schermo: la scena è coperta dal bianco, niente aggiornamenti né disegno (animazione fluida)
+            if (window.logoIntroOpen) return;
             if (puck && gameState !== 'playing' && !gamePaused) updateBroadcastOverlays();
 
             if (gamePaused) {
@@ -15814,7 +15933,7 @@
                     // finto caricamento con un fun fact prima di entrare nella modalità scelta
                     const modeLabel = (item.querySelector('.splash-tile-title') || {}).textContent || '';
                     const go = () => {
-                        if (window.showFunFactLoading) window.showFunFactLoading(modeLabel.trim(), proceed, hideSplash);
+                        if (action !== 'play' && window.showFunFactLoading) window.showFunFactLoading(modeLabel.trim(), proceed, hideSplash);
                         else proceed();
                     };
                     // keyboard highlight

@@ -24,6 +24,8 @@ I18N.add('en', {
     'Difficoltà': 'Difficulty',
     'Cambia': 'Change',
     'Attuale': 'Current',
+    // intro del logo
+    'Tocca lo schermo o premi un tasto': 'Tap the screen or press any key',
     // livelli (DIFFICULTY_LEVELS in index.html)
     'Livello di difficoltà': 'Difficulty level',
     'Squadra avversaria': 'Opposing team',
