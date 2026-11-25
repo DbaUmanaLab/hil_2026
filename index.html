@@ -2982,10 +2982,21 @@
                 capacity: 'Tribunetta e Ballatoio',
                 surface: 'Pavimento Sportivo Azzurro',
                 roof: 'Capriate Reticolari e Lanterna Vetrata'
+            },
+            epernay: {
+                id: 'epernay',
+                name: 'GYMNASE HENRI-VIET',
+                shortTitle: 'Gymnase Henri-Viet',
+                location: 'Épernay (Marne) • Grand Est, Francia',
+                clubBadge: 'Casa: Bombardiers d’Épernay',
+                desc: 'Grande palestra col controsoffitto a pannelli gialli e verde petrolio a bande diagonali e le lunghe file di plafoniere. Sul lato dei cronometristi la parete gialla con i controventi verdi dipinti a zig-zag, i pilastri verde brillante, la fascia di finestre traslucide in alto e il tabellone; davanti, per tutta la lunghezza della pista, la tribuna a gradoni in doghe di legno. Lato panchine e testate verde scuro, con le tende divisorie raccolte, gli armadietti in legno e gli stendardi bianchi del club. Pista a piastrelle azzurre con la riga centrale rossa e le aree di porta arancioni, balaustre bianche con la ringhiera in tubo sui piedi rossi.',
+                capacity: 'Tribuna a Gradoni in Legno',
+                surface: 'Piastrelle Modulari Azzurre',
+                roof: 'Controsoffitto a Pannelli Gialli e Verdi'
             }
         };
 
-        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'rethel', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'valladolid', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova', 'monleale', 'tres_cantos', 'arona', 'espanya', 'sagunto', 'metropolitano', 'castellon', 'aranda', 'rubi', 'anglet', 'angers', 'grenoble', 'caen'];
+        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'rethel', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'valladolid', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova', 'monleale', 'tres_cantos', 'arona', 'espanya', 'sagunto', 'metropolitano', 'castellon', 'aranda', 'rubi', 'anglet', 'angers', 'grenoble', 'caen', 'epernay'];
         // Palazzetti presenti nel menu ma non selezionabili (al momento nessuno)
         const DISABLED_ARENAS = new Set();
         const SELECTABLE_ARENA_IDS = ARENA_IDS.filter(id => !DISABLED_ARENAS.has(id));
@@ -3469,7 +3480,9 @@
             // finestre piccole o solo sulle testate: in più i lucernari sul colmo, da cui entra il sole
             fox_legnaro: { skylights: true },
             ferrara: { skylights: true },
-            molina: { elev: 52 }
+            molina: { elev: 52 },
+            // Gymnase Henri-Viet: finestre uguali sui due lati lunghi, il sole entra da quelle sopra la tribuna
+            epernay: { side: '-x' }
         };
         function sunBeamGradientTexture() {
             if (sunBeamGradientTexture.tex) return sunBeamGradientTexture.tex;
@@ -4365,7 +4378,7 @@
         };
         const ARENA_SURFACE = {
             cittadella: 'tiles', vicenza: 'tiles', milano: 'tiles', asiago: 'tiles', novi: 'tiles', ferrara: 'tiles',
-            padova: 'tiles', edera_trieste: 'tiles', rethel: 'tiles', valladolid: 'tiles', monleale: 'tiles', tres_cantos: 'tiles', arona: 'tiles', espanya: 'tiles', sagunto: 'tiles', metropolitano: 'tiles', castellon: 'tiles', aranda: 'tiles', anglet: 'tiles', angers: 'tiles', grenoble: 'tiles', caen: 'tiles',
+            padova: 'tiles', edera_trieste: 'tiles', rethel: 'tiles', valladolid: 'tiles', monleale: 'tiles', tres_cantos: 'tiles', arona: 'tiles', espanya: 'tiles', sagunto: 'tiles', metropolitano: 'tiles', castellon: 'tiles', aranda: 'tiles', anglet: 'tiles', angers: 'tiles', grenoble: 'tiles', caen: 'tiles', epernay: 'tiles',
             cus_verona: 'polished', treviso: 'polished', time42: 'polished',
             empoli: 'resin', molina: 'resin', piacenza: 'resin', villeneuve: 'resin', forli: 'resin', fox_legnaro: 'resin', rubi: 'resin',
             kraken_camaiore: 'parquet', roma: 'parquet',
@@ -5906,8 +5919,13 @@
             const n = arenaScoreboards.north;
             if (!n) return;
             n.rotation.y = 0;
-            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'rethel', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'valladolid', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova', 'monleale', 'tres_cantos', 'arona', 'espanya', 'sagunto', 'metropolitano', 'castellon', 'aranda', 'rubi', 'anglet', 'angers', 'grenoble', 'caen'].includes(matchConfig.arena);
-            if (matchConfig.arena === 'caen') {
+            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'rethel', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'valladolid', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova', 'monleale', 'tres_cantos', 'arona', 'espanya', 'sagunto', 'metropolitano', 'castellon', 'aranda', 'rubi', 'anglet', 'angers', 'grenoble', 'caen', 'epernay'].includes(matchConfig.arena);
+            if (matchConfig.arena === 'epernay') {
+                // tabellone sulla parete gialla dei cronometristi, sopra la tribuna e sotto la fascia di finestre
+                n.position.set(-25.1, 6.2, 2);
+                n.rotation.y = Math.PI / 2;
+                n.scale.setScalar(0.36);
+            } else if (matchConfig.arena === 'caen') {
                 // tabellone sulla parete est, fra la scritta Les Conquérants e la bandiera della Normandia
                 n.position.set(23.6, 5.4, -2);
                 n.rotation.y = -Math.PI / 2;
@@ -6255,7 +6273,7 @@
                 roughness: 0.55
             });
             const benchBackMat = isAsiago ? new THREE.MeshStandardMaterial({ map: pbr.woodDiffuse, bumpMap: preset.usePhysicalMat ? pbr.woodBump : null, bumpScale: 0.015, color: 0xc8955a, roughness: 0.6 }) : new THREE.MeshStandardMaterial({
-                color: arenaId === 'caen' ? 0x141416 : arenaId === 'grenoble' ? 0x14204a : arenaId === 'angers' ? 0x1b2a6b : arenaId === 'anglet' ? 0x14583a : arenaId === 'rubi' ? 0x141416 : arenaId === 'aranda' ? 0x2350b8 : arenaId === 'castellon' ? 0x141416 : arenaId === 'metropolitano' ? 0x1f3a9e : arenaId === 'sagunto' ? 0x141416 : arenaId === 'espanya' ? 0x3a3f46 : arenaId === 'arona' ? 0x1f3f95 : arenaId === 'tres_cantos' ? 0x141416 : arenaId === 'monleale' ? 0x1c286e : arenaId === 'padova' ? 0x2a2a2e : arenaId === 'parma' ? 0x1e4a30 : arenaId === 'torre_pellice' ? 0x8a6a48 : arenaId === 'kemarin' ? 0x14244a : arenaId === 'piacenza' ? 0x141416 : arenaId === 'ferrara' ? 0x1d3f9a : arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'rethel' ? 0x111114 : arenaId === 'valladolid' ? 0x1c1e24 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
+                color: arenaId === 'epernay' ? 0x141416 : arenaId === 'caen' ? 0x141416 : arenaId === 'grenoble' ? 0x14204a : arenaId === 'angers' ? 0x1b2a6b : arenaId === 'anglet' ? 0x14583a : arenaId === 'rubi' ? 0x141416 : arenaId === 'aranda' ? 0x2350b8 : arenaId === 'castellon' ? 0x141416 : arenaId === 'metropolitano' ? 0x1f3a9e : arenaId === 'sagunto' ? 0x141416 : arenaId === 'espanya' ? 0x3a3f46 : arenaId === 'arona' ? 0x1f3f95 : arenaId === 'tres_cantos' ? 0x141416 : arenaId === 'monleale' ? 0x1c286e : arenaId === 'padova' ? 0x2a2a2e : arenaId === 'parma' ? 0x1e4a30 : arenaId === 'torre_pellice' ? 0x8a6a48 : arenaId === 'kemarin' ? 0x14244a : arenaId === 'piacenza' ? 0x141416 : arenaId === 'ferrara' ? 0x1d3f9a : arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'rethel' ? 0x111114 : arenaId === 'valladolid' ? 0x1c1e24 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
                 roughness: 0.8
             });
 
@@ -6385,6 +6403,7 @@
             angers: 'src/arenas/angers.js',
             grenoble: 'src/arenas/grenoble.js',
             caen: 'src/arenas/caen.js',
+            epernay: 'src/arenas/epernay.js',
             roma: 'src/arenas/roma.js',
             treviso: 'src/arenas/treviso.js',
             novi: 'src/arenas/novi.js',
@@ -6869,7 +6888,9 @@
             // Halle Clemenceau: pista azzurro chiaro, balaustre bianche col bordo giallo, niente vetro (transenne nel modulo)
             grenoble: { dir: 'assets/textures/grenoble/', normal: 'assets/textures/grenoble/rink_normal.jpg', floorTint: 0xc4d0d8, floorTintLow: 0xb8c4cc, noGlass: true },
             // Halle des Granges: pavimento azzurro, balaustre basse bianche, niente vetro (reti dietro le porte nel modulo)
-            caen: { dir: 'assets/textures/caen/', normal: 'assets/textures/caen/rink_normal.jpg', floorTint: 0xb2c4d2, floorTintLow: 0xa6b8c6, noGlass: true }
+            caen: { dir: 'assets/textures/caen/', normal: 'assets/textures/caen/rink_normal.jpg', floorTint: 0xb2c4d2, floorTintLow: 0xa6b8c6, noGlass: true },
+            // Gymnase Henri-Viet: piastrelle azzurre, balaustre bianche con la ringhiera in tubo, niente vetro (reti dietro le porte nel modulo)
+            epernay: { dir: 'assets/textures/epernay/', normal: 'assets/textures/epernay/rink_normal.jpg', floorTint: 0xaec0d0, floorTintLow: 0xa2b4c4, noGlass: true }
         };
 
         // Balaustre: ogni striscia rappresenta 18,5 m di pannelli pubblicitari
@@ -7206,7 +7227,7 @@
                             { jacket: 0xf8fafc, shirt: 0xdc2626, isJersey: true }
                         ]))));
 
-            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'rethel' || arenaId === 'valladolid' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina' || arenaId === 'ferrara' || arenaId === 'piacenza' || arenaId === 'kemarin' || arenaId === 'torre_pellice' || arenaId === 'parma' || arenaId === 'padova' || arenaId === 'monleale' || arenaId === 'tres_cantos' || arenaId === 'arona' || arenaId === 'espanya' || arenaId === 'sagunto' || arenaId === 'metropolitano' || arenaId === 'castellon' || arenaId === 'aranda' || arenaId === 'rubi' || arenaId === 'anglet' || arenaId === 'angers' || arenaId === 'grenoble' || arenaId === 'caen') return;   // pubblico costruito dall'architettura del palazzetto
+            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'rethel' || arenaId === 'valladolid' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina' || arenaId === 'ferrara' || arenaId === 'piacenza' || arenaId === 'kemarin' || arenaId === 'torre_pellice' || arenaId === 'parma' || arenaId === 'padova' || arenaId === 'monleale' || arenaId === 'tres_cantos' || arenaId === 'arona' || arenaId === 'espanya' || arenaId === 'sagunto' || arenaId === 'metropolitano' || arenaId === 'castellon' || arenaId === 'aranda' || arenaId === 'rubi' || arenaId === 'anglet' || arenaId === 'angers' || arenaId === 'grenoble' || arenaId === 'caen' || arenaId === 'epernay') return;   // pubblico costruito dall'architettura del palazzetto
 
             // Spalti laterali dietro il tavolo cronometristi (con spazio sull'angolo destro per la casetta bar a Cittadella)
             for (let row = 0; row < 4; row++) {

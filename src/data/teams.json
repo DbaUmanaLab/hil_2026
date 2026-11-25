@@ -3180,6 +3180,180 @@
       ]
     },
     {
+      "id": "epernay",
+      "league": "LIGUE ELITE",
+      "name": "BOMBARDIERS D'ÉPERNAY",
+      "shortName": "BOMBARDIERS",
+      "abbr": "EPE",
+      "note": "Roster fornito dal club (1 portiere, 4 difensori, 10 attaccanti), senza statistiche. C/LW/RW e linee scelti provvisoriamente; Pature (attaccante) e Mathias Chaumet (difensore) tra le riserve. Nessun portiere di riserva; allenatore non indicato.",
+      "jerseyClubId": "epernay",
+      "homeArena": "epernay",
+      "logo": "epernay.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/epernay.png"
+      ],
+      "ratings": {
+        "off": 73,
+        "def": 72,
+        "goa": 71
+      },
+      "colors": {
+        "primary": "#62b83a",
+        "secondary": "#141416",
+        "staffJacket": "#141416",
+        "coachJacket": "#62b83a"
+      },
+      "rosterScreen": {
+        "photo": "epernay.jpg",
+        "focus": "50% 25%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "3",
+        "name": "CHAUMET",
+        "first": "Bastien"
+      },
+      "backupGoalies": [],
+      "reserves": [
+        {
+          "num": "94",
+          "name": "PATURE",
+          "first": "Matteo"
+        },
+        {
+          "num": "79",
+          "name": "CHAUMET",
+          "first": "Mathias"
+        }
+      ],
+      "kits": {
+        "black": {
+          "label": "Divisa Nera",
+          "primary": "#141416",
+          "pants": "#141416",
+          "helmet": "#141416",
+          "glove": "#62b83a"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "GERMANO",
+            "first": "Hugo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "5",
+            "name": "RODRIGUES",
+            "first": "Hugo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "7",
+            "name": "DUPONT",
+            "first": "Julien",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "DENEUCHATEL",
+            "first": "Arthur",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "71",
+            "name": "VITOVEC",
+            "first": "Miroslav",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "12",
+            "name": "DUPONT",
+            "first": "Matthieu",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "17",
+            "name": "TRAN",
+            "first": "Louis",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "14",
+            "name": "BERNAD",
+            "first": "Jakub",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "75",
+            "name": "MAUJEAN",
+            "first": "Matteo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "13",
+            "name": "GARCIA-PRIETO",
+            "first": "Nathan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "76",
+            "name": "MORIZET",
+            "first": "Valentin",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "26",
+            "name": "DENEUCHATEL",
+            "first": "Martin",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "asiago_newts",
       "league": "SERIE B",
       "name": "ASIAGO NEWTS",
