@@ -3354,6 +3354,194 @@
       ]
     },
     {
+      "id": "vierzon",
+      "league": "LIGUE ELITE",
+      "name": "PRÉDATEURS DE VIERZON",
+      "shortName": "PRÉDATEURS",
+      "abbr": "VIE",
+      "note": "Roster fornito dal club (2 portieri, 5 difensori, 6 attaccanti), senza statistiche. Con 6 attaccanti per 9 posti tre attaccanti giocano in due linee; Candellier e Ledon (difensori) tra le riserve. C/LW/RW, linee e portiere titolare scelti provvisoriamente; allenatore non indicato.",
+      "jerseyClubId": "vierzon",
+      "homeArena": "vierzon",
+      "logo": "vierzon.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/vierzon_1.png",
+        "assets/jerseys/vierzon_2.png"
+      ],
+      "ratings": {
+        "off": 74,
+        "def": 73,
+        "goa": 74
+      },
+      "colors": {
+        "primary": "#d81e2a",
+        "secondary": "#141416",
+        "staffJacket": "#141416",
+        "coachJacket": "#d81e2a"
+      },
+      "rosterScreen": {
+        "photo": "vierzon.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "31",
+        "name": "MATOUSEK",
+        "first": "Jiri"
+      },
+      "backupGoalies": [
+        {
+          "num": "71",
+          "name": "ECHES",
+          "first": "Gauthier"
+        }
+      ],
+      "reserves": [
+        {
+          "num": "78",
+          "name": "CANDELLIER",
+          "first": "Matheo"
+        },
+        {
+          "num": "97",
+          "name": "LEDON",
+          "first": "Tanguy"
+        }
+      ],
+      "kits": {
+        "red": {
+          "label": "Divisa Rossa",
+          "primary": "#d81e2a",
+          "pants": "#141416",
+          "helmet": "#d81e2a",
+          "glove": "#141416"
+        },
+        "pink": {
+          "label": "Divisa Rosa",
+          "primary": "#e0197a",
+          "pants": "#141416",
+          "helmet": "#f8fafc",
+          "glove": "#e0197a"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "25",
+            "name": "XAVIER",
+            "first": "Judicael",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "4",
+            "name": "BOUCHUT",
+            "first": "Baptiste",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "18",
+            "name": "LEVILLAIN",
+            "first": "Florian",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "49",
+            "name": "JAROCKI",
+            "first": "Robin",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "9",
+            "name": "DESSON",
+            "first": "Jean",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "6",
+            "name": "LUYTON",
+            "first": "Antonin",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "57",
+            "name": "BALDWIN",
+            "first": "Chuck",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "21",
+            "name": "BALDWIN",
+            "first": "David",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "25",
+            "name": "XAVIER",
+            "first": "Judicael",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "6",
+            "name": "LUYTON",
+            "first": "Antonin",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "18",
+            "name": "LEVILLAIN",
+            "first": "Florian",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "74",
+            "name": "VYORAL",
+            "first": "Jan",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "asiago_newts",
       "league": "SERIE B",
       "name": "ASIAGO NEWTS",
