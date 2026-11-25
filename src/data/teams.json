@@ -3542,6 +3542,169 @@
       ]
     },
     {
+      "id": "metz",
+      "league": "LIGUE ELITE",
+      "name": "GREEN FALCONS DE PONT-DE-METZ",
+      "shortName": "GREEN FALCONS",
+      "abbr": "PDM",
+      "note": "Roster fornito dal club: 1 portiere e 4 giocatori di movimento, senza statistiche. Numeri PROVVISORI da correggere (nel roster nessun numero): Josse 8, Cognard 11, Delaroche 17, Hard 22; nome di battesimo di Delaroche e Hard non indicato. Con 4 giocatori di movimento per 12 posti gli stessi quattro occupano tutte le linee, con ruoli che ruotano. C/LW/RW scelti provvisoriamente. Nessun portiere di riserva; allenatore non indicato.",
+      "jerseyClubId": "metz",
+      "homeArena": "metz",
+      "logo": "metz.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/metz.png"
+      ],
+      "ratings": {
+        "off": 68,
+        "def": 67,
+        "goa": 69
+      },
+      "colors": {
+        "primary": "#2aa84a",
+        "secondary": "#141416",
+        "staffJacket": "#141416",
+        "coachJacket": "#2aa84a"
+      },
+      "rosterScreen": {
+        "photo": "metz.jpg",
+        "focus": "50% 35%"
+      },
+      "coach": null,
+      "goalie": {
+        "num": "34",
+        "name": "GOSSELIN",
+        "first": "Alexis"
+      },
+      "backupGoalies": [],
+      "reserves": [],
+      "kits": {
+        "black": {
+          "label": "Divisa Nera",
+          "primary": "#141416",
+          "pants": "#141416",
+          "helmet": "#141416",
+          "glove": "#2aa84a"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "8",
+            "name": "JOSSE",
+            "first": "Adrien",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "COGNARD",
+            "first": "Thomas",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "17",
+            "name": "DELAROCHE",
+            "first": "",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "22",
+            "name": "HARD",
+            "first": "",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "11",
+            "name": "COGNARD",
+            "first": "Thomas",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "DELAROCHE",
+            "first": "",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "22",
+            "name": "HARD",
+            "first": "",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "8",
+            "name": "JOSSE",
+            "first": "Adrien",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "17",
+            "name": "DELAROCHE",
+            "first": "",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "22",
+            "name": "HARD",
+            "first": "",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "8",
+            "name": "JOSSE",
+            "first": "Adrien",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "11",
+            "name": "COGNARD",
+            "first": "Thomas",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "asiago_newts",
       "league": "SERIE B",
       "name": "ASIAGO NEWTS",
