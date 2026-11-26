@@ -2711,6 +2711,7 @@
     <script src="src/game/Heads.js"></script>
     <script src="src/game/People.js"></script>
     <script src="src/game/PoseBlend.js"></script>
+    <script src="src/game/GoalieMask.js"></script>
     <script src="src/game/Warmup.js"></script>
     <script>
         // --- SQUADRE E LEGHE: dati in src/data/teams.json, caricati da src/data/teams-loader.js (TEAM_DATA) ---
@@ -8427,6 +8428,62 @@
             return g;
         }
 
+        // Visiera trasparente a metà faccia per giocatori e arbitri: lastra di policarbonato che avvolge il davanti
+        // del casco dal bordo sopra la fronte fino alla punta del naso, un poco più lontana dal viso in basso,
+        // con gli angoli inferiori che risalgono verso le tempie; profilo sottile sul bordo inferiore e viti
+        // sulle tempie. Geometria e materiali condivisi da tutti i caschi.
+        const HELMET_VISOR = { A: 1.2, rx: 0.162 * 0.98 + 0.012, rz: 0.162 * 1.12 + 0.01, z0: 0.012, yTop: 0.234, hMid: 0.118, hSide: 0.07 };
+        let helmetVisorParts = null;
+        function helmetVisorPoint(a, t) {
+            const V = HELMET_VISOR;
+            const h = V.hMid - (V.hMid - V.hSide) * (a / V.A) * (a / V.A);
+            return new THREE.Vector3(Math.sin(a) * V.rx * (1 + 0.03 * t), V.yTop - t * h, -Math.cos(a) * V.rz * (1 + 0.1 * t) + V.z0);
+        }
+        function helmetVisor(low) {
+            if (!helmetVisorParts) {
+                const V = HELMET_VISOR, segA = 28, segH = 6;
+                const pos = [], index = [];
+                for (let i = 0; i <= segA; i++) {
+                    const a = -V.A + 2 * V.A * i / segA;
+                    for (let j = 0; j <= segH; j++) { const p = helmetVisorPoint(a, j / segH); pos.push(p.x, p.y, p.z); }
+                }
+                for (let i = 0; i < segA; i++) for (let j = 0; j < segH; j++) {
+                    const a = i * (segH + 1) + j, b = a + segH + 1;
+                    index.push(a, b, a + 1, b, b + 1, a + 1);
+                }
+                const shield = new THREE.BufferGeometry();
+                shield.setIndex(index);
+                shield.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+                shield.computeVertexNormals();
+                const edgePts = [];
+                for (let i = 0; i <= 20; i++) edgePts.push(helmetVisorPoint(-V.A + 2 * V.A * i / 20, 1));
+                helmetVisorParts = {
+                    shield,
+                    edge: new THREE.TubeGeometry(new THREE.CatmullRomCurve3(edgePts), 40, 0.0022, 5, false),
+                    screw: new THREE.CylinderGeometry(0.008, 0.008, 0.006, 12),
+                    shieldMat: new THREE.MeshPhysicalMaterial({ color: 0xe6f1ff, transparent: true, opacity: 0.16, roughness: 0.04, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.03, depthWrite: false, side: THREE.DoubleSide }),
+                    edgeMat: new THREE.MeshStandardMaterial({ color: 0x2b2f36, roughness: 0.4, transparent: true, opacity: 0.85 }),
+                    screwMat: new THREE.MeshStandardMaterial({ color: 0xc7cbd1, metalness: 0.85, roughness: 0.3 })
+                };
+            }
+            const P = helmetVisorParts, V = HELMET_VISOR;
+            const g = new THREE.Group();
+            const shield = new THREE.Mesh(P.shield, P.shieldMat);
+            shield.renderOrder = 2;                         // dopo il viso: la trasparenza non lo cancella
+            shield.castShadow = false;
+            g.add(shield, new THREE.Mesh(P.edge, P.edgeMat));
+            if (!low) {
+                [-1, 1].forEach(sd => {
+                    const p = helmetVisorPoint(sd * V.A, 0.25);
+                    const sc = new THREE.Mesh(P.screw, P.screwMat);
+                    sc.position.copy(p).add(new THREE.Vector3(sd * 0.004, 0, 0));
+                    sc.rotation.z = Math.PI / 2;
+                    g.add(sc);
+                });
+            }
+            return g;
+        }
+
         function createSkater(clubId, kitId, teamSide, role, lineIndex, isGoalie, jerseyNum = '21', playerName = 'LAGO') {
             const root = new THREE.Group();
             const isRef = clubId === 'ref';
@@ -8519,95 +8576,18 @@
             window.HIL_PEOPLE.applyHead(head, { female: false, age: isRef ? 'adult' : 'young', facial: Math.random() < 0.3 ? 'stubble' : 'none' });
 
             if (isGoalie) {
-                const maskMat = new THREE.MeshPhysicalMaterial({ color: 0xf8fafc, roughness: 0.2, metalness: 0.1, clearcoat: 0.9 });
-                const cageMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, metalness: 0.9, roughness: 0.2 });
-                maskMat.side = THREE.DoubleSide;   // l'interno della calotta si vede dall'apertura
-                const linerMat = new THREE.MeshStandardMaterial({ color: 0x1a1a1e, roughness: 0.85, side: THREE.BackSide });
-                cageMat.color.setHex(0x1f2937);    // griglia scura, come le maschere da gara
-
-                // Ellissoide della maschera. Nella SphereGeometry il davanti (-Z) è a phi = 3π/2.
-                const MR = 0.17, MSC = new THREE.Vector3(0.98, 1.08, 1.12), MPOS = new THREE.Vector3(0, 0.18, 0.012);
-                const FRONT = Math.PI * 1.5;
-                const T_TOP = Math.PI * 0.30;      // fronte: inizio dell'apertura
-                const T_CHIN = Math.PI * 0.72;     // fine dell'apertura, inizio mentoniera
-                const T_BOTTOM = Math.PI * 0.80;   // bordo inferiore di fianchi e nuca
-                const T_CHIN_LOW = Math.PI * 0.88; // bordo inferiore della mentoniera
-                const HALF_W = Math.PI * 0.30;     // semiampiezza dell'apertura (~54°)
-                const maskPart = (mat, phiStart, phiLen, thStart, thLen, ws, hs, r = MR) => {
-                    const m = new THREE.Mesh(new THREE.SphereGeometry(r, ws, hs, phiStart, phiLen, thStart, thLen), mat);
-                    m.scale.copy(MSC);
-                    m.position.copy(MPOS);
-                    return m;
-                };
-                const cap = maskPart(maskMat, 0, Math.PI * 2, 0, T_TOP, 28, 8);
-                const sides = maskPart(maskMat, FRONT + HALF_W, Math.PI * 2 - HALF_W * 2, T_TOP, T_BOTTOM - T_TOP, 24, 12);
-                const chin = maskPart(maskMat, FRONT - HALF_W, HALF_W * 2, T_CHIN, T_CHIN_LOW - T_CHIN, 14, 5);
-                const liner = maskPart(linerMat, FRONT + HALF_W, Math.PI * 2 - HALF_W * 2, 0.15, T_BOTTOM - 0.15, 20, 10, MR * 0.97);
-                // fascia colorata dalla fronte alla nuca
-                const stripeTop = maskPart(padAccentMat, FRONT - 0.22, 0.44, 0.02, T_TOP - 0.02, 6, 6, MR * 1.004);
-                const stripeBack = maskPart(padAccentMat, Math.PI * 0.5 - 0.22, 0.44, 0.02, Math.PI * 0.7, 6, 12, MR * 1.004);
-
-                // punto sulla superficie dell'ellissoide (stessa parametrizzazione di SphereGeometry)
-                const maskPoint = (theta, phi, k) => new THREE.Vector3(
-                    -MR * k * Math.cos(phi) * Math.sin(theta) * MSC.x + MPOS.x,
-                    MR * k * Math.cos(theta) * MSC.y + MPOS.y,
-                    MR * k * Math.sin(phi) * Math.sin(theta) * MSC.z + MPOS.z
-                );
-                // la griglia sporge dal viso: più avanti al centro, a filo della calotta ai bordi
-                const cageK = (theta, phi) => {
-                    const dp = (phi - FRONT) / HALF_W, dt = (theta - (T_TOP + T_CHIN) / 2) / ((T_CHIN - T_TOP) / 2);
-                    return 1.0 + 0.07 * Math.max(0, 1 - dp * dp) * Math.max(0, 1 - 0.5 * dt * dt);
-                };
-                const cage = new THREE.Group();
-                const addBar = (pts, radius) => {
-                    const curve = new THREE.CatmullRomCurve3(pts);
-                    cage.add(new THREE.Mesh(new THREE.TubeGeometry(curve, Math.max(6, pts.length * 2), radius, 5, false), cageMat));
-                };
-                const N = 14;
-                // barre orizzontali (cornice superiore e inferiore più spesse)
-                const rows = 6;
-                for (let i = 0; i <= rows; i++) {
-                    const th = T_TOP + (T_CHIN - T_TOP) * (i / rows);
-                    const pts = [];
-                    for (let j = 0; j <= N; j++) {
-                        const ph = FRONT - HALF_W + (HALF_W * 2) * (j / N);
-                        pts.push(maskPoint(th, ph, cageK(th, ph)));
-                    }
-                    addBar(pts, (i === 0 || i === rows) ? 0.0055 : 0.0032);
-                }
-                // barre verticali; le due centrali lasciano libera la zona degli occhi (stile "cat-eye")
-                const cols = 8;
-                for (let j = 0; j <= cols; j++) {
-                    const ph = FRONT - HALF_W + (HALF_W * 2) * (j / cols);
-                    const edge = (j === 0 || j === cols);
-                    const eyeGap = (j === 2 || j === 6);
-                    const thFrom = eyeGap ? T_TOP + (T_CHIN - T_TOP) * (3 / rows) : T_TOP;
-                    const pts = [];
-                    for (let i = 0; i <= N; i++) {
-                        const th = thFrom + (T_CHIN - thFrom) * (i / N);
-                        pts.push(maskPoint(th, ph, cageK(th, ph)));
-                    }
-                    addBar(pts, edge ? 0.0055 : 0.0032);
-                }
-                headGroup.add(cap, sides, chin, liner, stripeTop, stripeBack, cage);
-                // marchio sulla fronte e sui fianchi della maschera
-                if (!lowQ) {
-                    const tex = gearLogoTexture('#111114', null);
-                    const decals = new THREE.Group();
-                    decals.scale.copy(MSC);
-                    decals.position.copy(MPOS);
-                    decals.add(
-                        shellDecal(tex, MR, 0.128, 0.03, Math.PI, 0.1, 0.003),
-                        shellDecal(tex, MR, 0.02, 0.03, Math.PI / 2 + 0.32, 0.1, 0.003),
-                        shellDecal(tex, MR, 0.02, 0.03, Math.PI * 1.5 - 0.32, 0.1, 0.003)
-                    );
-                    headGroup.add(decals);
-                }
+                // maschera da portiere: calotta sagomata con grafica nei colori della squadra, piatto posteriore
+                // e gabbia "cat-eye" cromata (src/game/GoalieMask.js)
+                headGroup.add(window.HIL_GOALIE_MASK.build({
+                    clubId, name: playerName, low: lowQ,
+                    logo: lowQ ? null : gearLogoTexture('#111114', null).image
+                }));
             } else {
-                // calotta: parte alta completa + fianchi/nuca, lasciando libero il viso (davanti = -Z, phi 3π/2)
+                // calotta: parte alta completa + fianchi/nuca su tempie e orecchie; il viso resta libero
+                // (davanti = -Z, phi 3π/2: i fianchi lasciano aperti ±69°, dove si attacca la visiera)
                 const shell = new THREE.Group();
                 const capTop = new THREE.Mesh(new THREE.SphereGeometry(0.162, 26, 10, 0, Math.PI * 2, 0, Math.PI * 0.36), helmetMat);
-                const capSide = new THREE.Mesh(new THREE.SphereGeometry(0.162, 26, 8, Math.PI * 1.5 + 0.62, Math.PI * 2 - 1.24, Math.PI * 0.36, Math.PI * 0.25), helmetMat);
+                const capSide = new THREE.Mesh(new THREE.SphereGeometry(0.162, 26, 8, Math.PI * 1.5 + 1.2, Math.PI * 2 - 2.4, Math.PI * 0.36, Math.PI * 0.25), helmetMat);
                 shell.add(capTop, capSide);
                 shell.scale.set(0.98, 1.0, 1.12);
                 shell.position.set(0, 0.19, 0.012);
@@ -8625,16 +8605,13 @@
                 earL.scale.set(0.45, 1, 0.9);
                 earL.position.set(-0.142, 0.15, 0.015);
                 const earR = earL.clone(); earR.position.x = 0.142;
-                const strap = new THREE.Mesh(new THREE.TorusGeometry(0.12, 0.007, 6, 16, Math.PI), isRef ? blackMat : new THREE.MeshStandardMaterial({ color: 0xe5e7eb, roughness: 0.8 }));
-                strap.rotation.set(Math.PI, Math.PI / 2, 0);
-                strap.position.set(0, 0.12, -0.02);
                 // prese d'aria: tre feritoie inclinate sulla fronte-calotta e regolazione nera sulla nuca
                 const ventL = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.012, 0.07), blackMat);
                 ventL.position.set(-0.05, 0.338, -0.035); ventL.rotation.set(0.35, 0.18, 0.12);
                 const ventR = ventL.clone(); ventR.position.x = 0.05; ventR.rotation.set(0.35, -0.18, -0.12);
                 const adjust = new THREE.Mesh(createRoundedBoxGeometry(0.09, 0.03, 0.02, 0.008), blackMat);
                 adjust.position.set(0, 0.205, 0.188);
-                headGroup.add(shell, brim, ridge, vents, ventL, ventR, adjust, earL, earR, strap);
+                headGroup.add(shell, brim, ridge, vents, ventL, ventR, adjust, earL, earR);
                 // marchio tecnico: davanti sopra la visiera e sui due fianchi (nero sui caschi chiari)
                 if (!isRef && !lowQ) {
                     const light = gearLum(helmetColor) > 150;
@@ -8649,18 +8626,8 @@
                     );
                     headGroup.add(decals);
                 }
-                if (!isRef) {
-                    const visor = new THREE.Mesh(
-                        new THREE.CylinderGeometry(0.17, 0.165, 0.09, 24, 1, true, -Math.PI * 0.38, Math.PI * 0.76),
-                        new THREE.MeshPhysicalMaterial({ color: 0xeef6ff, transparent: true, opacity: 0.1, roughness: 0.05, metalness: 0.0, clearcoat: 0.6, depthWrite: false, side: THREE.DoubleSide })
-                    );
-                    visor.rotation.y = Math.PI;
-                    visor.position.set(0, 0.165, 0.01);
-                    const visorEdge = new THREE.Mesh(new THREE.TorusGeometry(0.168, 0.004, 4, 24, Math.PI * 0.76), blackMat);
-                    visorEdge.rotation.set(Math.PI / 2, 0, Math.PI + Math.PI * 0.12);
-                    visorEdge.position.set(0, 0.12, 0.01);
-                    headGroup.add(visor, visorEdge);
-                }
+                // visiera trasparente a metà faccia (giocatori e arbitri): dal bordo del casco alla punta del naso
+                headGroup.add(helmetVisor(lowQ));
             }
 
             // ---------- 4. gambe: braghe, ginocchio, calzettoni, pattini inline / gambali del portiere
@@ -11094,6 +11061,7 @@
 
         // --- PRESENTAZIONE DI DUE GIOCATORI CON LE FORMAZIONI SCHIERATE ---
         const SPOTLIGHT_DURATION = 3.4;
+        const MASK_SPOTLIGHT_DURATION = 4.8;              // primo piano della maschera del portiere: un po' più lungo
         let playerSpotlight = null;
 
         function startPlayerSpotlight() {
@@ -11103,6 +11071,13 @@
                 return list.reduce((best, sk) => ((sk.pts || 0) > (best.pts || 0) ? sk : best));
             };
             const list = [pick('home'), pick('guest')].filter(Boolean);
+            // primo piano della maschera di uno dei due portieri (grafica, gabbia cromata, dettagli)
+            const goalies = skaters.filter(sk => sk.isGoalie && sk.onIce !== false && sk.mesh.parent);
+            if (goalies.length) {
+                const gk = goalies[Math.floor(Math.random() * goalies.length)];
+                const mask = gk.headGroup && gk.headGroup.children.find(c => c.userData && c.userData.maskDesign);
+                if (mask) list.push({ isMaskCam: true, goalie: gk, design: mask.userData.maskDesign, mesh: gk.mesh });
+            }
             // poi un momento per i due allenatori, in piedi in panchina
             ['home', 'guest'].forEach(team => {
                 const clubId = team === 'home' ? matchConfig.homeClub : matchConfig.guestClub;
@@ -11133,6 +11108,7 @@
         function showSpotlightCard(sk) {
             if (timekeeperTodd) timekeeperTodd.member.waving = !!sk.isTodd;
             if (sk.isTodd) { showToddSpotlightCard(); return; }
+            if (sk.isMaskCam) { showMaskSpotlightCard(sk); return; }
             if (sk.isRef) { showRefereeSpotlightCard(sk); return; }
             if (sk.isCoach) { showCoachSpotlightCard(sk); return; }
             const club = CLUB_ROSTERS[sk.clubId];
@@ -11148,6 +11124,25 @@
             card.classList.remove('hidden', 'is-in');
             void card.offsetWidth;
             card.classList.add('is-in');
+        }
+
+        // maschera del portiere: nome, squadra e grafica della calotta (src/game/GoalieMask.js)
+        function showMaskSpotlightCard(it) {
+            const gk = it.goalie;
+            const club = CLUB_ROSTERS[gk.clubId];
+            const theme = ROSTER_THEMES[gk.clubId] || ROSTER_THEMES.cittadella;
+            const card = document.getElementById('spot-card');
+            card.style.setProperty('--team', theme.primary);
+            document.getElementById('spot-logo').src = logoSrcOf(gk.clubId);
+            document.getElementById('spot-num').textContent = gk.jerseyNum;
+            const d = (window.HIL_GOALIE_MASK.DESIGNS || []).find(x => x.id === it.design);
+            document.getElementById('spot-kicker').textContent = _t(gk.team === 'home' ? 'Squadra di casa' : 'Squadra ospite') + ' • ' + _t('La maschera del portiere');
+            document.getElementById('spot-name').innerHTML = (gk.firstName ? `<small class="spot-first">${rosterEsc(gk.firstName)}</small>` : '') + rosterEsc(gk.playerName);
+            document.getElementById('spot-team').innerHTML = `${club ? club.name : ''} • <b>${rosterEsc(_t('Grafica: {0}', d ? _t(d.name) : it.design))}</b>`;
+            card.classList.remove('hidden', 'is-in');
+            void card.offsetWidth;
+            card.classList.add('is-in');
+            if (window.gameAudio && window.gameAudio.playCrowdOoh) window.gameAudio.playCrowdOoh(0.7);
         }
 
         function showCoachSpotlightCard(it) {
@@ -11207,8 +11202,32 @@
             if (!sp) return;
             sp.t += dt;
             const sk = sp.list[sp.idx];
-            const k = Math.min(1, sp.t / SPOTLIGHT_DURATION);
-            if (sk.isTodd) {
+            const dur = sk.isMaskCam ? MASK_SPOTLIGHT_DURATION : SPOTLIGHT_DURATION;
+            const k = Math.min(1, sp.t / dur);
+            if (sk.isMaskCam) {
+                // primo piano della maschera: il portiere guarda verso il centro pista, la camera parte di tre quarti
+                // davanti e gli gira attorno lentamente fino al fianco, dove si vede la grafica
+                const gk = sk.goalie;
+                const fwd = new THREE.Vector3(0, 0, gk.mesh.position.z >= 0 ? -1 : 1);
+                gk.rotationY = Math.atan2(-fwd.x, -fwd.z);
+                gk.mesh.rotation.y = gk.rotationY;
+                if (gk.headGroup) gk.headGroup.rotation.y = 0;
+                const head = new THREE.Vector3();
+                gk.headGroup.getWorldPosition(head);
+                head.y += 0.18;                                   // centro della maschera
+                const ease = k * k * (3 - 2 * k);
+                const ang = -0.55 + ease * 1.75;                  // da tre quarti davanti a quasi di profilo
+                const dist = 0.95 - ease * 0.2;
+                const side = new THREE.Vector3(fwd.z, 0, -fwd.x);
+                const camTarget = head.clone()
+                    .addScaledVector(fwd, Math.cos(ang) * dist)
+                    .addScaledVector(side, Math.sin(ang) * dist);
+                camTarget.y = head.y + 0.12 - ease * 0.06;
+                // avvicinamento indipendente dal frame rate: il primo piano arriva in tempo anche sui dispositivi lenti
+                camera.position.lerp(camTarget, 1 - Math.exp(-dt * (sp.t < 0.6 ? 5 : 10)));
+                camera.lookAt(head.x, head.y - 0.02, head.z);
+                focusCameraOn(head.x, head.y, head.z);
+            } else if (sk.isTodd) {
                 // dalla pista, appena sopra la balaustra: primo piano di Todd al tavolo che saluta
                 const head = new THREE.Vector3();
                 sk.headGroup.getWorldPosition(head);
@@ -11242,7 +11261,7 @@
             focusCameraOn(sk.mesh.position.x, 1.25, sk.mesh.position.z);
             if (sk.headGroup) sk.headGroup.rotation.y = 0;
             }
-            if (sp.t >= SPOTLIGHT_DURATION) {
+            if (sp.t >= dur) {
                 sp.idx++;
                 sp.t = 0;
                 if (sp.idx >= sp.list.length) finishIntro();

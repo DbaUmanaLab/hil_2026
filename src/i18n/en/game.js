@@ -286,5 +286,19 @@ I18N.add('en', {
     'Realizzazione %': 'Shooting %',
     'Minuti di penalità': 'Penalty minutes',
     'Marcatori': 'Scorers',
-    '{0} periodo di {1} • {2} da giocare': '{0} period of {1} • {2} to play'
+    '{0} periodo di {1} • {2} da giocare': '{0} period of {1} • {2} to play',
+
+    // presentazione: primo piano della maschera del portiere (src/game/GoalieMask.js)
+    'La maschera del portiere': "The goalie's mask",
+    'Grafica: {0}': 'Design: {0}',
+    'Fiamme': 'Flames',
+    'Tigre': 'Tiger',
+    'Fulmini': 'Lightning',
+    'Strisce veloci': 'Speed stripes',
+    'Scacchi': 'Checkers',
+    'Schegge': 'Shards',
+    'Ali': 'Wings',
+    'Schizzi': 'Splatter',
+    'Artigli': 'Claws',
+    'Stelle': 'Stars'
 });
