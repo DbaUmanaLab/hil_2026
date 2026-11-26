@@ -159,7 +159,7 @@
                 bodyPivot.add(torso);
                 const headGroup = new THREE.Group();
                 headGroup.position.y = 0.68;
-                const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 12), getRandomPhotoFaceMaterial());
+                const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 12), getCrowdHeadPlaceholderMaterial());
                 const hair = new THREE.Mesh(new THREE.SphereGeometry(0.148, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), hairMatF);
                 hair.position.x = -0.015;
                 headGroup.add(head, hair);

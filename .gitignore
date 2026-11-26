@@ -1,3 +1,6 @@
 node_modules/
 # asset alleggeriti per le app (tools/bundle_assets.py)
 deploy/bundle-assets/
+
+# cache degli asset MakeHuman scaricati da tools/generate_heads.py
+tools/.cache/

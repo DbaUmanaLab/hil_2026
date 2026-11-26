@@ -4,8 +4,8 @@
 //    il 10% tifa per gli ospiti, il resto per la squadra di casa; alcuni indossano la maglia o la
 //    felpa (colore + logo) della squadra, altri sventolano una bandierina con i suoi colori;
 //  - giocatori: altezza e peso diversi, qualcuno con barba e/o baffi, nazionalità.
-// Script classico: usa a runtime THREE, TEAM_DATA, CLUB_ROSTERS, matchConfig e
-// getFaceMaterialFromFile dello script principale di index.html.
+// Script classico: usa a runtime THREE, TEAM_DATA, CLUB_ROSTERS e matchConfig dello script principale
+// di index.html, e le teste modellate di src/game/Heads.js (window.HIL_HEADS).
 (function () {
     'use strict';
 
@@ -33,11 +33,8 @@
         return list[list.length - 1][0];
     }
 
-    // ---------- volti fotografici e loro varianti (tools/generate_face_variants.py)
-    const FACE_COUNT = 3;
-    const FEMALE_FACES = [1, 3];
+    // ---------- barba e baffi (le teste sono in src/game/Heads.js)
     const FACIAL_HAIR = ['beard', 'mustache', 'full'];
-    const faceFile = (n, variant) => `assets/players/player_face_${n}${variant ? '_' + variant : ''}.jpg`;
     function normFacialHair(v) {
         v = String(v || '').toLowerCase();
         if (v === 'both' || v === 'entrambi' || v === 'full') return 'full';
@@ -72,9 +69,13 @@
         const fr = r();
         const facialHair = female ? 'none' : info.facialHair != null ? normFacialHair(info.facialHair)
             : (fr < 0.06 ? 'beard' : fr < 0.11 ? 'mustache' : fr < 0.17 ? 'full' : 'none');               // pochi: ~17%
+        // volto: variante della testa modellata (pelle, forma), colore di capelli e sopracciglia;
+        // chi non ha barba né baffi a volte ha la barba di qualche giorno
         const fi = r();
-        const face = female ? FEMALE_FACES[Math.floor(fi * FEMALE_FACES.length)] : 1 + Math.floor(fi * FACE_COUNT);
-        return { nat: String(info.nat || country).toUpperCase(), female, height, weight, facialHair, face };
+        const head = window.HIL_HEADS ? window.HIL_HEADS.pick(female ? 'f' : 'm', 'young', fi) : 0;
+        const hair = pickWeighted(HAIR_COLORS_YOUNG, r());
+        const stubble = !female && r() < 0.3;
+        return { nat: String(info.nat || country).toUpperCase(), female, height, weight, facialHair, head, hair, stubble };
     }
 
     function traitsOf(clubId, num, name, isGoalie) {
@@ -103,13 +104,9 @@
             ap.position.x = ap.userData.baseX * (1 + (w - 1) * 0.9);
         });
         // volto (il portiere ha la maschera: niente barba)
-        if (sk.headMesh && typeof getFaceMaterialFromFile === 'function') {
-            const variant = t.female ? 'female' : (sk.isGoalie || t.facialHair === 'none' ? '' : t.facialHair);
-            sk.headMesh.material = getFaceMaterialFromFile(faceFile(t.face, variant));
-        }
-        // forma della testa: le giocatrici hanno mento, arcate e mascella più delicati
-        if (sk.headMesh && sk.headMesh.userData.headRadius) {
-            sk.headMesh.geometry = makeHeadGeometry(sk.headMesh.userData.headRadius, t.female);
+        if (sk.headMesh) {
+            const facial = sk.isGoalie ? 'none' : t.facialHair !== 'none' ? t.facialHair : (t.stubble ? 'stubble' : 'none');
+            applyHead(sk.headMesh, { variant: t.head, facial, hair: t.hair });
         }
     }
 
@@ -135,108 +132,85 @@
 
     // =====================================================================
     // TESTE MODELLATE (giocatori, arbitri, pubblico, cronometristi, staff)
-    // Una sfera deformata: naso, arcate sopraccigliari, orbite, zigomi, labbra, mento, mascella
-    // che si stringe verso il collo e nuca. Le UV restano quelle della SphereGeometry, quindi la
-    // foto del volto (centrata su +X, occhi a ~0.41 dell'altezza, bocca a ~0.66) cade sui rilievi.
-    // La griglia è più fitta sul davanti (dove c'è il volto) e rada dietro; la calotta resta
-    // sferica in alto così i capelli (sfere poco più grandi) la coprono come prima.
-    // Geometria condivisa per raggio, sesso e dettaglio.
+    // Teste MakeHuman (src/game/Heads.js): una variante per sesso, età, etnia e forma del volto,
+    // con la sua pelle; barba, baffi e sopracciglia tinti col colore dei capelli. Stesso sistema di
+    // riferimento della vecchia sfera (volto verso +X, calotta a y = +raggio), quindi chi costruisce
+    // i personaggi crea una testa qualsiasi del raggio voluto e poi chiama applyHead().
     // =====================================================================
-    const G = (x, s) => Math.exp(-(x * x) / (2 * s * s));
-    const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
-    const PI = Math.PI;
+    const HEADS = () => window.HIL_HEADS;
 
-    function headShape(th, dphi, female) {
-        // th = angolo dall'alto (0..π), dphi = angolo dal centro del volto (-π..π)
-        let r = 1;
-        // naso: dorso che sale dalla radice (fra gli occhi) alla punta, poi rientra sotto le narici
-        const up = smooth(0.43 * PI, 0.565 * PI, th);
-        const down = th > 0.565 * PI ? G(th - 0.565 * PI, 0.028 * PI) : 1;
-        const nose = (0.22 + 0.78 * up) * up * down + (th < 0.565 * PI ? 0.18 * G(th - 0.43 * PI, 0.03 * PI) : 0);
-        r += (female ? 0.105 : 0.125) * nose * G(dphi, 0.075 + 0.045 * up);
-        // arcata sopraccigliare e orbite
-        r += (female ? 0.012 : 0.03) * G(th - 0.365 * PI, 0.035 * PI) * G(dphi, 0.55);
-        r -= 0.032 * G(th - 0.415 * PI, 0.032 * PI) * (G(dphi - 0.66, 0.19) + G(dphi + 0.66, 0.19));
-        // zigomi
-        r += 0.026 * G(th - 0.5 * PI, 0.055 * PI) * (G(dphi - 0.82, 0.28) + G(dphi + 0.82, 0.28));
-        // labbra e mento
-        r += (female ? 0.034 : 0.026) * G(th - 0.66 * PI, 0.03 * PI) * G(dphi, 0.24);
-        r -= 0.018 * G(th - 0.72 * PI, 0.022 * PI) * G(dphi, 0.3);                 // solco sotto il labbro
-        r += (female ? 0.035 : 0.06) * G(th - 0.79 * PI, 0.05 * PI) * G(dphi, 0.36);
-        return r;
+    // pubblico: dettaglio ridotto tranne che con la grafica al massimo; tutti ridotti con la grafica bassa
+    function headLod(crowd) {
+        const id = typeof getActiveQualityPreset === 'function' ? getActiveQualityPreset().id : 'medium';
+        if (id === 'low') return 'lo';
+        return crowd && id !== 'high' ? 'lo' : 'hi';
     }
 
-    function headGeometry(radius, female, low) {
-        const key = ['head', Math.round(radius * 1000), female ? 'f' : 'm', low ? 'lo' : 'hi'].join('_');
-        return geo(key, () => {
-            const W = low ? 30 : 44, H = low ? 22 : 32;
-            const pos = [], uv = [], index = [];
-            const v = new THREE.Vector3();
-            for (let iy = 0; iy <= H; iy++) {
-                const th = (iy / H) * PI;
-                for (let ix = 0; ix <= W; ix++) {
-                    // phi denso davanti (phi = π) e rado dietro
-                    const s = (ix / W) * 2 - 1;
-                    const dphi = PI * (0.52 * s + 0.48 * s * s * s);
-                    const phi = PI + dphi;
-                    const nx = -Math.cos(phi) * Math.sin(th), ny = Math.cos(th), nz = Math.sin(phi) * Math.sin(th);
-                    const r = headShape(th, dphi, female);
-                    v.set(nx * r, ny * r, nz * r);
-                    // proporzioni: più stretta che profonda, più lunga verso il mento (la calotta resta com'è)
-                    v.z *= 0.9;
-                    if (ny < 0) v.y *= 1.1;
-                    // mascella e collo: sotto gli zigomi la testa si stringe, soprattutto ai lati e dietro
-                    const t = smooth(-0.3, -0.95, ny);
-                    v.z *= 1 - (female ? 0.2 : 0.14) * t;
-                    if (nx < 0) v.x *= 1 - 0.3 * t * -nx;
-                    else v.x *= 1 - 0.08 * t * smooth(0.5, 1.4, Math.abs(dphi));     // guance verso la mandibola
-                    // nuca un po' sporgente
-                    if (nx < 0 && ny > -0.2) v.x *= 1 + 0.07 * -nx * smooth(-0.2, 0.5, ny);
-                    pos.push(v.x * radius, v.y * radius, v.z * radius);
-                    uv.push(phi / (2 * PI), 1 - iy / H);
-                }
+    function headRadius(head) {
+        if (!head.userData.headRadius) {
+            const g = head.geometry;
+            head.userData.headRadius = (g && g.userData.hilHead && g.userData.hilHead.radius) || (g && g.parameters && g.parameters.radius) || 0.14;
+        }
+        return head.userData.headRadius;
+    }
+
+    // tono della pelle della variante (collo, mani, braccia e gambe scoperte)
+    function skinMaterial(variant) {
+        return colorMat(HEADS().variantInfo(variant).skin, 0.6);
+    }
+
+    // Dà alla testa la geometria e il materiale di una variante. Restituisce la variante (o null).
+    // opts: { variant (se manca si sceglie con female/age/u), female, age: 'young'|'adult'|'any', u,
+    //         facial: 'none'|'stubble'|'beard'|'mustache'|'full', hair: colore dei capelli, crowd }
+    // head.userData.skinMat (facoltativo): materiale della pelle del personaggio, intonato al volto.
+    function applyHead(head, opts = {}) {
+        if (!head || !HEADS()) return null;
+        const H = HEADS();
+        const v = opts.variant != null ? opts.variant : H.pick(opts.female ? 'f' : 'm', opts.age || 'adult', opts.u);
+        const old = head.geometry;
+        head.geometry = H.geometry(v, headRadius(head), headLod(opts.crowd));
+        if (old && old !== head.geometry && !(old.userData && old.userData.hilHead)) old.dispose();
+        head.material = H.material(v, { facial: opts.facial || 'none', hair: opts.hair });
+        head.userData.headVariant = v;
+        if (head.userData.skinMat) head.userData.skinMat.color.setHex(H.variantInfo(v).skin);
+        return v;
+    }
+
+    // Calotte dei capelli, cappellini e cuffie erano pensati per la vecchia sfera, con gli occhi molto
+    // più in alto di una testa vera: le calotte sferiche (spicchio che parte dall'alto e scende poco
+    // sotto l'equatore) diventano la cuffia di capelli della variante, con l'attaccatura sopra fronte e
+    // orecchie; gli altri oggetti (cappellini, capelli lunghi, frangia dei calvi) si stringono ai lati
+    // sul cranio. Una volta sola per oggetto.
+    function isHairCap(o) {
+        const p = o.isMesh && o.geometry && o.geometry.type === 'SphereGeometry' && o.geometry.parameters;
+        return !!p && p.thetaStart === 0 && p.phiLength > 6.2 && p.thetaLength > 0.45 * Math.PI && p.thetaLength < 0.7 * Math.PI;
+    }
+    function fitToSkull(head, objs) {
+        if (!head || head.userData.headVariant == null || !HEADS()) return;
+        const v = head.userData.headVariant;
+        const sk = HEADS().variantInfo(v).skull;   // [semi-profondità, calotta, semi-larghezza, centro]
+        const k = clamp(sk[2] + 0.1, 0.8, 1);
+        // asse laterale della testa nel suo gruppo: Z se non è ruotata, X se è girata di 90°
+        const lat = new THREE.Vector3(0, 0, 1).applyQuaternion(head.quaternion);
+        const ax = Math.abs(lat.x) > Math.abs(lat.z) ? 'x' : 'z';
+        objs.forEach(o => {
+            if (!o || o === head || o.userData.skullFit) return;
+            o.userData.skullFit = true;
+            if (isHairCap(o)) {
+                o.geometry = HEADS().hairGeometry(v, headRadius(head));   // la sfera può essere condivisa: non si libera
+                o.position.copy(head.position);
+                o.quaternion.copy(head.quaternion);
+                o.scale.copy(head.scale);
+                return;
             }
-            for (let iy = 0; iy < H; iy++) {
-                for (let ix = 0; ix < W; ix++) {
-                    const a = iy * (W + 1) + ix + 1, b = iy * (W + 1) + ix;
-                    const c = (iy + 1) * (W + 1) + ix, d = (iy + 1) * (W + 1) + ix + 1;
-                    if (iy !== 0) index.push(a, b, d);
-                    if (iy !== H - 1) index.push(b, c, d);
-                }
-            }
-            const g = new THREE.BufferGeometry();
-            g.setIndex(index);
-            g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
-            g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
-            g.computeVertexNormals();
-            // cucitura dietro (prima e ultima colonna coincidono) e poli: normali uguali, niente spigoli
-            const n = g.attributes.normal, tmp = new THREE.Vector3(), tmp2 = new THREE.Vector3();
-            for (let iy = 0; iy <= H; iy++) {
-                const i0 = iy * (W + 1), i1 = i0 + W;
-                tmp.fromBufferAttribute(n, i0).add(tmp2.fromBufferAttribute(n, i1)).normalize();
-                n.setXYZ(i0, tmp.x, tmp.y, tmp.z); n.setXYZ(i1, tmp.x, tmp.y, tmp.z);
-            }
-            [0, H].forEach(iy => {
-                const ny = iy === 0 ? 1 : -1;
-                for (let ix = 0; ix <= W; ix++) n.setXYZ(iy * (W + 1) + ix, 0, ny, 0);
-            });
-            g.computeBoundingSphere();
-            return g;
+            o.scale[ax] *= k;
+            o.position[ax] *= k;
         });
     }
-
-    // radius: raggio della vecchia sfera; la testa nuova ha la stessa calotta
+    // Geometria della testa di riferimento (prima di applyHead): uomo, o donna, giovane
     function makeHeadGeometry(radius, female) {
-        const low = typeof getActiveQualityPreset === 'function' && getActiveQualityPreset().id === 'low';
-        return headGeometry(radius, !!female, low);
-    }
-
-    // Sostituisce la geometria sferica di una testa (stesso raggio, stessa foto)
-    function reshapeHead(head, female) {
-        if (!head || !head.geometry || head.geometry.type !== 'SphereGeometry') return;
-        const old = head.geometry;
-        head.geometry = makeHeadGeometry(old.parameters.radius, female);
-        old.dispose();
+        if (!HEADS()) return new THREE.SphereGeometry(radius, 16, 12);
+        return HEADS().geometry(HEADS().pick(female ? 'f' : 'm', 'young', 0), radius, headLod(false));
     }
 
     // =====================================================================
@@ -719,9 +693,12 @@
         headGroup.add(m);
     }
 
-    function styleHair(head, hair, headGroup, female, adult, r) {
+    function pickHairColor(female, adult, r) {
         const palette = adult ? HAIR_COLORS : HAIR_COLORS_YOUNG;
-        let color = pickWeighted(female ? palette.filter(c => c[0] !== 0xd8d6d0) : palette, r());
+        return pickWeighted(female ? palette.filter(c => c[0] !== 0xd8d6d0) : palette, r());
+    }
+
+    function styleHair(head, hair, headGroup, female, adult, r, color) {
         const hairMat = colorMat(color, 0.8);
         if (!hair) return;
         if (!female && adult && r() < 0.08) {
@@ -803,23 +780,28 @@
         const adult = !isChild;
         const female = opts.female != null ? !!opts.female : r() < FEMALE_RATIO;
         root.userData.female = female;
-        arms.forEach(a => replaceSphereHand(a, a.position.z > 0 ? 1 : -1, 'relaxed', '+x'));
-        // corpo modellato al posto dei cilindri (collo del colore delle mani)
-        const handMesh = arms.length && arms[0].children.find(c => c.userData && c.userData.isHand);
-        upgradeBody(root, bodyPivot, arms, { female, front: '+x', skinMat: handMesh ? handMesh.material : null, random: r, shoes: opts.shoes });
 
-        // volto
-        if (head && typeof getFaceMaterialFromFile === 'function') {
-            let file;
-            if (female) file = faceFile(FEMALE_FACES[Math.floor(r() * FEMALE_FACES.length)], 'female');
-            else {
-                const n = 1 + Math.floor(r() * FACE_COUNT);
-                file = faceFile(n, adult && r() < 0.22 ? FACIAL_HAIR[Math.floor(r() * FACIAL_HAIR.length)] : '');
-            }
-            head.material = getFaceMaterialFromFile(file);
+        // volto: testa modellata (anche anziani tra gli adulti), barba/baffi e colore dei capelli
+        const hairColor = pickHairColor(female, adult, r);
+        let facial = 'none';
+        if (!female && adult) {
+            const f = r();
+            facial = f < 0.22 ? FACIAL_HAIR[Math.floor(r() * FACIAL_HAIR.length)] : f < 0.42 ? 'stubble' : 'none';
         }
-        reshapeHead(head, female);
-        styleHair(head, hair, headGroup, female, adult, r);
+        const variant = applyHead(head, { female, age: adult ? 'any' : 'young', facial, hair: hairColor, crowd: true });
+        const skinMat = variant != null ? skinMaterial(variant) : null;
+        root.userData.skinMat = skinMat;
+
+        // mani con le dita e corpo modellato al posto dei cilindri (collo e mani del colore del volto)
+        arms.forEach(a => {
+            const hand = replaceSphereHand(a, a.position.z > 0 ? 1 : -1, 'relaxed', '+x');
+            if (hand && skinMat) hand.material = skinMat;
+        });
+        const handMesh = arms.length && arms[0].children.find(c => c.userData && c.userData.isHand);
+        upgradeBody(root, bodyPivot, arms, { female, front: '+x', skinMat: skinMat || (handMesh ? handMesh.material : null), random: r, shoes: opts.shoes });
+
+        styleHair(head, hair, headGroup, female, adult, r, hairColor);
+        fitToSkull(head, headGroup.children);
 
         // corporatura: le donne un filo più minute
         if (female && torso) {
@@ -933,8 +915,7 @@
         bodyPivot.add(torso);
         const headGroup = new THREE.Group();
         headGroup.position.y = 0.69;
-        const faceMat = typeof getRandomPhotoFaceMaterial === 'function' ? getRandomPhotoFaceMaterial() : skinM;
-        const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 12), faceMat);
+        const head = new THREE.Mesh(new THREE.SphereGeometry(0.14, 14, 12), skinM);   // diventa una testa modellata
         const hair = new THREE.Mesh(new THREE.SphereGeometry(0.148, 12, 8, 0, Math.PI * 2, 0, Math.PI * 0.55), hairM);
         hair.position.x = -0.015;
         headGroup.add(head, hair);
@@ -978,14 +959,16 @@
             visor.position.set(0.1, 0.035, 0);
             visor.rotation.z = -0.12;
             headGroup.add(crown, visor);
+            fitToSkull(head, [crown, visor]);
         }
+        const skin = root.userData.skinMat || skinM;   // pelle del volto (braccia e gambe scoperte)
         const out = { mesh: root, bodyPivot, headGroup, leftArmPivot, rightArmPivot, baseY: 0, phase: Math.random() * Math.PI * 2, standing: true };
 
         // maniche corte (senza bastone): il braccio diventa pelle, la manica modellata copre spalla e metà braccio
         if (opts.shortSleeves && !opts.stick) {
             [leftArmPivot, rightArmPivot].forEach(ap => {
                 const arm = ap.children.find(c => c.isMesh && !c.userData.isHand && c.material === top);
-                if (arm) arm.material = skinM;
+                if (arm) arm.material = skin;
                 ap.add(new THREE.Mesh(sleeveGeometry(), top));
             });
         }
@@ -994,7 +977,7 @@
         if (opts.shorts != null) {
             const shortsM = colorMat(opts.shorts, 0.75);
             const socksM = colorMat(opts.socks != null ? opts.socks : opts.shorts, 0.8);
-            legs.forEach(leg => { leg.material = skinM; });
+            legs.forEach(leg => { leg.material = skin; });
             const spots = legs.map(l => [l.position.x, l.position.z]);
             const key = spots.map(p => p.map(mm).join(',')).join(';') + (bodyDetail().low ? '_lo' : '_hi');
             root.add(new THREE.Mesh(geo('wuShorts_' + key, () => shortsGeometry(spots)), shortsM));
@@ -1016,7 +999,7 @@
         if (opts.stick) {
             const gloveM = colorMat(opts.gloves != null ? opts.gloves : 0x111114, 0.5);
             const trimM = colorMat(opts.gloves === 0xffffff ? 0x14235a : 0xffffff, 0.5);
-            const arms = [leftArmPivot, rightArmPivot].map((ap, i) => buildAthleteArm(ap, i ? 1 : -1, top, skinM, gloveM, trimM));
+            const arms = [leftArmPivot, rightArmPivot].map((ap, i) => buildAthleteArm(ap, i ? 1 : -1, top, skin, gloveM, trimM));
             const stick = new THREE.Group();
             stick.rotation.order = 'YXZ';
             stick.position.set(STICK.px, STICK.py, STICK.pz);       // mano alta
@@ -1227,5 +1210,5 @@
         fp.userData.cloth.rotation.x = sway * 0.25;
     }
 
-    window.HIL_PEOPLE = { playerTraits, traitsOf, findPlayerInfo, applySkaterLook, decorateCrowdMember, updateCrowdFlag, makeHand, makeHeadGeometry, upgradeBody, addChestCrest, makePerson, SKATE_LIFT };
+    window.HIL_PEOPLE = { playerTraits, traitsOf, findPlayerInfo, applySkaterLook, decorateCrowdMember, updateCrowdFlag, makeHand, makeHeadGeometry, applyHead, fitToSkull, skinMaterial, upgradeBody, addChestCrest, makePerson, SKATE_LIFT };
 })();

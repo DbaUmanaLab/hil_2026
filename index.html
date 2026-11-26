@@ -2707,6 +2707,8 @@
     <!-- Squadre e leghe: src/data/teams.json (deve precedere lo script principale) -->
     <script src="src/data/teams-loader.js"></script>
     <script src="src/ui/Flags.js"></script>
+    <script src="src/game/HeadModels.js"></script>
+    <script src="src/game/Heads.js"></script>
     <script src="src/game/People.js"></script>
     <script src="src/game/Warmup.js"></script>
     <script>
@@ -5314,60 +5316,12 @@
             return window[key];
         }
 
-        // Volti fotografici (assets/players) per giocatori, arbitri e staff di panchina.
-        // La foto è frontale: la stendiamo su ~3/4 della circonferenza della sfera
-        // (orecchie circa a ±90°) e riempiamo il retro con la pelle presa dai bordi.
-        const PHOTO_FACE_FILES = [
-            'assets/players/player_face_1.jpg',
-            'assets/players/player_face_2.jpg',
-            'assets/players/player_face_3.jpg'
-        ];
-        const photoFaceMaterials = {};
-        // Todd, il cronometrista centrale del PalaHockey di Cittadella: volto con barba e baffi (tools/generate_todd_face.py)
-        const TODD_FACE_FILE = 'assets/players/todd_face.jpg';
-
-        function getPhotoFaceMaterial(index) {
-            const i = ((index % PHOTO_FACE_FILES.length) + PHOTO_FACE_FILES.length) % PHOTO_FACE_FILES.length;
-            return getFaceMaterialFromFile(PHOTO_FACE_FILES[i]);
-        }
-        function getFaceMaterialFromFile(file) {
-            if (photoFaceMaterials[file]) return photoFaceMaterials[file];
-
-            const canvas = document.createElement('canvas');
-            canvas.width = 1024;
-            canvas.height = 512;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#d9a68c';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            const tex = new THREE.CanvasTexture(canvas);
-            tex.anisotropy = 8;
-            const mat = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.55, metalness: 0.0 });
-
-            const img = new Image();
-            img.onload = () => {
-                const W = canvas.width, H = canvas.height;
-                const faceW = Math.round(W * 0.77);          // orecchie della foto ≈ ±90°
-                const x0 = Math.round((W - faceW) / 2);
-                // retro della testa: colonne di bordo della foto stirate sui margini
-                const edge = Math.max(2, Math.round(img.width * 0.02));
-                ctx.drawImage(img, 0, 0, edge, img.height, 0, 0, x0 + 2, H);
-                ctx.drawImage(img, img.width - edge, 0, edge, img.height, x0 + faceW - 2, 0, W - (x0 + faceW) + 2, H);
-                // ammorbidisce la cucitura sul retro mescolando i due bordi
-                ctx.globalAlpha = 0.5;
-                ctx.drawImage(canvas, W - x0, 0, x0, H, 0, 0, x0, H);
-                ctx.globalAlpha = 1;
-                ctx.drawImage(img, x0, 0, faceW, H);
-                tex.needsUpdate = true;
-            };
-            img.src = file;
-
-            photoFaceMaterials[file] = mat;
-            return mat;
-        }
-
-        function getRandomPhotoFaceMaterial() {
-            return getPhotoFaceMaterial(Math.floor(Math.random() * PHOTO_FACE_FILES.length));
+        // Materiale provvisorio delle teste del pubblico: i palazzetti creano una sfera, poi
+        // maybeMakeCrowdChild() -> HIL_PEOPLE.decorateCrowdMember() la sostituisce con una testa
+        // modellata (src/game/Heads.js) con la sua pelle.
+        let crowdHeadPlaceholderMat = null;
+        function getCrowdHeadPlaceholderMaterial() {
+            return crowdHeadPlaceholderMat || (crowdHeadPlaceholderMat = new THREE.MeshStandardMaterial({ color: 0xd9a68c, roughness: 0.6 }));
         }
 
         // Qualche bambino tra il pubblico: stesso modello del tifoso, rimpicciolito e con la
@@ -6907,9 +6861,12 @@
 
                 const headGroup = new THREE.Group();
                 headGroup.position.set(0, 0.68, 0);
-                // volti fotografici come il pubblico, uno diverso per ciascuno; a Cittadella al centro siede Todd
+                // teste modellate come il pubblico, una diversa per ciascuno (mani e collo dello stesso
+                // tono del volto); a Cittadella al centro siede Todd, con barba e baffi
                 const isTodd = idx === 1 && matchConfig.arena === 'cittadella';
-                const head = new THREE.Mesh(window.HIL_PEOPLE.makeHeadGeometry(0.145, false), isTodd ? getFaceMaterialFromFile(TODD_FACE_FILE) : getPhotoFaceMaterial(idx + 1));
+                const skinMat = handMat.clone();
+                const head = new THREE.Mesh(window.HIL_PEOPLE.makeHeadGeometry(0.145, false), skinMat);
+                head.userData.skinMat = skinMat;
                 const hairCap = new THREE.Mesh(
                     new THREE.SphereGeometry(0.153, 14, 12, 0, Math.PI * 2, 0, Math.PI * 0.56),
                     hairMat
@@ -6918,6 +6875,10 @@
                 hairCap.rotation.z = 0.16;
                 headGroup.add(head, hairCap);
                 bodyPivot.add(headGroup);
+                window.HIL_PEOPLE.applyHead(head, isTodd
+                    ? { variant: window.HIL_HEADS.findVariant('m_cau_m2'), facial: 'full', hair: 0x2a1d14 }
+                    : { female: false, age: 'adult', facial: Math.random() < 0.35 ? 'stubble' : 'none', hair: 0x181210 });
+                window.HIL_PEOPLE.fitToSkull(head, [hairCap]);
 
                 const buildTypingArm = (sideZ) => {
                     const armPivot = new THREE.Group();
@@ -6925,7 +6886,7 @@
                     armPivot.rotation.z = 0.58;
                     const sleeve = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.055, 0.42, 8), jacketMat);
                     sleeve.position.y = -0.21;
-                    const hand = window.HIL_PEOPLE.makeHand(handMat, sideZ, 'typing', '+x');
+                    const hand = window.HIL_PEOPLE.makeHand(skinMat, sideZ, 'typing', '+x');
                     hand.position.y = -0.44;
                     armPivot.add(sleeve, hand);
                     bodyPivot.add(armPivot);
@@ -6934,7 +6895,7 @@
 
                 const leftArmPivot = buildTypingArm(-0.22);
                 const rightArmPivot = buildTypingArm(0.22);
-                window.HIL_PEOPLE.upgradeBody(official, bodyPivot, [leftArmPivot, rightArmPivot], { skinMat: handMat });
+                window.HIL_PEOPLE.upgradeBody(official, bodyPivot, [leftArmPivot, rightArmPivot], { skinMat });
                 tkGroup.add(official);
 
                 const member = {
@@ -7426,7 +7387,7 @@
                     if (arenaId === 'cittadella' && row >= 2 && Math.abs(z - CIT_TV_TOWER_Z) < 1.35) continue;   // torre TV
 
                     const style = outfitStyles[Math.floor(Math.random() * outfitStyles.length)];
-                    const faceMat = getRandomPhotoFaceMaterial();
+                    const faceMat = getCrowdHeadPlaceholderMaterial();
                     const jacketMat = new THREE.MeshStandardMaterial({ color: style.jacket, roughness: 0.6 });
                     const shirtMat = new THREE.MeshStandardMaterial({ color: style.shirt, roughness: 0.5 });
 
@@ -8490,7 +8451,7 @@
             const gloveMat = new THREE.MeshStandardMaterial({ color: gloveColor, roughness: 0.5 });
             const gloveTrimMat = new THREE.MeshStandardMaterial({ color: gloveColor === 0xffffff ? 0x14235a : 0xffffff, roughness: 0.5 });
             const palmMat = new THREE.MeshStandardMaterial({ color: 0x2b2b2e, roughness: 0.8 });
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0xa06a55, roughness: 0.6 });   // tono vicino alle foto dei volti
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xa06a55, roughness: 0.6 });   // poi intonato al volto (applyHead)
             const blackMat = new THREE.MeshStandardMaterial({ color: 0x111114, roughness: 0.5 });
             const bootMat = new THREE.MeshPhysicalMaterial({ color: 0x141416, roughness: 0.3, metalness: 0.15, clearcoat: 0.5 });
             const bootAccentMat = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.4 });
@@ -8544,18 +8505,16 @@
             const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.062, 0.072, 0.11, 12), skinMat);
             neck.position.y = 0.04;
             headGroup.add(neck);
-            const head = new THREE.Mesh(window.HIL_PEOPLE.makeHeadGeometry(0.128, false), getRandomPhotoFaceMaterial());
-            head.userData.headRadius = 0.128;    // applySkaterLook sceglie la forma maschile/femminile
+            // testa modellata (orecchie comprese): per i giocatori applySkaterLook sceglie poi volto,
+            // barba e colore dei capelli dai loro tratti; collo (e mani dell'arbitro) prendono il tono del volto
+            const head = new THREE.Mesh(window.HIL_PEOPLE.makeHeadGeometry(0.128, false), skinMat);
+            head.userData.headRadius = 0.128;
+            head.userData.skinMat = skinMat;
             head.scale.set(1.0, 1.04, 1.04);
             head.position.y = 0.165;
             head.rotation.y = Math.PI / 2;
             headGroup.add(head);
-            [-1, 1].forEach(sd => {
-                const ear = new THREE.Mesh(new THREE.SphereGeometry(0.03, 8, 8), skinMat);
-                ear.scale.set(0.5, 1, 0.8);
-                ear.position.set(sd * 0.122, 0.16, 0.0);
-                headGroup.add(ear);
-            });
+            window.HIL_PEOPLE.applyHead(head, { female: false, age: isRef ? 'adult' : 'young', facial: Math.random() < 0.3 ? 'stubble' : 'none' });
 
             if (isGoalie) {
                 const maskMat = new THREE.MeshPhysicalMaterial({ color: 0xf8fafc, roughness: 0.2, metalness: 0.1, clearcoat: 0.9 });
@@ -9389,7 +9348,7 @@
             const pantsMat = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.72 });
             const shoeMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.4 });
             const hairMat = new THREE.MeshStandardMaterial({ color: isCoach ? 0x334155 : 0x181210, roughness: 0.75 });
-            const skinMat = new THREE.MeshStandardMaterial({ color: 0xa06a55, roughness: 0.55 });   // tono vicino alle foto dei volti
+            const skinMat = new THREE.MeshStandardMaterial({ color: 0xa06a55, roughness: 0.55 });   // poi intonato al volto (applyHead)
 
             [-0.12, 0.12].forEach(lx => {
                 const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.092, 0.076, 0.84, 10), pantsMat);
@@ -9413,7 +9372,8 @@
 
             const headGroup = new THREE.Group();
             headGroup.position.y = 0.76;
-            const head = new THREE.Mesh(window.HIL_PEOPLE.makeHeadGeometry(0.15, false), getRandomPhotoFaceMaterial());
+            const head = new THREE.Mesh(window.HIL_PEOPLE.makeHeadGeometry(0.15, false), skinMat);
+            head.userData.skinMat = skinMat;    // mani e collo dello stesso tono del volto
             head.rotation.y = Math.PI / 2;
             const hair = new THREE.Mesh(
                 new THREE.SphereGeometry(0.158, 14, 12, 0, Math.PI * 2, 0, Math.PI * 0.56),
@@ -9423,6 +9383,8 @@
             hair.rotation.x = -0.15;
             headGroup.add(head, hair);
             bodyPivot.add(headGroup);
+            window.HIL_PEOPLE.applyHead(head, { female: false, age: 'adult', facial: ['none', 'stubble', 'beard', 'full'][Math.floor(Math.random() * 4)], hair: hairMat.color.getHex() });
+            window.HIL_PEOPLE.fitToSkull(head, [hair]);
 
             const buildStaffArm = (sideX) => {
                 const armPivot = new THREE.Group();
