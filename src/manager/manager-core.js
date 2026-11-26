@@ -30,7 +30,9 @@
         PRIZES: {
             A: { final: 2500, win: 5000, label: 'scudetto' },
             B: { final: 1200, win: 2500, label: 'promozione' },
-            cupFinal: 1200, cupWin: 2500
+            cupFinal: 1200, cupWin: 2500,
+            // WSE European League: iscrizione (rimborso trasferta), finale disputata, titolo europeo
+            euro: { entry: 1500, final: 2500, win: 5000 }
         },
         INJ_P: 0.12,                                // probabilità di infortunio per squadra e partita
         MAX_MESSAGES: 250
@@ -128,6 +130,7 @@
     // tradotta intera se è una voce del dizionario, altrimenti pezzo per pezzo tra i ' • '
     const LABEL_PATTERNS = [
         [/^Giornata (\d+) di (\d+)$/, 'Giornata {0} di {1}'],
+        [/^Girone (\w)$/, 'Girone {0}'],
         [/^Inizio della stagione (\S+)$/, 'Inizio della stagione {0}'],
         [/^Fine della stagione (\S+)$/, 'Fine della stagione {0}']
     ];
@@ -788,6 +791,7 @@
             winterClose: ymd(y + 1, 2, 2),
             second: (i, n) => dAdd(ymd(y + 1, 2, 8), Math.floor(i * 80 / Math.max(1, n - 1))),
             playoff: n => dAdd(ymd(y + 1, 5, 2), 4 * n),
+            euroDraw: ymd(y + 1, 6, 1),
             end: ymd(y + 1, 6, 14)
         };
     }
@@ -812,13 +816,18 @@
             case 'second_half':
                 return { kind: 'league', comp: 'league', date: at(D.second(c.league.roundIdx - halfRounds(c), c.league.rounds.length - halfRounds(c))), label: engine().turnLabel(c.league) };
             case 'playoff':
-                return c.league.phase === 'playoff'
-                    ? { kind: 'playoff', comp: 'league', date: at(D.playoff(c.league.playoffs.turnNo)), label: engine().turnLabel(c.league) }
+                if (c.league.phase === 'playoff') return { kind: 'playoff', comp: 'league', date: at(D.playoff(c.league.playoffs.turnNo)), label: engine().turnLabel(c.league) };
+                // a stagione chiusa si sorteggia la WSE European League (qualificate dai risultati appena conclusi)
+                if (W() && !euroDrawn(c)) return { kind: 'euro_draw', date: at(D.euroDraw), label: 'Sorteggio della WSE European League' };
+                return { kind: 'season_end', date: at(D.end), label: `Fine della stagione ${seasonLabelOf(c.seasonYear)}` };
+            case 'europe':
+                return c.euro && c.euro.phase !== 'done'
+                    ? { kind: 'euro', comp: 'euro', date: at(dAdd(c.euro.start, W().dayOffset(c.euro))), label: W().turnLabel(c.euro) }
                     : { kind: 'season_end', date: at(D.end), label: `Fine della stagione ${seasonLabelOf(c.seasonYear)}` };
         }
         return null;
     }
-    function compOf(c, ev) { return ev && ev.comp === 'cup' ? c.cup : (ev && ev.comp === 'league' ? c.league : null); }
+    function compOf(c, ev) { return ev && ev.comp === 'cup' ? c.cup : ev && ev.comp === 'euro' ? c.euro : (ev && ev.comp === 'league' ? c.league : null); }
     function userFixture(c, ev) {
         ev = ev || nextEvent(c);
         const s = compOf(c, ev);
@@ -862,11 +871,12 @@
         // la gara dell'utente: incasso, tifosi, bonus sponsor
         if (uf && uf.result) {
             const home = uf.home === c.user, opp = home ? uf.away : uf.home;
-            const big = ev.kind === 'playoff' && before.poRound === E.poRounds(s).length - 1 || (ev.kind === 'cup' && s.cup.rounds.length === E.CUP_ROUNDS.length && uf === s.cup.rounds[E.CUP_ROUNDS.length - 1][0]);
-            const people = home ? homeGate(c, uf, ev, big) : 0;
+            const big = ev.kind === 'playoff' && before.poRound === E.poRounds(s).length - 1 || (ev.kind === 'cup' && s.cup.rounds.length === E.CUP_ROUNDS.length && uf === s.cup.rounds[E.CUP_ROUNDS.length - 1][0]) || (ev.kind === 'euro' && uf.t === 'F');
+            // European League: campo neutro, niente incasso al botteghino per nessuno
+            const people = home && ev.kind !== 'euro' ? homeGate(c, uf, ev, big) : 0;
             const sc = resultScore(uf, c.user), exp = expectedScore(c, c.user, opp, home);
             const won = sc >= 0.5;
-            const imp = ev.kind === 'playoff' ? 1.4 : ev.kind === 'cup' ? 1.3 : 1;
+            const imp = ev.kind === 'playoff' || ev.kind === 'euro' ? 1.4 : ev.kind === 'cup' ? 1.3 : 1;
             c.form.push(won ? 'W' : 'L');
             if (c.form.length > 10) c.form.shift();
             const streak = c.form.slice(-3);
@@ -895,6 +905,7 @@
         }
         if (ev.kind === 'playoff') trackPlayoffs(c, s, before);
         if (ev.kind === 'cup') trackCup(c, s);
+        if (ev.kind === 'euro') trackEuro(c, s, before);
         if (ev.comp === 'league') advanceOther(c);
     }
     // l'altra divisione avanza in proporzione: finisce la regular season quando la finisce l'utente
@@ -990,6 +1001,91 @@
         }
     }
 
+    // ------------------------------------------------------------------ WSE European League
+    // Si sorteggia a stagione chiusa (giugno): qualificate le prime tre di Serie A (campione, finalista e la
+    // semifinalista meglio piazzata, o la vincitrice della Coppa Italia), le prime di Francia e Spagna
+    // (classifiche stimate dal rating), la detentrice e il club ospitante. Se l'utente non c'è, il torneo
+    // si simula subito e se ne dà notizia.
+    const W = () => G.WSE;
+    const euroDrawn = c => !!(c.euro && c.euro.season === seasonLabelOf(c.seasonYear));
+    function italyRanking(c) {
+        const E = engine();
+        const A = userDiv(c) === 'A' ? c.league : c.other;
+        if (!A || A.phase !== 'done') return W().ratingRanking('IT');
+        const table = E.standings(A).map(r => r.id);
+        const out = [A.champion, E.leagueRunnerUp(A)].filter(Boolean);
+        const rounds = E.poRounds(A), po = A.playoffs;
+        if (po && rounds.length >= 2 && po.series[rounds.length - 2]) {
+            po.series[rounds.length - 2].map(x => (E.seriesWinner(A, x) === x.hi ? x.lo : x.hi))
+                .sort((a, b) => table.indexOf(a) - table.indexOf(b)).forEach(id => { if (!out.includes(id)) out.push(id); });
+        }
+        table.forEach(id => { if (!out.includes(id)) out.push(id); });
+        return out;
+    }
+    function nextThursday(s) { let d = s; for (let i = 0; i < 7 && dParse(d).getUTCDay() !== 4; i++) d = dAdd(d, 1); return d; }
+    function euroDraw(c) {
+        const Wm = W();
+        advanceOther(c, true);                       // la Serie A dell'altra divisione dev'essere conclusa
+        const national = { IT: italyRanking(c), FR: Wm.ratingRanking('FR'), ES: Wm.ratingRanking('ES') };
+        const { venue, host } = Wm.drawVenue();
+        const holder = c.euroHolder && rosters()[c.euroHolder] ? c.euroHolder : null;
+        const cupWinner = (c.cup && c.cup.champion) || null;
+        const entries = Wm.buildEntries({ national, cupWinner, holder, host, user: c.user });
+        const start = nextThursday(dAdd(c.date, 3));
+        c.euro = Wm.create({ user: c.user, season: seasonLabelOf(c.seasonYear), entries, venue, host, holder, start });
+        const vt = Wm.venueTitle(c.euro);
+        const me = entries.find(e => e.id === c.user);
+        if (me) {
+            c.stage = 'europe';
+            c.season.euro = 'Fase a gironi';
+            const gi = Wm.groupOfTeam(c.euro, c.user), grp = c.euro.groups[gi];
+            money(c, 'premi', CFG.PRIZES.euro.entry, 'Partecipazione alla WSE European League');
+            addFans(c, 3, null);
+            msg(c, 'gare', 'Qualificati alla WSE European League',
+                ['{0} è al via del torneo europeo per club ({1}): {2} squadre, dal {3} al {4} al {5}. Girone {6} con {7}.',
+                    clubName(c.user), { lc: Wm.reasonKey(me) }, entries.length, { d: start }, { d: dAdd(start, 3) }, vt, grp.id,
+                    grp.teams.filter(t => t !== c.user).map(clubShort).join(', ')]);
+        } else {
+            Wm.simulateAll(c.euro);
+            c.euroHolder = c.euro.champion;
+            msg(c, 'gare', 'WSE European League',
+                ['{0} non si è qualificata per il torneo europeo. Al {1} vince {2}, in finale su {3}.', clubName(c.user), vt, clubName(c.euro.champion), clubName(c.euro.runnerUp)]);
+        }
+    }
+    function trackEuro(c, s, before) {
+        const Wm = W();
+        if (before.phase === 'groups' && s.phase === 'ko') {
+            const gi = Wm.groupOfTeam(s, c.user);
+            const pos = Wm.groupTable(s, gi).findIndex(r => r.id === c.user) + 1;
+            const seed = s.ko.seeds.indexOf(c.user);
+            const next = seed < 0 ? 'gioca per il 9°-12° posto' : seed >= (s.format === 8 ? 4 : 8) ? 'gioca per il 5°-8° posto' : (s.format === 8 ? 'in semifinale' : 'ai quarti di finale');
+            c.season.euro = seed >= 0 && seed < (s.format === 8 ? 4 : 8) ? (s.format === 8 ? 'Semifinali' : 'Quarti di finale') : 'Fase a gironi';
+            msg(c, 'gare', 'European League: fase a gironi conclusa', ['{0} chiude al {1} posto il girone {2}: {3}.', clubName(c.user), { o: pos }, s.groups[gi].id, [next]]);
+        }
+        const place = Wm.finalPlace(s, c.user);
+        if (place && !c.season.euroDone) {
+            c.season.euroDone = true;
+            c.season.euroPlace = place;
+            c.season.euro = place === 1 ? 'Vinta' : place === 2 ? 'Finale' : `${place}° posto`;
+            const PZ = CFG.PRIZES.euro;
+            if (place <= 2) money(c, 'premi', PZ.final, 'Finale di European League disputata');
+            if (place === 1) {
+                money(c, 'premi', PZ.win, 'WSE European League vinta');
+                c.trophies.push({ season: c.seasonYear, comp: 'wse' });
+                c.sponsors.active.forEach(a => money(c, 'bonus', a.trophyBonus, ['Bonus trofeo • {0}', sponsorById(a.sid) ? sponsorById(a.sid).name : '']));
+                addFans(c, 12, "Campioni d'Europa!");
+                msg(c, 'gare', "Campioni d'Europa!", ['{0} vince la WSE European League al {1}: premio di {2} più {3} per la finale.', clubName(c.user), Wm.venueTitle(s), { e: PZ.win }, { e: PZ.final }]);
+            } else {
+                addFans(c, place === 2 ? 5 : place <= 4 ? 3 : 0, null);
+                msg(c, 'gare', ['European League: {0} posto', { o: place }], ['{0} chiude la WSE European League al {1} posto.', clubName(c.user), { o: place }]);
+            }
+        }
+        if (s.phase === 'done') {
+            c.euroHolder = s.champion;
+            if (s.champion !== c.user) msg(c, 'gare', 'WSE European League assegnata', ["{0} è campione d'Europa: battuta in finale {1}.", clubName(s.champion), clubName(s.runnerUp)]);
+        }
+    }
+
     // ------------------------------------------------------------------ fine stagione
     function progressPlayers(c) {
         Object.values(c.players).forEach(p => {
@@ -1020,6 +1116,7 @@
             playoff: s.playoff || (s.regularPos && s.regularPos <= E.playoffTeams(c.league) ? '—' : 'Non qualificata'),
             cup: s.cup || (c.cup && c.cup.teams.includes(c.user) ? '—' : 'Non qualificata'),
             champion: c.league.champion, cupWinner: c.cup ? c.cup.champion : null,
+            euro: s.euro || null, euroWinner: euroDrawn(c) ? c.euro.champion : null,
             income: inc, expense: exp, balance: Math.round(c.balance), fans: Math.round(c.fans)
         });
         // sponsor in scadenza: rinnovo proposto se la reputazione lo consente
@@ -1108,7 +1205,11 @@
                     : ["La Coppa Italia è riservata alle squadre di Serie A: quest'anno {0} la guarda da fuori.", clubName(c.user)]);
                 break;
             case 'cup':
+            case 'euro':
                 applyTurn(c, ev, userResult);
+                break;
+            case 'euro_draw':
+                euroDraw(c);
                 break;
             case 'winter_close':
                 closeWindow(c);
@@ -1148,7 +1249,7 @@
             seasonYear: year, date: ymd(year, 7, 1), stage: 'summer', summerWeek: 0,
             balance: div.B.includes(user) ? CFG.START_BUDGET.B : CFG.START_BUDGET.A, fans: 58, rep: null, lastRank: null, form: [],
             players: {}, nextPid: 1, nextMid: 1,
-            league: null, cup: null, season: {}, seasons: [], trophies: [],
+            league: null, cup: null, euro: null, euroHolder: null, season: {}, seasons: [], trophies: [],
             window: null, market: { neg: {}, incoming: [] },
             sponsors: { active: [], offers: [] },
             messages: [], ledger: [], history: [],

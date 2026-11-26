@@ -488,7 +488,14 @@
             add('intro.friendly', {});
         } else {
             const comp = (T.comp || {})[ctx.league] || ctx.leagueName || '';
-            if (ctx.kind === 'cup') {
+            if (ctx.kind === 'euro') {
+                // WSE European League: girone, tabellone (quarti/semifinali), finalissima o piazzamenti
+                if (ctx.stage === 'G') add('intro.euroGroup', { group: ctx.group, round: ctx.round, rounds: ctx.rounds });
+                else if (ctx.stage === 'F') add('intro.euroFinal', {});
+                else if (ctx.place) add('intro.euroPlace', Object.assign({}, ordVars(ctx.place)));
+                else if (ctx.placeSemi) add('intro.euroPlaceSemi', Object.assign({ last: ctx.placeSemi + 3 }, ordVars(ctx.placeSemi)));
+                else add('intro.euroKO', { stage: (T.stage || {})[ctx.stage] || '' });
+            } else if (ctx.kind === 'cup') {
                 if (ctx.roundId === 'F') add('intro.cupFinal', {});
                 else add('intro.cup', { stage: (T.stage || {})['C' + ctx.roundId] || '' });
             } else if (ctx.kind === 'playoff') {
@@ -509,7 +516,7 @@
                 const ct = ctx.teams && ctx.teams[teamId(side)];
                 if (!ct) return;
                 const t = teamName(side);
-                if (ctx.kind === 'league' && ct.pos && ct.pg > 0) {
+                if ((ctx.kind === 'league' || (ctx.kind === 'euro' && ctx.stage === 'G')) && ct.pos && ct.pg > 0) {
                     if (ct.pos === 1) add('intro.leader', { t, pts: ct.pts });
                     else if (ct.pos === ctx.total && ctx.total > 3) add('intro.last', { t });
                     else if (chat >= 1) add('intro.standing', Object.assign({ t, pts: ct.pts }, ordVars(ct.pos)));

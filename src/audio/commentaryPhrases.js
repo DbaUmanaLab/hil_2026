@@ -99,6 +99,29 @@
             'Siamo in Coppa Italia, si giocano i {stage}: dentro o fuori.',
             'Coppa Italia, turno dei {stage}: non ci sono seconde possibilità.'
         ],
+        'intro.euroGroup': [
+            'WSE European League, girone {group}: è la giornata {round} di {rounds}.',
+            'Torneo europeo per club, girone {group}, {round}ª giornata: punti pesanti per i quarti.',
+            'Si gioca per il girone {group} della European League: giornata {round} su {rounds}.'
+        ],
+        'intro.euroKO': [
+            'European League, {stage}: gara secca, chi vince resta in corsa per il titolo europeo.',
+            'Siamo ai {stage} della WSE European League: dentro o fuori.',
+            'Torneo europeo, {stage}: non ci sono seconde possibilità.'
+        ],
+        'intro.euroFinal': [
+            "È la finale della WSE European League: in palio il titolo di Campione d'Europa!",
+            "Finalissima europea: chi vince stasera è Campione d'Europa.",
+            'Si assegna la WSE European League: il meglio dell\'hockey in linea europeo.'
+        ],
+        'intro.euroPlace': [
+            'European League, si gioca per il {ord} posto: c\'è ancora una classifica europea da difendere.',
+            'Finale per il {ord} posto del torneo europeo: si chiude con una vittoria?'
+        ],
+        'intro.euroPlaceSemi': [
+            'European League, semifinale per i piazzamenti dal {ord} posto in giù: c\'è ancora una classifica da scalare.',
+            'Si gioca la semifinale per i posti dal {ord} al {last}° del torneo europeo.'
+        ],
         'intro.cupFinal': [
             'È la finale di Coppa Italia: in palio c\'è un trofeo!',
             'Finale di Coppa Italia: sessanta minuti, anzi quaranta, per alzare la coppa.',
@@ -760,6 +783,29 @@
             'Italian Cup, {stage}: one game, winner goes through.',
             'We\'re in the Italian Cup {stage}: win or go home.',
             'Italian Cup action, the {stage}: no second chances.'
+        ],
+        'intro.euroGroup': [
+            'WSE European League, group {group}: this is round {round} of {rounds}.',
+            'European club tournament, group {group}, round {round}: big points on the road to the quarter-finals.',
+            'Group {group} action in the European League: round {round} of {rounds}.'
+        ],
+        'intro.euroKO': [
+            'European League {stage}: one game, the winner stays in the hunt for the European title.',
+            'We\'re in the {stage} of the WSE European League: win or go home.',
+            'European tournament, {stage}: no second chances.'
+        ],
+        'intro.euroFinal': [
+            'It\'s the WSE European League final: the European crown is on the line!',
+            'The European final: whoever wins tonight is champion of Europe.',
+            'The WSE European League is up for grabs: the best of European inline hockey.'
+        ],
+        'intro.euroPlace': [
+            'European League, they play for {ord} place: there\'s still a European ranking to defend.',
+            'The game for {ord} place in the European tournament: can they finish with a win?'
+        ],
+        'intro.euroPlaceSemi': [
+            'European League, a placement semi-final for {ord} place and below: there\'s still a ranking to climb.',
+            'A placement semi-final in the European tournament: the places from {ord} down are up for grabs.'
         ],
         'intro.cupFinal': [
             'It\'s the Italian Cup final: there\'s silverware on the line!',

@@ -1,5 +1,6 @@
 // --- src/competition/competition.js ---
-// Modalità Competizione: Serie A, Serie B, Liga Élite (Spagna), Ligue Élite (Francia) e Coppa Italia.
+// Modalità Competizione: Serie A, Serie B, Liga Élite (Spagna), Ligue Élite (Francia), Coppa Italia e
+// WSE European League (regolamento e motore in src/competition/wse.js).
 // Script classico caricato dopo lo script principale di index.html: usa i suoi globali
 // (CLUB_ROSTERS, CLUB_RATINGS, ARENA_CATALOG, HOME_CLUB_ARENAS, matchConfig,
 //  launchMatchFromCurrentConfig, logoSrcOf, titleSplashScreen, showFunFactLoading, ...).
@@ -111,6 +112,12 @@
             facts: () => [[String(CUP_TEAMS), 'Squadre'], ['3', 'Turni'], ['Secca', 'Gara']]
         },
         {
+            // torneo europeo per club (World Skate Europe): sede estratta a caso, gironi e finali in quattro giorni
+            id: 'wse', name: 'WSE European League', short: 'European League', logo: 'assets/logos/wse_logo.png', active: true,
+            desc: "Il torneo europeo per club di World Skate Europe, in quattro giorni e in un impianto estratto a caso: campioni nazionali, 2ª e 3ª classificate, detentrice e club ospitante. Gironi all'italiana da 4 il giovedì e il venerdì, poi quarti, semifinali, finali e piazzamenti il sabato e la domenica.",
+            facts: () => [['8-12', 'Squadre'], ['2-3', 'Gironi'], ['4', 'Giorni']]
+        },
+        {
             // campionato francese: giocabile con le squadre della Ligue Élite presenti in configurazione (almeno 4)
             id: 'ligue_elite', league: 'LIGUE ELITE', name: 'Ligue Élite (Francia)', short: 'Ligue Élite', logo: 'assets/logos/ligue_elite_france.png',
             get active() { return leagueTeams('LIGUE ELITE').length >= 4; },
@@ -127,6 +134,8 @@
     ];
     let compIdx = 0;
     const isCup = () => state && state.comp === 'coppa_italia';
+    const isWse = () => state && state.comp === 'wse';
+    const W = () => window.WSE;
     const compOf = id => COMPS.find(c => c.id === id) || COMPS[0];
 
     let state = null;           // stagione in corso (serializzabile)
@@ -189,13 +198,14 @@
 
     // ------------------------------------------------------------------ simulazione partite CPU
     function strength(id) { const r = ratingOf(id); return { off: r.off, def: r.def * 0.55 + r.goa * 0.45, goa: r.goa }; }
-    function simulateMatch(home, away) {
+    // neutral: campo neutro (European League), niente vantaggio per chi è indicata in casa
+    function simulateMatch(home, away, neutral) {
         const H = strength(home), A = strength(away);
-        const lamH = 3.0 * Math.pow(H.off / A.def, 2.2) * 1.08;
+        const lamH = 3.0 * Math.pow(H.off / A.def, 2.2) * (neutral ? 1 : 1.08);
         const lamA = 3.0 * Math.pow(A.off / H.def, 2.2);
         let hg = poisson(lamH), ag = poisson(lamA);
         if (hg !== ag) return { hg, ag, type: 'REG' };
-        const pHome = 1 / (1 + Math.exp(-((H.off + H.def) - (A.off + A.def)) / 12)) + 0.03;
+        const pHome = 1 / (1 + Math.exp(-((H.off + H.def) - (A.off + A.def)) / 12)) + (neutral ? 0 : 0.03);
         if (Math.random() < 0.6) {                       // deciso dal golden goal
             if (Math.random() < pHome) hg++; else ag++;
             return { hg, ag, type: 'OT' };
@@ -366,6 +376,7 @@
 
     // ------------------------------------------------------------------ avanzamento
     function userFixture() {
+        if (isWse()) return W().userFixture(state);
         if (isCup()) {
             if (state.phase !== 'cup') return null;
             return state.cup.rounds[state.cup.round].find(f => !f.result && (f.home === state.user || f.away === state.user)) || null;
@@ -382,7 +393,11 @@
     }
     // gioca (simulando) tutto ciò che resta del turno corrente e passa al successivo
     function completeTurn() {
-        if (isCup()) {
+        if (isWse()) {
+            W().completeTurn(state);
+            // la vincitrice difende il titolo nella prossima edizione giocata in modalità torneo
+            if (state.phase === 'done' && !embedded) { try { localStorage.setItem('hil_wse_holder', state.champion); } catch (e) {} }
+        } else if (isCup()) {
             if (state.phase === 'cup') completeCupTurn();
         } else if (state.phase === 'regular') {
             const r = state.rounds[state.roundIdx];
@@ -422,6 +437,7 @@
     function readSaves() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '[]'); } catch (e) { return []; } }
     function writeSaves(list) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } }
     function progressLabel(s) {
+        if (s.comp === 'wse') return W().progressLabel(s);
         if (s.comp === 'coppa_italia') {
             if (s.phase === 'cup') return `Coppa Italia • ${_t(cupRoundLabel(s.cup.round))}`;
             return _t('Coppa conclusa • Vincitrice: {0}', clubName(s.champion));
@@ -595,7 +611,7 @@
             const s = readSaves().find(x => x.id === b.dataset.load);
             if (!s) return;
             state = s.data;
-            hubTab = state.comp === 'coppa_italia' ? 'bracket' : (state.phase === 'regular' ? 'table' : 'bracket');
+            hubTab = state.comp === 'wse' ? (state.phase === 'groups' ? 'groups' : 'ko') : state.comp === 'coppa_italia' ? 'bracket' : (state.phase === 'regular' ? 'table' : 'bracket');
             showScreen('hub');
         });
         el.querySelectorAll('[data-del]').forEach(b => b.onclick = () => {
@@ -612,7 +628,7 @@
         return '★'.repeat(n) + `<i>${'★'.repeat(5 - n)}</i>`;
     }
     // squadre selezionabili: quelle del girone, oppure di Serie A per la coppa
-    function compTeams(comp) { return comp.league ? leagueTeams(comp.league) : serieATeams(); }
+    function compTeams(comp) { return comp.id === 'wse' ? W().eligibleTeams() : comp.league ? leagueTeams(comp.league) : serieATeams(); }
     function renderTeams() {
         const el = root.querySelector('[data-screen="teams"]');
         const teams = compTeams(COMPS[compIdx]);
@@ -621,6 +637,7 @@
         const comp = COMPS[compIdx];
         const cpuNote = comp.id === 'coppa_italia'
             ? _t('In coppa con le {0} squadre col rating più alto • sorteggio libero', CUP_TEAMS - 1)
+            : comp.id === 'wse' ? _t('Con le qualificate di Italia, Francia e Spagna • sede estratta a caso')
             : _t('Le altre {0} squadre sono guidate dalla CPU', teams.length - 1);
         el.innerHTML = `
             <div class="cp-head">
@@ -648,7 +665,7 @@
                 <button class="cp-btn" data-act="back">◀ Competizioni</button>
                 <span class="cp-hint">Frecce per scegliere • Invio per iniziare</span>
                 <span class="cp-spacer"></span>
-                <button class="cp-btn is-primary" data-act="start">${comp.id === 'coppa_italia' ? 'Sorteggio del tabellone ▶' : 'Inizia la stagione ▶'}</button>
+                <button class="cp-btn is-primary" data-act="start">${comp.id === 'coppa_italia' ? 'Sorteggio del tabellone ▶' : comp.id === 'wse' ? 'Sorteggio dei gironi ▶' : 'Inizia la stagione ▶'}</button>
             </div>`;
         el.querySelector('[data-act="back"]').onclick = () => showScreen('select');
         el.querySelector('[data-act="start"]').onclick = () => startSeason(selectedTeam);
@@ -669,7 +686,7 @@
         if (typeof window.pickDifficulty !== 'function') { createSeason(user, 'normal'); return; }
         window.pickDifficulty({
             title: 'Scegli la difficoltà',
-            sub: _t(comp.id === 'coppa_italia' ? '{0} • vale per tutta la coppa' : '{0} • vale per tutta la stagione', comp.short || comp.name),
+            sub: _t(comp.id === 'coppa_italia' ? '{0} • vale per tutta la coppa' : comp.id === 'wse' ? '{0} • vale per tutto il torneo' : '{0} • vale per tutta la stagione', comp.short || comp.name),
             current: 'normal',
             currentTag: 'Consigliato',
             onPick: id => createSeason(user, id),
@@ -679,6 +696,7 @@
     function createSeason(user, difficulty) {
         const comp = COMPS[compIdx];
         if (comp.id === 'coppa_italia') { startCup(user, difficulty); return; }
+        if (comp.id === 'wse') { startWse(user, difficulty); return; }
         const teams = leagueTeams(comp.league);
         state = {
             id: 'c' + Date.now().toString(36),
@@ -721,6 +739,27 @@
         saveCurrent(true);
         showScreen('hub');
         toast(_t('Sorteggio fatto • {0} • salvata come "{1}"', difficultyLabel(state), state.name));
+    }
+
+    // WSE European League: classifiche nazionali stimate dal rating, detentrice dall'ultima edizione giocata,
+    // sede estratta a caso; la squadra dell'utente partecipa sempre (con una wild card se non si qualifica)
+    function startWse(user, difficulty) {
+        const national = {};
+        W().FEDS.forEach(f => { national[f.id] = W().ratingRanking(f.id); });
+        let holder = null;
+        try { holder = localStorage.getItem('hil_wse_holder'); } catch (e) {}
+        if (holder && !club(holder)) holder = null;
+        const { venue, host } = W().drawVenue();
+        const entries = W().buildEntries({ national, holder, host, user, forceUser: true });
+        state = Object.assign(W().create({ user, season: seasonLabel(), entries, venue, host, holder }), {
+            id: 'c' + Date.now().toString(36),
+            name: autoName(user, 'wse'),
+            difficulty: difficulty || 'normal'
+        });
+        hubTab = 'groups';
+        saveCurrent(true);
+        showScreen('hub');
+        toast(_t('Sorteggio fatto • {0} squadre • si gioca a {1}', state.teams.length, W().venueTitle(state)));
     }
 
     // --- 3. hub della stagione
@@ -861,6 +900,7 @@
     }
     let resTab = 'last';   // riquadro risultati: 'last' = ultimo turno giocato, 'next' = giornata in corso
     function renderHub() {
+        if (isWse()) { renderWseHub(); return; }
         if (isCup()) { renderCupHub(); return; }
         const el = root.querySelector('[data-screen="hub"]');
         const phaseTxt = state.phase === 'regular' ? 'Regular season' : (state.phase === 'playoff' ? L(state).po : 'Stagione conclusa');
@@ -998,7 +1038,83 @@
         on('champion', showChampion);
     }
 
+    // --- 3c. hub della WSE European League: gironi, fase finale, partecipanti
+    function wseNextHtml() {
+        if (state.phase === 'done') {
+            return `<div class="cp-rest"><b>Torneo concluso</b>${esc(_t("Campione d'Europa: {0}", clubName(state.champion)))}</div>
+                <div class="cp-next-actions"><button class="cp-btn is-primary" data-act="champion">Premiazione ▶</button></div>`;
+        }
+        const f = userFixture();
+        if (!f) {
+            const place = W().finalPlace(state, state.user);
+            return `<div class="cp-next-meta"><span>${esc(W().stageTitle(state))}</span><span>${esc(clubName(state.user))}</span></div>
+                <div class="cp-rest"><b>${place ? esc(_t('Torneo concluso • {0} posto', I18N.ord(place))) : 'Turno di riposo'}</b>Le partite di questo turno sono giocate dalla CPU</div>
+                <div class="cp-next-actions"><button class="cp-btn is-primary" data-act="sim-turn" data-focus>Simula il turno ▶</button></div>`;
+        }
+        const side = (id, lbl) => `<div class="side${id === state.user ? ' is-user' : ''}"><img src="${logo(id)}" alt=""><span>${esc(club(id).shortName || clubName(id))}</span><small>${lbl}</small></div>`;
+        return `<div class="cp-next-meta"><span>${esc(W().gameLabel(state, f))}</span><span>Gara secca</span></div>
+            <div class="cp-versus">${side(f.home, 'CASA')}<span class="cp-vs">VS</span>${side(f.away, 'OSPITE')}</div>
+            <div class="cp-next-arena">${esc(W().venueTitle(state))} • ${esc(kickoffText(fixtureKickoff(f)))}</div>
+            <div class="cp-next-actions">
+                <button class="cp-btn is-primary" data-act="play" data-focus>Gioca ▶</button>
+                <button class="cp-btn" data-act="sim">Simula partita</button>
+            </div>`;
+    }
+    function renderWseHub() {
+        const el = root.querySelector('[data-screen="hub"]');
+        if (!['groups', 'ko', 'entries'].includes(hubTab)) hubTab = state.phase === 'groups' ? 'groups' : 'ko';
+        const lr = W().lastResults(state);
+        const up = W().upcoming(state);
+        if (!up) resTab = 'last';
+        const phaseTxt = state.phase === 'groups' ? 'Fase a gironi • giovedì e venerdì' : (state.phase === 'ko' ? 'Fase finale • sabato e domenica' : 'Torneo concluso');
+        const body = hubTab === 'ko' ? W().koHtml(state) : hubTab === 'entries' ? W().entriesHtml(state) : W().groupsHtml(state);
+        const tabLabel = { groups: 'Gironi', ko: 'Fase finale', entries: 'Partecipanti' }[hubTab];
+        el.innerHTML = `
+            <div class="cp-head">
+                <img class="cp-head-logo" src="${W().LOGO}" alt="">
+                <div class="cp-head-titles"><span class="cp-kicker">${phaseTxt}</span><span class="cp-title">${W().NAME} ${esc(state.season)}</span></div>
+                <div class="cp-head-right">
+                    <span class="cp-pill"><img src="${logo(state.user)}" alt="">${esc(clubName(state.user))}</span>
+                    <span class="cp-pill">${esc(difficultyLabel(state))}</span>
+                    <span class="cp-pill" title="${esc(W().venueCity(state))}">📍 ${esc(W().venueTitle(state))}</span>
+                </div>
+            </div>
+            <div class="cp-hub">
+                <div class="cp-panel" data-label="${tabLabel}" style="display:flex;flex-direction:column;min-height:0">
+                    <div class="cp-panel-title">
+                        <div class="cp-tabs"><button class="cp-tab${hubTab === 'groups' ? ' is-active' : ''}" data-tab="groups">Gironi</button><button class="cp-tab${hubTab === 'ko' ? ' is-active' : ''}" data-tab="ko">Fase finale</button><button class="cp-tab${hubTab === 'entries' ? ' is-active' : ''}" data-tab="entries">Partecipanti</button></div>
+                        <span>${esc(_t('{0} squadre', state.teams.length))}</span>
+                    </div>
+                    ${body}
+                </div>
+                <div class="cp-col">
+                    <div class="cp-panel" data-label="Prossima partita"><div class="cp-panel-title"><span>Prossima partita</span></div><div class="cp-next">${wseNextHtml()}</div></div>
+                    <div class="cp-panel" data-label="Risultati" style="display:flex;flex-direction:column;min-height:0;flex:1">
+                        <div class="cp-panel-title">${up ? `<div class="cp-tabs"><button class="cp-tab${resTab === 'last' ? ' is-active' : ''}" data-res="last">${esc(lr.tab || lr.title)}</button><button class="cp-tab${resTab === 'next' ? ' is-active' : ''}" data-res="next">${esc(up.title)}</button></div><span>${resTab === 'next' ? 'Da giocare' : 'Risultati'}</span>` : `<span>${esc(lr.title)}</span>`}</div>
+                        <div class="cp-results" data-pager="y">${up && resTab === 'next' ? up.body : lr.body}</div>
+                    </div>
+                </div>
+            </div>
+            <div class="cp-foot">
+                <button class="cp-btn" data-act="exit">◀ Esci</button>
+                <span class="cp-hint">${_t('Salvataggio automatico dopo ogni turno • "{0}"', esc(state.name))}</span>
+                <span class="cp-spacer"></span>
+                <button class="cp-btn" data-act="save">Salva</button>
+            </div>`;
+        el.querySelectorAll('[data-res]').forEach(b => b.onclick = () => { resTab = b.dataset.res; renderHub(); setupHubSwitcher(); const t = el.querySelector(`[data-res="${resTab}"]`); if (t) t.focus({ preventScroll: true }); });
+        el.querySelectorAll('[data-tab]').forEach(b => b.onclick = () => { hubTab = b.dataset.tab; renderHub(); setupHubSwitcher(); const t = el.querySelector(`[data-tab="${hubTab}"]`); if (t) t.focus({ preventScroll: true }); });
+        el.querySelector('[data-act="exit"]').onclick = exitToMenu;
+        el.querySelector('[data-act="save"]').onclick = () => saveCurrent(false);
+        const on = (act, fn) => { const b = el.querySelector(`[data-act="${act}"]`); if (b) b.onclick = fn; };
+        on('play', playUserMatch);
+        on('sim', () => { const f = userFixture(); if (f && !f.result) f.result = simulateMatch(f.home, f.away, true); finishTurn(); });
+        on('sim-turn', finishTurn);
+        on('champion', showChampion);
+    }
+
     function finishTurn() {
+        const wasGroups = isWse() && state.phase === 'groups';
+        const wseAlive = isWse() && !!userFixture();
         const wasCupAlive = isCup() && !!userFixture();
         const wasRegular = state.phase === 'regular';
         completeTurn();
@@ -1011,6 +1127,19 @@
                 : (pl && (pl.hi === state.user || pl.lo === state.user) ? _t('al {0}', _t(playoutCfg().label).toLowerCase()) : (playoutCfg() ? _t('salva') : _t('fuori dai play-off')));
             toast(_t('Regular season conclusa • {0} {1} • {2}', clubName(state.user), I18N.ord(pos), verdict));
         }
+        if (wasGroups && state.phase === 'ko') {
+            hubTab = 'ko';
+            const gi = W().groupOfTeam(state, state.user);
+            const pos = W().groupTable(state, gi).findIndex(r => r.id === state.user) + 1;
+            const seed = state.ko.seeds.indexOf(state.user);
+            const verdict = seed < 0 ? _t('gioca per il 9°-12° posto')
+                : seed >= (state.format === 8 ? 4 : 8) ? _t('gioca per il 5°-8° posto')
+                : _t(state.format === 8 ? 'in semifinale' : 'ai quarti di finale');
+            toast(_t('Gironi conclusi • {0} {1} nel girone {2} • {3}', clubName(state.user), I18N.ord(pos), state.groups[gi].id, verdict));
+        } else if (wseAlive && state.phase !== 'done' && !userFixture()) {
+            const place = W().finalPlace(state, state.user);
+            if (place) toast(_t('{0} chiude la European League al {1} posto', clubName(state.user), I18N.ord(place)));
+        }
         if (wasCupAlive && state.phase !== 'done') {
             const won = state.cup.rounds[state.cup.round - 1].some(g => winnerOf(g) === state.user);
             toast(won ? _t('Passaggio del turno • {0} in {1}', clubName(state.user), _t(cupRoundLabel(state.cup.round)).toLowerCase()) : _t('{0} eliminata dalla coppa', clubName(state.user)));
@@ -1018,7 +1147,29 @@
         showScreen('hub');
         if (state.phase === 'done') showChampion();
     }
+    function showWseChampion() {
+        const o = document.createElement('div');
+        o.className = 'cp-overlay';
+        const isUser = state.champion === state.user;
+        const place = W().placeOf(state, state.user);
+        const msg = isUser ? "Campioni d'Europa! Quattro giorni da leggenda."
+            : place === 2 ? _t('{0} chiude al 2° posto: finale persa, ma che cammino!', esc(clubName(state.user)))
+            : _t('{0} chiude la European League al {1} posto.', esc(clubName(state.user)), I18N.ord(place));
+        o.innerHTML = `<div class="cp-panel cp-dialog">
+            <span class="cp-kicker">${esc(W().NAME)} ${esc(state.season)} • ${esc(_t('Finale'))} • ${esc(W().venueTitle(state))}</span>
+            <img class="cp-champ-crest" src="${logo(state.champion)}" alt="">
+            <h2>${esc(clubName(state.champion))}<br>${esc(_t("Campione d'Europa"))}</h2>
+            <p>${_t('2° posto: {0} • 3° posto: {1}', esc(clubName(state.runnerUp)), esc(clubName(state.ranking[2])))}</p>
+            <p>${msg}</p>
+            <div class="cp-next-actions"><button class="cp-btn" data-x="hub">Tabellone</button><button class="cp-btn is-primary" data-x="menu">Torna al menu ▶</button></div>
+        </div>`;
+        document.body.appendChild(o);
+        o.querySelector('[data-x="hub"]').onclick = () => { o.remove(); hubTab = 'ko'; showScreen('hub'); };
+        o.querySelector('[data-x="menu"]').onclick = () => { o.remove(); exitToMenu(); };
+        if (window.gameAudio && window.gameAudio.playStinger) window.gameAudio.playStinger('victory');
+    }
     function showChampion() {
+        if (isWse()) { showWseChampion(); return; }
         const o = document.createElement('div');
         o.className = 'cp-overlay';
         const isUser = state.champion === state.user;
@@ -1059,14 +1210,15 @@
         matchConfig.guestClub = f.away;
         matchConfig.homeKit = homeKit;
         matchConfig.guestKit = awayKit;
-        matchConfig.arena = arenaOf(f.home);
+        matchConfig.arena = isWse() ? state.venue : arenaOf(f.home);      // European League: sede unica estratta a caso
         matchConfig.userTeam = f.home === state.user ? 'home' : 'guest';   // non tocca la preferenza salvata
         matchConfig.difficulty = state.difficulty || 'normal';              // livello scelto a inizio stagione (salvataggi vecchi: normale)
         pendingFixture = f;
         matchActive = true;
         const ko = fixtureKickoff(f);
         matchConfig.timeOfDay = ko.daytime ? 'day' : 'night';      // partita pomeridiana o serale
-        const label = isCup() ? `Coppa Italia • ${_t(cupRoundLabel(state.cup.round))}`
+        const label = isWse() ? `${W().SHORT} • ${W().gameLabel(state, f)}`
+            : isCup() ? `Coppa Italia • ${_t(cupRoundLabel(state.cup.round))}`
             : (state.phase === 'regular' ? `${L(state).name} • ${_t('Giornata {0}', state.roundIdx + 1)}` : `${L(state).name} • ${_t(poRounds()[state.playoffs.round].label)}`);
         // la schermata della competizione si chiude quando il caricamento la copre (niente palazzetto nella dissolvenza)
         if (typeof showFunFactLoading === 'function') showFunFactLoading(`${label} • ${ko.label}`, launchMatchFromCurrentConfig, hideRoot);
@@ -1139,6 +1291,7 @@
     }
     // le gare che si giocano nel turno corrente (riferimenti: dopo completeTurn hanno il risultato)
     function turnFixtures() {
+        if (isWse()) return W().turnFixtures(state);
         if (isCup()) return state.phase === 'cup' ? state.cup.rounds[state.cup.round].slice() : [];
         if (state.phase === 'regular') { const r = state.rounds[state.roundIdx]; return r ? r.fixtures.slice() : []; }
         if (state.phase === 'playoff') {
@@ -1198,6 +1351,7 @@
         return [9, 10, 11, 0, 1, 2][Math.min(5, Math.floor(fr * 6))];
     }
     function fixtureKickoff(f) {
+        if (isWse()) return W().kickoff(state, f);
         const day = !isCup() && state.phase === 'playoff' && L(state).lowSeedFirst && f.n ? (f.n === 3 ? 0 : 6) : null;
         return kickoff([state.comp, state.season, f.home, f.away, f.n || '', isCup() ? state.cup.round : state.roundIdx].join('|'), fixtureMonth(), day);
     }
@@ -1206,6 +1360,7 @@
     // ------------------------------------------------------------------ contesto per la telecronaca
     // risultati di una squadra in ordine di gioco ('W'/'L'), ultime n
     function formOf(id, n = 5) {
+        if (isWse()) return W().formOf(state, id, n);
         const games = [];
         if (isCup()) state.cup.rounds.forEach(r => r.forEach(f => games.push(f)));
         else {
@@ -1216,6 +1371,7 @@
         return games.filter(f => f.result && (f.home === id || f.away === id)).map(f => (winnerOf(f) === id ? 'W' : 'L')).slice(-n);
     }
     function matchContext(home, away) {
+        if (isWse()) return W().matchContext(state, home, away);
         const ctx = { league: leagueOf(state), leagueName: L(state).name, user: state.user, teams: {} };
         if (isCup()) {
             ctx.kind = 'cup';
@@ -1248,6 +1404,7 @@
 
     // NB: resta in italiano (Hockey Manager la salva nei messaggi della carriera): tradurre dove la si mostra
     function turnLabel() {
+        if (isWse()) return W().turnLabel(state);
         if (isCup()) return state.phase === 'cup' ? `Coppa Italia • ${cupRoundLabel(state.cup.round)}` : 'Coppa Italia';
         if (state.phase === 'regular') return `${L(state).name} • Giornata ${state.roundIdx + 1} di ${state.rounds.length}`;
         if (state.phase === 'playoff') return `${L(state).name} • ${poRounds()[state.playoffs.round].label}`;

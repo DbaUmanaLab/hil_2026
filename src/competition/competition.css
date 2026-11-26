@@ -322,3 +322,22 @@
 /* ---------- play-out salvezza nel tabellone (Liga Élite) ---------- */
 .cp-playout h4 { color: #f87171; }
 .cp-playout .cp-res-rest { text-align: center; margin-top: 6px; }
+
+/* ---------- WSE European League: gironi e tabellone con i piazzamenti ---------- */
+.wse-groups { flex: 1; min-height: 0; overflow: auto; display: grid; gap: 12px; padding: 12px; align-content: start; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.wse-groups.g3 { grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.wse-group { border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); overflow: hidden; }
+.wse-group h5 { margin: 0; padding: 8px 12px; font-size: 12px; letter-spacing: .22em; text-transform: uppercase; color: var(--bx-gold, #f6b511); border-bottom: 1px solid rgba(255,255,255,.08); }
+.wse-table th { position: static; background: rgba(12,25,64,.6); }
+.wse-table td { padding: 5px 5px; font-size: clamp(12px, 1vw, 14px); }
+.wse-table .team img { width: 22px; height: 22px; }
+.wse-bracket.c3 { grid-template-columns: repeat(3, minmax(190px, 1fr)); }
+.wse-bracket.c4 { grid-template-columns: repeat(3, minmax(190px, 1fr)) minmax(170px, .8fr); }
+.wse-bracket.c2 { grid-template-columns: repeat(2, minmax(200px, 1fr)); }
+.wse-bracket .cp-round-body { justify-content: flex-start; }
+.wse-gl { padding: 4px 10px; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: #94a3b8; background: rgba(0,0,0,.18); }
+.cp-series.wse-final { border-color: rgba(246,181,17,.75); box-shadow: 0 0 0 1px rgba(246,181,17,.35); }
+.cp-series.wse-final .wse-gl { color: var(--bx-gold, #f6b511); }
+.wse-rank .cp-round-body { gap: 4px; }
+.wse-entries .cp-save-row.is-user { box-shadow: inset 4px 0 0 var(--bx-gold, #f6b511); }
+@media (max-width: 900px) { .wse-groups { grid-template-columns: 1fr; } }

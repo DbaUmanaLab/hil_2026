@@ -487,5 +487,28 @@ I18N.add('en', {
         '{0} left: not enough for two months of costs ({1} a month). If the balance drops below zero the club goes bankrupt.',
     'Benvenuto alla guida di {0}': 'Welcome to the helm of {0}',
     "Il presidente ti affida la squadra con un budget di {0}. Ogni mese paghi gli stipendi ({1}) e ogni settimana l'affitto del palazzetto ({2}). Si parte in {3}: l'ultima di Serie A retrocede, la vincente dei play-off di Serie B sale. Biglietti, bar, sponsor e premi portano entrate. Se il saldo va sotto zero la società fallisce.":
-        "The owner hands you the team with a budget of {0}. Every month you pay salaries ({1}) and every week the arena rent ({2}). You start in {3}: the last-place Serie A team is relegated, the Serie B playoff winner moves up. Tickets, concessions, sponsors and prizes bring in money. If the balance drops below zero the club goes bankrupt."
+        "The owner hands you the team with a budget of {0}. Every month you pay salaries ({1}) and every week the arena rent ({2}). You start in {3}: the last-place Serie A team is relegated, the Serie B playoff winner moves up. Tickets, concessions, sponsors and prizes bring in money. If the balance drops below zero the club goes bankrupt.",
+
+    // WSE European League nella carriera
+    'Sorteggio della WSE European League': 'WSE European League draw',
+    '{0} • campo neutro': '{0} • neutral venue',
+    'Qualificate, sede e sorteggio dei gironi del torneo europeo': 'Qualified clubs, venue and group draw of the European tournament',
+    'La tua squadra ha già finito il torneo': 'Your team has already finished the tournament',
+    'EL: {0}': 'EL: {0}',
+    'Qualificati alla WSE European League': 'Qualified for the WSE European League',
+    '{0} è al via del torneo europeo per club ({1}): {2} squadre, dal {3} al {4} al {5}. Girone {6} con {7}.':
+        '{0} is in the European club tournament ({1}): {2} teams, from {3} to {4} at {5}. Group {6} with {7}.',
+    'Partecipazione alla WSE European League': 'WSE European League participation',
+    '{0} non si è qualificata per il torneo europeo. Al {1} vince {2}, in finale su {3}.':
+        '{0} did not qualify for the European tournament. At {1} the title goes to {2}, beating {3} in the final.',
+    'European League: fase a gironi conclusa': 'European League: group stage over',
+    '{0} chiude al {1} posto il girone {2}: {3}.': '{0} finishes {1} in group {2}: {3}.',
+    'Finale di European League disputata': 'European League final played',
+    'WSE European League vinta': 'WSE European League won',
+    "Campioni d'Europa!": 'Champions of Europe!',
+    '{0} vince la WSE European League al {1}: premio di {2} più {3} per la finale.': '{0} wins the WSE European League at {1}: a {2} prize plus {3} for reaching the final.',
+    'European League: {0} posto': 'European League: {0} place',
+    '{0} chiude la WSE European League al {1} posto.': '{0} finishes the WSE European League in {1} place.',
+    'WSE European League assegnata': 'WSE European League decided',
+    "{0} è campione d'Europa: battuta in finale {1}.": '{0} are the champions of Europe, beating {1} in the final.'
 });

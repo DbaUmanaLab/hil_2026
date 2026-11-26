@@ -14736,6 +14736,24 @@
             return parts.length ? `<div class="rs-extras${long ? ' is-long' : ''}" style="--i:${startIdx}">${parts.join('<span class="rs-sep">|</span>')}</div>` : '';
         }
 
+        // L'elenco deve stare tutto nel pannello, senza barra di scorrimento: se le righe (o le riserve che
+        // vanno a capo) superano l'altezza disponibile, il carattere scende a piccoli passi finché ci stanno
+        function fitRosterList() {
+            const list = document.getElementById('rs-list');
+            const wrap = list && list.parentElement;
+            if (!wrap || !wrap.clientHeight) return;
+            list.style.fontSize = '';
+            let size = parseFloat(getComputedStyle(list).fontSize);
+            for (let guard = 0; guard < 30 && wrap.scrollHeight > wrap.clientHeight + 1 && size > 9; guard++) {
+                size *= 0.95;
+                list.style.fontSize = size.toFixed(2) + 'px';
+            }
+        }
+        window.addEventListener('resize', () => {
+            const sc = document.getElementById('prematch-lineup-screen');
+            if (sc && !sc.classList.contains('hidden')) fitRosterList();
+        });
+
         function restartRosterAnim(el) {
             el.classList.remove('rs-anim-in', 'rs-anim-out');
             void el.offsetWidth;
@@ -14782,6 +14800,7 @@
                 const rsList = document.getElementById('rs-list');
                 rsList.innerHTML = renderRosterRowsHTML(club);
                 rsList.classList.toggle('is-crowded', rosterExtrasCount(club) > ROSTER_LONG_EXTRAS);
+                fitRosterList();
                 restartRosterAnim(screen);
             };
 
@@ -16649,6 +16668,7 @@
 
     <!-- Modalità Competizione (Serie A / Coppa Italia): usa i globali dello script principale -->
     <script src="src/competition/competition.js"></script>
+    <script src="src/competition/wse.js"></script>
     <!-- Fine periodo e festa di fine partita in pista -->
     <script src="src/game/Ceremony.js"></script>
     <!-- Hockey Manager: sponsor, logica della carriera e interfaccia -->

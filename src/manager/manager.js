@@ -364,8 +364,15 @@
     // orario della partita dal calendario della carriera (giorno della settimana e mese veri): decide se si
     // gioca col sole o di sera (motore orari in competition.js)
     function kickoffOf(ev, f) {
+        // European League: orari del programma del torneo (più partite al giorno nello stesso impianto)
+        if (ev.kind === 'euro' && career.euro && window.WSE) return window.WSE.kickoff(career.euro, f);
         const d = new Date(ev.date + 'T12:00:00Z');
         return E().kickoff([career.id, ev.date, f.home, f.away].join('|'), d.getUTCMonth(), d.getUTCDay());
+    }
+    // impianto della partita: la sede unica della European League o il palazzetto di chi gioca in casa
+    function venueLine(ev, f) {
+        if (ev.kind === 'euro' && career.euro && window.WSE) return _t('{0} • campo neutro', window.WSE.venueTitle(career.euro));
+        return f.home === career.user ? _t('{0} • incasso di biglietti e bar', MC().arenaName(f.home)) : MC().arenaName(f.home);
     }
     function showMatchDialog(ev, f) {
         const r = CLUB_RATINGS;
@@ -374,7 +381,7 @@
         overlay(`
             <span class="cp-kicker">${esc(_t('{0} • {1} • ore {2}', MC().evLabel(ev.label), MC().dateLabel(ev.date, true), kickoffOf(ev, f).time))}</span>
             ${versusHtml(f)}
-            <div class="cp-next-arena">${esc(f.home === career.user ? _t('{0} • incasso di biglietti e bar', MC().arenaName(f.home)) : MC().arenaName(f.home))}</div>
+            <div class="cp-next-arena">${esc(venueLine(ev, f))}</div>
             <div class="mg-compare"><span>OFF ${mine.off} • DEF ${mine.def} • GOA ${mine.goa}</span><b>vs</b><span>OFF ${theirs.off} • DEF ${theirs.def} • GOA ${theirs.goa}</span></div>
             <p>${availabilityLine()}</p>
             <div class="cp-next-actions">
@@ -401,10 +408,10 @@
         matchConfig.guestClub = f.away;
         matchConfig.homeKit = homeKit;
         matchConfig.guestKit = awayKit;
-        matchConfig.arena = HOME_CLUB_ARENAS[f.home] || f.home;
+        matchConfig.arena = ev.kind === 'euro' && career.euro ? career.euro.venue : (HOME_CLUB_ARENAS[f.home] || f.home);
         matchConfig.userTeam = f.home === career.user ? 'home' : 'guest';
         matchConfig.difficulty = career.difficulty || 'normal';            // livello scelto a inizio carriera (salvataggi vecchi: normale)
-        liveMatch = { s: ev.comp === 'cup' ? career.cup : career.league, f };
+        liveMatch = { s: ev.comp === 'cup' ? career.cup : ev.comp === 'euro' ? career.euro : career.league, f };
         const ko = kickoffOf(ev, f);
         matchConfig.timeOfDay = ko.daytime ? 'day' : 'night';      // partita pomeridiana o serale
         matchActive = true;
@@ -480,6 +487,7 @@
                 <div><small>${esc(s.divName || 'Serie A')}</small><b>${s.pos ? esc(_t('{0} posto', I18N.ord(s.pos))) : '—'}</b></div>
                 <div><small>Play-off</small><b>${esc(_t(s.playoff))}</b></div>
                 <div><small>Coppa Italia</small><b>${esc(_t(cupW ? 'Vinta' : s.cup))}</b></div>
+                ${s.euro ? `<div><small>European League</small><b>${esc(euroLabel(s.euro))}</b></div>` : ''}
                 <div><small>Bilancio stagione</small><b class="${s.income + s.expense >= 0 ? 'mg-pos' : 'mg-neg'}">${s.income + s.expense >= 0 ? '+' : ''}${eur(s.income + s.expense)}</b></div>
                 <div><small>Saldo</small><b>${eur(s.balance)}</b></div>
                 <div><small>Tifosi</small><b>${s.fans} • ${esc(_t(MC().fansMood(s.fans)))}</b></div>
@@ -488,7 +496,12 @@
             <div class="cp-next-actions"><button class="cp-btn is-primary" data-x="ok" data-keyback data-focus>Avanti ▶</button></div>`, (o, close) => {
             o.querySelector('[data-x="ok"]').onclick = close;
         });
-        if (window.gameAudio && window.gameAudio.playStinger && (champ || cupW)) window.gameAudio.playStinger('victory');
+        if (window.gameAudio && window.gameAudio.playStinger && (champ || cupW || s.euro === 'Vinta')) window.gameAudio.playStinger('victory');
+    }
+    // esito europeo salvato in italiano ('Vinta', 'Finale', '5° posto', 'Quarti di finale'...)
+    function euroLabel(v) {
+        const m = /^(\d+)° posto$/.exec(v || '');
+        return m ? _t('{0} posto', I18N.ord(+m[1])) : _t(v || '—');
     }
     function showGameOver() {
         const c = career;
@@ -530,7 +543,7 @@
             const fs = M.freeSlots(c);
             if (fs.main + fs.sec > 0 && !c.sponsors.offers.length) alerts.push(`<button type="button" class="mg-alert is-info" data-go="sponsors">🤝 ${esc(_t(fs.main + fs.sec > 1 ? '{0} spazi sponsor liberi' : '{0} spazio sponsor libero', fs.main + fs.sec))}</button>`);
             const next = !ev ? '<div class="cp-rest"><b>Carriera terminata</b></div>' : f
-                ? `<div class="cp-next-meta"><span>${esc(M.evLabel(ev.label))}</span><span>${esc(_t('{0} • ore {1}', M.dateLabel(ev.date, true), kickoffOf(ev, f).time))}</span></div>${versusHtml(f)}<div class="cp-next-arena">${esc(M.arenaName(f.home))} • ${esc(_t(kickoffOf(ev, f).daytime ? '☀ di pomeriggio' : '☾ in serata'))}</div>
+                ? `<div class="cp-next-meta"><span>${esc(M.evLabel(ev.label))}</span><span>${esc(_t('{0} • ore {1}', M.dateLabel(ev.date, true), kickoffOf(ev, f).time))}</span></div>${versusHtml(f)}<div class="cp-next-arena">${esc(ev.kind === 'euro' && c.euro ? window.WSE.venueTitle(c.euro) : M.arenaName(f.home))} • ${esc(_t(kickoffOf(ev, f).daytime ? '☀ di pomeriggio' : '☾ in serata'))}</div>
                    <div class="cp-next-actions"><button class="cp-btn" data-act="sim">Simula</button><button class="cp-btn is-primary" data-act="play" data-focus>Gioca ▶</button></div>`
                 : `<div class="cp-next-meta"><span>${esc(M.dateLabel(ev.date, true))}</span></div><div class="cp-rest"><b>${esc(M.evLabel(ev.label))}</b>${esc(eventHint(ev))}</div>
                    <div class="cp-next-actions"><button class="cp-btn is-primary" data-act="go" data-focus>Continua ▶</button></div>`;
@@ -579,6 +592,8 @@
             season_end: ' • Premi, bilanci, rinnovi e ritiri',
             league: ' • Turno di riposo per la tua squadra',
             playoff: ' • La tua squadra non gioca in questo turno',
+            euro_draw: ' • Qualificate, sede e sorteggio dei gironi del torneo europeo',
+            euro: ' • La tua squadra ha già finito il torneo',
             cup: career && career.cup && !career.cup.teams.includes(career.user) ? ' • La Coppa Italia è riservata alla Serie A' : ' • La tua squadra non è più in coppa'
         }[ev.kind];
         return h ? ' • ' + _t(h.slice(3)) : '';
@@ -884,6 +899,12 @@
             const lr = lg ? En.lastResults(lg) : null;
             const ud = MC().userDiv(c), od = ud === 'A' ? 'B' : 'A';
             const cupBody = c.cup ? En.cupBracketHtml(c.cup) : '<div class="cp-empty" style="margin:auto">La Coppa Italia si gioca a gennaio, durante la sosta del campionato</div>';
+            const Wm = window.WSE;
+            if (ui.comp === 'euro' && !c.euro) ui.comp = 'league';
+            if (!['groups', 'ko', 'entries'].includes(ui.euroView)) ui.euroView = c.euro && c.euro.phase !== 'groups' ? 'ko' : 'groups';
+            const euroBody = c.euro ? (ui.euroView === 'ko' ? Wm.koHtml(c.euro) : ui.euroView === 'entries' ? Wm.entriesHtml(c.euro) : Wm.groupsHtml(c.euro)) : '';
+            const isEuro = ui.comp === 'euro';
+            const sideRes = isEuro ? Wm.lastResults(c.euro) : null;
             const hist = c.seasons.slice().reverse();
             return `<div class="mg-grid mg-comps">
                 <div class="cp-panel mg-span2 mg-fill" data-label="Classifiche e tabelloni">
@@ -891,21 +912,24 @@
                         <button class="cp-tab${ui.comp === 'league' ? ' is-active' : ''}" data-comp="league">${MC().CFG.DIV[ud].name}</button>
                         ${c.other ? `<button class="cp-tab${ui.comp === 'other' ? ' is-active' : ''}" data-comp="other">${MC().CFG.DIV[od].name}</button>` : ''}
                         <button class="cp-tab${ui.comp === 'cup' ? ' is-active' : ''}" data-comp="cup">Coppa Italia</button>
-                        ${ui.comp !== 'cup' && lg ? `<button class="cp-tab${ui.compView === 'table' ? ' is-active' : ''}" data-view="table">Classifica</button><button class="cp-tab${ui.compView === 'bracket' ? ' is-active' : ''}" data-view="bracket">Play-off</button>` : ''}
-                    </div><span>${ui.comp !== 'cup' ? (lg ? esc(En.progressLabel(lg)) : '') : (c.cup ? esc(En.progressLabel(c.cup)) : '')}</span></div>
-                    ${ui.comp !== 'cup' ? leagueBody : cupBody}
+                        ${c.euro ? `<button class="cp-tab${isEuro ? ' is-active' : ''}" data-comp="euro">European League</button>` : ''}
+                        ${ui.comp !== 'cup' && !isEuro && lg ? `<button class="cp-tab${ui.compView === 'table' ? ' is-active' : ''}" data-view="table">Classifica</button><button class="cp-tab${ui.compView === 'bracket' ? ' is-active' : ''}" data-view="bracket">Play-off</button>` : ''}
+                        ${isEuro ? `<button class="cp-tab${ui.euroView === 'groups' ? ' is-active' : ''}" data-euro="groups">Gironi</button><button class="cp-tab${ui.euroView === 'ko' ? ' is-active' : ''}" data-euro="ko">Fase finale</button><button class="cp-tab${ui.euroView === 'entries' ? ' is-active' : ''}" data-euro="entries">Partecipanti</button>` : ''}
+                    </div><span>${isEuro ? '' : ui.comp !== 'cup' ? (lg ? esc(En.progressLabel(lg)) : '') : (c.cup ? esc(En.progressLabel(c.cup)) : '')}</span></div>
+                    ${isEuro ? euroBody : ui.comp !== 'cup' ? leagueBody : cupBody}
                 </div>
                 <div class="cp-col">
-                    <div class="cp-panel mg-fill"><div class="cp-panel-title"><span>${lr ? esc(lr.title) : 'Risultati'}</span></div>
-                        <div class="cp-results" data-pager="y">${ui.comp === 'cup' && c.cup ? En.lastResults(c.cup).body : (lr ? lr.body : '<div class="cp-empty">Nessuna partita giocata</div>')}</div></div>
+                    <div class="cp-panel mg-fill"><div class="cp-panel-title"><span>${isEuro ? esc(sideRes.title) : lr ? esc(lr.title) : 'Risultati'}</span></div>
+                        <div class="cp-results" data-pager="y">${isEuro ? sideRes.body : ui.comp === 'cup' && c.cup ? En.lastResults(c.cup).body : (lr ? lr.body : '<div class="cp-empty">Nessuna partita giocata</div>')}</div></div>
                     <div class="cp-panel mg-fill"><div class="cp-panel-title"><span>Albo della carriera</span><b>${esc(_t('{0} trofei', c.trophies.length))}</b></div>
-                        <div class="mg-hist" data-pager="y">${hist.length ? hist.map(s => `<div class="mg-hist-row"><b>${esc(s.label)}</b><span>${esc((s.divName || 'Serie A').replace('Serie ', ''))} ${s.pos ? I18N.ord(s.pos) : '—'}${s.moved ? (/Promossa/.test(s.moved) ? ' ▲' : ' ▼') : ''} • ${esc(_t('PO: {0} • Coppa: {1}', _t(s.playoff), _t(s.cupWinner === c.user ? 'Vinta' : s.cup)))}</span><em class="${s.income + s.expense >= 0 ? 'mg-pos' : 'mg-neg'}">${eur(s.income + s.expense)}</em></div>`).join('') : '<div class="cp-empty">La prima stagione è in corso</div>'}</div></div>
+                        <div class="mg-hist" data-pager="y">${hist.length ? hist.map(s => `<div class="mg-hist-row"><b>${esc(s.label)}</b><span>${esc((s.divName || 'Serie A').replace('Serie ', ''))} ${s.pos ? I18N.ord(s.pos) : '—'}${s.moved ? (/Promossa/.test(s.moved) ? ' ▲' : ' ▼') : ''} • ${esc(_t('PO: {0} • Coppa: {1}', _t(s.playoff), _t(s.cupWinner === c.user ? 'Vinta' : s.cup)))}${s.euro ? esc(' • ' + _t('EL: {0}', euroLabel(s.euro))) : ''}</span><em class="${s.income + s.expense >= 0 ? 'mg-pos' : 'mg-neg'}">${eur(s.income + s.expense)}</em></div>`).join('') : '<div class="cp-empty">La prima stagione è in corso</div>'}</div></div>
                 </div>
             </div>`;
         },
         bind(el) {
             el.querySelectorAll('[data-comp]').forEach(b => b.onclick = () => { ui.comp = b.dataset.comp; renderHub(); });
             el.querySelectorAll('[data-view]').forEach(b => b.onclick = () => { ui.compView = b.dataset.view; renderHub(); });
+            el.querySelectorAll('[data-euro]').forEach(b => b.onclick = () => { ui.euroView = b.dataset.euro; renderHub(); });
         }
     };
 
