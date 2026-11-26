@@ -4,11 +4,12 @@
 // (matchConfig, CLUB_ROSTERS, CLUB_RATINGS, ARENA_CATALOG, ROSTER_THEMES, TEAM_DATA, DIFFICULTY_LEVELS,
 //  DIFFICULTY_IDS, normDifficulty, getClubLogoSVG, getUserTeam) e _t() di src/i18n/i18n.js.
 //
-//  - MatchIntro.open({ kind, onBack, onPlay(levelId) }): schermata con il palazzetto sullo sfondo, i due
-//    loghi e i roster; in basso "Scendi in pista" (con il livello proposto, l'ultimo usato) e, facoltativo, il
-//    pulsante che apre la scelta del livello. kind: 'friendly' | 'quick' | 'rematch'.
+//  - MatchIntro.open({ kind, label, onBack, onPlay(levelId) }): schermata con il palazzetto sullo sfondo, i
+//    due loghi e i roster; in basso "Scendi in pista" (con il livello proposto, l'ultimo usato in qualsiasi
+//    partita) e il pulsante che apre la scelta del livello. kind: 'friendly' | 'quick' | 'rematch' |
+//    'competition' (modalità torneo e Hockey Manager, con label = competizione e turno).
 //  - window.pickDifficulty({ title, sub, current, currentTag, onPick(id), onCancel() }): la stessa scelta del
-//    livello in una finestra a sé (nuova competizione, nuova carriera).
+//    livello in una finestra a sé.
 // Entrambe sono livelli .cp-overlay di src/ui/uikit.js: frecce, Invio ed Esc funzionano da tastiera,
 // controller e telecomando.
 (function () {
@@ -152,7 +153,7 @@
             <div class="mi-shade"></div>
             <div class="mi-wrap" data-fit="10">
                 <header class="mi-top">
-                    <span class="mi-kicker">${esc(tr(KIND[opts.kind] || KIND.friendly))}</span>
+                    <span class="mi-kicker">${esc(opts.label || tr(KIND[opts.kind] || KIND.friendly))}</span>
                     <div class="mi-arena">
                         <b translate="no">${esc(arena.shortTitle || arena.name || '')}</b>
                         <small>${esc(arena.location || '')}</small>

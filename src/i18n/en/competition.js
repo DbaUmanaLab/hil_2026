@@ -75,8 +75,8 @@ I18N.add('en', {
     '{0} • vale per tutta la coppa': '{0} • applies to the whole cup',
     '{0} • vale per tutta la stagione': '{0} • applies to the whole season',
     'Consigliato': 'Recommended',
-    'Nuova stagione • {0} • salvata come "{1}"': 'New season • {0} • saved as "{1}"',
-    'Sorteggio fatto • {0} • salvata come "{1}"': 'Draw complete • {0} • saved as "{1}"',
+    'Nuova stagione • salvata come "{0}"': 'New season • saved as "{0}"',
+    'Sorteggio fatto • salvata come "{0}"': 'Draw complete • saved as "{0}"',
 
     // schermata 3: hub (classifica, tabellone, prossima partita, risultati)
     'Riquadro precedente': 'Previous panel',

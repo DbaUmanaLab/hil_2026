@@ -3,7 +3,7 @@
 // WSE European League (regolamento e motore in src/competition/wse.js).
 // Script classico caricato dopo lo script principale di index.html: usa i suoi globali
 // (CLUB_ROSTERS, CLUB_RATINGS, ARENA_CATALOG, HOME_CLUB_ARENAS, matchConfig,
-//  launchMatchFromCurrentConfig, logoSrcOf, titleSplashScreen, showFunFactLoading, ...).
+//  launchMatchFromCurrentConfig, logoSrcOf, titleSplashScreen, ...).
 //
 // SERIE A
 //  - Regular season: girone unico all'italiana, andata e ritorno; con un numero dispari di
@@ -430,10 +430,6 @@
     }
 
     // ------------------------------------------------------------------ salvataggi
-    function difficultyLabel(s) {
-        const L = typeof DIFFICULTY_LEVELS !== 'undefined' && DIFFICULTY_LEVELS[(s && s.difficulty) || 'normal'];
-        return _t('Difficoltà {0}', _t(L ? L.label : 'Normale'));
-    }
     function readSaves() { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '[]'); } catch (e) { return []; } }
     function writeSaves(list) { try { localStorage.setItem(SAVE_KEY, JSON.stringify(list)); return true; } catch (e) { return false; } }
     function progressLabel(s) {
@@ -585,7 +581,7 @@
                     <div class="cp-save-row">
                         <img src="${logo(s.data.user)}" alt="">
                         <div style="min-width:0"><div class="n">${esc(s.name)}</div>
-                            <div class="s">${esc(progressLabel(s.data))} • ${esc(difficultyLabel(s.data))} • ${new Date(s.savedAt).toLocaleString(I18N.locale,{ dateStyle: 'short', timeStyle: 'short' })}</div></div>
+                            <div class="s">${esc(progressLabel(s.data))} • ${new Date(s.savedAt).toLocaleString(I18N.locale,{ dateStyle: 'short', timeStyle: 'short' })}</div></div>
                         <div class="a"><button class="cp-btn is-small is-primary" data-load="${s.id}">Riprendi</button><button class="cp-btn is-small is-danger" data-del="${s.id}">Elimina</button></div>
                     </div>`).join('') : '<div class="cp-empty">Nessuna stagione salvata</div>'}</div>
             </div>`;
@@ -680,23 +676,12 @@
             };
         });
     }
-    // livello della CPU: scelto una volta all'inizio della stagione (o della coppa) e salvato con lei
-    function startSeason(user) {
+    // il livello della CPU si sceglie prima di ogni partita (presentazione della partita), non qui
+    function startSeason(user) { createSeason(user); }
+    function createSeason(user) {
         const comp = COMPS[compIdx];
-        if (typeof window.pickDifficulty !== 'function') { createSeason(user, 'normal'); return; }
-        window.pickDifficulty({
-            title: 'Scegli la difficoltà',
-            sub: _t(comp.id === 'coppa_italia' ? '{0} • vale per tutta la coppa' : comp.id === 'wse' ? '{0} • vale per tutto il torneo' : '{0} • vale per tutta la stagione', comp.short || comp.name),
-            current: 'normal',
-            currentTag: 'Consigliato',
-            onPick: id => createSeason(user, id),
-            onCancel: () => { const f = root.querySelector('[data-screen="teams"] [data-focus]'); if (f) f.focus({ preventScroll: true }); }
-        });
-    }
-    function createSeason(user, difficulty) {
-        const comp = COMPS[compIdx];
-        if (comp.id === 'coppa_italia') { startCup(user, difficulty); return; }
-        if (comp.id === 'wse') { startWse(user, difficulty); return; }
+        if (comp.id === 'coppa_italia') { startCup(user); return; }
+        if (comp.id === 'wse') { startWse(user); return; }
         const teams = leagueTeams(comp.league);
         state = {
             id: 'c' + Date.now().toString(36),
@@ -711,15 +696,14 @@
             phase: 'regular',
             playoffs: null,
             champion: null,
-            lastTurn: null,
-            difficulty
+            lastTurn: null
         };
         hubTab = 'table';
         saveCurrent(true);
         showScreen('hub');
-        toast(_t('Nuova stagione • {0} • salvata come "{1}"', difficultyLabel(state), state.name));
+        toast(_t('Nuova stagione • salvata come "{0}"', state.name));
     }
-    function startCup(user, difficulty) {
+    function startCup(user) {
         const cup = createCup(user);
         state = {
             id: 'c' + Date.now().toString(36),
@@ -732,18 +716,17 @@
             phase: 'cup',
             champion: null,
             runnerUp: null,
-            lastTurn: null,
-            difficulty: difficulty || 'normal'
+            lastTurn: null
         };
         hubTab = 'bracket';
         saveCurrent(true);
         showScreen('hub');
-        toast(_t('Sorteggio fatto • {0} • salvata come "{1}"', difficultyLabel(state), state.name));
+        toast(_t('Sorteggio fatto • salvata come "{0}"', state.name));
     }
 
     // WSE European League: classifiche nazionali stimate dal rating, detentrice dall'ultima edizione giocata,
     // sede estratta a caso; la squadra dell'utente partecipa sempre (con una wild card se non si qualifica)
-    function startWse(user, difficulty) {
+    function startWse(user) {
         const national = {};
         W().FEDS.forEach(f => { national[f.id] = W().ratingRanking(f.id); });
         let holder = null;
@@ -753,8 +736,7 @@
         const entries = W().buildEntries({ national, holder, host, user, forceUser: true });
         state = Object.assign(W().create({ user, season: seasonLabel(), entries, venue, host, holder }), {
             id: 'c' + Date.now().toString(36),
-            name: autoName(user, 'wse'),
-            difficulty: difficulty || 'normal'
+            name: autoName(user, 'wse')
         });
         hubTab = 'groups';
         saveCurrent(true);
@@ -913,7 +895,6 @@
                 <div class="cp-head-titles"><span class="cp-kicker">${phaseTxt}</span><span class="cp-title">${L(state).name} ${esc(state.season)}</span></div>
                 <div class="cp-head-right">
                     <span class="cp-pill"><img src="${logo(state.user)}" alt="">${esc(clubName(state.user))}</span>
-                    <span class="cp-pill">${esc(difficultyLabel(state))}</span>
                     <span class="cp-pill">${esc(progressLabel(state).split(' • ').slice(-1)[0])}</span>
                 </div>
             </div>
@@ -1006,7 +987,6 @@
                 <div class="cp-head-titles"><span class="cp-kicker">${state.phase === 'done' ? 'Coppa conclusa' : 'Eliminazione diretta • gare secche'}</span><span class="cp-title">Coppa Italia ${esc(state.season)}</span></div>
                 <div class="cp-head-right">
                     <span class="cp-pill"><img src="${logo(state.user)}" alt="">${esc(clubName(state.user))}</span>
-                    <span class="cp-pill">${esc(difficultyLabel(state))}</span>
                     <span class="cp-pill">${state.phase === 'done' ? _t('Finale giocata') : esc(_t(cupRoundLabel(state.cup.round)))}${alive || state.phase === 'done' ? '' : ' • ' + _t('eliminati')}</span>
                 </div>
             </div>
@@ -1075,7 +1055,6 @@
                 <div class="cp-head-titles"><span class="cp-kicker">${phaseTxt}</span><span class="cp-title">${W().NAME} ${esc(state.season)}</span></div>
                 <div class="cp-head-right">
                     <span class="cp-pill"><img src="${logo(state.user)}" alt="">${esc(clubName(state.user))}</span>
-                    <span class="cp-pill">${esc(difficultyLabel(state))}</span>
                     <span class="cp-pill" title="${esc(W().venueCity(state))}">📍 ${esc(W().venueTitle(state))}</span>
                 </div>
             </div>
@@ -1212,17 +1191,27 @@
         matchConfig.guestKit = awayKit;
         matchConfig.arena = isWse() ? state.venue : arenaOf(f.home);      // European League: sede unica estratta a caso
         matchConfig.userTeam = f.home === state.user ? 'home' : 'guest';   // non tocca la preferenza salvata
-        matchConfig.difficulty = state.difficulty || 'normal';              // livello scelto a inizio stagione (salvataggi vecchi: normale)
-        pendingFixture = f;
-        matchActive = true;
         const ko = fixtureKickoff(f);
         matchConfig.timeOfDay = ko.daytime ? 'day' : 'night';      // partita pomeridiana o serale
         const label = isWse() ? `${W().SHORT} • ${W().gameLabel(state, f)}`
             : isCup() ? `Coppa Italia • ${_t(cupRoundLabel(state.cup.round))}`
             : (state.phase === 'regular' ? `${L(state).name} • ${_t('Giornata {0}', state.roundIdx + 1)}` : `${L(state).name} • ${_t(poRounds()[state.playoffs.round].label)}`);
-        // la schermata della competizione si chiude quando il caricamento la copre (niente palazzetto nella dissolvenza)
-        if (typeof showFunFactLoading === 'function') showFunFactLoading(`${label} • ${ko.label}`, launchMatchFromCurrentConfig, hideRoot);
-        else { hideRoot(); launchMatchFromCurrentConfig(); }
+        const start = () => {
+            pendingFixture = f;
+            matchActive = true;
+            // niente fun fact qui: compaiono solo entrando nelle modalità dalla schermata di avvio
+            hideRoot();
+            launchMatchFromCurrentConfig();
+        };
+        // presentazione della partita come nelle amichevoli: livello della CPU proposto (l'ultimo usato) e modificabile
+        if (!window.MatchIntro) { start(); return; }
+        if (typeof preloadArenaModule === 'function') preloadArenaModule(matchConfig.arena);
+        window.MatchIntro.open({
+            kind: 'competition',
+            label: `${label} • ${ko.label}`,
+            onBack: () => { const b = root.querySelector('[data-act="play"]'); if (b) b.focus({ preventScroll: true }); },
+            onPlay: id => { if (typeof setFreeMatchDifficulty === 'function') setFreeMatchDifficulty(id); start(); }
+        });
     }
     function onUserMatchFinished(res) {
         matchActive = false;

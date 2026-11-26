@@ -3312,7 +3312,8 @@
         function goalieTune(team) { return team === getUserTeam() ? USER_GOALIE_TUNING : difficultyLevel().goalie; }
 
         // Scelta del livello e presentazione della partita: src/ui/MatchIntro.js (window.pickDifficulty, MatchIntro.open)
-        // amichevole e partita rapida: livello scelto ogni volta (proposto l'ultimo usato)
+        // livello scelto prima di ogni partita (amichevole, partita rapida, competizioni, Hockey Manager):
+        // si propone l'ultimo usato, in qualsiasi modalità
         function setFreeMatchDifficulty(id) {
             matchConfig.difficulty = normDifficulty(id);
             try { localStorage.setItem('hil_difficulty', matchConfig.difficulty); } catch (e) {}
@@ -16009,10 +16010,12 @@
                             setPreMatchStep(1);
                         }
                     };
-                    // finto caricamento con un fun fact prima di entrare nella modalità scelta
+                    // finto caricamento con un fun fact prima di entrare nella modalità scelta: solo da qui
+                    // (competizioni, Hockey Manager, partita rapida); l'amichevole entra subito e le partite di
+                    // competizioni e Manager partono senza
                     const modeLabel = (item.querySelector('.splash-tile-title') || {}).textContent || '';
                     const go = () => {
-                        if (action !== 'play' && window.showFunFactLoading) window.showFunFactLoading(modeLabel.trim(), proceed, hideSplash);
+                        if (['competition', 'manager', 'quick'].includes(action) && window.showFunFactLoading) window.showFunFactLoading(modeLabel.trim(), proceed, hideSplash);
                         else proceed();
                     };
                     // keyboard highlight

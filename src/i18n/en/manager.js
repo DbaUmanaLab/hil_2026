@@ -13,7 +13,7 @@ I18N.add('en', {
     'Inizia la carriera ▶': 'Start career ▶',
     'Carriere salvate': 'Saved careers',
     'Fallita': 'Bankrupt',
-    'Stagione {0} • {1} • {2} • {3}': 'Season {0} • {1} • {2} • {3}',
+    'Stagione {0} • {1} • {2}': 'Season {0} • {1} • {2}',
     'Elimina': 'Delete',
     'Conferma': 'Confirm',
     'Nessuna carriera salvata': 'No saved careers',
@@ -26,7 +26,7 @@ I18N.add('en', {
     'Rosa giovane e palazzetto piccolo: occhio alla retrocessione': 'Young roster and a small arena: watch out for relegation',
     'Hockey Manager • vale per tutta la carriera': 'Hockey Manager • applies to the whole career',
     'Consigliato': 'Recommended',
-    'Difficoltà {0} • carriera salvata come "{1}"': 'Difficulty {0} • career saved as "{1}"',
+    'Carriera salvata come "{0}"': 'Career saved as "{0}"',
     'Carriera salvata': 'Career saved',
     'Salvataggio non riuscito: spazio del browser esaurito': 'Save failed: browser storage is full',
 
