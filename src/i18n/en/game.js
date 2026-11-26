@@ -300,5 +300,12 @@ I18N.add('en', {
     'Ali': 'Wings',
     'Schizzi': 'Splatter',
     'Artigli': 'Claws',
-    'Stelle': 'Stars'
+    'Stelle': 'Stars',
+
+    // cambio linea volante
+    'CAMBIO IN LINEA {0}: SERVE IL DISCO IN DIFESA': 'LINE {0} CHANGE: GET THE PUCK IN YOUR ZONE',
+    'CAMBIO LINEA: TIENI IL DISCO, I COMPAGNI ESCONO': 'LINE CHANGE: HOLD THE PUCK WHILE YOUR TEAMMATES CHANGE',
+    'PASSA IL DISCO A UN COMPAGNO PER USCIRE': 'PASS THE PUCK TO A TEAMMATE TO GO OFF',
+    'L{0} → L{1} IN ATTESA': 'L{0} → L{1} PENDING',
+    'CAMBIO L{0} IN CORSO': 'L{0} CHANGE IN PROGRESS'
 });

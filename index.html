@@ -9848,52 +9848,65 @@
             sitDown();
         }
 
+        // ---- CAMBIO LINEA
+        // A gioco fermo (ingaggio, intermezzi) il cambio è immediato. In gioco è "volante" (updateFlyingChanges):
+        // chiesto con i tasti (o dalla CPU quando la linea è stanca), parte solo quando la squadra ha il disco
+        // nella propria metà campo. Fase A: il portatore resta in pista (quello della CPU va dietro la propria
+        // porta e tergiversa), gli altri tre escono ed entrano tre compagni della nuova linea. Fase B: uno dei
+        // nuovi va a prendere il disco; ricevuto il passaggio, il vecchio portatore esce ed entra l'ultimo.
+        // Per la squadra dell'utente il portatore è il giocatore controllato: esce quando passa il disco.
+        const flyingChange = { home: null, guest: null };
+        const FLYING_CHANGE_TIMEOUT = 12;            // s di fase B: oltre, il portatore esce comunque
+        const FLYING_CHANGE_ENTER_MAX = 6;           // s di fase A: oltre, i nuovi entrano anche se gli uscenti non sono arrivati
+
         function requestLineChange(teamSide, newLineIdx) {
             const cur = getActiveLine(teamSide);
             if (newLineIdx === cur || newLineIdx < 0 || newLineIdx > 2) return;
-            if (window.gameAudio) window.gameAudio.playLineChange();
-            commentaryEvent('lineChange', { team: teamSide, line: newLineIdx });
-            const isUser = teamSide === getUserTeam();
-            // con le penalità la linea può scendere in tre (o in due) e un compagno di un'altra linea può coprire un ruolo
-            const lineup = pickLineup(teamSide, newLineIdx);
-            const outgoing = skaters.filter(s => s.team === teamSide && !s.isGoalie && s.onIce && !lineup.includes(s) && s.lineChangeState !== 'exiting');
-            const incoming = lineup.filter(s => !s.onIce);
-            outgoing.forEach(s => { s.enterFrom = null; s.fillRole = null; });
-            const bench = BENCH_LAYOUT[teamSide];
+            if (gameState !== 'playing') { flyingChange[teamSide] = null; executeLineChange(teamSide, newLineIdx); return; }
+            const fc = flyingChange[teamSide];
+            if (fc && fc.phase !== 'wait') return;              // un cambio è già in corso
+            flyingChange[teamSide] = { newLine: newLineIdx, phase: 'wait', t: 0 };
+            if (teamSide === getUserTeam()) {
+                showHudToast(_t('CAMBIO IN LINEA {0}: SERVE IL DISCO IN DIFESA', newLineIdx + 1));
+                updateLineHUD();
+            }
+        }
 
-            // gli uscenti occupano i posti lasciati liberi da chi entra (prima finivano tutti sugli slot 0-4,
-            // sovrapposti a chi era già seduto); i posti lontani dalla porta vanno a chi scavalca
-            const freeSlots = incoming.map(s => s.benchSlot)
+        // uscita verso la panchina: 1 o 2 scavalcano la balaustra (i più lontani dalla porta), gli altri escono
+        // dalla porta uno alla volta; si siedono nei posti lasciati liberi da chi entra (freeFrom)
+        function exitSkatersToBench(teamSide, outgoing, freeFrom) {
+            if (!outgoing.length) return;
+            const bench = BENCH_LAYOUT[teamSide];
+            outgoing.forEach(s => { s.enterFrom = null; s.fillRole = null; s.lcHold = false; s.lcRecv = false; });
+            const freeSlots = freeFrom.map(s => s.benchSlot)
                 .sort((a, b) => Math.abs(getBenchSeatPosition(teamSide, b).z - bench.doorZ) - Math.abs(getBenchSeatPosition(teamSide, a).z - bench.doorZ));
-            // 1 o 2 scavalcano la balaustra: quelli più lontani dalla porta lungo la panchina
             const nVault = Math.min(outgoing.length, Math.random() < 0.5 ? 1 : 2);
             const byDoorFar = outgoing.slice().sort((a, b) => Math.abs(b.mesh.position.z - bench.doorZ) - Math.abs(a.mesh.position.z - bench.doorZ));
             const vaulters = byDoorFar.slice(0, nVault);
-            // gli altri escono dalla porta uno alla volta, il più vicino per primo
             const doorUsers = byDoorFar.slice(nVault).sort((a, b) =>
                 Math.hypot(a.mesh.position.x - 16.7, a.mesh.position.z - bench.doorZ) -
                 Math.hypot(b.mesh.position.x - 16.7, b.mesh.position.z - bench.doorZ));
-
             vaulters.concat(doorUsers).forEach((s, idx) => {
                 s.onIce = false;
                 s.isHuman = false;
                 s.lineChangeState = 'exiting';
-                s.benchSlot = freeSlots.length > idx ? freeSlots[idx] : idx;
+                s.benchSlot = freeSlots.length > idx ? freeSlots[idx] : s.benchSlot;
                 s.exitMode = idx < nVault ? 'vault' : 'door';
                 s.exitStage = 'approach';
                 s.exitOrder = ++lineChangeExitCounter;
                 s.exitTimer = 0;
                 s.exitPath = null;
                 if (s.exitMode === 'vault') {
-                    // punto di scavalco davanti al proprio posto, lontano dalla porta e dai divisori
                     let vz = getBenchSeatPosition(teamSide, s.benchSlot).z;
                     vz = Math.max(bench.zStart + 0.7, Math.min(bench.zEnd - 0.7, vz));
                     if (Math.abs(vz - bench.doorZ) < 1.3) vz = bench.doorZ + (vz >= bench.doorZ ? 1.3 : -1.3);
                     s.vaultZ = vz;
                 }
             });
-
-            // chi entra parte in fila indiana dentro la panchina, allineato alla porta: esce uno alla volta
+        }
+        // chi entra parte in fila indiana dentro la panchina, allineato alla porta: esce uno alla volta
+        function sendSkatersOnIce(teamSide, incoming) {
+            const bench = BENCH_LAYOUT[teamSide];
             incoming.forEach((s, idx) => {
                 s.onIce = true;
                 s.lineChangeState = 'entering';
@@ -9904,25 +9917,151 @@
                 s.leanZ = 0;
                 setSkaterHockeyReadyPose(s, 0, 0);
             });
+        }
+        function refreshLineUi() {
+            updateLineHUD();
+            if (typeof _refreshHudGuestLinePlayers === 'function') _refreshHudGuestLinePlayers();
+            if (typeof refreshPauseLines === 'function') refreshPauseLines();
+        }
 
+        // cambio immediato (gioco fermo). force: anche se la linea attiva è già quella (cambio volante a metà)
+        function executeLineChange(teamSide, newLineIdx, opts = {}) {
+            const cur = getActiveLine(teamSide);
+            if ((!opts.force && newLineIdx === cur) || newLineIdx < 0 || newLineIdx > 2) return;
+            if (window.gameAudio) window.gameAudio.playLineChange();
+            commentaryEvent('lineChange', { team: teamSide, line: newLineIdx });
+            const isUser = teamSide === getUserTeam();
+            // con le penalità la linea può scendere in tre (o in due) e un compagno di un'altra linea può coprire un ruolo
+            const lineup = pickLineup(teamSide, newLineIdx);
+            skaters.forEach(s => { if (s.team === teamSide) { s.lcHold = false; s.lcRecv = false; } });
+            const outgoing = skaters.filter(s => s.team === teamSide && !s.isGoalie && s.onIce && !lineup.includes(s) && s.lineChangeState !== 'exiting');
+            const incoming = lineup.filter(s => !s.onIce);
+            exitSkatersToBench(teamSide, outgoing, incoming);
+            sendSkatersOnIce(teamSide, incoming);
             if (teamSide === 'home') activeHomeLine = newLineIdx; else activeGuestLine = newLineIdx;
             if (isUser) {
                 const newCenter = lineup.find(s => (s.fillRole || s.role) === 'C') || incoming[0] || lineup[0];
                 setControlledPlayer(newCenter);
                 showHudToast(_t('LINEA {0} IN PISTA', newLineIdx + 1));
             }
-            updateLineHUD();
-            if (typeof _refreshHudGuestLinePlayers === 'function') _refreshHudGuestLinePlayers();
-            if (typeof refreshPauseLines === 'function') refreshPauseLines();
+            refreshLineUi();
             // durante ingaggio o intermezzi i giocatori non si muovono: senza questo i nuovi entrati
             // restavano fermi alla porta della panchina e gli uscenti sui punti dell'ingaggio
-            if ((gameState === 'faceoff' || gameState === 'cutaway') && !gamePaused) positionPlayersForFaceoff();
+            if (!opts.noReposition && (gameState === 'faceoff' || gameState === 'cutaway') && !gamePaused) positionPlayersForFaceoff();
+        }
+
+        // squadra con il disco nella propria metà campo (la propria porta è dalla parte opposta all'attacco)
+        function teamHasPuckInDefense(team) {
+            return aiPossessionTeam() === team && puck.position.z * aiAttackDir(team) < -1;
+        }
+        function startFlyingChange(team, fc) {
+            const lineup = pickLineup(team, fc.newLine);
+            const holder = currentPuckCarrier;
+            const outgoing = skaters.filter(s => s.team === team && !s.isGoalie && s.onIce && !lineup.includes(s) && s.lineChangeState !== 'exiting');
+            const incoming = lineup.filter(s => !s.onIce);
+            const isUser = team === getUserTeam();
+            if (window.gameAudio) window.gameAudio.playLineChange();
+            commentaryEvent('lineChange', { team, line: fc.newLine });
+            if (team === 'home') activeHomeLine = fc.newLine; else activeGuestLine = fc.newLine;
+            if (!holder || !outgoing.includes(holder)) {
+                // il portatore resta anche nella nuova linea: cambio in un colpo solo
+                exitSkatersToBench(team, outgoing, incoming);
+                sendSkatersOnIce(team, incoming);
+                flyingChange[team] = null;
+                if (isUser) showHudToast(_t('LINEA {0} IN PISTA', fc.newLine + 1));
+                refreshLineUi();
+                return;
+            }
+            const role = holder.fillRole || holder.role;
+            const reserve = incoming.find(s => (s.fillRole || s.role) === role) || incoming[incoming.length - 1] || null;
+            const incomingA = incoming.filter(s => s !== reserve);
+            const outgoingA = outgoing.filter(s => s !== holder);
+            // i nuovi non entrano subito: ciascuno aspetta che un compagno uscente arrivi alla panchina
+            exitSkatersToBench(team, outgoingA, incomingA);
+            const roleOf = s => s.fillRole || s.role;
+            const receiver = incomingA.find(s => roleOf(s) === 'D') || incomingA.find(s => roleOf(s) === 'C') || incomingA[0] || null;
+            Object.assign(fc, { phase: 'A', t: 0, holder, reserve, incomingA, outgoingA, pendingIn: incomingA.slice(), sent: 0, receiver });
+            holder.lcHold = true;
+            if (receiver) receiver.lcRecv = true;
+            if (isUser) showHudToast(_t('CAMBIO LINEA: TIENI IL DISCO, I COMPAGNI ESCONO'));
+            refreshLineUi();
+        }
+        function finishFlyingChange(team, fc) {
+            const h = fc.holder;
+            const isUser = team === getUserTeam();
+            if (fc.receiver) fc.receiver.lcRecv = false;
+            if (h) h.lcHold = false;
+            flyingChange[team] = null;
+            const holderCanLeave = h && h.onIce && !h.penaltyBox && !h.expelled && !h.waitInBox && h.lineChangeState !== 'exiting';
+            if (holderCanLeave) {
+                const enter = fc.reserve && !fc.reserve.onIce && !fc.reserve.penaltyBox && !fc.reserve.expelled ? [fc.reserve] : [];
+                if (isUser && player === h) {
+                    const c = currentPuckCarrier && currentPuckCarrier.team === team && currentPuckCarrier !== h ? currentPuckCarrier : null;
+                    const next = c || (fc.receiver && fc.receiver.onIce ? fc.receiver : null) ||
+                        skaters.find(k => k.team === team && k.onIce && !k.isGoalie && k !== h && k.lineChangeState !== 'exiting');
+                    if (next) setControlledPlayer(next);
+                }
+                if (currentPuckCarrier === h) currentPuckCarrier = null;
+                exitSkatersToBench(team, [h], enter);
+                sendSkatersOnIce(team, enter);
+            }
+            if (isUser) showHudToast(_t('LINEA {0} IN PISTA', fc.newLine + 1));
+            refreshLineUi();
+        }
+        function updateFlyingChanges(dt) {
+            ['home', 'guest'].forEach(team => {
+                const fc = flyingChange[team];
+                if (!fc) return;
+                fc.t += dt;
+                if (fc.phase === 'wait') {
+                    if (teamHasPuckInDefense(team)) startFlyingChange(team, fc);
+                    return;
+                }
+                const h = fc.holder;
+                const holderGone = !h || !h.onIce || h.penaltyBox || h.expelled || h.waitInBox;
+                if (fc.phase === 'A') {
+                    // un nuovo entra quando un uscente è arrivato alla porta o alla balaustra della panchina
+                    // (dopo FLYING_CHANGE_ENTER_MAX secondi entrano comunque)
+                    if (fc.pendingIn.length) {
+                        const arrived = fc.outgoingA.filter(o => o.lineChangeState !== 'exiting' || o.exitStage !== 'approach').length;
+                        const due = fc.t > FLYING_CHANGE_ENTER_MAX ? fc.pendingIn.length : Math.max(0, arrived - fc.sent);
+                        if (due > 0) {
+                            const go = fc.pendingIn.splice(0, due);
+                            fc.sent += go.length;
+                            sendSkatersOnIce(team, go);
+                        }
+                    }
+                    // i nuovi sono in pista (superata la porta della panchina): uno va a prendere il disco
+                    const settled = !fc.pendingIn.length && fc.incomingA.every(s => !s.onIce || s.lineChangeState !== 'entering');
+                    if (settled && fc.t > 1.0) {
+                        fc.phase = 'B';
+                        fc.t = 0;
+                        if (team === getUserTeam() && h === player) showHudToast(_t('PASSA IL DISCO A UN COMPAGNO PER USCIRE'));
+                    }
+                }
+                if (fc.phase === 'B' || holderGone) {
+                    const c = aiPossessionTeam() === team ? currentPuckCarrier : null;
+                    if (holderGone || (c && c !== h) || fc.t > FLYING_CHANGE_TIMEOUT) finishFlyingChange(team, fc);
+                }
+            });
+        }
+        // ingaggio: un cambio chiesto o a metà si completa subito
+        function flushFlyingChanges() {
+            ['home', 'guest'].forEach(team => {
+                const fc = flyingChange[team];
+                if (!fc) return;
+                flyingChange[team] = null;
+                executeLineChange(team, fc.newLine, { force: true, noReposition: true });
+            });
         }
 
         function updateLineHUD() {
             const statusEl = document.getElementById('line-change-status');
             const userLine = getActiveLine(getUserTeam());
-            if (statusEl) statusEl.textContent = _t('L{0} ATTIVA', userLine + 1);
+            const ufc = flyingChange[getUserTeam()];
+            if (statusEl) statusEl.textContent = ufc
+                ? (ufc.phase === 'wait' ? _t('L{0} → L{1} IN ATTESA', userLine + 1, ufc.newLine + 1) : _t('CAMBIO L{0} IN CORSO', ufc.newLine + 1))
+                : _t('L{0} ATTIVA', userLine + 1);
 
             // Bottoni numerati 1/2/3 — aggiorna stile attivo/inattivo
             for (let i = 0; i < 3; i++) {
@@ -11286,6 +11425,7 @@
         }
 
         function positionPlayersForFaceoff() {
+            flushFlyingChanges();
             skaters.forEach(k => { k.mesh.rotation.z = 0; k.leanZ = 0; });
             puck.position.set(faceoffSpot.x, puckPhysics.height / 2, faceoffSpot.z);
             puckPhysics.velocity.set(0, 0, 0);
@@ -12556,6 +12696,23 @@
                 return out;
             }
 
+            // 0. Cambio volante: il portatore tergiversa dietro la propria porta; il ricevitore della nuova linea
+            //    si offre di lato alla porta per prendere il disco
+            if (s.lcHold && currentPuckCarrier === s && aiPossessionTeam() === team) {
+                const behind = ownGoalZ + Math.sign(ownGoalZ) * 2.4;
+                out.target.set(Math.sin(clock.getElapsed() * 0.85 + (s.jerseyNum | 0)) * 2.6, 0, behind);
+                out.speed = 0.5;
+                aiClampToRink(out.target);
+                return out;
+            }
+            if (s.lcRecv) {
+                const side = s.mesh.position.x >= 0 ? 1 : -1;
+                out.target.set(side * 4.4, 0, ownGoalZ - Math.sign(ownGoalZ) * 3.2);
+                out.speed = 1.0;
+                aiClampToRink(out.target);
+                return out;
+            }
+
             // 1. Portatore: punta allo slot evitando i difensori davanti
             if (currentPuckCarrier === s && aiPossessionTeam() === team) {
                 const distGoalZ = Math.abs(oppGoalZ - pos.z);
@@ -12678,6 +12835,17 @@
 
         // Decisione del portatore AI: tiro, passaggio o conduzione. Restituisce true se ha rilasciato il disco.
         function aiCarrierDecision(s, stickTip, dt) {
+            // cambio volante: niente tiri né giocate, solo il passaggio al compagno della nuova linea quando è pronto
+            if (s.lcHold) {
+                const fc = flyingChange[s.team];
+                const r = fc && fc.phase === 'B' ? fc.receiver : null;
+                if (r && r.onIce && r.lineChangeState === 'none' && aiFlatDist(r.mesh.position, s.mesh.position) < 15 &&
+                    !aiLaneBlocked(puck.position, r.mesh.position, aiOnIce(aiOtherTeam(s.team)), 0.9)) {
+                    aiPass(s, stickTip, r);
+                    return true;
+                }
+                return false;
+            }
             s.aiDecisionTimer = (s.aiDecisionTimer || 0) - dt;
             if (s.aiDecisionTimer > 0) return false;
             const tune = aiTune(s.team);
@@ -12833,6 +13001,7 @@
         function updateSkaters(dt) {
             if (autoSwitchCooldown > 0) autoSwitchCooldown = Math.max(0, autoSwitchCooldown - dt);
             if (gameState === 'playing') {
+                updateFlyingChanges(dt);
                 autoSelectClosestTeammateToPuck();
                 updateAiTeamPlans(dt);
             }
