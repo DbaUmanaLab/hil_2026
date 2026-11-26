@@ -2710,6 +2710,7 @@
     <script src="src/game/HeadModels.js"></script>
     <script src="src/game/Heads.js"></script>
     <script src="src/game/People.js"></script>
+    <script src="src/game/PoseBlend.js"></script>
     <script src="src/game/Warmup.js"></script>
     <script>
         // --- SQUADRE E LEGHE: dati in src/data/teams.json, caricati da src/data/teams-loader.js (TEAM_DATA) ---
@@ -8737,7 +8738,7 @@
                     skate.add(wheel, hub);
                 });
                 root.add(legPivot);
-                return { legPivot, kneePivot };
+                return { legPivot, kneePivot, skate };
             }
             const leftLeg = buildLeg(-0.128);
             const rightLeg = buildLeg(0.128);
@@ -8875,6 +8876,8 @@
                 torsoMesh: torso,
                 shortsMesh: shorts,
                 leftLegPivot: leftLeg.legPivot,
+                leftSkate: leftLeg.skate,
+                rightSkate: rightLeg.skate,
                 leftKneePivot: leftLeg.kneePivot,
                 rightLegPivot: rightLeg.legPivot,
                 rightKneePivot: rightLeg.kneePivot,
@@ -8949,40 +8952,95 @@
                 return;
             }
 
+            // da fermi non si resta immobili: respiro e piccoli spostamenti del peso da un pattino all'altro
+            const tNow = clock ? clock.getElapsed() : 0;
+            if (s.idlePhase === undefined) s.idlePhase = Math.random() * Math.PI * 2;
+            const still = Math.max(0, 1 - Math.abs(stride) * 10) * (1 - charge) * (1 - Math.min(1, shootSwing));
+            const breathe = Math.sin(tNow * 1.8 + s.idlePhase) * still;
+            const shift = Math.sin(tNow * 0.6 + s.idlePhase * 1.7) * still;
+
             if (s.isRef) {
-                s.hipGroup.position.y = 0.88 - Math.abs(stride) * 0.04;
-                s.bodyPivot.rotation.set(-0.12 - Math.abs(stride) * 0.2, 0, 0);
-                s.leftLegPivot.rotation.set(-stride, 0, 0);
-                s.leftKneePivot.rotation.set(-Math.max(0, -stride) * 0.7, 0, 0);
-                s.rightLegPivot.rotation.set(stride, 0, 0);
-                s.rightKneePivot.rotation.set(-Math.max(0, stride) * 0.7, 0, 0);
-                s.leftArmPivot.rotation.set(stride * 0.45, 0, 0.08);
-                s.leftElbowPivot.rotation.set(0.25, 0, 0);
-                s.rightArmPivot.rotation.set(-stride * 0.45, 0, -0.08);
-                s.rightElbowPivot.rotation.set(0.25, 0, 0);
+                skatingLegs(s, stride, { knee: 0.55 + breathe * 0.03, thigh: 0.24, shift });
+                s.bodyPivot.rotation.set(-0.14 - Math.abs(stride) * 0.16 + breathe * 0.015, stride * 0.08, -stride * 0.08 + shift * 0.02);
+                // braccia che oscillano col passo (in avanti quella opposta alla gamba che spinge)
+                s.leftArmPivot.rotation.set(-stride * 0.55 + breathe * 0.03, 0, 0.1);
+                s.leftElbowPivot.rotation.set(0.3 + Math.max(0, -stride) * 0.5, 0, 0);
+                s.rightArmPivot.rotation.set(stride * 0.55 + breathe * 0.03, 0, -0.1);
+                s.rightElbowPivot.rotation.set(0.3 + Math.max(0, stride) * 0.5, 0, 0);
                 return;
             }
 
-            const crouch = 0.055 + Math.abs(stride) * 0.04 + charge * 0.04;
-            s.hipGroup.position.y = 0.88 - crouch;
+            // frenata (hockey stop): calcolata nel frame dal ciclo di gioco, altrove non vale
+            const live = window.HIL_POSE && s.poseFrame === window.HIL_POSE.frame;
+            const brake = live ? (s.brakeAmt || 0) : 0;
+            skatingLegs(s, stride, {
+                knee: 0.8 + charge * 0.18 + brake * 0.42 + breathe * 0.04,
+                thigh: 0.37 + charge * 0.06 + brake * 0.14,
+                brake, shift
+            });
 
             const twist = -charge * 0.42 + shootSwing * 0.55;
-            // busto in avanti (rotation.x negativa = in avanti); caricando il tiro si raddrizza un poco
-            s.bodyPivot.rotation.set(-0.24 + charge * 0.06, -twist, -stride * 0.05);
+            // busto in avanti (rotation.x negativa = in avanti) e sopra il pattino d'appoggio;
+            // caricando il tiro si raddrizza un poco, frenando si porta indietro
+            s.bodyPivot.rotation.set(-0.27 + charge * 0.06 + brake * 0.36 + breathe * 0.02, -twist + stride * 0.06, -stride * 0.09 + shift * 0.025);
 
-            s.leftLegPivot.rotation.set(-stride + 0.08, 0, 0.06 + Math.max(0, stride) * 0.14);
-            s.leftKneePivot.rotation.set(-0.16 - Math.max(0, -stride) * 0.75 - crouch * 1.4, 0, 0);
-
-            s.rightLegPivot.rotation.set(stride + 0.08, 0, -0.06 - Math.max(0, -stride) * 0.14);
-            s.rightKneePivot.rotation.set(-0.16 - Math.max(0, stride) * 0.75 - crouch * 1.4, 0, 0);
-
-            s.leftArmPivot.rotation.set(0.62 + charge * 0.35 - shootSwing * 0.25, -0.28, 0.12);
+            // braccia: la stecca resta in mano, ma seguono il ritmo della falcata
+            s.leftArmPivot.rotation.set(0.62 + charge * 0.35 - shootSwing * 0.25 + stride * 0.1 + breathe * 0.03, -0.28, 0.12);
             s.leftElbowPivot.rotation.set(0.48 + charge * 0.25, 0, 0);
-
-            s.rightArmPivot.rotation.set(0.42 - charge * 0.75 + shootSwing * 0.95, 0.22, -0.14);
+            s.rightArmPivot.rotation.set(0.42 - charge * 0.75 + shootSwing * 0.95 - stride * 0.14 + breathe * 0.02, 0.22, -0.14);
             s.rightElbowPivot.rotation.set(0.42 + charge * 0.2 - shootSwing * 0.25, 0, 0);
 
+            if (live && !s.isGoalie) {
+                // hockey stop: pattini di traverso alla corsa, busto che resta rivolto in avanti
+                const side = s.stopSide || 1;
+                s.mesh.rotation.y = s.rotationY + brake * 1.2 * side;
+                s.bodyPivot.rotation.y -= brake * 0.95 * side;
+            }
+
             updateSkaterStickPose(s);
+        }
+
+        // Pattinata in linea: la gamba che spinge va di lato e indietro distendendo il ginocchio, l'altra
+        // rientra sotto il corpo piegata (pattino sollevato). stride in [-0.65, 0.65]: > 0 spinge la sinistra.
+        // In curva la gamba esterna, rientrando, incrocia davanti all'altra. Le gambe partono dalla radice del
+        // modello: anche e attacco delle gambe si abbassano quanto serve perché il pattino più basso resti
+        // sul ghiaccio (prima, piegando le ginocchia, i pattini si alzavano).
+        // misure del modello: anca → ginocchio 0,35; ginocchio → caviglia (attacco del pattino) 0,37;
+        // caviglia → fondo delle ruote 0,171 a pattino piatto. A gamba dritta il fondo delle ruote sta dov'era prima.
+        const LEG_UPPER = 0.35, LEG_LOWER = 0.37, SKATE_DEPTH = 0.171;
+        function skatingLegs(s, stride, o) {
+            const base = o.knee, thigh = o.thigh, brake = o.brake || 0, shift = o.shift || 0;
+            const pL = Math.max(0, stride), pR = Math.max(0, -stride);
+            const lean = s.leanZ || 0;
+            const cross = Math.max(0, Math.min(1, (Math.abs(lean) - 0.06) / 0.14));
+            const crossR = lean > 0 ? cross * Math.min(1, pL / 0.65) : 0;    // curva a sinistra: incrocia la destra
+            const crossL = lean < 0 ? cross * Math.min(1, pR / 0.65) : 0;    // curva a destra: incrocia la sinistra
+            const lx = thigh - pL * 0.62 + pR * 0.34 + shift * 0.03;
+            const lz = -0.05 - pL * 0.78 + pR * 0.12 - brake * 0.18 - shift * 0.04 + crossL * 0.42;
+            const lk = -(base - pL * 0.55 + pR * 0.45);
+            const rx = thigh - pR * 0.62 + pL * 0.34 - shift * 0.03;
+            const rz = 0.05 + pR * 0.78 - pL * 0.12 + brake * 0.18 - shift * 0.04 - crossR * 0.42;
+            const rk = -(base - pR * 0.55 + pL * 0.45);
+            s.leftLegPivot.rotation.set(lx, 0, lz);
+            s.leftKneePivot.rotation.set(lk, 0, 0);
+            s.rightLegPivot.rotation.set(rx, 0, rz);
+            s.rightKneePivot.rotation.set(rk, 0, 0);
+            // caviglia: il pattino resta parallelo al ghiaccio (si contro-ruota rispetto alla tibia); nella spinta
+            // resta un poco inclinato sul filo interno, come quando le ruote mordono di lato
+            if (s.leftSkate) s.leftSkate.rotation.set(-(lx + lk), 0, -lz * 0.55);
+            if (s.rightSkate) s.rightSkate.rotation.set(-(rx + rk), 0, -rz * 0.55);
+            const depth = (a, k, z) => (LEG_UPPER * Math.cos(a) + LEG_LOWER * Math.cos(a + k)) * Math.cos(z) + SKATE_DEPTH * Math.cos(z * 0.45);
+            const drop = Math.max(0, LEG_UPPER + LEG_LOWER + SKATE_DEPTH - Math.max(depth(lx, lk, lz), depth(rx, rk, rz)));
+            if (s.legBaseY === undefined) s.legBaseY = s.leftLegPivot.position.y;
+            s.leftLegPivot.position.y = s.rightLegPivot.position.y = s.legBaseY - drop;
+            s.hipGroup.position.y = 0.88 - drop;
+            return drop;
+        }
+        // pose che impostano le gambe a mano (panchina, esultanze): attacco delle gambe all'altezza originale
+        function resetLegHeight(s) {
+            if (s.legBaseY !== undefined) s.leftLegPivot.position.y = s.rightLegPivot.position.y = s.legBaseY;
+            if (s.leftSkate) s.leftSkate.rotation.set(0, 0, 0);
+            if (s.rightSkate) s.rightSkate.rotation.set(0, 0, 0);
         }
 
         // Dinamica del corpo sovrapposta alla posa base: piega in curva, busto in avanti
@@ -8998,7 +9056,9 @@
             const yawRate = dYaw / dt;
             const targetLean = s.isGoalie ? 0 : Math.max(-0.3, Math.min(0.3, yawRate * speed * 0.02));
             s.leanZ = (s.leanZ || 0) + (targetLean - (s.leanZ || 0)) * Math.min(1, dt * 7);
-            s.mesh.rotation.z = s.leanZ;
+            // frenando di traverso ci si inclina via dalla direzione di corsa
+            const brakeRoll = window.HIL_POSE && s.poseFrame === window.HIL_POSE.frame ? (s.brakeAmt || 0) * 0.22 * (s.stopSide || 1) : 0;
+            s.mesh.rotation.z = s.leanZ + brakeRoll;
             if (s.contactShadow) s.contactShadow.visible = true;
 
             if (!s.isGoalie) {
@@ -9021,6 +9081,7 @@
 
         function updateSkaterStickPose(s) {
             if (!s || !s.stickGroup || !s.leftHandAnchor || !s.rightHandAnchor) return;
+            if (window.HIL_POSE) window.HIL_POSE.stickFollowsHands(s);
             s.mesh.updateMatrixWorld(true);
 
             const pTop = new THREE.Vector3();
@@ -9041,6 +9102,7 @@
 
         function setSkaterBenchPose(s, celebrating = false) {
             if (!s) return;
+            resetLegHeight(s);
             s.hipGroup.position.y = 0.62;
             s.bodyPivot.rotation.set(-0.05, 0, 0);
             s.leftLegPivot.rotation.set(1.35, 0, 0.04);
@@ -9065,6 +9127,7 @@
 
         function applyGoalCelebrationPose(s, t, isScorer) {
             if (!s) return;
+            resetLegHeight(s);
             const celebId = currentGoalCelebration ? currentGoalCelebration.id : 'fist_pump';
 
             if (!isScorer || s.isGoalie) {
@@ -12146,6 +12209,9 @@
                     rotZ: s.mesh.rotation.z,
                     headY: s.headGroup ? s.headGroup.rotation.y : 0,
                     hipY: s.hipGroup.position.y,
+                    legY: s.leftLegPivot.position.y,
+                    skL: s.leftSkate ? [s.leftSkate.rotation.x, s.leftSkate.rotation.z] : null,
+                    skR: s.rightSkate ? [s.rightSkate.rotation.x, s.rightSkate.rotation.z] : null,
                     bodyRotX: s.bodyPivot.rotation.x,
                     bodyRotY: s.bodyPivot.rotation.y,
                     bodyRotZ: s.bodyPivot.rotation.z,
@@ -12216,6 +12282,9 @@
                 s.mesh.rotation.set(st.rotX, st.rotY, st.rotZ || 0);
                 if (s.headGroup) s.headGroup.rotation.y = st.headY || 0;
                 s.hipGroup.position.y = st.hipY;
+                if (st.legY != null) s.leftLegPivot.position.y = s.rightLegPivot.position.y = st.legY;
+                if (st.skL && s.leftSkate) s.leftSkate.rotation.set(st.skL[0], 0, st.skL[1]);
+                if (st.skR && s.rightSkate) s.rightSkate.rotation.set(st.skR[0], 0, st.skR[1]);
                 s.bodyPivot.rotation.set(st.bodyRotX, st.bodyRotY, st.bodyRotZ);
                 s.leftLegPivot.rotation.set(st.leftLegX, 0, st.leftLegZ);
                 s.leftKneePivot.rotation.x = st.leftKneeX;
@@ -13051,16 +13120,30 @@
                 constrainToCurvedRink(s.mesh.position, s.velocity, 0.72, 0.35);
 
                 const speed = s.velocity.length();
+                // accelerazione lungo il moto (smussata): decide spinte, scivolate e frenate
+                const prevSpd = s.prevSpeed == null ? speed : s.prevSpeed;
+                s.prevSpeed = speed;
+                s.accSm = (s.accSm || 0) + ((speed - prevSpd) / Math.max(dt, 1e-3) - (s.accSm || 0)) * Math.min(1, dt * 8);
+                // frenata secca da velocità sostenuta: hockey stop, da un lato o dall'altro
+                const brakeTarget = !s.isGoalie && speed > 2.2 && s.accSm < -12 ? Math.min(1, 0.45 + (-s.accSm - 12) / 22) : 0;
+                if (brakeTarget > 0 && !((s.brakeAmt || 0) > 0.05)) s.stopSide = Math.random() < 0.5 ? 1 : -1;
+                s.brakeAmt = (s.brakeAmt || 0) + (brakeTarget - (s.brakeAmt || 0)) * Math.min(1, dt * (brakeTarget > (s.brakeAmt || 0) ? 12 : 3.5));
+                if (window.HIL_POSE) s.poseFrame = window.HIL_POSE.frame;
                 let stride = 0;
                 if (speed > 0.45) {
-                    s.walkCycle += dt * (4.5 + speed * 0.85);
-                    stride = Math.sin(s.walkCycle) * Math.min(0.65, speed * 0.05);
+                    // in accelerazione spinte ampie e frequenti; lanciati a velocità costante si scivola con
+                    // spinte più corte e lente; frenando le gambe smettono di spingere
+                    const push = Math.max(0, Math.min(1, 0.45 + s.accSm / 10));
+                    s.walkCycle += dt * (4.2 + speed * 0.72) * (0.72 + 0.28 * push);
+                    stride = Math.sin(s.walkCycle) * Math.min(0.65, speed * 0.055) * (0.5 + 0.5 * push) * (1 - s.brakeAmt);
                 }
 
                 let shootSwing = 0;
                 if (s.shootAnim > 0) {
                     s.shootAnim = Math.max(0, s.shootAnim - dt * 3.5);
-                    shootSwing = Math.sin(s.shootAnim * Math.PI);
+                    // colpo secco e accompagnamento lento: la stecca arriva in fondo in un attimo e torna con calma
+                    const ph = 1 - s.shootAnim;
+                    shootSwing = ph < 0.18 ? Math.sin(ph / 0.18 * Math.PI / 2) : 0.5 + 0.5 * Math.cos((ph - 0.18) / 0.82 * Math.PI);
                 }
 
                 const chargeAmt = (s.isHuman && shotCharging) ? shotChargePower : 0;
@@ -13855,10 +13938,21 @@
         }
 
         // --- LOOP PRINCIPALE ---
+        // raccordi fra le pose (src/game/PoseBlend.js): una volta per frame, dopo tutti gli aggiornamenti
+        // e prima della registrazione del replay (che così rivede i movimenti fusi)
+        let posesBlendedFrame = -1;
+        function blendAllPoses(dt) {
+            if (!window.HIL_POSE || posesBlendedFrame === window.HIL_POSE.frame) return;
+            posesBlendedFrame = window.HIL_POSE.frame;
+            const list = referees && referees.length ? Array.from(new Set(skaters.concat(referees))) : skaters;
+            window.HIL_POSE.blendAll(list, dt, updateSkaterStickPose);
+        }
+
         function animate() {
             requestAnimationFrame(animate);
             if (!clock || !renderer || !scene || !camera) return;
             clock.update();
+            if (window.HIL_POSE) window.HIL_POSE.tick();
             const dt = Math.min(clock.getDelta(), 0.05);
             syncArenaViewOffset();
             syncBroadcastHud();
@@ -13927,6 +14021,7 @@
                 updatePuck(dt);
                 updateBroadcastOverlays();
                 updateCrowd(dt);
+                blendAllPoses(dt);
                 recordReplayFrame();
                 updateCamera();
             } else if (gameState === 'penalty_call') {
@@ -13946,6 +14041,7 @@
                 updatePuck(dt);
                 updateCrowd(dt);
                 updatePuckCarrierUI(dt);
+                blendAllPoses(dt);
                 recordReplayFrame();
                 updateCamera();
 
@@ -13967,6 +14063,8 @@
                 return;
             }
 
+            // il replay rimette le pose registrate (già fuse): lì niente raccordi
+            if (gameState !== 'replay' && gameState !== 'menu') blendAllPoses(dt);
             updateDynamicArenaLights(dt);
             updatePenaltyDoors(dt);
             renderMainFrame(dt);
