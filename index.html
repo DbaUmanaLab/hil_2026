@@ -8947,16 +8947,17 @@
                 brake, shift
             });
 
-            const twist = -charge * 0.42 + shootSwing * 0.55;
-            // busto in avanti (rotation.x negativa = in avanti) e sopra il pattino d'appoggio;
-            // caricando il tiro si raddrizza un poco, frenando si porta indietro
-            s.bodyPivot.rotation.set(-0.27 + charge * 0.06 + brake * 0.36 + breathe * 0.02, -twist + stride * 0.06, -stride * 0.09 + shift * 0.025);
+            const twist = -charge * 0.42 + shootSwing * 0.75;
+            // busto in avanti (rotation.x negativa = in avanti) e sopra il pattino d'appoggio; caricando il tiro
+            // si raddrizza un poco, nel colpo si butta sulla stecca, frenando si porta indietro
+            s.bodyPivot.rotation.set(-0.27 + charge * 0.06 - shootSwing * 0.14 + brake * 0.36 + breathe * 0.02, -twist + stride * 0.06, -stride * 0.09 + shift * 0.025);
 
-            // braccia: la stecca resta in mano, ma seguono il ritmo della falcata
-            s.leftArmPivot.rotation.set(0.62 + charge * 0.35 - shootSwing * 0.25 + stride * 0.1 + breathe * 0.03, -0.28, 0.12);
-            s.leftElbowPivot.rotation.set(0.48 + charge * 0.25, 0, 0);
-            s.rightArmPivot.rotation.set(0.42 - charge * 0.75 + shootSwing * 0.95 - stride * 0.14 + breathe * 0.02, 0.22, -0.14);
-            s.rightElbowPivot.rotation.set(0.42 + charge * 0.2 - shootSwing * 0.25, 0, 0);
+            // braccia: la stecca resta in mano, ma seguono il ritmo della falcata; nel tiro la mano bassa spinge
+            // la stecca avanti e in alto (accompagnamento), quella alta tira indietro
+            s.leftArmPivot.rotation.set(0.62 + charge * 0.35 - shootSwing * 0.4 + stride * 0.1 + breathe * 0.03, -0.28 - shootSwing * 0.2, 0.12);
+            s.leftElbowPivot.rotation.set(0.48 + charge * 0.25 + shootSwing * 0.25, 0, 0);
+            s.rightArmPivot.rotation.set(0.42 - charge * 0.75 + shootSwing * 1.25 - stride * 0.14 + breathe * 0.02, 0.22, -0.14 - shootSwing * 0.15);
+            s.rightElbowPivot.rotation.set(0.42 + charge * 0.2 - shootSwing * 0.35, 0, 0);
 
             if (live && !s.isGoalie) {
                 // hockey stop: pattini di traverso alla corsa, busto che resta rivolto in avanti
@@ -8976,6 +8977,7 @@
         // misure del modello: anca → ginocchio 0,35; ginocchio → caviglia (attacco del pattino) 0,37;
         // caviglia → fondo delle ruote 0,171 a pattino piatto. A gamba dritta il fondo delle ruote sta dov'era prima.
         const LEG_UPPER = 0.35, LEG_LOWER = 0.37, SKATE_DEPTH = 0.171;
+        const SHOT_ANIM_TIME = 0.5;          // durata del gesto del tiro (colpo, accompagnamento, ritorno)
         function skatingLegs(s, stride, o) {
             const base = o.knee, thigh = o.thigh, brake = o.brake || 0, shift = o.shift || 0;
             const pL = Math.max(0, stride), pR = Math.max(0, -stride);
@@ -13158,12 +13160,20 @@
                     stride = Math.sin(s.walkCycle) * Math.min(0.65, speed * 0.055) * (0.5 + 0.5 * push) * (1 - s.brakeAmt);
                 }
 
+                // tiro (e passaggio): shootAnim viene impostato al rilascio, da 0,6 (passaggio) a 1 (tiro pieno).
+                // Il gesto ha un suo tempo (SHOT_ANIM_TIME) che riparte a ogni nuovo rilascio: colpo rapido,
+                // accompagnamento tenuto un attimo, ritorno morbido; ampiezza secondo la potenza.
+                if (s.shootAnim > (s.prevShootAnim || 0) + 0.01) { s.shotT = 0; s.shotPow = s.shootAnim; }
+                s.prevShootAnim = s.shootAnim = Math.max(0, s.shootAnim - dt * 3.5);
                 let shootSwing = 0;
-                if (s.shootAnim > 0) {
-                    s.shootAnim = Math.max(0, s.shootAnim - dt * 3.5);
-                    // colpo secco e accompagnamento lento: la stecca arriva in fondo in un attimo e torna con calma
-                    const ph = 1 - s.shootAnim;
-                    shootSwing = ph < 0.18 ? Math.sin(ph / 0.18 * Math.PI / 2) : 0.5 + 0.5 * Math.cos((ph - 0.18) / 0.82 * Math.PI);
+                if (s.shotT != null && s.shotT < SHOT_ANIM_TIME) {
+                    s.shotT += dt;
+                    const ph = Math.min(1, s.shotT / SHOT_ANIM_TIME);
+                    const ease = x => x * x * (3 - 2 * x);
+                    const curve = ph < 0.14 ? Math.sin(ph / 0.14 * Math.PI / 2) : ph < 0.34 ? 1 : 1 - ease((ph - 0.34) / 0.66);
+                    shootSwing = curve * (0.55 + 0.45 * Math.min(1, s.shotPow || 1));
+                    // gesto troppo rapido per i raccordi delle pose: in questo frame si applica così com'è
+                    if (window.HIL_POSE) s.poseSnap = window.HIL_POSE.frame;
                 }
 
                 const chargeAmt = (s.isHuman && shotCharging) ? shotChargePower : 0;

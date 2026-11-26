@@ -36,8 +36,9 @@
     function blendSkater(s, dt, updateStick) {
         if (!s || !s.mesh || !s.bodyPivot) return;
         const st = s._pb || (s._pb = {});
-        // primo frame, o dopo un salto (replay, pausa, oggetto rimesso in scena): si parte dalla posa attuale
-        if (st.frame == null || frame - st.frame > 2 || !s.mesh.visible) { snapshot(s, st); st.frame = frame; return; }
+        // primo frame, o dopo un salto (replay, pausa, oggetto rimesso in scena), o gesto rapido che non va
+        // smussato (tiro: s.poseSnap nel frame): si parte dalla posa attuale
+        if (st.frame == null || frame - st.frame > 2 || !s.mesh.visible || s.poseSnap === frame) { snapshot(s, st); st.frame = frame; return; }
         st.frame = frame;
         JOINTS.forEach(n => {
             const o = s[n];
