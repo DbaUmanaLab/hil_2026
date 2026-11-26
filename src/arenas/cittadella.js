@@ -45,6 +45,23 @@
         const lightMat = new THREE.MeshBasicMaterial({ color: 0xfff7e6 });
         const corridorMat = new THREE.MeshBasicMaterial({ color: 0xfdf3dc });
 
+        // ---------- 0. pavimento di servizio sotto tutto il capannone (fra balaustre, panchine, pareti e tribuna):
+        // granata, un poco più chiaro del tendone (stesso colore di wall_maroon.jpg, mediana #721d21, ma rivolto alla luce), appena sotto la
+        // pista. Senza, fuori dalle balaustre si vedeva il vuoto (di giorno bianco, con i fasci di sole sopra).
+        const serviceFloor = new THREE.Mesh(
+            new THREE.PlaneGeometry(2 * A, 2 * HL),
+            new THREE.MeshStandardMaterial({
+                color: 0x721d21,                   // illuminato dall'alto risulta un filo più chiaro delle pareti
+                normalMap: loadFileTexture(CIT_TEX + 'rink_normal.jpg', { repeat: [2 * A / 36, 2 * HL / 72] }),
+                normalScale: new THREE.Vector2(0.5, 0.5),
+                roughness: 0.82, metalness: 0
+            })
+        );
+        serviceFloor.rotation.x = -Math.PI / 2;
+        serviceFloor.position.set(CX, -0.015, 0);
+        serviceFloor.receiveShadow = preset.shadows;
+        targetGroup.add(serviceFloor);
+
         // ---------- 1. telo della volta, con leggero "cuscino" tra un arco e l'altro
         const nTh = lowQ ? 40 : 72, nZ = (2 * HL / BAY) * (lowQ ? 4 : 8);
         const vPos = [], vUv = [], vIdx = [];
