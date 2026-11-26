@@ -4505,10 +4505,11 @@
         let shotChargePower = 0;
         let puckReleaseCooldown = 0;
 
+        // disco da hockey in linea vero: 76 mm di diametro, 25 mm di spessore (prima era circa sei volte più grande)
         const puckPhysics = {
             velocity: null,
-            radius: 0.22,
-            height: 0.11,
+            radius: 0.038,
+            height: 0.025,
             gravity: -24
         };
 
@@ -7664,21 +7665,116 @@
             if (periodBadgeEl) periodBadgeEl.textContent = currentPeriod > TOTAL_PERIODS ? 'OT' : _t('{0}° P', currentPeriod);
         }
 
-        // --- DISCO PROPORZIONATO CON OMBRA DINAMICA DI ALTEZZA ---
+        // --- DISCO IN SCALA REALE, CON L'ADESIVO DELLA SQUADRA DI CASA E L'ALONE ---
+        // Texture dalla foto di un disco vero (tools/generate_puck_textures.py): faccia con il rilievo a scacchi
+        // e gli inserti bianchi, bordo zigrinato; al centro l'adesivo con il logo della squadra di casa.
+        // L'alone (anello steso sul pavimento) mantiene il disco visibile da lontano, come nei giochi di hockey in TV.
+        let puckFaceCanvas = null, puckFaceTex = null, puckFaceBase = null, puckStickerClub = null, puckHalo = null;
+        function drawPuckFace(logoImg) {
+            const c = puckFaceCanvas, g = c.getContext('2d'), N = c.width;
+            g.fillStyle = '#0e0e10';
+            g.fillRect(0, 0, N, N);
+            if (puckFaceBase && puckFaceBase.complete && puckFaceBase.naturalWidth) g.drawImage(puckFaceBase, 0, 0, N, N);
+            // adesivo: disco bianco con il logo, bordo scuro sottile
+            const r = N * 0.5 * 0.355;
+            g.save();
+            g.beginPath(); g.arc(N / 2, N / 2, r, 0, Math.PI * 2); g.closePath();
+            g.fillStyle = '#f4f4f5'; g.fill();
+            g.clip();
+            if (logoImg && logoImg.naturalWidth) {
+                const k = Math.min((r * 1.8) / logoImg.naturalWidth, (r * 1.8) / logoImg.naturalHeight);
+                const w = logoImg.naturalWidth * k, h = logoImg.naturalHeight * k;
+                g.drawImage(logoImg, N / 2 - w / 2, N / 2 - h / 2, w, h);
+            }
+            g.restore();
+            g.lineWidth = N * 0.012; g.strokeStyle = '#1c1c20';
+            g.beginPath(); g.arc(N / 2, N / 2, r, 0, Math.PI * 2); g.stroke();
+            puckFaceTex.needsUpdate = true;
+        }
+        // logo della squadra di casa sull'adesivo (a ogni partita)
+        function setPuckSticker(clubId) {
+            if (!puckFaceCanvas || puckStickerClub === clubId) return;
+            puckStickerClub = clubId;
+            drawPuckFace(null);
+            const src = typeof logoSrcOf === 'function' ? logoSrcOf(clubId) : '';
+            if (!src) return;
+            const img = new Image();
+            img.onload = () => { if (puckStickerClub === clubId) drawPuckFace(img); };
+            img.src = src;
+        }
+        function createPuckHaloTexture() {
+            const c = document.createElement('canvas');
+            c.width = c.height = 128;
+            const g = c.getContext('2d');
+            const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+            // anello bianco luminoso con un'ombra scura all'esterno: si legge sia sui pavimenti chiari che scuri
+            gr.addColorStop(0, 'rgba(255,255,255,0.0)');
+            gr.addColorStop(0.2, 'rgba(255,255,255,0.15)');
+            gr.addColorStop(0.36, 'rgba(255,255,255,0.95)');
+            gr.addColorStop(0.5, 'rgba(235,248,255,0.85)');
+            gr.addColorStop(0.6, 'rgba(10,25,50,0.45)');
+            gr.addColorStop(0.8, 'rgba(10,25,50,0.12)');
+            gr.addColorStop(1, 'rgba(10,25,50,0)');
+            g.fillStyle = gr;
+            g.fillRect(0, 0, 128, 128);
+            return new THREE.CanvasTexture(c);
+        }
+        // alone: anello a terra di grandezza quasi costante a schermo (più grande da lontano), sparisce nei primi piani
+        function updatePuckHalo() {
+            if (!puckHalo || !puck || !camera) return;
+            const d = camera.position.distanceTo(puck.position);
+            const size = Math.max(0.25, Math.min(2.6, d * 0.06));
+            puckHalo.scale.set(size, size, 1);
+            puckHalo.position.set(puck.position.x, 0.006, puck.position.z);   // anello a terra: anche col disco in volo segna dove cade
+            const near = Math.max(0, Math.min(1, (d - 2.5) / 3));
+            puckHalo.material.opacity = 0.9 * near;
+            puckHalo.visible = puck.visible && near > 0.02;
+        }
+
         function createPuck() {
-            const puckGeo = new THREE.CylinderGeometry(puckPhysics.radius, puckPhysics.radius, puckPhysics.height, 28);
-            const puckMat = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.28, metalness: 0.35 });
-            puck = new THREE.Mesh(puckGeo, puckMat);
+            const puckGeo = new THREE.CylinderGeometry(puckPhysics.radius, puckPhysics.radius, puckPhysics.height, 32);
+            puckFaceCanvas = document.createElement('canvas');
+            puckFaceCanvas.width = puckFaceCanvas.height = 512;
+            puckFaceTex = new THREE.CanvasTexture(puckFaceCanvas);
+            puckFaceTex.anisotropy = 4;
+            puckFaceBase = new Image();
+            puckFaceBase.onload = () => drawPuckFace(null);
+            puckFaceBase.src = 'assets/textures/puck/puck_top.jpg';
+            const sideTex = loadFileTexture('assets/textures/puck/puck_side.jpg', { repeat: [3, 1] });
+            const sideMat = new THREE.MeshStandardMaterial({ map: sideTex, roughness: 0.55, metalness: 0.05 });
+            const faceMat = new THREE.MeshStandardMaterial({ map: puckFaceTex, roughness: 0.42, metalness: 0.05 });
+            puck = new THREE.Mesh(puckGeo, [sideMat, faceMat, faceMat]);
             puck.position.set(0, puckPhysics.height / 2, 0);
             puck.castShadow = true;
             scene.add(puck);
+            drawPuckFace(null);
+            if (matchConfig && matchConfig.homeClub) setPuckSticker(matchConfig.homeClub);
 
+            puckHalo = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({
+                map: createPuckHaloTexture(), color: 0xffffff, transparent: true, opacity: 0.9, depthWrite: false,
+                polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2
+            }));
+            puckHalo.rotation.x = -Math.PI / 2;           // steso sul pavimento
+            puckHalo.renderOrder = 4;
+            scene.add(puckHalo);
+
+            // ombra di contatto sfumata, a filo del pavimento (sotto il disco, non a metà altezza)
+            const shC = document.createElement('canvas');
+            shC.width = shC.height = 64;
+            const shG = shC.getContext('2d');
+            const shGr = shG.createRadialGradient(32, 32, 0, 32, 32, 32);
+            shGr.addColorStop(0, 'rgba(2,6,23,0.75)');
+            shGr.addColorStop(0.6, 'rgba(2,6,23,0.45)');
+            shGr.addColorStop(1, 'rgba(2,6,23,0)');
+            shG.fillStyle = shGr;
+            shG.fillRect(0, 0, 64, 64);
             puckShadowMesh = new THREE.Mesh(
-                new THREE.CircleGeometry(puckPhysics.radius * 1.15, 20),
-                new THREE.MeshBasicMaterial({ color: 0x020617, transparent: true, opacity: 0.45 })
+                new THREE.PlaneGeometry(puckPhysics.radius * 2.8, puckPhysics.radius * 2.8),
+                new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shC), transparent: true, opacity: 0.8, depthWrite: false,
+                    polygonOffset: true, polygonOffsetFactor: -1, polygonOffsetUnits: -1 })
             );
             puckShadowMesh.rotation.x = -Math.PI / 2;
-            puckShadowMesh.position.y = 0.015;
+            puckShadowMesh.position.y = 0.003;
             scene.add(puckShadowMesh);
         }
 
@@ -7827,7 +7923,7 @@
             }
 
             if (puck && puckShadowMesh) {
-                puckShadowMesh.position.set(puck.position.x, 0.015, puck.position.z);
+                puckShadowMesh.position.set(puck.position.x, 0.003, puck.position.z);
                 const hScale = Math.max(0.55, 1.15 - puck.position.y * 0.22);
                 puckShadowMesh.scale.set(hScale, hScale, 1);
             }
@@ -8586,8 +8682,8 @@
                 // calotta: parte alta completa + fianchi/nuca su tempie e orecchie; il viso resta libero
                 // (davanti = -Z, phi 3π/2: i fianchi lasciano aperti ±69°, dove si attacca la visiera)
                 const shell = new THREE.Group();
-                const capTop = new THREE.Mesh(new THREE.SphereGeometry(0.162, 26, 10, 0, Math.PI * 2, 0, Math.PI * 0.36), helmetMat);
-                const capSide = new THREE.Mesh(new THREE.SphereGeometry(0.162, 26, 8, Math.PI * 1.5 + 1.2, Math.PI * 2 - 2.4, Math.PI * 0.36, Math.PI * 0.25), helmetMat);
+                const capTop = new THREE.Mesh(new THREE.SphereGeometry(0.162, 26, 11, 0, Math.PI * 2, 0, Math.PI * 0.43), helmetMat);   // fino sotto il bordo: niente fessura sulla fronte
+                const capSide = new THREE.Mesh(new THREE.SphereGeometry(0.162, 26, 8, Math.PI * 1.5 + 1.2, Math.PI * 2 - 2.4, Math.PI * 0.43, Math.PI * 0.18), helmetMat);
                 shell.add(capTop, capSide);
                 shell.scale.set(0.98, 1.0, 1.12);
                 shell.position.set(0, 0.19, 0.012);
@@ -8611,7 +8707,10 @@
                 const ventR = ventL.clone(); ventR.position.x = 0.05; ventR.rotation.set(0.35, -0.18, -0.12);
                 const adjust = new THREE.Mesh(createRoundedBoxGeometry(0.09, 0.03, 0.02, 0.008), blackMat);
                 adjust.position.set(0, 0.205, 0.188);
-                headGroup.add(shell, brim, ridge, vents, ventL, ventR, adjust, earL, earR);
+                // il casco era modellato sulla vecchia testa sferica, più larga: tutte le parti (calotta, bordo,
+                // paraorecchie, marchi, visiera) stanno in un gruppo ristretto attorno al centro della testa
+                const helmet = new THREE.Group();
+                helmet.add(shell, brim, ridge, vents, ventL, ventR, adjust, earL, earR);
                 // marchio tecnico: davanti sopra la visiera e sui due fianchi (nero sui caschi chiari)
                 if (!isRef && !lowQ) {
                     const light = gearLum(helmetColor) > 150;
@@ -8624,10 +8723,14 @@
                         shellDecal(tex, 0.162, 0.028, 0.03, Math.PI / 2 + 0.3, 0.11),
                         shellDecal(tex, 0.162, 0.028, 0.03, Math.PI * 1.5 - 0.3, 0.11)
                     );
-                    headGroup.add(decals);
+                    helmet.add(decals);
                 }
                 // visiera trasparente a metà faccia (giocatori e arbitri): dal bordo del casco alla punta del naso
-                headGroup.add(helmetVisor(lowQ));
+                helmet.add(helmetVisor(lowQ));
+                const HY = 0.165;                         // centro della testa: resta fermo nel restringimento
+                helmet.scale.set(0.8, 0.85, 0.87);
+                helmet.position.set(0, HY * (1 - helmet.scale.y), 0);
+                headGroup.add(helmet);
             }
 
             // ---------- 4. gambe: braghe, ginocchio, calzettoni, pattini inline / gambali del portiere
@@ -11007,6 +11110,7 @@
             introOverlay.classList.add('hidden');
             document.getElementById('spot-card').classList.add('hidden');
             playerSpotlight = null;
+            restorePuckCamFov();                          // intro saltata durante il primo piano del disco
             skaters.forEach(s => {
                 if (s.onIce || s.isGoalie) {
                     setSkaterHockeyReadyPose(s, 0, 0);
@@ -11203,7 +11307,16 @@
         // --- PRESENTAZIONE DI DUE GIOCATORI CON LE FORMAZIONI SCHIERATE ---
         const SPOTLIGHT_DURATION = 3.4;
         const MASK_SPOTLIGHT_DURATION = 4.8;              // primo piano della maschera del portiere: un po' più lungo
+        const PUCK_SPOTLIGHT_DURATION = 4.4;              // primo piano del disco a centro pista, prima dell'ingaggio
+        const PUCK_CAM_FOV = 26;                          // obiettivo stretto: il disco (76 mm) riempie l'inquadratura
         let playerSpotlight = null;
+        let puckCamSavedFov = null;
+        function restorePuckCamFov() {
+            if (puckCamSavedFov === null) return;
+            camera.fov = puckCamSavedFov;
+            camera.updateProjectionMatrix();
+            puckCamSavedFov = null;
+        }
 
         function startPlayerSpotlight() {
             const pick = team => {
@@ -11236,6 +11349,8 @@
             });
             // al PalaHockey di Cittadella chiude le presentazioni Todd, il cronometrista
             if (matchConfig.arena === 'cittadella' && timekeeperTodd) list.push({ isTodd: true, ...timekeeperTodd });
+            // per ultimo, il disco della partita a centro pista: texture, bordo zigrinato e adesivo della squadra di casa
+            if (puck) list.push({ isPuckCam: true });
             if (!list.length) { finishIntro(); return; }
             introLineupData.forEach(it => setSkaterHockeyReadyPose(it.skater, 0, 0));
             introSingleCard.classList.add('hidden');
@@ -11250,6 +11365,7 @@
             if (timekeeperTodd) timekeeperTodd.member.waving = !!sk.isTodd;
             if (sk.isTodd) { showToddSpotlightCard(); return; }
             if (sk.isMaskCam) { showMaskSpotlightCard(sk); return; }
+            if (sk.isPuckCam) { showPuckSpotlightCard(); return; }
             if (sk.isRef) { showRefereeSpotlightCard(sk); return; }
             if (sk.isCoach) { showCoachSpotlightCard(sk); return; }
             const club = CLUB_ROSTERS[sk.clubId];
@@ -11284,6 +11400,30 @@
             void card.offsetWidth;
             card.classList.add('is-in');
             if (window.gameAudio && window.gameAudio.playCrowdOoh) window.gameAudio.playCrowdOoh(0.7);
+        }
+
+        // disco della partita: adesivo con il logo della squadra di casa
+        function showPuckSpotlightCard() {
+            const clubId = matchConfig.homeClub;
+            const club = CLUB_ROSTERS[clubId];
+            const theme = ROSTER_THEMES[clubId] || ROSTER_THEMES.cittadella;
+            const card = document.getElementById('spot-card');
+            card.style.setProperty('--team', theme.primary);
+            document.getElementById('spot-logo').src = logoSrcOf(clubId);
+            // icona disco
+            document.getElementById('spot-num').innerHTML = '<svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="10" rx="8" ry="3.5"/><path d="M4 10v4c0 1.9 3.6 3.5 8 3.5s8-1.6 8-3.5v-4"/></svg>';
+            document.getElementById('spot-kicker').textContent = _t('Disco ufficiale della partita');
+            document.getElementById('spot-name').innerHTML = rosterEsc(_t('IL DISCO'));
+            document.getElementById('spot-team').innerHTML = `${club ? rosterEsc(club.name) : ''} • <b>${rosterEsc(_t('Adesivo della squadra di casa'))}</b>`;
+            card.classList.remove('hidden', 'is-in');
+            void card.offsetWidth;
+            card.classList.add('is-in');
+            // il disco aspetta l'ingaggio a centro pista
+            puck.position.set(0, puckPhysics.height / 2, 0);
+            puck.rotation.set(0, 0, 0);
+            if (puckPhysics.velocity) puckPhysics.velocity.set(0, 0, 0);
+            puck.visible = true;
+            if (window.gameAudio && window.gameAudio.playCrowdOoh) window.gameAudio.playCrowdOoh(0.6);
         }
 
         function showCoachSpotlightCard(it) {
@@ -11343,9 +11483,22 @@
             if (!sp) return;
             sp.t += dt;
             const sk = sp.list[sp.idx];
-            const dur = sk.isMaskCam ? MASK_SPOTLIGHT_DURATION : SPOTLIGHT_DURATION;
+            const dur = sk.isMaskCam ? MASK_SPOTLIGHT_DURATION : sk.isPuckCam ? PUCK_SPOTLIGHT_DURATION : SPOTLIGHT_DURATION;
             const k = Math.min(1, sp.t / dur);
-            if (sk.isMaskCam) {
+            if (sk.isPuckCam) {
+                // primo piano del disco: la camera parte dall'alto (adesivo con il logo), gli gira attorno
+                // e scende quasi a filo del pavimento, dove si vede il bordo zigrinato
+                if (puckCamSavedFov === null) { puckCamSavedFov = camera.fov; camera.fov = PUCK_CAM_FOV; camera.updateProjectionMatrix(); }
+                const c = puck.position;
+                const ease = k * k * (3 - 2 * k);
+                const ang = 0.35 + ease * 2.1;
+                const dist = 0.5 - ease * 0.14;
+                const camTarget = new THREE.Vector3(c.x + Math.sin(ang) * dist, 0.42 - ease * 0.33, c.z + Math.cos(ang) * dist);
+                if (sp.t < dt * 1.5) camera.position.copy(camTarget);   // stacco netto: niente volo dalla scena precedente
+                else camera.position.lerp(camTarget, 1 - Math.exp(-dt * 10));
+                camera.lookAt(c.x, c.y - 0.002, c.z);
+                focusCameraOn(c.x, c.y, c.z);
+            } else if (sk.isMaskCam) {
                 // primo piano della maschera: il portiere guarda verso il centro pista, la camera parte di tre quarti
                 // davanti e gli gira attorno lentamente fino al fianco, dove si vede la grafica
                 const gk = sk.goalie;
@@ -11403,6 +11556,7 @@
             if (sk.headGroup) sk.headGroup.rotation.y = 0;
             }
             if (sp.t >= dur) {
+                if (sk.isPuckCam) restorePuckCamFov();
                 sp.idx++;
                 sp.t = 0;
                 if (sp.idx >= sp.list.length) finishIntro();
@@ -14277,6 +14431,7 @@
             cameraFocusPoint.active = true;
         }
         function renderMainFrame(dt) {
+            updatePuckHalo();
             const fp = cameraFocusPoint && cameraFocusPoint.active ? cameraFocusPoint : null;
             if (cameraFocusPoint) cameraFocusPoint.active = false;
             const hi = getActiveQualityPreset().id === 'high';
@@ -15380,6 +15535,7 @@
             scoreGuestEl.textContent = '0';
             buildSelectedArena(matchConfig.arena);
             rebuildMatchTeams();
+            setPuckSticker(matchConfig.homeClub);         // adesivo del disco: logo della squadra di casa
             applyTimeOfDay();               // giocatori e staff appena creati: ombre del giorno
             assignMatchReferees();
             applyMatchConfigToHUD();

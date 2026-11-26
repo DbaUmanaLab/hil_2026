@@ -291,6 +291,9 @@ I18N.add('en', {
     // presentazione: primo piano della maschera del portiere (src/game/GoalieMask.js)
     'La maschera del portiere': "The goalie's mask",
     'Grafica: {0}': 'Design: {0}',
+    'Disco ufficiale della partita': 'Official game puck',
+    'IL DISCO': 'THE PUCK',
+    'Adesivo della squadra di casa': 'Home team sticker',
     'Fiamme': 'Flames',
     'Tigre': 'Tiger',
     'Fulmini': 'Lightning',
