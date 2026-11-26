@@ -75,6 +75,31 @@
         return g;
     }
 
+    // ---------- capelli lunghi delle varianti femminili ('bob' alla mascella, 'long' sulle spalle):
+    // sipario che parte dal cranio e cade dritto dal punto più largo della testa, viso libero
+    const curtainCache = {};
+    let curtainIndex = null;
+    function hasLongHair(variant) { return !!(DATA.variants[variant] && DATA.variants[variant].long); }
+    function longHairGeometry(variant, radius, style) {
+        const V = DATA.variants[variant];
+        if (!V || !V.long || !V.long[style]) return null;
+        const key = variant + '|' + style + '|' + Math.round(radius * 10000);
+        if (curtainCache[key]) return curtainCache[key];
+        if (!curtainIndex) curtainIndex = new THREE.BufferAttribute(decode(DATA.hair.curtainIndex, Uint16Array), 1);
+        const p16 = decode(V.long[style], Int16Array);
+        const k = DATA.hair.curtainRange / 32767 * radius;
+        const pos = new Float32Array(p16.length);
+        for (let i = 0; i < p16.length; i++) pos[i] = p16[i] * k;
+        const g = new THREE.BufferGeometry();
+        g.setIndex(curtainIndex);
+        g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        g.computeVertexNormals();
+        g.computeBoundingSphere();
+        g.userData.hilHair = { variant, radius, style };
+        curtainCache[key] = g;
+        return g;
+    }
+
     // ---------- materiali
     const texCache = {};
     function tex(path) {
@@ -171,5 +196,5 @@ uniform vec3 hilBrow;`)
     function variantInfo(i) { return DATA.variants[i] || DATA.variants[0]; }
     function findVariant(id) { return Math.max(0, DATA.variants.findIndex(v => v.id === id)); }
 
-    window.HIL_HEADS = { geometry, hairGeometry, material, pick, variantInfo, findVariant, count: DATA.variants.length };
+    window.HIL_HEADS = { geometry, hairGeometry, longHairGeometry, hasLongHair, material, pick, variantInfo, findVariant, count: DATA.variants.length };
 })();

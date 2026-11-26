@@ -6,7 +6,8 @@ Sorgente: MakeHuman (https://github.com/makehumancommunity/makehuman) e il suo p
 tools/.cache/makehuman (ignorata da git); i file generati invece si committano.
 
 Uscite:
-  src/game/HeadModels.js        geometrie (due livelli di dettaglio, una forma per variante)
+  src/game/HeadModels.js        geometrie (due livelli di dettaglio, una forma per variante), cuffia dei
+                                capelli corti per ogni variante e capelli lunghi ('bob', 'long') per le donne
   assets/heads/<variante>.jpg   pelle del volto + occhi (layout UV comune a tutte le varianti)
   assets/heads/masks_a.png      R sopracciglia sottili, G sopracciglia folte, B barba
   assets/heads/masks_b.png      R baffi, G ombra della barba rasata
@@ -521,6 +522,64 @@ def hair_shell(G):
     return np.array(out)
 
 
+# capelli lunghi (solo varianti femminili): "sipario" attorno a un asse verticale dietro il volto.
+# Ogni colonna (angolo dal davanti, viso escluso) parte poco sopra l'attaccatura e scende: il raggio
+# segue la testa e, sotto il punto più largo, resta costante (i capelli cadono dritti invece di
+# aderire a mascella e collo), con un filo di svasatura in fondo.
+CURTAIN_COLS, CURTAIN_ROWS = 30, 16
+CURTAIN_AXIS = np.array([-0.08, 0.0])                 # (x, z) dell'asse
+CURTAIN_STYLES = {                                    # lunghezza (y in fondo), angolo libero sul viso, svasatura
+    'bob': (-1.05, 1.12, 0.05),
+    'long': (-2.35, 1.0, 0.16),
+}
+
+
+def curtain_index():
+    idx = []
+    C, R = CURTAIN_COLS, CURTAIN_ROWS
+    for r in range(R - 1):
+        for c in range(C - 1):
+            a = r * C + c; b = a + 1; a2 = a + C; b2 = b + C
+            idx += [a, a2, b, b, a2, b2]
+    return np.array(idx, dtype=np.uint16)
+
+
+def hair_curtain(G, style):
+    bottom, alpha0, flare = CURTAIN_STYLES[style]
+    hx = G[:, 0] - CURTAIN_AXIS[0]; hz = G[:, 2] - CURTAIN_AXIS[1]
+    hr = np.hypot(hx, hz); ha = np.arctan2(hz, hx)
+    alphas = np.linspace(alpha0, 2 * math.pi - alpha0, CURTAIN_COLS)
+    alphas = np.where(alphas > math.pi, alphas - 2 * math.pi, alphas)
+    out = np.zeros((CURTAIN_ROWS, CURTAIN_COLS, 3))
+    rnd = np.random.default_rng(11)
+    ragged = rnd.uniform(-1, 1, CURTAIN_COLS)
+    ragged = (np.roll(ragged, 1) + 2 * ragged + np.roll(ragged, -1)) / 4          # punte irregolari, non a zig-zag
+    for c, al in enumerate(alphas):
+        # parte vicino alla sommità, appena fuori dalla cuffia: niente gradino sulla nuca
+        top = float(np.clip(hairline_y(np.array([al]))[0] + 0.3, 0.5, 0.75))
+        bot = bottom + ragged[c] * (0.04 if style == 'bob' else 0.11) * min(1, abs(al) / 1.6)
+        ys = top + (bot - top) * (np.linspace(0, 1, CURTAIN_ROWS) ** 1.2)
+        da = np.angle(np.exp(1j * (ha - al)))
+        run = 0.0
+        for r, y in enumerate(ys):
+            w = np.exp(-(da / 0.12) ** 2) * np.exp(-((G[:, 1] - y) / 0.06) ** 2)
+            rad = (w * hr).sum() / w.sum() if w.sum() > 1e-6 else 0.0
+            run = max(run, rad)                       # sotto il punto più largo cadono dritti
+            t = r / (CURTAIN_ROWS - 1)
+            thick = 0.05 if r == 0 else 0.078
+            wave = 0.014 * math.sin(c * 2.1 + 0.7) * t                                # ciocche
+            R = run + thick + flare * t * t + wave
+            # sotto il mento: le ciocche davanti piegano all'indietro (viso e collo liberi) e i lati si
+            # appiattiscono sulle spalle, così i capelli lunghi non fanno da cappuccio
+            sdown = float(smooth(-0.6, bottom, y)) if style == 'long' else 0.0
+            front = max(0.0, 1 - (abs(al) - alpha0) / 1.3)
+            a_eff = al + math.copysign(0.55 * sdown * front, al)
+            px = CURTAIN_AXIS[0] + R * math.cos(a_eff)
+            pz = CURTAIN_AXIS[1] + R * math.sin(a_eff) * (1 - 0.2 * sdown)
+            out[r, c] = [px - 0.06 * sdown, y, pz]
+    return out.reshape(-1, 3)
+
+
 def b64(arr):
     return base64.b64encode(np.ascontiguousarray(arr).tobytes()).decode('ascii')
 
@@ -668,7 +727,9 @@ def main():
         N /= np.linalg.norm(N, axis=1, keepdims=True) + 1e-12
         return G, N
 
-    out = {'lods': {}, 'variants': [], 'hair': {'index': b64(hair_index())}}
+    POS_RANGE = 2.0
+    out = {'lods': {}, 'variants': [], 'hair': {'index': b64(hair_index()), 'curtainIndex': b64(curtain_index()),
+                                                  'curtainRange': POS_RANGE * 1.5}}
     lod_keys = {}
     for name, n in (('hi', HI_TRIS), ('lo', LO_TRIS)):
         keys, index, uv = build_lod(lods[n])
@@ -678,7 +739,6 @@ def main():
         print(f'  lod {name}: {len(keys)} vertici, {len(index) // 3} triangoli')
 
     # ---------------------------------------------------------------- varianti
-    POS_RANGE = 2.0
     for var, Vm in zip(VARIANTS, var_meshes):
         vid, sex, age, eth, skin, eye_col = var
         eye_pos = fit_proxy(eye_refs, eye_scales, Vm)
@@ -700,6 +760,13 @@ def main():
         hs = hair_shell(to_game(Vm[head_vs], nrm))
         assert np.abs(hs).max() < POS_RANGE
         entry['hair'] = b64(np.round(hs / POS_RANGE * 32767).astype(np.int16))
+        if sex == 'f':
+            Gh = to_game(Vm[head_vs], nrm)
+            entry['long'] = {}
+            for st in CURTAIN_STYLES:
+                cp = hair_curtain(Gh, st)
+                assert np.abs(cp).max() < POS_RANGE * 1.5
+                entry['long'][st] = b64(np.round(cp / (POS_RANGE * 1.5) * 32767).astype(np.int16))
         out['variants'].append(entry)
 
     # ---------------------------------------------------------------- mappa di posizione (rif.)

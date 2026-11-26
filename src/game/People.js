@@ -670,10 +670,10 @@
     }
 
     // ---------- capelli
-    function addLongHair(headGroup, hairMat, style, r) {
-        const R = 0.15;
-        // fronte libera: davanti = +X (θ = π/2 sul cilindro); le ciocche laterali incorniciano il viso
-        const gap = 0.78, start = Math.PI / 2 + gap, len = Math.PI * 2 - gap * 2;
+    // Capelli lunghi delle donne: 'long' (sulle spalle) e 'bob' (alla mascella) sono il "sipario" della
+    // variante (src/game/Heads.js), che cade dal cranio e lascia libero il viso; 'ponytail' è una coda
+    // dietro la nuca sopra la cuffia.
+    function addLongHair(head, headGroup, hairMat, style) {
         if (style === 'ponytail') {
             const tail = new THREE.Mesh(geo('pony', () => new THREE.SphereGeometry(0.07, 10, 8)), hairMat);
             tail.scale.set(0.75, 1.9, 0.75);
@@ -684,12 +684,14 @@
             headGroup.add(tail, tie);
             return;
         }
-        const long = style === 'long';
-        const h = long ? 0.34 + r * 0.08 : 0.2;
-        const key = 'hair_' + style + '_' + Math.round(h * 100);
-        const g = geo(key, () => new THREE.CylinderGeometry(R, R + (long ? 0.03 : 0.012), h, 14, 1, true, start, len));
+        const g = head.userData.headVariant != null && HEADS()
+            ? HEADS().longHairGeometry(head.userData.headVariant, headRadius(head), style) : null;
+        if (!g) return;
         const m = new THREE.Mesh(g, colorMat(hairMat.color.getHex(), 0.8, THREE.DoubleSide));
-        m.position.set(-0.012, 0.03 - h / 2, 0);
+        m.position.copy(head.position);
+        m.quaternion.copy(head.quaternion);
+        m.scale.copy(head.scale);
+        m.userData.skullFit = true;          // segue già il cranio: fitToSkull non lo stringe
         headGroup.add(m);
     }
 
@@ -712,7 +714,7 @@
             return;
         }
         hair.material = hairMat;
-        if (female) addLongHair(headGroup, hairMat, pickWeighted([['long', 55], ['ponytail', 15], ['bob', 30]], r()), r());
+        if (female) addLongHair(head, headGroup, hairMat, pickWeighted([['long', 55], ['ponytail', 15], ['bob', 30]], r()));
     }
 
     // ---------- abbigliamento
