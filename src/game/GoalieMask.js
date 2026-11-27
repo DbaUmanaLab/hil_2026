@@ -378,6 +378,23 @@
         const chromeMat = new THREE.MeshStandardMaterial({ color: 0xe5e7eb, metalness: 0.92, roughness: 0.22 });
         const strapMat = new THREE.MeshStandardMaterial({ color: 0xf1f3f5, roughness: 0.85 });
 
+        // maschera modellata (src/game/Helmets.js, "Helmet for Puck" di K31THUZ4D, CC BY 4.0): calotta con le UV
+        // "di fianco" come la nostra, quindi la stessa grafica; imbottitura interna e gabbia del modello.
+        // Il modello è aperto dietro: piatto posteriore, cinghie e fibbie restano quelli procedurali.
+        const H = window.HIL_HELMETS;
+        if (H && H.has('goalie')) {
+            const lod = low ? 'lo' : 'hi';
+            grp.position.set(0, 0, 0);                    // le geometrie del modello sono già nel sistema della testa
+            grp.add(new THREE.Mesh(H.geometry('goalie', 'shell', lod), shellMat));
+            grp.add(new THREE.Mesh(H.geometry('goalie', 'liner', lod), new THREE.MeshStandardMaterial({ color: 0x17171a, roughness: 0.9 })));
+            grp.add(new THREE.Mesh(H.geometry('goalie', 'cage', lod), chromeMat));
+            const back = new THREE.Group();
+            back.position.copy(POS);
+            grp.add(back);
+            addBackplate(back, trimMat, linerMat, strapMat, chromeMat, design, colors, low);
+            return grp;
+        }
+
         const shellGeo = shellGeometry(low);
         const shell = new THREE.Mesh(shellGeo, shellMat);
         const liner = new THREE.Mesh(shellGeo, linerMat);
@@ -400,20 +417,7 @@
         range(thetaMax(SIDE), 0.02, 8).slice(1).forEach(th => outline.push([th, SIDE]));
         grp.add(tubeAlong(outline, 0.985, 0.0062, trimMat, low));
 
-        // piatto posteriore in tinta unita, cinghie elastiche e fibbie (solo sul piatto, sotto le ali della calotta)
-        const backMat = new THREE.MeshPhysicalMaterial({ color: trimMat.color.getHex(), roughness: 0.3, clearcoat: 0.85, clearcoatRoughness: 0.12 });
-        grp.add(new THREE.Mesh(backplateGeometry(low), backMat));
-        grp.add(new THREE.Mesh(backplateGeometry(low), linerMat));
-        const b0 = SIDE - 0.12, b1 = 2 * PI - SIDE + 0.12;
-        grp.add(tubeAlong(range(b0, b1, 14).map(d => [PI * 0.58, d]), 1.0, 0.0065, strapMat, low));
-        grp.add(tubeAlong(range(b0, b1, 14).map(d => [PI * 0.34, d]), 1.0, 0.006, strapMat, low));
-        [b0 + 0.18, b1 - 0.18].forEach(d => {
-            const p = pointAt(PI * 0.58, d, 1.005);
-            const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.024, 0.028), chromeMat);
-            buckle.position.copy(p);
-            buckle.rotation.y = Math.atan2(p.x, p.z);            // appoggiata sul piatto
-            grp.add(buckle);
-        });
+        addBackplate(grp, trimMat, linerMat, strapMat, chromeMat, design, colors, low);
 
         // gabbia cromata con viti ai lati e clip sulla fronte
         grp.add(cage(chromeMat, low));
@@ -431,6 +435,23 @@
         });
 
         return grp;
+    }
+
+    // piatto posteriore in tinta unita, cinghie elastiche e fibbie (solo sul piatto, sotto le ali della calotta)
+    function addBackplate(grp, trimMat, linerMat, strapMat, chromeMat, design, colors, low) {
+        const backMat = new THREE.MeshPhysicalMaterial({ color: trimMat.color.getHex(), roughness: 0.3, clearcoat: 0.85, clearcoatRoughness: 0.12 });
+        grp.add(new THREE.Mesh(backplateGeometry(low), backMat));
+        grp.add(new THREE.Mesh(backplateGeometry(low), linerMat));
+        const b0 = SIDE - 0.12, b1 = 2 * PI - SIDE + 0.12;
+        grp.add(tubeAlong(range(b0, b1, 14).map(d => [PI * 0.58, d]), 1.0, 0.0065, strapMat, low));
+        grp.add(tubeAlong(range(b0, b1, 14).map(d => [PI * 0.34, d]), 1.0, 0.006, strapMat, low));
+        [b0 + 0.18, b1 - 0.18].forEach(d => {
+            const p = pointAt(PI * 0.58, d, 1.005);
+            const buckle = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.024, 0.028), chromeMat);
+            buckle.position.copy(p);
+            buckle.rotation.y = Math.atan2(p.x, p.z);            // appoggiata sul piatto
+            grp.add(buckle);
+        });
     }
 
     window.HIL_GOALIE_MASK = { build, DESIGNS };

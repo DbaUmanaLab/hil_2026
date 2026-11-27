@@ -2709,6 +2709,8 @@
     <script src="src/ui/Flags.js"></script>
     <script src="src/game/HeadModels.js"></script>
     <script src="src/game/Heads.js"></script>
+    <script src="src/game/HelmetModels.js"></script>
+    <script src="src/game/Helmets.js"></script>
     <script src="src/game/People.js"></script>
     <script src="src/game/PoseBlend.js"></script>
     <script src="src/game/GoalieMask.js"></script>
@@ -8580,6 +8582,71 @@
             return g;
         }
 
+        // Casco modellato (src/game/Helmets.js, modello Sketchfab CC BY 4.0 senza i suoi loghi): calotta nel colore
+        // del casco della squadra con il marchio tecnico davanti e sui fianchi (non per gli arbitri né in grafica
+        // bassa), imbottiture e paraorecchie scuri, visiera trasparente a metà faccia, sottogola bianco.
+        const modelHelmetMats = {};
+        function modelHelmetShellMaterial(color, withLogo) {
+            const key = color + '|' + (withLogo ? 1 : 0);
+            if (modelHelmetMats[key]) return modelHelmetMats[key];
+            let map = null;
+            if (withLogo) {
+                // tela "di fianco" della calotta: u = 0,5 davanti, 0,25 / 0,75 sui fianchi; v = 1 in cima
+                const W = 1024, H = 512, cv = document.createElement('canvas');
+                cv.width = W; cv.height = H;
+                const g = cv.getContext('2d');
+                g.fillStyle = '#' + color.toString(16).padStart(6, '0');
+                g.fillRect(0, 0, W, H);
+                const light = gearLum(color) > 150;
+                const logo = gearLogoTexture(light ? '#111114' : '#ffffff', light ? null : 'rgba(0,0,0,0.35)').image;
+                const put = (u, v, w) => { const h = w * logo.height / logo.width; g.drawImage(logo, u * W - w / 2, (1 - v) * H - h / 2, w, h); };
+                put(0.5, 0.585, W * 0.1);
+                put(0.27, 0.56, W * 0.085);
+                put(0.73, 0.56, W * 0.085);
+                map = new THREE.CanvasTexture(cv);
+                map.wrapS = THREE.RepeatWrapping;
+                map.anisotropy = 4;
+            }
+            modelHelmetMats[key] = new THREE.MeshPhysicalMaterial({ color: map ? 0xffffff : color, map, roughness: 0.22, metalness: 0.1, clearcoat: 0.8, clearcoatRoughness: 0.12 });
+            return modelHelmetMats[key];
+        }
+        function modelHelmetPartMaterials() {
+            if (!modelHelmetMats.parts) modelHelmetMats.parts = {
+                pad: new THREE.MeshStandardMaterial({ color: 0x17181b, roughness: 0.85 }),
+                liner: new THREE.MeshStandardMaterial({ color: 0x101113, roughness: 0.95, side: THREE.DoubleSide }),
+                ear: new THREE.MeshPhysicalMaterial({ color: 0x1b1c20, roughness: 0.35, clearcoat: 0.4 }),
+                visor: new THREE.MeshPhysicalMaterial({ color: 0xe6f1ff, transparent: true, opacity: 0.18, roughness: 0.04, metalness: 0, clearcoat: 1, clearcoatRoughness: 0.03, depthWrite: false, side: THREE.DoubleSide }),
+                strap: new THREE.MeshStandardMaterial({ color: 0xf1f3f5, roughness: 0.8 }),
+                clip: new THREE.MeshStandardMaterial({ color: 0xe5e7eb, roughness: 0.45 }),
+                metal: new THREE.MeshStandardMaterial({ color: 0xc7cbd1, metalness: 0.85, roughness: 0.3 })
+            };
+            return modelHelmetMats.parts;
+        }
+        // fodera scura: calotta ellissoidale chiusa appena dentro il guscio (sopra il bordo del casco); dalle prese
+        // d'aria si vede lei e non la testa. Raggi sul guscio adattato alla testa (src/game/Helmets.js, FIT.player).
+        const modelHelmetLiners = {};
+        function modelHelmetLiner(lod) {
+            if (!modelHelmetLiners[lod]) {
+                const g = new THREE.SphereGeometry(1, lod === 'lo' ? 14 : 24, lod === 'lo' ? 6 : 10, 0, Math.PI * 2, 0, Math.PI * 0.52);
+                g.scale(0.139, 0.128, 0.146);
+                g.translate(0, 0.193, 0.004);
+                modelHelmetLiners[lod] = g;
+            }
+            return modelHelmetLiners[lod];
+        }
+        function buildModelHelmet(color, withLogo, low) {
+            const H = window.HIL_HELMETS, lod = low ? 'lo' : 'hi', M = modelHelmetPartMaterials();
+            const grp = new THREE.Group();
+            grp.add(new THREE.Mesh(H.geometry('player', 'shell', lod), modelHelmetShellMaterial(color, withLogo)));
+            grp.add(new THREE.Mesh(modelHelmetLiner(lod), M.liner));
+            ['pad', 'ear', 'strap', 'clip', 'metal'].forEach(r => { const g = H.geometry('player', r, lod); if (g) grp.add(new THREE.Mesh(g, M[r])); });
+            const visor = new THREE.Mesh(H.geometry('player', 'visor', lod), M.visor);
+            visor.renderOrder = 2;                         // dopo il viso: la trasparenza non lo cancella
+            visor.castShadow = false;
+            grp.add(visor);
+            return grp;
+        }
+
         function createSkater(clubId, kitId, teamSide, role, lineIndex, isGoalie, jerseyNum = '21', playerName = 'LAGO') {
             const root = new THREE.Group();
             const isRef = clubId === 'ref';
@@ -8678,7 +8745,10 @@
                     clubId, name: playerName, low: lowQ,
                     logo: lowQ ? null : gearLogoTexture('#111114', null).image
                 }));
+            } else if (window.HIL_HELMETS && window.HIL_HELMETS.has('player')) {
+                headGroup.add(buildModelHelmet(helmetColor, !isRef && !lowQ, lowQ));
             } else {
+                // (riserva se mancano i dati del casco modellato)
                 // calotta: parte alta completa + fianchi/nuca su tempie e orecchie; il viso resta libero
                 // (davanti = -Z, phi 3π/2: i fianchi lasciano aperti ±69°, dove si attacca la visiera)
                 const shell = new THREE.Group();
