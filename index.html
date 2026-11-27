@@ -9353,23 +9353,32 @@
             if (!s) return;
 
             if (s.isGoalie) {
-                // k = 0 in piedi accucciato, k = 1 in farfalla: ginocchia a terra unite davanti, gambali
-                // aperti sul pavimento verso i pali, busto dritto, guanto e bloccatore larghi
+                // k = 0 posizione d'attesa (stance), k = 1 in farfalla: ginocchia a terra unite davanti, gambali
+                // aperti sul pavimento verso i pali, busto dritto, guanto e bloccatore larghi.
+                // Stance come i portieri veri: piedi molto larghi, ginocchia piegate, stinchi aperti verso
+                // l'esterno con i gambali quasi verticali, bacino basso e busto quasi dritto; guanto aperto di lato
+                // all'altezza del fianco, bloccatore davanti all'anca con la stecca a terra davanti ai pattini.
                 const k = gameState === 'playing' ? (s.butterfly || 0) : 0;
                 const L = (a, b) => a + (b - a) * k;
                 if (s.legBaseY === undefined) s.legBaseY = s.leftLegPivot.position.y;
-                s.leftLegPivot.position.y = s.rightLegPivot.position.y = L(s.legBaseY, 0.46);
-                s.hipGroup.position.y = L(0.78, 0.44);
-                s.bodyPivot.rotation.set(L(-0.28, -0.08), 0, 0);
-                s.leftLegPivot.rotation.set(L(0.38, 0.3), 0, L(0.22, 0.05));
-                s.leftKneePivot.rotation.set(L(-0.68, -1.6), 0, L(0, -1.35));
-                s.rightLegPivot.rotation.set(L(0.38, 0.3), 0, L(-0.22, -0.05));
-                s.rightKneePivot.rotation.set(L(-0.68, -1.6), 0, L(0, 1.35));
+                const thX = 0.62, knX = -1.02, thZ = 0.26, knZ = 0.18;          // stance: coscia avanti e fuori, stinco indietro e fuori
+                // abbassamento che tiene i pattini a terra con le gambe piegate (coscia 0,35, stinco 0,37)
+                const stanceDrop = 0.72 - Math.cos(thZ) * (0.35 * Math.cos(thX) + 0.37 * Math.cos(thX + knX) * Math.cos(knZ));
+                const legY = s.legBaseY - stanceDrop;
+                s.leftLegPivot.position.y = s.rightLegPivot.position.y = L(legY, 0.46);
+                s.hipGroup.position.y = L(legY + 0.03, 0.44);
+                s.bodyPivot.rotation.set(L(-0.2, -0.08), 0, 0);
+                s.leftLegPivot.rotation.set(L(thX, 0.3), 0, L(-thZ, 0.05));
+                s.leftKneePivot.rotation.set(L(knX, -1.6), 0, L(-knZ, -1.35));
+                s.rightLegPivot.rotation.set(L(thX, 0.3), 0, L(thZ, -0.05));
+                s.rightKneePivot.rotation.set(L(knX, -1.6), 0, L(knZ, 1.35));
 
-                s.leftArmPivot.rotation.set(L(0.62, 0.8), -0.2, L(0.35, -0.3));
-                s.leftElbowPivot.rotation.set(L(0.55, 0.35), 0, 0);
-                s.rightArmPivot.rotation.set(L(0.48, 0.62), 0.2, L(-0.25, 0.28));
-                s.rightElbowPivot.rotation.set(L(0.45, 0.3), 0, 0);
+                // guanto (sinistra): braccio aperto di lato e un po' avanti, avambraccio in avanti, mano al fianco
+                s.leftArmPivot.rotation.set(L(0.1, 0.8), -0.3, L(-0.62, -0.3));
+                s.leftElbowPivot.rotation.set(L(0.62, 0.35), L(1.25, 0), 0);    // avambraccio ruotato: la tasca guarda il tiratore
+                // bloccatore (destra): davanti all'anca destra, gomito piegato, stecca verso il basso
+                s.rightArmPivot.rotation.set(L(0.08, 0.62), 0.15, L(0.3, 0.28));
+                s.rightElbowPivot.rotation.set(L(0.55, 0.3), 0, 0);
                 if (shootSwing > 0) {
                     // respinta / poke check: braccio del bastone allungato in avanti e di lato, busto che si sbilancia
                     s.rightArmPivot.rotation.x += shootSwing * 0.75;
@@ -9514,6 +9523,29 @@
             if (!s || !s.stickGroup || !s.leftHandAnchor || !s.rightHandAnchor) return;
             if (window.HIL_POSE) window.HIL_POSE.stickFollowsHands(s);
             s.mesh.updateMatrixWorld(true);
+            if (s.isGoalie) {
+                // il portiere tiene la stecca con il solo bloccatore, sopra la paletta (y -0,18 nel sistema della
+                // stecca): la lama (centro a y -1,24, sotto -1,295) va a terra al centro, davanti ai pattini
+                const hand = new THREE.Vector3();
+                s.rightHandAnchor.getWorldPosition(hand);
+                s.mesh.worldToLocal(hand);
+                const GRIP = 0.18, reach = 1.295 - GRIP;
+                const tx = hand.x * 0.45;                              // lama tra il centro e il pattino destro
+                const dy = hand.y - 0.012, dx = tx - hand.x;
+                const horiz = Math.sqrt(Math.max(0.0025, reach * reach - dy * dy - dx * dx));
+                const dir = new THREE.Vector3(tx, 0.012, hand.z - horiz).sub(hand).normalize();
+                // assi della stecca: -Y lungo l'asta verso la lama, +Z verso destra (la punta della lama, che va
+                // verso -Z, guarda il lato del guanto), X di conseguenza
+                const ay = dir.clone().negate();
+                const az = new THREE.Vector3(1, 0, 0).addScaledVector(ay, -ay.x).normalize();
+                const ax = new THREE.Vector3().crossVectors(ay, az).normalize();
+                s.stickGroup.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(ax, ay, az));
+                s.stickGroup.position.copy(hand).addScaledVector(dir, -GRIP);   // il punto di presa (y -GRIP) nella mano
+                // la lama appoggia a terra: il suo punto più basso (tallone o punta) sul pavimento
+                const low = Math.min(...[0.02, -0.44].map(z => new THREE.Vector3(0, -1.295, z).applyQuaternion(s.stickGroup.quaternion).y));
+                s.stickGroup.position.y += 0.006 - (s.stickGroup.position.y + low);
+                return;
+            }
 
             const pTop = new THREE.Vector3();
             const pBot = new THREE.Vector3();
