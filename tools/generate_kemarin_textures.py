@@ -236,4 +236,43 @@ wind = np.zeros((128, 256, 3), np.float32) + np.array([40, 54, 46], np.float32)
 wind += ((fft_noise(128, 256, beta=1.4) - 0.5) * 14)[..., None]
 wind[:, ::4] *= 0.9
 save(to_img(wind), 'windscreen.jpg')
+
+# ================================================================== 4. SERA: finestre accese (mappe emissive)
+# Stesso disegno delle facciate (facade(): righe, colonne, balconi, tende e pluviali), generatore a parte:
+# le facciate restano identiche. Finestra accesa = luce calda (o fredda della TV) fra le stecche della tapparella.
+print('luci di sera')
+
+
+def facade_lights(w, h, win_rows, win_cols, balconies=False, pipes=0, seed=0, share=0.5):
+    rr = random.Random(seed)                         # ripete le scelte di facade() (tende da sole)
+    lr = random.Random(seed + 500)
+    img = Image.new('RGB', (w, h), (0, 0, 0))
+    d = ImageDraw.Draw(img)
+    rh = h / win_rows
+    for r in range(win_rows):
+        for c in range(win_cols):
+            cw = w / win_cols
+            x0, y0 = c * cw + cw * 0.28, r * rh + rh * 0.25
+            x1, y1 = x0 + cw * 0.44, y0 + rh * 0.5
+            if lr.random() < share:
+                col = lr.choice([(255, 196, 120), (255, 214, 150), (255, 180, 100), (190, 210, 255)])
+                k = lr.uniform(0.6, 0.95)
+                d.rectangle([x0, y0, x1, y1], fill=tuple(int(v * k) for v in col))
+                for kk in range(1, 8):                   # stecche della tapparella
+                    yy = y0 + (y1 - y0) * kk / 8
+                    d.line([(x0, yy), (x1, yy)], fill=tuple(int(v * k * 0.45) for v in col), width=1)
+            if balconies and r > 0:
+                d.rectangle([x0 - cw * 0.12, y1 - rh * 0.16, x1 + cw * 0.12, y1 + 2], outline=(0, 0, 0), width=2)
+                if rr.random() < 0.35:
+                    rr.choice([0, 1, 2])
+                    d.polygon([(x0 - 6, y0 - 8), (x1 + 6, y0 - 8), (x1 + 16, y0 + rh * 0.18), (x0 - 16, y0 + rh * 0.18)], fill=(0, 0, 0))
+    for k in range(pipes):
+        x = int(w * (k + 0.5) / pipes)
+        d.rectangle([x - 4, 0, x + 4, h], fill=(0, 0, 0))
+    return img.filter(ImageFilter.GaussianBlur(0.6))
+
+
+save(facade_lights(1024, 512, 3, 12, pipes=4, seed=1, share=0.25), 'church_facade_lights.jpg')
+save(facade_lights(512, 512, 4, 5, balconies=True, seed=2), 'flats_brick_lights.jpg')
+save(facade_lights(512, 512, 4, 5, balconies=True, seed=3), 'flats_beige_lights.jpg')
 print('fatto')

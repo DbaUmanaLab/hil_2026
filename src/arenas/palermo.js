@@ -42,11 +42,14 @@
         sky.position.y = -10;
         sky.renderOrder = -10;
         targetGroup.add(sky);
+        // di sera (setupOutdoorNight, in fondo): cielo stellato, finestre accese, fari e lampioni accesi
+        const night = { daySky: sky, facades: [], floods: [], lamps: [], dim: [] };
 
         // ---------- 2. terreno: asfalto delle strade, piazzale chiaro attorno alla pista
         const ground = new THREE.Mesh(new THREE.CircleGeometry(270, 48), std(0x6a6966, 0.95));
         ground.rotation.x = -Math.PI / 2; ground.position.y = -0.04;
         targetGroup.add(ground);
+        night.dim.push(ground.material);
         const pav = new THREE.Mesh(new THREE.PlaneGeometry(66, 96), std(0xb4aca4, 0.92));
         pav.rotation.x = -Math.PI / 2; pav.position.set(2, -0.02, 0);
         targetGroup.add(pav);
@@ -163,6 +166,9 @@
             l.rotation.y = -side * Math.PI / 2; l.position.x = -side * 0.15;
             head.add(b, l);
             targetGroup.add(head);
+            const lens = new THREE.Vector3(-side * 0.15, 0, 0);
+            head.updateMatrixWorld(true);
+            night.floods.push({ pos: head.localToWorld(lens.clone()).add(V(-side * 0.25, 0, 0)), aim: V(x - side * 16, 0, z * 0.6) });
         }));
         const lamps = [];
         for (let z = -60; z <= 60; z += 24) lamps.push([-38, z]);
@@ -171,13 +177,17 @@
             const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.1, 9, 8), galv);
             pole.position.set(x, 4.5, z); targetGroup.add(pole);
             box(headMat, 0.6, 0.14, 0.3, x, 9, z);
+            night.lamps.push(V(x, 8.85, z));
         });
 
         // ---------- 7. condomini alti attorno (7-9 piani, tetti piani col parapetto)
         const flats = (x, z, w, d, floors, tex, ry = 0) => {
             const H = floors * 3.0;
-            const front = new THREE.MeshStandardMaterial({ map: loadFileTexture(T + tex, { repeat: [Math.max(1, Math.round(w / 12)), floors / 4] }), roughness: 0.9 });
-            const side = new THREE.MeshStandardMaterial({ map: loadFileTexture(T + tex, { repeat: [Math.max(1, Math.round(d / 12)), floors / 4] }), roughness: 0.9 });
+            const rf = [Math.max(1, Math.round(w / 12)), floors / 4], rs = [Math.max(1, Math.round(d / 12)), floors / 4];
+            const lit = tex.replace('.jpg', '_lights.jpg');
+            const front = new THREE.MeshStandardMaterial({ map: loadFileTexture(T + tex, { repeat: rf }), roughness: 0.9 });
+            const side = new THREE.MeshStandardMaterial({ map: loadFileTexture(T + tex, { repeat: rs }), roughness: 0.9 });
+            night.facades.push({ mat: front, lights: loadFileTexture(T + lit, { repeat: rf }) }, { mat: side, lights: loadFileTexture(T + lit, { repeat: rs }) });
             const top = std(0xcfcac0, 0.95);
             const b = new THREE.Mesh(new THREE.BoxGeometry(d, H, w), [front, front, top, top, side, side]);
             b.position.set(x, H / 2, z); b.rotation.y = ry; targetGroup.add(b);
@@ -225,6 +235,7 @@
         trunks.instanceMatrix.needsUpdate = true;
         blobs.instanceMatrix.needsUpdate = true;
         targetGroup.add(trunks, blobs);
+        night.dim.push(trunks.material, blobs.material);
         [[-40, -48], [-44, 20], [34, -46], [36, 46]].forEach(([x, z]) => {
             const t = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.4, 10, 7), std(0x6a5040, 0.9)); t.position.set(x, 5, z); targetGroup.add(t);
             const c = new THREE.Mesh(new THREE.SphereGeometry(4, 10, 8), std(0x2c4a2a, 0.95, { flatShading: true })); c.scale.set(1.25, 0.45, 1.25); c.position.set(x, 10.6, z); targetGroup.add(c);
@@ -261,6 +272,12 @@
 
         // ---------- 10. sostegni del tabellone, davanti alla recinzione nord
         beams([[V(-1.8, 0, -FZ + 0.3), V(-1.8, 5.6, -FZ + 0.3), 0.07], [V(1.8, 0, -FZ + 0.3), V(1.8, 5.6, -FZ + 0.3), 0.07]], galv);
+
+        // ---------- 11. di sera: cielo stellato, finestre dei condomini accese, torri faro e lampioni accesi;
+        // il bar resta illuminato dentro (vetri caldi)
+        const barGlass = glass;
+        night.facades.push({ mat: barGlass, lights: (() => { const c = document.createElement('canvas'); c.width = c.height = 4; const g2 = c.getContext('2d'); g2.fillStyle = '#ffd9a0'; g2.fillRect(0, 0, 4, 4); return new THREE.CanvasTexture(c); })() });
+        setupOutdoorNight(targetGroup, night);
     }
 
     registerArenaBuilder('palermo', buildPalermoArchitecture);

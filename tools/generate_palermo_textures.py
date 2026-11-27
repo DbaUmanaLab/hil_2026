@@ -195,6 +195,11 @@ def flats(w, h, base, floors, cols, seed, shutter=(150, 140, 126), railing=(70, 
     img = to_img(arr).convert('RGBA')
     d = ImageDraw.Draw(img)
     rh, cw = h / floors, w / cols
+    # mappa delle luci di sera (emissiva): finestre accese sotto la tapparella, nero altrove; stesso disegno
+    # della facciata, con un generatore a parte così la facciata resta identica
+    lit = Image.new('RGB', (w, h), (0, 0, 0))
+    ld = ImageDraw.Draw(lit)
+    lr = random.Random(seed + 500)
     for r in range(floors):
         y0 = r * rh
         d.rectangle([0, y0 + rh - 6, w, y0 + rh], fill=tuple(int(v * 0.9) for v in base) + (255,))   # marcapiano
@@ -208,29 +213,45 @@ def flats(w, h, base, floors, cols, seed, shutter=(150, 140, 126), railing=(70, 
             d.rectangle([wx0, wy0, wx1, wy0 + sh], fill=shutter + (255,))                  # tapparella
             for k in range(wy0.__int__(), int(wy0 + sh), 5):
                 d.line([(wx0, k), (wx1, k)], fill=tuple(max(0, v - 16) for v in shutter) + (255,), width=1)
+            on = lr.random()
+            if on < 0.5:                                    # metà delle case accese: luce calda o luce fredda della TV
+                warm = lr.choice([(255, 196, 120), (255, 214, 150), (255, 180, 100), (190, 210, 255)])
+                k_ = lr.uniform(0.7, 1.0)
+                ld.rectangle([wx0, wy0 + sh, wx1, wy1], fill=tuple(int(v * k_) for v in warm))
+                for k in range(int(wy0) + 2, int(wy0 + sh), 5):            # filo di luce fra le stecche
+                    ld.line([(wx0, k), (wx1, k)], fill=tuple(int(v * k_ * 0.35) for v in warm), width=1)
             if r < floors - 1 or True:
                 by0 = y0 + rh * 0.6
                 if glass_balcony and rr.random() < 0.3:                                     # veranda a vetri verdi
                     d.rectangle([x0 + cw * 0.08, wy0, x0 + cw * 0.92, y0 + rh * 0.9], fill=(96, 150, 104, 255))
+                    ld.rectangle([x0 + cw * 0.08, wy0, x0 + cw * 0.92, y0 + rh * 0.9], fill=(150, 170, 110) if on < 0.5 else (0, 0, 0))
                     for k in range(4):
                         xx = x0 + cw * (0.08 + 0.84 * k / 3)
                         d.line([(xx, wy0), (xx, y0 + rh * 0.9)], fill=(230, 230, 226, 255), width=3)
+                        ld.line([(xx, wy0), (xx, y0 + rh * 0.9)], fill=(0, 0, 0), width=3)
                 else:
                     d.rectangle([x0 + cw * 0.08, by0, x0 + cw * 0.92, y0 + rh * 0.9], outline=railing + (255,), width=3)
+                    ld.rectangle([x0 + cw * 0.08, by0, x0 + cw * 0.92, y0 + rh * 0.9], outline=(0, 0, 0), width=3)
                     for k in np.arange(x0 + cw * 0.08, x0 + cw * 0.92, 7):
                         d.line([(k, by0), (k, y0 + rh * 0.9)], fill=railing + (255,), width=1)
+                        ld.line([(k, by0), (k, y0 + rh * 0.9)], fill=(0, 0, 0), width=1)
                 d.rectangle([x0 + cw * 0.04, y0 + rh * 0.9, x0 + cw * 0.96, y0 + rh * 0.97], fill=tuple(min(255, v + 10) for v in base) + (255,))
                 if awnings and rr.random() < 0.25:                                           # tende da sole
                     d.polygon([(wx0 - 8, wy0 - 4), (wx1 + 8, wy0 - 4), (wx1 + 18, wy0 + rh * 0.22), (wx0 - 18, wy0 + rh * 0.22)],
                               fill=rr.choice([(214, 168, 60, 255), (60, 110, 80, 255), (190, 80, 60, 255), (220, 220, 214, 255)]))
+                    ld.polygon([(wx0 - 8, wy0 - 4), (wx1 + 8, wy0 - 4), (wx1 + 18, wy0 + rh * 0.22), (wx0 - 18, wy0 + rh * 0.22)], fill=(0, 0, 0))
                 if rr.random() < 0.12:                                                       # condizionatore
                     d.rectangle([x0 + cw * 0.8, by0 - 30, x0 + cw * 0.95, by0 - 4], fill=(228, 228, 224, 255))
-    return img.convert('RGB')
+                    ld.rectangle([x0 + cw * 0.8, by0 - 30, x0 + cw * 0.95, by0 - 4], fill=(0, 0, 0))
+    return img.convert('RGB'), lit.filter(ImageFilter.GaussianBlur(0.6))
 
 
-save(flats(512, 512, (236, 234, 228), 4, 4, 1), 'flats_white.jpg')
-save(flats(512, 512, (230, 214, 186), 4, 4, 2, glass_balcony=True), 'flats_cream.jpg')
-save(flats(512, 512, (214, 138, 92), 4, 4, 3, shutter=(120, 92, 70)), 'flats_ochre.jpg')
+for name, args, kw in (('flats_white', ((236, 234, 228), 4, 4, 1), {}),
+                       ('flats_cream', ((230, 214, 186), 4, 4, 2), {'glass_balcony': True}),
+                       ('flats_ochre', ((214, 138, 92), 4, 4, 3), {'shutter': (120, 92, 70)})):
+    fac, lit = flats(512, 512, *args, **kw)
+    save(fac, name + '.jpg')
+    save(lit, name + '_lights.jpg')             # di sera: finestre accese (mappa emissiva)
 
 # muro in blocchetti di cemento dietro la pensilina
 bw = np.zeros((256, 512, 3), np.float32) + np.array([156, 146, 128], np.float32)

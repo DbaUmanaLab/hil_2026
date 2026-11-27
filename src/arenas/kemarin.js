@@ -41,9 +41,12 @@
         sky.position.y = -10;
         sky.renderOrder = -10;
         targetGroup.add(sky);
+        // di sera (setupOutdoorNight, in fondo): cielo stellato, finestre accese, fari e lampioni accesi
+        const night = { daySky: sky, facades: [], floods: [], lamps: [], dim: [] };
 
         // ---------- 2. terreno: prato secco tutto attorno, piazzale in cemento attorno alla pista
         const ground = new THREE.Mesh(new THREE.CircleGeometry(270, 48), std(0xa39a72, 1.0));
+        night.dim.push(ground.material);
         ground.rotation.x = -Math.PI / 2; ground.position.y = -0.04;
         targetGroup.add(ground);
         const pav = new THREE.Mesh(new THREE.PlaneGeometry(62, 104), std(0x9b9a95, 0.95));
@@ -124,6 +127,7 @@
             l.rotation.y = -side * Math.PI / 2; l.position.x = -side * 0.15;
             head.add(b, l);
             targetGroup.add(head);
+            night.floods.push({ pos: V(x - side * 0.75, H + 0.1, z), aim: V(x - side * 17, 0, z * 0.6) });
         });
 
         // lampioni stradali con il braccio ricurvo, lungo la strada (ovest) e a sud
@@ -138,11 +142,13 @@
             arm.position.set(x + (dirX ? -0.7 : 0), H, z + (dirX ? 0 : 0.7)); targetGroup.add(arm);
             const lh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.25), headMat);
             lh.position.set(x + (dirX ? -1.4 : 0), H - 0.05, z + (dirX ? 0 : 1.4)); targetGroup.add(lh);
+            night.lamps.push(V(lh.position.x, H - 0.2, lh.position.z));
         });
 
         // ---------- 6. la chiesa bianca a nord: blocco a tre piani, campanili cilindrici e corona di lamelle
         const facTex = loadFileTexture(T + 'church_facade.jpg', { repeat: [2, 1] });
         const facMat = new THREE.MeshStandardMaterial({ map: facTex, roughness: 0.9 });
+        night.facades.push({ mat: facMat, lights: loadFileTexture(T + 'church_facade_lights.jpg', { repeat: [2, 1] }) });
         const plaster = std(0xe8e8e4, 0.9);
         const CH = 9.2, CZ = -52, CL = 54, CD = 12, CXc = -4;
         const church = new THREE.Mesh(new THREE.BoxGeometry(CL, CH, CD), [plaster, plaster, plaster, plaster, facMat, facMat]);
@@ -192,12 +198,16 @@
 
         // ---------- 7. condomini a est (mattoni e intonaco beige, tetti a padiglione in coppi)
         const roofMat = new THREE.MeshStandardMaterial({ map: loadFileTexture(T + 'roof_tiles.jpg', { repeat: [3, 2] }), roughness: 0.9 });
+        night.dim.push(roofMat);
         const flat = (x, z, w, d, floors, tex) => {
             const H = floors * 3.0;
             const ft = loadFileTexture(T + tex, { repeat: [Math.max(1, Math.round(w / 15)), floors / 4] });
             const fs = loadFileTexture(T + tex, { repeat: [Math.max(1, Math.round(d / 15)), floors / 4] });
             const mFront = new THREE.MeshStandardMaterial({ map: ft, roughness: 0.9 });
             const mSide = new THREE.MeshStandardMaterial({ map: fs, roughness: 0.9 });
+            const lit = tex.replace('.jpg', '_lights.jpg');
+            night.facades.push({ mat: mFront, lights: loadFileTexture(T + lit, { repeat: [Math.max(1, Math.round(w / 15)), floors / 4] }) },
+                { mat: mSide, lights: loadFileTexture(T + lit, { repeat: [Math.max(1, Math.round(d / 15)), floors / 4] }) });
             const roofCap = std(0xd8d2c6, 0.9);
             const b = new THREE.Mesh(new THREE.BoxGeometry(d, H, w), [mFront, mFront, roofCap, roofCap, mSide, mSide]);
             b.position.set(x, H / 2, z); targetGroup.add(b);
@@ -238,6 +248,7 @@
         trunks.instanceMatrix.needsUpdate = true;
         blobs.instanceMatrix.needsUpdate = true;
         targetGroup.add(trunks, blobs);
+        night.dim.push(trunks.material, blobs.material);
         // qualche pino marittimo alto dietro la chiesa (come nelle foto)
         [[-36, -48], [-40, -58], [28, -60]].forEach(([x, z]) => {
             const t = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.35, 8, 7), std(0x5b4636, 0.9)); t.position.set(x, 4, z); targetGroup.add(t);
@@ -294,6 +305,9 @@
 
         // ---------- 11. sostegni del tabellone, montato sulla recinzione nord
         targetGroup.add(new THREE.Mesh(mergeBeamGeometry([[V(-1.8, 0, -FZ - 0.25), V(-1.8, 5.6, -FZ - 0.25), 0.07], [V(1.8, 0, -FZ - 0.25), V(1.8, 5.6, -FZ - 0.25), 0.07]]), galv));
+
+        // ---------- 12. di sera: cielo stellato, finestre di chiesa e condomini accese, torri faro e lampioni accesi
+        setupOutdoorNight(targetGroup, night);
     }
 
     registerArenaBuilder('kemarin', buildKemarinArchitecture);
