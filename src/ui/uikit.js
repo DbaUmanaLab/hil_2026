@@ -179,6 +179,7 @@
     // =====================================================================
     // livelli in ordine di priorità: vince il primo visibile
     const LAYERS = [
+        { sel: '#credits-screen' },                     // crediti dalla schermata iniziale: Esc preme "Indietro"
         { sel: '.cp-overlay' },
         { sel: '#match-stats-modal' },
         { sel: '#pg-overlay' },

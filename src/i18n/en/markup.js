@@ -185,6 +185,8 @@ I18N.add('en', {
     'Annulla': 'Cancel',
     'Esci dalla partita': 'Quit match',
     // schermata di caricamento
+    // crediti
+    'Crediti': 'Credits',
     'Lo sapevi che?': 'Did you know?',
     'Caricamento': 'Loading'
 });

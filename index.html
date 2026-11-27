@@ -1577,6 +1577,23 @@
         .splash-opt-btn { height: 38px; padding: 0 14px 0 10px; border-radius: 999px; display: inline-flex; align-items: center; gap: 7px; color: #f6b511; background: rgba(10,14,26,.6); border: 1.5px solid rgba(246,181,17,.55);
             font-family: 'Oswald', sans-serif; font-weight: 600; font-size: 13px; letter-spacing: .14em; text-transform: uppercase; transition: background .2s, transform .2s; flex: 0 0 auto; }
         .splash-opt-btn:hover { background: rgba(10,14,26,.85); transform: scale(1.04); }
+        #credits-screen { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 16px; background: rgba(3,6,16,.82); backdrop-filter: blur(6px); }
+        #credits-screen.hidden { display: none; }
+        #credits-screen .cr-panel { width: min(760px, 100%); max-height: 100%; display: flex; flex-direction: column; background: linear-gradient(180deg, #0d1529 0%, #080d1a 100%); border: 1.5px solid rgba(246,181,17,.45); border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.6); overflow: hidden; }
+        #credits-screen .cr-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 18px 22px 14px; border-bottom: 1px solid rgba(148,163,184,.18); }
+        #credits-screen .cr-kicker { font-family: Oswald, sans-serif; font-size: 12px; letter-spacing: .22em; color: #f6b511; text-transform: uppercase; }
+        #credits-screen .cr-title { font-family: Montserrat, sans-serif; font-weight: 900; font-size: clamp(24px, 4vw, 34px); color: #fff; text-transform: uppercase; letter-spacing: .02em; line-height: 1; margin-top: 2px; }
+        #credits-screen .cr-body { overflow-y: auto; scrollbar-color: rgba(246,181,17,.5) transparent; scrollbar-width: thin; padding: 8px 22px 22px; font-family: Oswald, sans-serif; color: #cbd5e1; }
+        #credits-screen .cr-sec { margin-top: 16px; }
+        #credits-screen .cr-sec h3 { font-size: 13px; letter-spacing: .18em; text-transform: uppercase; color: #f6b511; margin-bottom: 8px; }
+        #credits-screen .cr-sec p { font-size: 14px; line-height: 1.45; color: #94a3b8; margin-bottom: 8px; }
+        #credits-screen .cr-item { display: grid; grid-template-columns: 1fr auto; gap: 2px 12px; padding: 9px 0; border-top: 1px solid rgba(148,163,184,.12); }
+        #credits-screen .cr-item:first-of-type { border-top: 0; }
+        #credits-screen .cr-name { font-size: 16px; font-weight: 600; color: #f1f5f9; letter-spacing: .02em; }
+        #credits-screen .cr-name a { color: inherit; text-decoration: none; border-bottom: 1px dotted rgba(246,181,17,.6); }
+        #credits-screen .cr-name a:hover, #credits-screen .cr-name a:focus { color: #f6b511; }
+        #credits-screen .cr-lic { font-size: 12px; letter-spacing: .08em; color: #f6b511; white-space: nowrap; align-self: center; text-transform: uppercase; }
+        #credits-screen .cr-who { grid-column: 1 / -1; font-size: 13px; color: #94a3b8; }
         .splash-opt-btn kbd { font: inherit; font-size: 10px; color: #94a3b8; border: 1px solid rgba(148,163,184,.45); border-radius: 4px; padding: 0 5px; }
         #pause-menu.is-settings { z-index: 75; background-color: #050913; background-image: linear-gradient(90deg, rgba(5,9,19,.94) 0%, rgba(5,9,19,.78) 34%, rgba(5,9,19,.38) 62%, rgba(5,9,19,.55) 100%), linear-gradient(180deg, rgba(5,9,19,.35) 0%, transparent 30%, transparent 70%, rgba(5,9,19,.7) 100%), url('assets/backgrounds/options_screen.jpg'); background-size: cover; background-position: center 30%; animation: pzSettingsBg 18s ease-in-out infinite alternate; }
         @keyframes pzSettingsBg { from { background-position: center 30%; } to { background-position: 60% 45%; } }
@@ -1793,6 +1810,23 @@
     </script>
 
     <!-- SCHERMATA INIZIALE — STILE EA / NHL TILE MENU -->
+    <!-- Crediti: modelli 3D, teste, caratteri e librerie di terzi (contenuto in renderCreditsScreen) -->
+    <div id="credits-screen" class="hidden" role="dialog" aria-modal="true" aria-labelledby="credits-title">
+        <div class="cr-panel">
+            <div class="cr-head">
+                <div>
+                    <div class="cr-kicker">HIL 2026</div>
+                    <h2 id="credits-title" class="cr-title">Crediti</h2>
+                </div>
+                <button type="button" id="credits-close-btn" class="splash-opt-btn" data-keyback aria-label="Chiudi">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+                    <span>Indietro</span><kbd class="hidden sm:inline">Esc</kbd>
+                </button>
+            </div>
+            <div id="credits-body" class="cr-body"></div>
+        </div>
+    </div>
+
     <div id="title-splash-screen" class="fixed inset-0 flex flex-col pointer-events-auto z-[60] overflow-hidden" style="background:#060b14;">
 
         <!-- Scanlines sottili -->
@@ -1812,6 +1846,10 @@
                 <button type="button" id="splash-music-btn" class="splash-music-btn" aria-label="Musica on/off" title="Musica">
                     <svg id="splash-music-on" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
                     <svg id="splash-music-off" class="hidden" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/><path d="M3 3l18 18"/></svg>
+                </button>
+                <button type="button" id="splash-credits-btn" class="splash-opt-btn" aria-label="Crediti" title="Crediti (C)">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v6"/><path d="M12 7.5h.01"/></svg>
+                    <span class="hidden sm:inline">Crediti</span><kbd class="hidden sm:inline">C</kbd>
                 </button>
                 <button type="button" id="splash-options-btn" class="splash-opt-btn" aria-label="Opzioni" title="Opzioni (O)">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1.08-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1.08 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
@@ -1878,7 +1916,7 @@
                 The unofficial hockey in line game
             </div>
             <div class="splash-keys text-[11px] font-black uppercase tracking-widest text-amber-300">
-                <span class="splash-keys-kb"><kbd>←</kbd><kbd>→</kbd> Scegli <i></i> <kbd>Invio</kbd> Gioca <i></i> <kbd>O</kbd> Opzioni <i></i> <kbd>M</kbd> Musica</span>
+                <span class="splash-keys-kb"><kbd>←</kbd><kbd>→</kbd> Scegli <i></i> <kbd>Invio</kbd> Gioca <i></i> <kbd>O</kbd> Opzioni <i></i> <kbd>C</kbd> Crediti <i></i> <kbd>M</kbd> Musica</span>
                 <span class="splash-keys-touch animate-pulse">Tocca una modalità per iniziare</span>
                 <span class="splash-keys-tv"><kbd>◀</kbd><kbd>▶</kbd> Scegli <i></i> <kbd>OK</kbd> Gioca <i></i> <kbd>▲</kbd> Opzioni e musica <i></i> <kbd>Indietro</kbd> ×2 Esci</span>
                 <span class="splash-keys-pad"><kbd>◀</kbd><kbd>▶</kbd> Scegli <i></i> <kbd>A</kbd> Gioca <i></i> <kbd>B</kbd> Indietro <i></i> <kbd>▲</kbd> Opzioni e musica</span>
@@ -8771,6 +8809,78 @@
             return grp;
         }
 
+        // Materiale dello scarpone modellato: colori per vertice (texture originale ricolorata in tools/generate_helmets.py)
+        let modelSkateBodyMat = null;
+        function modelSkateBodyMaterial() {
+            if (!modelSkateBodyMat) modelSkateBodyMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.5, metalness: 0.05 });
+            return modelSkateBodyMat;
+        }
+        // Pantaloncini modellati ("GEFF ESPAÑA - MSK Hockey", GEFF SPORT, CC BY 4.0) nel colore dei pantaloni della divisa
+        // con la banda laterale. Pelle a tre ossa: bacino, coscia sinistra e coscia destra; sotto il cavallo il tessuto
+        // segue sempre di più la coscia del suo lato, così i pantaloncini si muovono con le gambe senza strapparsi.
+        const modelShortsGeo = {};
+        function modelShortsGeometry(role, lod, gW) {
+            const key = role + '|' + lod + '|' + gW;
+            if (modelShortsGeo[key]) return modelShortsGeo[key];
+            const g = window.HIL_HELMETS.geometry('shorts', role, lod).clone();
+            if (gW !== 1) g.scale(gW, 1, 1.06);
+            const p = g.attributes.position, n = p.count;
+            const idx = new Uint16Array(n * 4), w = new Float32Array(n * 4);
+            const ss = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+            for (let i = 0; i < n; i++) {
+                const x = p.getX(i), y = p.getY(i);
+                const leg = ss(-0.06, -0.26, y);                 // 0 sopra il cavallo, 1 verso l'orlo
+                const left = 1 - ss(-0.05, 0.05, x);              // lato sinistro (x < 0), sfumato al centro
+                idx.set([0, 1, 2, 0], i * 4);
+                w.set([1 - leg, leg * left, leg * (1 - left), 0], i * 4);
+            }
+            g.setAttribute('skinIndex', new THREE.Uint16BufferAttribute(idx, 4));
+            g.setAttribute('skinWeight', new THREE.Float32BufferAttribute(w, 4));
+            modelShortsGeo[key] = g;
+            return g;
+        }
+        // banda laterale disegnata nello shader sulla posizione di riposo (sistema del bacino): fascia verticale di
+        // 9 cm sui due fianchi, bordi diritti qualunque sia la maglia dei triangoli
+        const modelShortsMats = {};
+        function modelShortsMaterial(color, stripeColor, gW) {
+            const key = color + '|' + stripeColor + '|' + gW;
+            if (modelShortsMats[key]) return modelShortsMats[key];
+            const m = new THREE.MeshStandardMaterial({ color, roughness: 0.66, side: THREE.DoubleSide });
+            m.onBeforeCompile = sh => {
+                sh.uniforms.uStripe = { value: new THREE.Color(stripeColor) };
+                sh.uniforms.uSideX = { value: 0.15 * gW };
+                sh.vertexShader = 'varying vec3 vRestPos;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n\tvRestPos = position;');
+                sh.fragmentShader = 'uniform vec3 uStripe;\nuniform float uSideX;\nvarying vec3 vRestPos;\n' + sh.fragmentShader.replace('#include <color_fragment>',
+                    '#include <color_fragment>\n' +
+                    '\tfloat sideK = smoothstep(uSideX - 0.004, uSideX + 0.004, abs(vRestPos.x));\n' +
+                    '\tfloat bandK = 1.0 - smoothstep(0.042, 0.047, abs(vRestPos.z));\n' +
+                    '\tdiffuseColor.rgb = mix(diffuseColor.rgb, uStripe, sideK * bandK);');
+            };
+            m.customProgramCacheKey = () => 'hilShortsStripe';
+            modelShortsMats[key] = m;
+            return m;
+        }
+        function buildModelShorts(root, hipGroup, legL, legR, gW, color, stripeColor, low) {
+            const lod = low ? 'lo' : 'hi';
+            const grp = new THREE.Group();
+            // ossa nei centri di rotazione: bacino e anche (posa di riposo: tutte le rotazioni a zero)
+            const bones = [new THREE.Bone(), new THREE.Bone(), new THREE.Bone()];
+            hipGroup.add(bones[0]); legL.add(bones[1]); legR.add(bones[2]);
+            root.updateMatrixWorld(true);
+            const skeleton = new THREE.Skeleton(bones);
+            ['shell', 'stripe'].forEach(role => {
+                const m = new THREE.SkinnedMesh(modelShortsGeometry(role, lod, gW), modelShortsMaterial(color, stripeColor, gW));
+                m.frustumCulled = false;
+                m.castShadow = true;
+                grp.add(m);
+                hipGroup.add(grp);
+                root.updateMatrixWorld(true);
+                m.bind(skeleton, m.matrixWorld);
+            });
+            hipGroup.remove(grp);
+            return grp;
+        }
+
         function createSkater(clubId, kitId, teamSide, role, lineIndex, isGoalie, jerseyNum = '21', playerName = 'LAGO') {
             const root = new THREE.Group();
             const isRef = clubId === 'ref';
@@ -8811,15 +8921,20 @@
             hipGroup.position.y = 0.88;
             root.add(hipGroup);
             const gW = isGoalie ? 1.12 : 1.0;
-            const shorts = new THREE.Mesh(buildEllipticLathe([
-                [-0.2, 0.25 * gW, 0.19], [-0.1, 0.252 * gW, 0.19], [0.0, 0.242 * gW, 0.18], [0.1, 0.225 * gW, 0.165], [0.15, 0.21 * gW, 0.155]
-            ], SEG, 0, 1, SM), pantsMat);
-            hipGroup.add(shorts);
-            const belt = new THREE.Mesh(new THREE.TorusGeometry(1, 0.025, 6, SEG), blackMat);
-            belt.scale.set(0.212 * gW, 0.157, 1);
-            belt.rotation.x = Math.PI / 2;
-            belt.position.y = 0.14;
-            hipGroup.add(belt);
+            const GEAR = window.HIL_HELMETS;
+            const modelShorts = !!(GEAR && GEAR.has('shorts'));
+            let shorts = null;                           // pantaloncini a tornio (riserva): la corporatura li allarga
+            if (!modelShorts) {
+                shorts = new THREE.Mesh(buildEllipticLathe([
+                    [-0.2, 0.25 * gW, 0.19], [-0.1, 0.252 * gW, 0.19], [0.0, 0.242 * gW, 0.18], [0.1, 0.225 * gW, 0.165], [0.15, 0.21 * gW, 0.155]
+                ], SEG, 0, 1, SM), pantsMat);
+                hipGroup.add(shorts);
+                const belt = new THREE.Mesh(new THREE.TorusGeometry(1, 0.025, 6, SEG), blackMat);
+                belt.scale.set(0.212 * gW, 0.157, 1);
+                belt.rotation.x = Math.PI / 2;
+                belt.position.y = 0.14;
+                hipGroup.add(belt);
+            }
 
             // ---------- 2. busto: maglia larga sopra le protezioni (spalle squadrate)
             const bodyPivot = new THREE.Group();
@@ -8938,18 +9053,22 @@
             function buildLeg(sideX) {
                 const legPivot = new THREE.Group();
                 legPivot.position.set(sideX, 0.85, 0);
+                // coscia: con i pantaloncini modellati resta la guaina (girdle) un po' più stretta, nel colore dei pantaloni
+                const tk = modelShorts ? 0.88 : 1;
                 const thigh = new THREE.Mesh(buildEllipticLathe([
-                    [-0.37, 0.11 * gW, 0.12], [-0.3, 0.122 * gW, 0.13], [-0.15, 0.132 * gW, 0.138], [-0.02, 0.13 * gW, 0.136], [0.05, 0.12 * gW, 0.125]
+                    [-0.37, 0.11 * gW * tk, 0.12 * tk], [-0.3, 0.122 * gW * tk, 0.13 * tk], [-0.15, 0.132 * gW * tk, 0.138 * tk], [-0.02, 0.13 * gW * tk, 0.136 * tk], [0.05, 0.12 * gW * tk, 0.125 * tk]
                 ], LSEG, 0, 1, 8), pantsMat);
                 legPivot.add(thigh);
-                const band = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.3, 0.06), stripeMat);
-                band.position.set(Math.sign(sideX) * 0.13 * gW, -0.17, 0);
-                legPivot.add(band);
-                const hem = new THREE.Mesh(new THREE.TorusGeometry(1, 0.012, 5, LSEG), stripeMat);
-                hem.scale.set(0.11 * gW, 0.12, 1);
-                hem.rotation.x = Math.PI / 2;
-                hem.position.y = -0.365;
-                legPivot.add(hem);
+                if (!modelShorts) {
+                    const band = new THREE.Mesh(new THREE.BoxGeometry(0.018, 0.3, 0.06), stripeMat);
+                    band.position.set(Math.sign(sideX) * 0.13 * gW, -0.17, 0);
+                    legPivot.add(band);
+                    const hem = new THREE.Mesh(new THREE.TorusGeometry(1, 0.012, 5, LSEG), stripeMat);
+                    hem.scale.set(0.11 * gW, 0.12, 1);
+                    hem.rotation.x = Math.PI / 2;
+                    hem.position.y = -0.365;
+                    legPivot.add(hem);
+                }
 
                 const kneePivot = new THREE.Group();
                 kneePivot.position.set(0, -0.35, 0);
@@ -8991,6 +9110,17 @@
                 const skate = new THREE.Group();
                 skate.position.set(0, -0.37, 0);
                 kneePivot.add(skate);
+                if (GEAR && GEAR.has('skate')) {
+                    // pattino modellato ("Modern Rollerblades", assetfactory): scarpone con i colori per vertice,
+                    // ruote gialle (giocatori) o grigie (arbitri)
+                    const lodS = lowQ ? 'lo' : 'hi';
+                    const body = new THREE.Mesh(GEAR.geometry('skate', 'body', lodS), modelSkateBodyMaterial());
+                    const wheels = new THREE.Mesh(GEAR.geometry('skate', 'wheels', lodS), wheelMat);
+                    body.castShadow = wheels.castShadow = true;
+                    skate.add(body, wheels);
+                    root.add(legPivot);
+                    return { legPivot, kneePivot, skate };
+                }
                 const bootUpper = new THREE.Mesh(createRoundedBoxGeometry(0.105, 0.13, 0.26, 0.035), bootMat);
                 bootUpper.position.set(0, -0.025, -0.03);
                 const toe = new THREE.Mesh(new THREE.SphereGeometry(0.055, 14, 10), bootMat);
@@ -9020,6 +9150,7 @@
             }
             const leftLeg = buildLeg(-0.128);
             const rightLeg = buildLeg(0.128);
+            if (modelShorts) hipGroup.add(buildModelShorts(root, hipGroup, leftLeg.legPivot, rightLeg.legPivot, gW, pantsMat.color.getHex(), stripeMat.color.getHex(), lowQ));
 
             // ---------- 5. braccia: maniche larghe della maglia, guanti imbottiti / attrezzatura portiere
             const aW = isGoalie ? 1.18 : 1.0;
@@ -9133,6 +9264,17 @@
                         stickGroup.add(art);
                     });
                 }
+                if (!isGoalie && GEAR && GEAR.has('stick')) {
+                    // stecca modellata: asta con la grafica della linea scelta, lama coperta dal nastro, pomello bianco
+                    stickGroup.remove(shaft, knob);
+                    const tapeBlackM = stickModel !== 'vortex' && (String(jerseyNum).length % 2 === 0);
+                    stickGroup.add(
+                        new THREE.Mesh(GEAR.geometry('stick', 'shaft', 'hi'), getStickBrandMaterial(stickModel)),
+                        new THREE.Mesh(GEAR.geometry('stick', 'blade', 'hi'), new THREE.MeshStandardMaterial({ color: tapeBlackM ? 0x1a1a1d : 0xf0f0f0, roughness: 0.9 })),
+                        new THREE.Mesh(GEAR.geometry('stick', 'knob', 'hi'), new THREE.MeshStandardMaterial({ color: 0xf2f2f2, roughness: 0.9 }))
+                    );
+                    root.add(stickGroup);
+                }
                 const bladeLen = isGoalie ? 0.46 : 0.34, bladeH = isGoalie ? 0.11 : 0.085;
                 const bladeGeo = createRoundedBoxGeometry(isGoalie ? 0.05 : 0.016, bladeH, bladeLen, 0.006, 4).clone();
                 const bp = bladeGeo.attributes.position;
@@ -9148,8 +9290,10 @@
                 const tape = new THREE.Mesh(createRoundedBoxGeometry(isGoalie ? 0.056 : 0.022, bladeH + 0.004, bladeLen * 0.5, 0.006), new THREE.MeshStandardMaterial({ color: tapeBlack ? 0x1a1a1d : 0xf4f4f4, roughness: 0.95 }));
                 tape.position.set(0.01, -shaftLen + 0.2, -bladeLen * 0.5);
                 tape.rotation.y = 0.12;
-                stickGroup.add(blade, tape);
-                root.add(stickGroup);
+                if (!stickGroup.parent) {
+                    stickGroup.add(blade, tape);
+                    root.add(stickGroup);
+                }
             }
 
             const skaterObj = {
@@ -16039,6 +16183,64 @@
         }
         window.openSettingsScreen = openSettingsScreen;
 
+        // --- CREDITI (dalla schermata iniziale) ---
+        // Opere di terzi usate nel gioco, con autore, licenza e collegamento: i modelli 3D arrivano da
+        // src/game/HelmetModels.js (generato da tools/generate_helmets.py), il resto è qui.
+        const CREDITS_EXTRA = {
+            people: [
+                { title: 'MakeHuman', author: 'MakeHuman Community', url: 'https://github.com/makehumancommunity/makehuman', license: 'CC0 1.0',
+                  note: 'Teste e volti dei personaggi (mesh base, pelli, occhi e sopracciglia)' }
+            ],
+            fonts: [
+                { title: 'Montserrat', author: 'The Montserrat Project Authors', url: 'https://fonts.google.com/specimen/Montserrat', license: 'SIL OFL 1.1' },
+                { title: 'Oswald', author: 'The Oswald Project Authors', url: 'https://fonts.google.com/specimen/Oswald', license: 'SIL OFL 1.1' }
+            ],
+            libs: [
+                { title: 'three.js', author: 'three.js authors', url: 'https://threejs.org', license: 'MIT' },
+                { title: 'Tailwind CSS', author: 'Tailwind Labs', url: 'https://tailwindcss.com', license: 'MIT' }
+            ]
+        };
+        // ruolo di ogni modello 3D nel gioco (per titolo del modello)
+        const CREDITS_MODEL_ROLE = {
+            'Hockey Helmet Washington Capitals': 'Casco di giocatori e arbitri',
+            'Helmet for Puck': 'Maschera del portiere',
+            'pads': 'Gambali del portiere',
+            'hockey_stick': 'Stecca dei giocatori',
+            'GEFF ESPAÑA - MSK Hockey': 'Pantaloncini',
+            'Modern Rollerblades': 'Pattini'
+        };
+        function renderCreditsScreen() {
+            const esc = v => String(v).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+            const item = it => `<div class="cr-item">
+                    <div class="cr-name"><a href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.title)}</a></div>
+                    <div class="cr-lic">${esc(it.license)}</div>
+                    <div class="cr-who">${esc(it.author)}${it.note ? ' • ' + esc(_t(it.note)) : ''}</div>
+                </div>`;
+            const models = ((window.HIL_HELMETS && window.HIL_HELMETS.credits) || []).map(c => Object.assign({}, c, { note: CREDITS_MODEL_ROLE[c.title] || '' }));
+            const sec = (title, intro, list) => list.length ? `<div class="cr-sec"><h3>${esc(_t(title))}</h3>${intro ? `<p>${esc(_t(intro))}</p>` : ''}${list.map(item).join('')}</div>` : '';
+            document.getElementById('credits-body').innerHTML =
+                sec('Modelli 3D', 'Modelli da Sketchfab: nel gioco ne usiamo solo le forme, ridotte e ricolorate; loghi e marchi originali sono stati tolti.', models) +
+                sec('Personaggi', '', CREDITS_EXTRA.people) +
+                sec('Caratteri', '', CREDITS_EXTRA.fonts) +
+                sec('Librerie', '', CREDITS_EXTRA.libs) +
+                `<div class="cr-sec"><h3>${esc(_t('Squadre e marchi'))}</h3><p>${esc(_t('Loghi, maglie, nomi e marchi delle squadre, delle leghe, delle competizioni e degli sponsor sono di proprietà delle rispettive società e organizzazioni.'))}</p></div>`;
+        }
+        function openCreditsScreen() {
+            renderCreditsScreen();
+            const el = document.getElementById('credits-screen');
+            el.classList.remove('hidden');
+            window.creditsOpen = true;
+            const b = document.getElementById('credits-close-btn');
+            if (b) try { b.focus({ preventScroll: true }); } catch (e) {}
+        }
+        function closeCreditsScreen() {
+            document.getElementById('credits-screen').classList.add('hidden');
+            window.creditsOpen = false;
+            const b = document.getElementById('splash-credits-btn');
+            if (b && !titleSplashScreen.classList.contains('hidden')) try { b.focus({ preventScroll: true }); } catch (e) {}
+        }
+        window.openCreditsScreen = openCreditsScreen;
+
         function setPauseFocus(idx) {
             const items = Array.from(document.querySelectorAll('#pz-nav .pz-item'));
             if (!items.length) return;
@@ -16819,12 +17021,15 @@
                     if (e.key === 'Escape') { e.preventDefault(); playUiSoundFor('back'); if (pausePage) closePausePage(); else closeSettingsScreen(); }
                     return;
                 }
+                // crediti aperti: Esc e frecce li gestisce src/ui/uikit.js (Esc preme "Indietro"), niente scorciatoie sotto
+                if (window.creditsOpen) return;
                 // scelta del livello di difficoltà aperta: tasti tutti a src/ui/uikit.js, niente scorciatoie sotto
                 if (document.querySelector('.df-overlay')) return;
                 if (!titleSplashScreen.classList.contains('hidden')) {
                     // scelta della modalità: frecce, Invio e Spazio li gestisce src/ui/uikit.js (spostano il fuoco tra
                     // tessere e pulsanti della testata e premono quello selezionato); qui solo le scorciatoie
                     if ((e.key === 'o' || e.key === 'O') && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); openSettingsScreen(); return; }
+                    if ((e.key === 'c' || e.key === 'C') && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); openCreditsScreen(); return; }
                     if ((e.key === 'm' || e.key === 'M') && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); const mb = document.getElementById('splash-music-btn'); if (mb) mb.click(); return; }
                     // Invio/Spazio senza nulla selezionato (es. fuoco perso): parte la tessera evidenziata
                     if ((e.key === 'Enter' || e.code === 'Space') && !titleSplashScreen.contains(document.activeElement)) {
@@ -17087,6 +17292,12 @@
             bindToggle('splash-music-btn', () => window.gameAudio && window.gameAudio.setMusicEnabled(!window.gameAudio.musicEnabled));
             const optBtn = document.getElementById('splash-options-btn');
             if (optBtn) optBtn.addEventListener('click', e => { e.stopPropagation(); openSettingsScreen(); });
+            const crBtn = document.getElementById('splash-credits-btn');
+            if (crBtn) crBtn.addEventListener('click', e => { e.stopPropagation(); openCreditsScreen(); });
+            const crClose = document.getElementById('credits-close-btn');
+            if (crClose) crClose.addEventListener('click', e => { e.stopPropagation(); closeCreditsScreen(); });
+            const crScreen = document.getElementById('credits-screen');
+            if (crScreen) crScreen.addEventListener('click', e => { if (e.target === crScreen) closeCreditsScreen(); });
             bindToggle('sfx-toggle-btn', () => window.gameAudio && window.gameAudio.setSfxEnabled(!window.gameAudio.sfxEnabled));
             window.refreshAudioToggles = refreshAudioToggles;
             setTimeout(refreshAudioToggles, 0);

@@ -1,6 +1,23 @@
 // Traduzioni inglesi: presentazione della partita, livelli di difficoltà, pagina Lingua (vedi src/i18n/i18n.js)
 I18N.add('en', {
     'HIL 2026 - Hockey in line': 'HIL 2026 - Inline Hockey',
+    // crediti (schermata iniziale)
+    'Modelli 3D': '3D models',
+    'Modelli da Sketchfab: nel gioco ne usiamo solo le forme, ridotte e ricolorate; loghi e marchi originali sono stati tolti.':
+        'Models from Sketchfab: the game only uses their shapes, simplified and recolored; the original logos and trademarks have been removed.',
+    'Personaggi': 'Characters',
+    'Caratteri': 'Fonts',
+    'Librerie': 'Libraries',
+    'Squadre e marchi': 'Teams and trademarks',
+    'Loghi, maglie, nomi e marchi delle squadre, delle leghe, delle competizioni e degli sponsor sono di proprietà delle rispettive società e organizzazioni.':
+        'Logos, jerseys, names and trademarks of the teams, leagues, competitions and sponsors are the property of their respective clubs and organizations.',
+    'Teste e volti dei personaggi (mesh base, pelli, occhi e sopracciglia)': 'Character heads and faces (base mesh, skins, eyes and eyebrows)',
+    'Casco di giocatori e arbitri': 'Player and referee helmet',
+    'Maschera del portiere': 'Goalie mask',
+    'Gambali del portiere': 'Goalie leg pads',
+    'Stecca dei giocatori': 'Player stick',
+    'Pantaloncini': 'Shorts',
+    'Pattini': 'Skates',
     // presentazione della partita (src/ui/MatchIntro.js)
     'Amichevole': 'Friendly',
     'Partita rapida': 'Quick Match',
