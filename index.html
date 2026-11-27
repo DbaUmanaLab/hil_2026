@@ -5826,6 +5826,28 @@
             });
         }
         // gambali del portiere: V nel colore della squadra con filetti neri, marchio verticale sul lato esterno
+        // materiali del gambale modellato: la grafica di goaliePadTexture su fondo bianco (UV piatte da davanti)
+        const goaliePadMats = {};
+        function goaliePadFrontMaterial(accentHex, outerRight) {
+            const key = accentHex + '|' + (outerRight ? 1 : 0);
+            if (goaliePadMats[key]) return goaliePadMats[key];
+            const art = goaliePadTexture(accentHex, outerRight).image;
+            const c = document.createElement('canvas');
+            c.width = art.width; c.height = art.height;
+            const g = c.getContext('2d');
+            g.fillStyle = '#f4f5f7';
+            g.fillRect(0, 0, c.width, c.height);
+            g.drawImage(art, 0, 0);
+            const tex = new THREE.CanvasTexture(c);
+            tex.anisotropy = getActiveQualityPreset().anisotropy || 1;
+            goaliePadMats[key] = new THREE.MeshStandardMaterial({ map: tex, roughness: 0.45 });
+            return goaliePadMats[key];
+        }
+        function goaliePadBackMaterial() {
+            if (!goaliePadMats.back) goaliePadMats.back = new THREE.MeshStandardMaterial({ color: 0xd8dbe0, roughness: 0.6 });
+            return goaliePadMats.back;
+        }
+
         function goaliePadTexture(accentHex, outerRight) {
             const acc = '#' + accentHex.toString(16).padStart(6, '0');
             return gearCanvasTexture(`pad|${accentHex}|${outerRight ? 1 : 0}`, 256, 640, (g, w, h) => {
@@ -8270,6 +8292,30 @@
             return jerseyKitCache[src];
         }
 
+        // Fasce del retro (orlo, spalle) con i colori netti della divisa: la media delle colonne ai bordi della foto
+        // sfuma le righe; ogni riga viene portata sul colore più vicino fra fondo, accenti e colori della manica
+        function sharpJerseyBand(info) {
+            if (info.sharpBand) return info.sharpBand;
+            const src = info.band, n = src.height;
+            // fondo, accenti e colori della manica ben distinti dal fondo (i grigi chiari tornano al fondo)
+            const pal = [info.base, info.accent, info.accent2].concat((info.sleevePalette || []).filter(c => rgbDist(c, info.base) > 90))
+                .filter((c, i) => i === 0 || rgbDist(c, info.base) > 90);
+            const sd = src.getContext('2d').getImageData(0, 0, 1, n).data;
+            const out = document.createElement('canvas');
+            out.width = 1; out.height = n;
+            const octx = out.getContext('2d'), img = octx.createImageData(1, n);
+            for (let r = 0; r < n; r++) {
+                const c = [sd[r * 4], sd[r * 4 + 1], sd[r * 4 + 2]];
+                let best = c, bd = 1e9;
+                pal.forEach(q => { const d = rgbDist(c, q); if (d < bd) { bd = d; best = q; } });
+                const k = bd < 120 ? best : c;
+                img.data.set([k[0], k[1], k[2], 255], r * 4);
+            }
+            octx.putImageData(img, 0, 0);
+            info.sharpBand = out;
+            return out;
+        }
+
         // Disegna la texture del busto: fronte proiettato ortograficamente, retro con fasce, nome e numero
         function paintJerseyCanvas(canvas, info, fallback, num, name) {
             const ctx = canvas.getContext('2d');
@@ -8279,7 +8325,7 @@
             ctx.fillRect(0, 0, W, H);
             if (info.ok) {
                 const cr = info.crop, cw = cr.x1 - cr.x0, ch = cr.y1 - cr.y0;
-                ctx.drawImage(info.band, 0, 0, 1, info.band.height, half, 0, half, H);
+                ctx.drawImage(sharpJerseyBand(info), 0, 0, 1, info.band.height, half, 0, half, H);
                 for (let c = 0; c < half; c++) {
                     const u = (c + 0.5) / W;
                     const sxp = cr.x0 + (1 - Math.cos(2 * Math.PI * u)) / 2 * (cw - 1);
@@ -8357,6 +8403,82 @@
                 normalScale: new THREE.Vector2(0.35, 0.35),
                 roughness: 0.72, metalness: 0.0
             }, opts));
+        }
+
+        // calotta della spalla con le UV ristrette alla cima della manica (v vicino a 1)
+        const shoulderCapCache = {};
+        function shoulderCapGeometry(aW) {
+            const key = String(aW);
+            if (shoulderCapCache[key]) return shoulderCapCache[key];
+            const g = new THREE.SphereGeometry(0.108 * aW, 18, 12);
+            const uv = g.attributes.uv;
+            for (let i = 0; i < uv.count; i++) uv.setY(i, 0.965 + uv.getY(i) * 0.03);
+            shoulderCapCache[key] = g;
+            return g;
+        }
+
+        // Scollo a V delle maglie da hockey: fascia che gira dietro il collo e scende davanti a V sul petto,
+        // appoggiata sulla calotta del busto (stesso sistema del busto: davanti -Z, y dal bacino)
+        const jerseyCollarCache = {};
+        function jerseyCollarGeometry(low) {
+            const key = low ? 'lo' : 'hi';
+            if (jerseyCollarCache[key]) return jerseyCollarCache[key];
+            const N = low ? 28 : 56, pts = [];
+            for (let i = 0; i < N; i++) {
+                const a = (i / N) * Math.PI * 2;                 // 0 = davanti
+                const f = Math.cos(a);                           // 1 davanti, -1 dietro
+                const v = Math.max(0, f - 0.35) / 0.65;           // quanto è nella V davanti
+                const vv = Math.pow(v, 1.6);
+                const rx = 0.1 + 0.012 * (1 - v), rz = 0.084;
+                const x = Math.sin(a) * rx * (1 - 0.82 * vv);
+                const z = -f * rz - 0.06 * vv;                   // la punta della V avanza sul petto
+                const y = 0.728 - 0.004 * (1 - f) - 0.085 * vv;  // e scende
+                pts.push(new THREE.Vector3(x, y, z + 0.008));
+            }
+            const curve = new THREE.CatmullRomCurve3(pts, true);
+            const g = new THREE.TubeGeometry(curve, N * 2, 0.014, low ? 4 : 6, true);
+            jerseyCollarCache[key] = g;
+            return g;
+        }
+        // colore dello scollo nella foto: i bordi della V sotto il colletto (fascia alta al centro della maglia),
+        // il colore più frequente diverso dal fondo; se non c'è, l'accento della divisa
+        function jerseyCollarColor(info) {
+            if (info.collarColor) return info.collarColor;
+            let col = rgbDist(info.accent, info.base) > 80 ? info.accent : info.accent2;
+            try {
+                const cr = info.crop, cw = cr.x1 - cr.x0, ch = cr.y1 - cr.y0;
+                const x0 = Math.round(cr.x0 + cw * 0.36), w = Math.max(1, Math.round(cw * 0.28));
+                const y0 = Math.round(cr.y0), h = Math.max(1, Math.round(ch * 0.12));
+                const c = document.createElement('canvas');
+                c.width = w; c.height = h;
+                const g = c.getContext('2d');
+                g.drawImage(info.img, x0, y0, w, h, 0, 0, w, h);
+                const d = g.getImageData(0, 0, w, h).data, hist = {};
+                for (let i = 0; i < d.length; i += 4) {
+                    if (d[i + 3] < 200) continue;
+                    const q = [d[i], d[i + 1], d[i + 2]];
+                    if (rgbDist(q, info.base) < 70) continue;
+                    const key = (q[0] >> 5) + ',' + (q[1] >> 5) + ',' + (q[2] >> 5);
+                    const e = hist[key] || (hist[key] = { n: 0, r: 0, g: 0, b: 0 });
+                    e.n++; e.r += q[0]; e.g += q[1]; e.b += q[2];
+                }
+                const top = Object.values(hist).sort((a, b) => b.n - a.n)[0];
+                if (top && top.n > 20) col = [top.r / top.n, top.g / top.n, top.b / top.n];
+            } catch (e) { /* immagine non leggibile: resta l'accento */ }
+            info.collarColor = col;
+            return col;
+        }
+        function getKitCollarMaterial(clubId, kitId) {
+            const key = 'collar|' + clubId + '|' + kitId;
+            if (playerJerseyCache[key]) return playerJerseyCache[key];
+            const fb = kitFallbackColors(clubId, kitId);
+            const mat = new THREE.MeshStandardMaterial({ color: new THREE.Color(rgbCss(fb.accent)), roughness: 0.7 });
+            analyzeJerseyImage(getKitJerseySrc(clubId, kitId)).then(info => {
+                if (!info.ok) return;
+                mat.color.set(rgbCss(jerseyCollarColor(info)));
+            });
+            playerJerseyCache[key] = mat;
+            return mat;
         }
 
         // Maglia del giocatore (busto): una texture per giocatore, perché nome e numero cambiano
@@ -8460,26 +8582,28 @@
             canvas.getContext('2d').drawImage(big, 0, 0, canvas.width, canvas.height);
             const jTex = new THREE.CanvasTexture(canvas);
             jTex.anisotropy = getActiveQualityPreset().anisotropy;
-            // maniche
+            // maniche disegnate come le divise vere: righe verticali lungo il braccio, fascia colorata sopra il gomito
+            // (arancio FISR, verde World Skate) e polsino nero. In alto la spalla (v = 1), in basso il polsino.
             const sc = document.createElement('canvas');
             sc.width = 256; sc.height = 512;
             const sctx = sc.getContext('2d');
             sctx.fillStyle = '#f6f6f6'; sctx.fillRect(0, 0, 256, 512);
             sctx.fillStyle = '#0e0e10';
-            for (let x = 0; x < 256; x += 32) sctx.fillRect(x, 0, 16, 512);
+            const per = 256 / 11;
+            for (let i = 0; i < 11; i++) sctx.fillRect(i * per, 0, per / 2, 512);
+            sctx.fillStyle = kit === 'italia' ? '#e4511e' : '#8dc63f';
+            sctx.fillRect(0, 150, 256, 54);
+            sctx.fillStyle = '#0e0e10';
+            sctx.fillRect(0, 148, 256, 3); sctx.fillRect(0, 203, 256, 3);
+            sctx.fillRect(0, 482, 256, 30);
             const sTex = new THREE.CanvasTexture(sc);
             analyzeJerseyImage(REFEREE_KIT_SRC[kit]).then(info => {
                 if (!info.ok) return;
                 paintJerseyCanvas(big, info, fb, '', '');
                 canvas.getContext('2d').drawImage(big, 0, 0, canvas.width, canvas.height);
                 jTex.needsUpdate = true;
-                sctx.drawImage(info.sleeve, 0, 0, 128, 512);
-                sctx.save(); sctx.translate(256, 0); sctx.scale(-1, 1);
-                sctx.drawImage(info.sleeve, 0, 0, 128, 512);
-                sctx.restore();
-                sTex.needsUpdate = true;
             });
-            playerJerseyCache[key] = { jersey: makeFabricMaterial(jTex), sleeve: makeFabricMaterial(sTex) };
+            playerJerseyCache[key] = { jersey: makeFabricMaterial(jTex), sleeve: makeFabricMaterial(sTex), collar: new THREE.MeshStandardMaterial({ color: 0x0e0e10, roughness: 0.7 }) };
             return playerJerseyCache[key];
         }
 
@@ -8702,22 +8826,29 @@
             bodyPivot.position.y = 0.10;
             hipGroup.add(bodyPivot);
             const tW = isGoalie ? 1.16 : 1.0, tD = isGoalie ? 1.28 : 1.0;
+            // taglio delle maglie da hockey: larga e dritta sopra le protezioni, orlo basso e un po' svasato sopra
+            // i pantaloni, spalle ampie e morbide che scendono nelle maniche
             const torso = new THREE.Mesh(buildEllipticLathe([
-                [-0.2, 0.262 * tW, 0.192 * tD, 0.0],
-                [-0.06, 0.25 * tW, 0.182 * tD, 0.0],
-                [0.1, 0.236 * tW, 0.172 * tD, -0.005],
-                [0.28, 0.258 * tW, 0.182 * tD, -0.012],
-                [0.44, 0.292 * tW, 0.19 * tD, -0.012],
-                [0.56, 0.318 * tW, 0.185 * tD, -0.006],
-                [0.64, 0.29 * tW, 0.165 * tD, 0.0],
-                [0.7, 0.17, 0.12, 0.004],
+                [-0.28, 0.278 * tW, 0.206 * tD, 0.004],
+                [-0.2, 0.27 * tW, 0.2 * tD, 0.002],
+                [-0.06, 0.256 * tW, 0.188 * tD, 0.0],
+                [0.1, 0.246 * tW, 0.178 * tD, -0.005],
+                [0.28, 0.264 * tW, 0.186 * tD, -0.012],
+                [0.44, 0.292 * tW, 0.192 * tD, -0.012],
+                [0.55, 0.31 * tW, 0.186 * tD, -0.006],
+                [0.63, 0.282 * tW, 0.166 * tD, 0.0],
+                [0.69, 0.19, 0.13, 0.004],
                 [0.73, 0.09, 0.075, 0.01]
-            ], SEG, 0, 1, preset.id === 'low' ? 14 : 28, true), jerseyMat);   // colletto sulla calotta delle spalle
+            ], SEG, 0, 1, preset.id === 'low' ? 14 : 30, true), jerseyMat);   // colletto sulla calotta delle spalle
             bodyPivot.add(torso);
-            const collar = new THREE.Mesh(new THREE.TorusGeometry(1, 0.016, 6, 20), blackMat);
-            collar.scale.set(0.088, 0.075, 1);
-            collar.rotation.x = Math.PI / 2;
-            collar.position.set(0, 0.725, 0.01);
+            // bordo dell'orlo: piccolo risvolto che dà spessore al tessuto
+            const hemRim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.008, 5, SEG), jerseyMat);
+            hemRim.scale.set(0.278 * tW, 0.206 * tD, 1);
+            hemRim.rotation.x = Math.PI / 2;
+            hemRim.position.set(0, -0.28, 0.004);
+            bodyPivot.add(hemRim);
+            // scollo a V con il bordo nel colore d'accento della divisa
+            const collar = new THREE.Mesh(jerseyCollarGeometry(lowQ), isRef ? refMats.collar : getKitCollarMaterial(clubId, kitId));
             bodyPivot.add(collar);
 
             // ---------- 3. testa, casco con visiera / maschera del portiere
@@ -8832,7 +8963,13 @@
                 ], LSEG, 0, 1, 8), sockMat);
                 kneePivot.add(shin);
 
-                if (isGoalie) {
+                if (isGoalie && window.HIL_HELMETS && window.HIL_HELMETS.has('pads')) {
+                    // gambale modellato (src/game/Helmets.js, "pads" di gurjbakshi, CC BY 4.0): davanti con la grafica
+                    // a V nel colore della squadra e il marchio sul lato esterno, retro con le cinghie
+                    const side = sideX < 0 ? 'left' : 'right', lod = lowQ ? 'lo' : 'hi';
+                    kneePivot.add(new THREE.Mesh(window.HIL_HELMETS.geometry('pads.' + side, 'front', lod), goaliePadFrontMaterial(padAccentMat.color.getHex(), sideX < 0)));
+                    kneePivot.add(new THREE.Mesh(window.HIL_HELMETS.geometry('pads.' + side, 'back', lod), goaliePadBackMaterial()));
+                } else if (isGoalie) {
                     const pad = new THREE.Mesh(createRoundedBoxGeometry(0.27, 0.66, 0.17, 0.06), padWhiteMat);
                     pad.position.set(0, -0.09, -0.1);
                     // grafica a V nel colore della squadra, marchio verticale sul lato esterno (al posto delle fasce)
@@ -8889,24 +9026,31 @@
             function buildArm(sideX) {
                 const armPivot = new THREE.Group();
                 armPivot.position.set(sideX, 0.58, 0);
-                const shoulder = new THREE.Mesh(new THREE.SphereGeometry(0.118 * aW, 16, 12), sleeveMat);
-                shoulder.scale.set(1.05, 0.95, 1.08);
-                shoulder.position.set(Math.sign(sideX) * 0.004, 0.0, 0);
+                // spalla: calotta schiacciata che si appoggia sul busto (niente "palloni" sulle spalle)
+                const shoulder = new THREE.Mesh(shoulderCapGeometry(aW), sleeveMat);
+                shoulder.scale.set(0.97, 0.76, 1.04);
+                shoulder.position.set(-Math.sign(sideX) * 0.022, -0.012, 0);
                 armPivot.add(shoulder);
                 const upper = new THREE.Mesh(buildEllipticLathe([
-                    [-0.28, 0.088 * aW, 0.094 * aW], [-0.16, 0.096 * aW, 0.102 * aW], [-0.04, 0.106 * aW, 0.11 * aW], [0.04, 0.11 * aW, 0.114 * aW]
+                    [-0.28, 0.1 * aW, 0.106 * aW], [-0.16, 0.104 * aW, 0.11 * aW], [-0.04, 0.108 * aW, 0.116 * aW], [0.03, 0.106 * aW, 0.118 * aW]
                 ], LSEG, 0.5, 1, 6), sleeveMat);
                 armPivot.add(upper);
                 const elbowPivot = new THREE.Group();
                 elbowPivot.position.set(0, -0.26, 0);
                 armPivot.add(elbowPivot);
-                const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.09 * aW, 14, 12), sleeveMat);
-                elbow.scale.set(1, 1, 1.12);
+                const elbow = new THREE.Mesh(new THREE.SphereGeometry(0.1 * aW, 14, 12), sleeveMat);
+                elbow.scale.set(1, 1, 1.08);
                 elbowPivot.add(elbow);
+                // avambraccio largo sopra la gomitiera, che si allarga un poco sul polsino del guanto
                 const fore = new THREE.Mesh(buildEllipticLathe([
-                    [-0.22, 0.086 * aW, 0.09 * aW], [-0.12, 0.084 * aW, 0.088 * aW], [0.0, 0.088 * aW, 0.094 * aW], [0.03, 0.09 * aW, 0.096 * aW]
+                    [-0.235, 0.098 * aW, 0.102 * aW], [-0.2, 0.094 * aW, 0.098 * aW], [-0.12, 0.093 * aW, 0.097 * aW], [0.0, 0.098 * aW, 0.104 * aW], [0.03, 0.1 * aW, 0.106 * aW]
                 ], LSEG, 0.0, 0.5, 6), sleeveMat);
                 elbowPivot.add(fore);
+                const cuffRim = new THREE.Mesh(new THREE.TorusGeometry(1, 0.007, 5, LSEG), sleeveMat);
+                cuffRim.scale.set(0.098 * aW, 0.102 * aW, 1);
+                cuffRim.rotation.x = Math.PI / 2;
+                cuffRim.position.y = -0.235;
+                elbowPivot.add(cuffRim);
 
                 let handAnchor;
                 if (isRef) {

@@ -13,7 +13,9 @@
     // gioco = modello * s + o (scala non uniforme: la testa è più corta del casco originale)
     const FIT = {
         player: { s: [0.212, 0.178, 0.168], o: [0, 0.15, 0.002] },
-        goalie: { s: [0.00909, 0.0085, 0.0088], o: [0, -0.0123, -0.01] }
+        goalie: { s: [0.00909, 0.0085, 0.0088], o: [0, -0.0123, -0.01] },
+        // gambali nel sistema del ginocchio (kneePivot): dalla caviglia a sopra il ginocchio, davanti alla tibia
+        pads: { s: [0.44, 0.47, 0.44], o: [0, -0.045, -0.065] }
     };
 
     function decode(b64, Type) {
@@ -25,16 +27,17 @@
     }
 
     const cache = {};
-    // model: 'player' | 'goalie'; role: parte (shell, pad, ear, visor, strap, clip, metal / shell, liner, cage)
+    // model: 'player' | 'goalie' | 'pads.left' | 'pads.right'; role: parte (shell, pad, ear, visor, strap, clip,
+    // metal / shell, liner, cage / front, back)
     function geometry(model, role, lod) {
-        const M = DATA[model];
+        const M = model.split('.').reduce((o, k) => o && o[k], DATA);
         if (!M) return null;
         lod = lod === 'lo' ? 'lo' : 'hi';
         const key = model + '|' + role + '|' + lod;
         if (key in cache) return cache[key];
         const P = M.lods[lod][role];
         if (!P) { cache[key] = null; return null; }
-        const F = FIT[model], lo = M.range[0], hi = M.range[1];
+        const F = FIT[model.split('.')[0]], lo = M.range[0], hi = M.range[1];
         const q = decode(P.pos, Int16Array), n8 = decode(P.nrm, Int8Array);
         const pos = new Float32Array(q.length), nrm = new Float32Array(n8.length);
         for (let i = 0; i < q.length; i += 3) {

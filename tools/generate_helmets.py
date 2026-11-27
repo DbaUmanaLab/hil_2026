@@ -1,4 +1,4 @@
-"""Caschi dei giocatori/arbitri e maschera del portiere da modelli 3D CC BY 4.0 di Sketchfab.
+"""Caschi dei giocatori/arbitri, maschera e gambali del portiere da modelli 3D CC BY 4.0 di Sketchfab.
 
 Sorgenti (zip glTF scaricati da Sketchfab, nella cartella models/ del progetto):
   models/hockey_helmet_washington_capitals.zip
@@ -7,9 +7,12 @@ Sorgenti (zip glTF scaricati da Sketchfab, nella cartella models/ del progetto):
   models/helmet_for_puck.zip
       "Helmet for Puck" di K31THUZ4D (https://sketchfab.com/K31THUZ4D)
       https://sketchfab.com/3d-models/helmet-for-puck-3bfcec855d3843e889f311ead4d48481
-Entrambi CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/): uso libero, anche commerciale,
+  models/pads.zip
+      "pads" di gurjbakshi (https://sketchfab.com/gurjbakshi)
+      https://sketchfab.com/3d-models/pads-e6313b4e57a04a198fbe3f8598929c05
+Tutti CC BY 4.0 (http://creativecommons.org/licenses/by/4.0/): uso libero, anche commerciale,
 citando l'autore (lo fanno i crediti del gioco). Le texture originali NON si usano: hanno loghi e
-marchi reali (Capitals, Bauer, Oilers, CCM). Si tengono solo le forme; colori e grafiche li mette il gioco.
+marchi reali (Capitals, Bauer, Oilers, CCM, Warrior). Si tengono solo le forme; colori e grafiche li mette il gioco.
 
 Lavorazione:
   - parti del modello raggruppate per ruolo (calotta, imbottitura, paraorecchie, visiera, sottogola, metallo);
@@ -18,7 +21,10 @@ Lavorazione:
   - normali ricalcolate con gli spigoli vivi (angolo > CREASE);
   - calotta del giocatore e maschera del portiere: UV "di fianco" calcolate dalla forma
     (u = 0,5 + angolo dal davanti, v = 1 - angolo dall'alto) come la vecchia maschera procedurale,
-    così le grafiche di src/game/GoalieMask.js e i marchi del casco si dipingono su una tela semplice.
+    così le grafiche di src/game/GoalieMask.js e i marchi del casco si dipingono su una tela semplice;
+  - gambali: i due pezzi separati, prima raggruppati su una griglia (il modello ha 434.000 triangoli),
+    poi ridotti; UV piatte viste da davanti (u da sinistra a destra, v dal basso) per la grafica della squadra,
+    il retro (cinghie) a parte.
 
 Uscita: src/game/HelmetModels.js (window.HIL_HELMET_DATA). Posizioni nelle unità del modello già
 centrate: la scala e la posizione sulla testa le decide il gioco (index.html e GoalieMask.js).
@@ -37,6 +43,8 @@ CREASE = math.radians(40)
 
 PLAYER_ZIP = os.path.join(ROOT, 'models', 'hockey_helmet_washington_capitals.zip')
 GOALIE_ZIP = os.path.join(ROOT, 'models', 'helmet_for_puck.zip')
+PADS_ZIP = os.path.join(ROOT, 'models', 'pads.zip')
+PADS_LOD = {'hi': 2200, 'lo': 900}         # triangoli per gambale
 
 # materiali del casco (nomi dei materiali glTF) -> parte del gioco
 PLAYER_PARTS = {
@@ -134,14 +142,15 @@ def weld(chunks, tol):
     return V, F[np.sort(keep)]
 
 
-def reduce(V, F, target):
+def reduce(V, F, target, lock=True):
     if target is None or len(F) <= target: return F
     tris = [(list(map(int, f)), list(map(int, f))) for f in F]
     ec = collections.Counter()
     for f in F:
         for i in range(3):
             a, b = int(f[i]), int(f[(i + 1) % 3]); ec[(min(a, b), max(a, b))] += 1
-    locked = {v for (a, b), c in ec.items() if c != 2 for v in (a, b)}   # bordi aperti e spigoli non manifold
+    # bordi aperti e spigoli non manifold bloccati (non per i gambali: il modello generato ne è pieno)
+    locked = {v for (a, b), c in ec.items() if c != 2 for v in (a, b)} if lock else set()
     res = decimate(tris, [V], locked, [target])
     return np.array([vs for vs, _ in res[target]], dtype=np.int64)
 
@@ -198,6 +207,35 @@ def side_uv(center, radii, side_span):
             if max(ds) - min(ds) > math.pi:
                 ds = [d + 2 * math.pi if d < 0 else d for d in ds]
             for k in range(3): out[fi, k, 0] = 0.5 + ds[k] / (2 * side_span)
+        return out
+    return fn
+
+
+def cluster(V, F, cell):
+    """Riduzione grossolana e veloce: vertici fusi su una griglia di lato 'cell' (posizione media)."""
+    key = np.floor(V / cell).astype(np.int64)
+    _, inv = np.unique(key, axis=0, return_inverse=True)
+    inv = inv.reshape(-1)
+    n = inv.max() + 1
+    P = np.zeros((n, 3)); cnt = np.zeros(n)
+    np.add.at(P, inv, V); np.add.at(cnt, inv, 1)
+    P /= cnt[:, None]
+    F = inv[F]
+    F = F[(F[:, 0] != F[:, 1]) & (F[:, 1] != F[:, 2]) & (F[:, 0] != F[:, 2])]
+    _, keep = np.unique(np.sort(F, axis=1), axis=0, return_index=True)
+    F = F[np.sort(keep)]
+    used = np.unique(F)
+    remap = -np.ones(n, dtype=np.int64); remap[used] = np.arange(len(used))
+    return P[used], remap[F]
+
+
+def planar_uv(lo, hi):
+    """UV piatte viste da davanti (-Z): u da sinistra a destra di chi guarda il gambale, v dal basso."""
+    def fn(V, F):
+        out = np.zeros((len(F), 3, 2))
+        P = V[F]
+        out[..., 0] = (hi[0] - P[..., 0]) / (hi[0] - lo[0])     # davanti a -Z: la sinistra di chi guarda è +X
+        out[..., 1] = (P[..., 1] - lo[1]) / (hi[1] - lo[1])
         return out
     return fn
 
@@ -291,9 +329,42 @@ def main():
     data['goalie'] = build(parts, lods, {'shell': side_uv(center, radii, side)}, ['shell', 'liner'])
     data['goalie']['uvCenter'] = list(map(float, center)); data['goalie']['uvRadii'] = list(map(float, radii))
 
+    # ------------------------------------------------------------------ gambali del portiere
+    # modello: due gambali affiancati, davanti +Z, alto +Y  ->  gioco: (-x, y, -z)
+    raw = load_gltf_zip(PADS_ZIP)
+    chunks = [(np.c_[-pw[:, 0], pw[:, 1], -pw[:, 2]], idx) for cs in raw.values() for pw, idx in cs]
+    V, F = weld(chunks, 2e-4)
+    V, F = cluster(V, F, 0.016)
+    print('gambali: dopo la griglia', len(F), 'triangoli')
+    data['pads'] = {}
+    cen = V[F].mean(1)
+    for side, sel in (('left', cen[:, 0] < 0), ('right', cen[:, 0] >= 0)):
+        Fs = F[sel]
+        used = np.unique(Fs)
+        remap = -np.ones(len(V), dtype=np.int64); remap[used] = np.arange(len(used))
+        Vs = V[used].copy(); Fs = remap[Fs]
+        c = (Vs.min(0) + Vs.max(0)) / 2
+        Vs[:, 0] -= c[0]; Vs[:, 2] -= c[2]                       # centrato in larghezza e profondità
+        lo, hi = Vs.min(0), Vs.max(0)
+        print('gambale', side)
+        m = None
+        for lod, target in PADS_LOD.items():
+            Fr = reduce(Vs, Fs, target, lock=False)
+            fn, _ = face_normals(Vs, Fr)
+            back = fn[:, 2] > 0.35                                # retro (verso +Z): cinghie e imbottitura
+            parts = {'front': (Vs, Fr[~back]), 'back': (Vs, Fr[back])}
+            mm = build(parts, {lod: {'front': None, 'back': None}}, {'front': planar_uv(lo, hi)}, ['front', 'back'])
+            if m is None: m = mm
+            else: m['lods'][lod] = mm['lods'][lod]
+        data['pads'][side] = m
+    data['credits'].append({'title': 'pads', 'author': 'gurjbakshi',
+                            'url': 'https://sketchfab.com/3d-models/pads-e6313b4e57a04a198fbe3f8598929c05',
+                            'license': 'CC BY 4.0'})
+
     js = ('// GENERATO da tools/generate_helmets.py: non modificare a mano.\n'
-          '// Caschi da Sketchfab, CC BY 4.0: "Hockey Helmet Washington Capitals" di Andrey Novichkov (hophobb)\n'
-          '// e "Helmet for Puck" di K31THUZ4D. Solo le forme: loghi e texture originali non sono inclusi.\n'
+          '// Modelli da Sketchfab, CC BY 4.0: "Hockey Helmet Washington Capitals" di Andrey Novichkov (hophobb),\n'
+          '// "Helmet for Puck" di K31THUZ4D e "pads" di gurjbakshi. Solo le forme: loghi e texture originali\n'
+          '// non sono inclusi.\n'
           'window.HIL_HELMET_DATA = ' + json.dumps(data, separators=(',', ':')) + ';\n')
     io.open(OUT_JS, 'w', encoding='utf-8').write(js)
     print(f'scritto {OUT_JS} ({len(js) // 1024} KB)')
