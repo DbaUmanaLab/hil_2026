@@ -6500,6 +6500,199 @@
       ]
     },
     {
+      "id": "palermo",
+      "league": "SERIE B",
+      "name": "PHOENIX HOCKEY PALERMO",
+      "shortName": "PHOENIX",
+      "abbr": "PHX",
+      "note": "ROSA PROVVISORIA: nessun roster disponibile (né fornito né sul sito del club). Nomi inventati, da sostituire con quelli veri; numeri 4, 13 e 17 dalle foto e dalle maglie, gli altri provvisori. Allenatore Luciano Amato dal sito del club (hcphoenix.it, squadra Senior). Fondata nel 1997, Serie B 2025/26 girone D, colori bianco, rosa e nero.",
+      "jerseyClubId": "palermo",
+      "homeArena": "palermo",
+      "logo": "palermo.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/palermo_1.png",
+        "assets/jerseys/palermo_2.png"
+      ],
+      "ratings": {
+        "off": 58,
+        "def": 56,
+        "goa": 60
+      },
+      "colors": {
+        "primary": "#da72a5",
+        "secondary": "#141416",
+        "staffJacket": "#141416",
+        "coachJacket": "#da72a5"
+      },
+      "rosterScreen": {
+        "photo": "palermo.jpg",
+        "focus": "50% 35%"
+      },
+      "coach": {
+        "first": "Luciano",
+        "last": "Amato",
+        "role": "Allenatore",
+        "note": "Allenatore della Phoenix"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "LA ROSA",
+        "first": "Giuseppe"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "CUSIMANO",
+          "first": "Fabio"
+        }
+      ],
+      "reserves": [
+        {
+          "num": "8",
+          "name": "VITALE",
+          "first": "Antonino"
+        },
+        {
+          "num": "27",
+          "name": "NAPOLI",
+          "first": "Daniele"
+        }
+      ],
+      "kits": {
+        "white": {
+          "label": "Divisa Bianco-Rosa",
+          "primary": "#f4f4f2",
+          "pants": "#141416",
+          "helmet": "#141416",
+          "glove": "#141416"
+        },
+        "black": {
+          "label": "Divisa Nera con le Fiamme",
+          "primary": "#18181a",
+          "pants": "#141416",
+          "helmet": "#141416",
+          "glove": "#da72a5"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "17",
+            "name": "GIANNONE",
+            "first": "Marco",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "13",
+            "name": "RUSSO",
+            "first": "Davide",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "9",
+            "name": "LO BIANCO",
+            "first": "Alessio",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "CATALANO",
+            "first": "Francesco",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "21",
+            "name": "MESSINA",
+            "first": "Roberto",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "11",
+            "name": "SCIORTINO",
+            "first": "Andrea",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "7",
+            "name": "PROVENZANO",
+            "first": "Luca",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "GAMBINO",
+            "first": "Salvatore",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "19",
+            "name": "MILAZZO",
+            "first": "Giorgio",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "LW",
+            "num": "23",
+            "name": "FERRARO",
+            "first": "Simone",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "RW",
+            "num": "88",
+            "name": "SCHIRÒ",
+            "first": "Emanuele",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "2",
+            "name": "PALAZZOLO",
+            "first": "Vincenzo",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "padova",
       "league": "SERIE A VINTAGE",
       "name": "GHOSTS PADOVA",

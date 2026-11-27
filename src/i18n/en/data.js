@@ -45,6 +45,7 @@ I18N.add('en', {
     "Vierzon (Cher) • Centro-Valle della Loira, Francia": "Vierzon (Cher) • Centre-Val de Loire, France",
     "Pont-de-Metz (Somme) • Alta Francia, Francia": "Pont-de-Metz (Somme) • Hauts-de-France, France",
     "Valence (Drôme) • Alvernia-Rodano-Alpi, Francia": "Valence (Drôme) • Auvergne-Rhône-Alpes, France",
+    "Palermo (PA) • Sicilia, Italia": "Palermo (PA) • Sicily, Italy",
     // palazzetti: squadre di casa
     "Casa: Cittadella HP • Pike • Asiago": "Home: Cittadella HP • Pike • Asiago",
     "Casa: Diavoli Vicenza": "Home: Diavoli Vicenza",
@@ -87,6 +88,7 @@ I18N.add('en', {
     "Casa: Prédateurs de Vierzon": "Home: Prédateurs de Vierzon",
     "Casa: Green Falcons de Pont-de-Metz": "Home: Green Falcons de Pont-de-Metz",
     "Casa: Aiglons de Valence": "Home: Aiglons de Valence",
+    "Casa: Phoenix Hockey Palermo": "Home: Phoenix Hockey Palermo",
     // palazzetti: capienza
     "850 Spettatori": "850 Spectators",
     "1.100 Spettatori": "1,100 Spectators",
@@ -132,6 +134,7 @@ I18N.add('en', {
     "SportCourt Azzurro a Piastrelle": "Tiled Light Blue SportCourt",
     "Resina Terracotta": "Terracotta Resin",
     "Cemento Lisciato": "Smoothed Concrete",
+    "Resina Rosata": "Pinkish Resin",
     "Piastrelle Modulari": "Modular Tiles",
     "Cemento Multisport": "Multi-Sport Concrete",
     "Piastrelle Azzurre Multisport": "Multi-Sport Light Blue Tiles",
@@ -265,6 +268,7 @@ I18N.add('en', {
         "A modern steel shed with a dark metal roof, a big polycarbonate barrel skylight along the ridge and LED light fixtures. Light gray corrugated metal walls with bracing and a band of translucent panels up high; on the end walls, the big green banner with the crest. On one side, the tiered stand with wooden benches; on the other, the snack bar, the green clubhouse doors, the scoreboard and the French flag. Black nets all around the rink, which has gray tiles with a green center line and the crest at center ice; green boards with a yellow base, black and worn behind the goals.",
     "Palestra moderna e luminosa: controsoffitto bianco coi faretti tondi, interrotto da due lunghe lanterne con le capriate bianche a vista, le vetrate laterali e i lucernari, e i grandi fari tondi. Da un lato le porte vetrate al piano terra dietro la rete bianca, sopra il ballatoio con la ringhiera, i canestri e gli striscioni del tifo, e dietro la tribuna a gradoni piena di pubblico; dall’altro e sulle testate le doghe verticali di legno chiaro. Pista azzurra con la riga centrale rosso scuro e le aree di porta arancio-rosse, balaustre bianche col piede giallo.":
         "A bright, modern gym: a white drop ceiling with round spotlights, broken up by two long lanterns with exposed white trusses, side windows and skylights, plus big round floodlights. On one side, glass doors on the ground floor behind white netting, the railed balcony above with basketball hoops and fan banners, and behind it the tiered stand packed with fans; on the other side and on the end walls, vertical slats of light wood. A light blue rink with a dark red center line and orange-red creases, and white boards with a yellow base.",
+    "Pista all'aperto in resina chiara rosata con le righe rosse e blu, balaustre basse bianche col piede giallo, in parte con i pannelli di rete grigia, e la recinzione alta in rete verde dietro le porte. Dietro le panchine il padiglione vetrato del bar con gli infissi bianchi e il bordo di coppi, la pensilina verde scuro e il muro con la siepe; tutto attorno i condomini alti coi balconi, i ficus, i pini e le torri faro. Il pubblico guarda in piedi lungo la ringhiera.": "Open-air rink in pale pinkish resin with red and blue lines, low white boards with a yellow kickplate, partly fitted with grey mesh panels, and a tall green mesh fence behind the goals. Behind the benches the glazed clubhouse bar with white frames and a terracotta-tile edge, the dark green canopy and the wall with the hedge; all around, tall apartment blocks with balconies, ficus trees, pines and floodlight towers. Fans watch standing along the railing.",
     // "Lo sapevi che?" (src/data/funFacts.js)
     "Il primo scudetto fu... con la pallina da tennis": "The first Italian title was won... with a tennis ball",
     "Il primo campionato italiano ufficiale di hockey in-line si disputò nel 1996 e fu vinto dal Tenniski Vecchia Viareggio (o All Star Milano a seconda della federazione organizzatrice dell'epoca, in un periodo di transizione tra FIHP e FISG). La vera curiosità pionieristica di quegli anni è che, prima della standardizzazione del disco (puck) in plastica dura, in molti tornei e allenamenti si giocava ancora con palline da tennis o dischi sperimentali che rimbalzavano ovunque.":
@@ -380,6 +384,7 @@ I18N.add('en', {
     "In pista anche come difensore": "Also plays on defense",
     "Allenatore degli Yétis": "Coach of the Yétis",
     "Allenatore degli Aiglons": "Coach of the Aiglons",
+    "Allenatore della Phoenix": "Phoenix coach",
     "Staff tecnico con Filippo Carturan": "Coaching staff with Filippo Carturan",
     "Guida la squadra e difende la porta": "Leads the team and guards the net",
     "Staff tecnico con Edoardo Bortoluzzi": "Coaching staff with Edoardo Bortoluzzi",

@@ -3211,10 +3211,21 @@
                 capacity: 'Tribuna a Gradoni e Ballatoio',
                 surface: 'Piastrelle Modulari Azzurre',
                 roof: 'Controsoffitto con Lanterne Vetrate'
+            },
+            palermo: {
+                id: 'palermo',
+                name: 'DLF "I CICLOPI"',
+                shortTitle: 'Centro Sportivo DLF Palermo',
+                location: 'Palermo (PA) • Sicilia, Italia',
+                clubBadge: 'Casa: Phoenix Hockey Palermo',
+                desc: 'Pista all\'aperto in resina chiara rosata con le righe rosse e blu, balaustre basse bianche col piede giallo, in parte con i pannelli di rete grigia, e la recinzione alta in rete verde dietro le porte. Dietro le panchine il padiglione vetrato del bar con gli infissi bianchi e il bordo di coppi, la pensilina verde scuro e il muro con la siepe; tutto attorno i condomini alti coi balconi, i ficus, i pini e le torri faro. Il pubblico guarda in piedi lungo la ringhiera.',
+                capacity: 'Pubblico in Piedi',
+                surface: 'Resina Rosata',
+                roof: 'All\'Aperto'
             }
         };
 
-        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'rethel', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'valladolid', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova', 'monleale', 'tres_cantos', 'arona', 'espanya', 'sagunto', 'metropolitano', 'castellon', 'aranda', 'rubi', 'anglet', 'angers', 'grenoble', 'caen', 'epernay', 'vierzon', 'metz', 'valence'];
+        const ARENA_IDS = ['cittadella', 'vicenza', 'milano', 'cus_verona', 'forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'rethel', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'valladolid', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova', 'monleale', 'tres_cantos', 'arona', 'espanya', 'sagunto', 'metropolitano', 'castellon', 'aranda', 'rubi', 'anglet', 'angers', 'grenoble', 'caen', 'epernay', 'vierzon', 'metz', 'valence', 'palermo'];
         // Palazzetti presenti nel menu ma non selezionabili (al momento nessuno)
         const DISABLED_ARENAS = new Set();
         const SELECTABLE_ARENA_IDS = ARENA_IDS.filter(id => !DISABLED_ARENAS.has(id));
@@ -4570,7 +4581,7 @@
             cittadella: 'tiles', vicenza: 'tiles', milano: 'tiles', asiago: 'tiles', novi: 'tiles', ferrara: 'tiles',
             padova: 'tiles', edera_trieste: 'tiles', rethel: 'tiles', valladolid: 'tiles', monleale: 'tiles', tres_cantos: 'tiles', arona: 'tiles', espanya: 'tiles', sagunto: 'tiles', metropolitano: 'tiles', castellon: 'tiles', aranda: 'tiles', anglet: 'tiles', angers: 'tiles', grenoble: 'tiles', caen: 'tiles', epernay: 'tiles', vierzon: 'tiles', metz: 'tiles', valence: 'tiles',
             cus_verona: 'polished', treviso: 'polished', time42: 'polished',
-            empoli: 'resin', molina: 'resin', piacenza: 'resin', villeneuve: 'resin', forli: 'resin', fox_legnaro: 'resin', rubi: 'resin',
+            empoli: 'resin', molina: 'resin', piacenza: 'resin', villeneuve: 'resin', forli: 'resin', fox_legnaro: 'resin', rubi: 'resin', palermo: 'resin',
             kraken_camaiore: 'parquet', roma: 'parquet',
             kemarin: 'concrete', torre_pellice: 'concrete', parma: 'concrete'
         };
@@ -6083,8 +6094,12 @@
             const n = arenaScoreboards.north;
             if (!n) return;
             n.rotation.y = 0;
-            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'rethel', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'valladolid', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova', 'monleale', 'tres_cantos', 'arona', 'espanya', 'sagunto', 'metropolitano', 'castellon', 'aranda', 'rubi', 'anglet', 'angers', 'grenoble', 'caen', 'epernay', 'vierzon', 'metz', 'valence'].includes(matchConfig.arena);
-            if (matchConfig.arena === 'valence') {
+            if (arenaScoreboards.south) arenaScoreboards.south.visible = !['forli', 'asiago', 'fox_legnaro', 'edera_trieste', 'kraken_camaiore', 'villeneuve', 'rethel', 'roma', 'treviso', 'novi', 'empoli', 'time42', 'molina', 'valladolid', 'ferrara', 'piacenza', 'kemarin', 'torre_pellice', 'parma', 'padova', 'monleale', 'tres_cantos', 'arona', 'espanya', 'sagunto', 'metropolitano', 'castellon', 'aranda', 'rubi', 'anglet', 'angers', 'grenoble', 'caen', 'epernay', 'vierzon', 'metz', 'valence', 'palermo'].includes(matchConfig.arena);
+            if (matchConfig.arena === 'palermo') {
+                // tabellone su due pali, davanti alla recinzione nord in rete verde
+                n.position.set(0, 4.7, -40.1);
+                n.scale.setScalar(0.4);
+            } else if (matchConfig.arena === 'valence') {
                 // tabellone sulla parete di legno (lato panchine), fra i due stendardi del club
                 n.position.set(22.6, 7.0, 0);
                 n.rotation.y = -Math.PI / 2;
@@ -6452,7 +6467,7 @@
                 roughness: 0.55
             });
             const benchBackMat = isAsiago ? new THREE.MeshStandardMaterial({ map: pbr.woodDiffuse, bumpMap: preset.usePhysicalMat ? pbr.woodBump : null, bumpScale: 0.015, color: 0xc8955a, roughness: 0.6 }) : new THREE.MeshStandardMaterial({
-                color: arenaId === 'valence' ? 0x141416 : arenaId === 'metz' ? 0x141416 : arenaId === 'vierzon' ? 0x141416 : arenaId === 'epernay' ? 0x141416 : arenaId === 'caen' ? 0x141416 : arenaId === 'grenoble' ? 0x14204a : arenaId === 'angers' ? 0x1b2a6b : arenaId === 'anglet' ? 0x14583a : arenaId === 'rubi' ? 0x141416 : arenaId === 'aranda' ? 0x2350b8 : arenaId === 'castellon' ? 0x141416 : arenaId === 'metropolitano' ? 0x1f3a9e : arenaId === 'sagunto' ? 0x141416 : arenaId === 'espanya' ? 0x3a3f46 : arenaId === 'arona' ? 0x1f3f95 : arenaId === 'tres_cantos' ? 0x141416 : arenaId === 'monleale' ? 0x1c286e : arenaId === 'padova' ? 0x2a2a2e : arenaId === 'parma' ? 0x1e4a30 : arenaId === 'torre_pellice' ? 0x8a6a48 : arenaId === 'kemarin' ? 0x14244a : arenaId === 'piacenza' ? 0x141416 : arenaId === 'ferrara' ? 0x1d3f9a : arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'rethel' ? 0x111114 : arenaId === 'valladolid' ? 0x1c1e24 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
+                color: arenaId === 'palermo' ? 0x141416 : arenaId === 'valence' ? 0x141416 : arenaId === 'metz' ? 0x141416 : arenaId === 'vierzon' ? 0x141416 : arenaId === 'epernay' ? 0x141416 : arenaId === 'caen' ? 0x141416 : arenaId === 'grenoble' ? 0x14204a : arenaId === 'angers' ? 0x1b2a6b : arenaId === 'anglet' ? 0x14583a : arenaId === 'rubi' ? 0x141416 : arenaId === 'aranda' ? 0x2350b8 : arenaId === 'castellon' ? 0x141416 : arenaId === 'metropolitano' ? 0x1f3a9e : arenaId === 'sagunto' ? 0x141416 : arenaId === 'espanya' ? 0x3a3f46 : arenaId === 'arona' ? 0x1f3f95 : arenaId === 'tres_cantos' ? 0x141416 : arenaId === 'monleale' ? 0x1c286e : arenaId === 'padova' ? 0x2a2a2e : arenaId === 'parma' ? 0x1e4a30 : arenaId === 'torre_pellice' ? 0x8a6a48 : arenaId === 'kemarin' ? 0x14244a : arenaId === 'piacenza' ? 0x141416 : arenaId === 'ferrara' ? 0x1d3f9a : arenaId === 'molina' ? 0x1f4fb5 : arenaId === 'time42' ? 0x1c1c20 : arenaId === 'empoli' ? 0x1c54c4 : arenaId === 'novi' ? 0x141416 : arenaId === 'treviso' ? 0x1c3f8a : arenaId === 'roma' ? 0x5c1a24 : arenaId === 'villeneuve' ? 0x1c3f66 : arenaId === 'rethel' ? 0x111114 : arenaId === 'valladolid' ? 0x1c1e24 : arenaId === 'kraken_camaiore' ? 0x1a1f5c : arenaId === 'edera_trieste' ? 0x14284d : arenaId === 'fox_legnaro' ? 0x1c1c20 : arenaId === 'forli' ? 0x2e353f : arenaId === 'cus_verona' ? 0x1b2347 : (isVicenza ? 0x18181b : (isMilano ? 0x0f2557 : (isAsiago ? 0x09090b : 0x3b0d0c))),
                 roughness: 0.8
             });
 
@@ -6586,6 +6601,7 @@
             vierzon: 'src/arenas/vierzon.js',
             metz: 'src/arenas/metz.js',
             valence: 'src/arenas/valence.js',
+            palermo: 'src/arenas/palermo.js',
             roma: 'src/arenas/roma.js',
             treviso: 'src/arenas/treviso.js',
             novi: 'src/arenas/novi.js',
@@ -7085,7 +7101,9 @@
             // Gymnase René Aviez: piastrelle grigie, balaustre verdi col piede giallo, niente vetro (reti nere nel modulo)
             metz: { dir: 'assets/textures/metz/', normal: 'assets/textures/metz/rink_normal.jpg', floorTint: 0xd0d0cc, floorTintLow: 0xc4c4c0, noGlass: true },
             // Gymnase Denis Maurin: piastrelle azzurre, balaustre bianche col piede giallo, niente vetro (reti bianche nel modulo)
-            valence: { dir: 'assets/textures/valence/', normal: 'assets/textures/valence/rink_normal.jpg', floorTint: 0xc0d4e2, floorTintLow: 0xb4c8d6, noGlass: true }
+            valence: { dir: 'assets/textures/valence/', normal: 'assets/textures/valence/rink_normal.jpg', floorTint: 0xc0d4e2, floorTintLow: 0xb4c8d6, noGlass: true },
+            // DLF "I Ciclopi" di Palermo: ALL'APERTO, resina chiara rosata, balaustre bianche col piede giallo, niente vetro
+            palermo: { dir: 'assets/textures/palermo/', normal: 'assets/textures/palermo/rink_normal.jpg', floorTint: 0xe8dadc, floorTintLow: 0xdccecf, noGlass: true, outdoor: true }
         };
 
         // Balaustre: ogni striscia rappresenta 18,5 m di pannelli pubblicitari
@@ -7422,7 +7440,7 @@
                             { jacket: 0xf8fafc, shirt: 0xdc2626, isJersey: true }
                         ]))));
 
-            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'rethel' || arenaId === 'valladolid' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina' || arenaId === 'ferrara' || arenaId === 'piacenza' || arenaId === 'kemarin' || arenaId === 'torre_pellice' || arenaId === 'parma' || arenaId === 'padova' || arenaId === 'monleale' || arenaId === 'tres_cantos' || arenaId === 'arona' || arenaId === 'espanya' || arenaId === 'sagunto' || arenaId === 'metropolitano' || arenaId === 'castellon' || arenaId === 'aranda' || arenaId === 'rubi' || arenaId === 'anglet' || arenaId === 'angers' || arenaId === 'grenoble' || arenaId === 'caen' || arenaId === 'epernay' || arenaId === 'vierzon' || arenaId === 'metz' || arenaId === 'valence') return;   // pubblico costruito dall'architettura del palazzetto
+            if (arenaId === 'milano' || arenaId === 'forli' || arenaId === 'asiago' || arenaId === 'fox_legnaro' || arenaId === 'edera_trieste' || arenaId === 'kraken_camaiore' || arenaId === 'villeneuve' || arenaId === 'rethel' || arenaId === 'valladolid' || arenaId === 'roma' || arenaId === 'treviso' || arenaId === 'novi' || arenaId === 'empoli' || arenaId === 'time42' || arenaId === 'molina' || arenaId === 'ferrara' || arenaId === 'piacenza' || arenaId === 'kemarin' || arenaId === 'torre_pellice' || arenaId === 'parma' || arenaId === 'padova' || arenaId === 'monleale' || arenaId === 'tres_cantos' || arenaId === 'arona' || arenaId === 'espanya' || arenaId === 'sagunto' || arenaId === 'metropolitano' || arenaId === 'castellon' || arenaId === 'aranda' || arenaId === 'rubi' || arenaId === 'anglet' || arenaId === 'angers' || arenaId === 'grenoble' || arenaId === 'caen' || arenaId === 'epernay' || arenaId === 'vierzon' || arenaId === 'metz' || arenaId === 'valence' || arenaId === 'palermo') return;   // pubblico costruito dall'architettura del palazzetto
 
             // Spalti laterali dietro il tavolo cronometristi (con spazio sull'angolo destro per la casetta bar a Cittadella)
             for (let row = 0; row < 4; row++) {
