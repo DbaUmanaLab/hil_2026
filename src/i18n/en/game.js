@@ -197,6 +197,7 @@ I18N.add('en', {
     'Divisa Rossa': 'Red Kit',
     'Divisa Verde': 'Green Kit',
     'Maglia Pike': 'Pike Jersey',
+    'Maglia Vintage': 'Vintage Jersey',
     'Schema Arancio': 'Orange Scheme',
     'Schema Bianco': 'White Scheme',
     'Schema Blu Navy': 'Navy Blue Scheme',

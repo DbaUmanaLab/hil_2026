@@ -64,7 +64,8 @@
       "logoOnScoreboard": "drawn",
       "jerseys": [
         "assets/jerseys/cittadella_1.png",
-        "assets/jerseys/cittadella_2.png"
+        "assets/jerseys/cittadella_2.png",
+        "assets/jerseys/cittadella_3.png"
       ],
       "ratings": {
         "off": 85,
@@ -241,6 +242,13 @@
           "pants": "#172554",
           "helmet": "#172554",
           "glove": "#172554"
+        },
+        "vintage": {
+          "label": "Maglia Vintage",
+          "primary": "#93303f",
+          "pants": "#141416",
+          "helmet": "#141416",
+          "glove": "#141416"
         }
       }
     },
