@@ -6693,6 +6693,229 @@
       ]
     },
     {
+      "id": "riccione",
+      "league": "SERIE B",
+      "name": "CORSARI RICCIONE",
+      "shortName": "CORSARI",
+      "abbr": "COR",
+      "note": "Nomi e statistiche dal roster ufficiale (5 partite, 20 giocatori e 2 portieri). Numeri di maglia e ruoli NON presenti nel roster: assegnati provvisoriamente, da sostituire con quelli veri (29 e 23 dalla maglia). Linee in ordine di punti. Staff tecnico: Stefano Tomassini, Luca Fabrizioli e Devis Montanari (gli ultimi due anche giocatori).",
+      "jerseyClubId": "riccione",
+      "homeArena": "riccione",
+      "logo": "riccione.png",
+      "logoOnScoreboard": "png",
+      "jerseys": [
+        "assets/jerseys/riccione_1.png",
+        "assets/jerseys/riccione_2.png"
+      ],
+      "ratings": {
+        "off": 62,
+        "def": 58,
+        "goa": 62
+      },
+      "colors": {
+        "primary": "#141416",
+        "secondary": "#c41e2e",
+        "staffJacket": "#141416",
+        "coachJacket": "#141416"
+      },
+      "rosterScreen": {
+        "photo": "riccione.jpg",
+        "focus": "50% 30%"
+      },
+      "coach": {
+        "first": "Stefano",
+        "last": "Tomassini",
+        "role": "Allenatore",
+        "note": "Staff tecnico dei Corsari"
+      },
+      "goalie": {
+        "num": "1",
+        "name": "MONTANARI",
+        "first": "Matteo"
+      },
+      "backupGoalies": [
+        {
+          "num": "30",
+          "name": "SCALBI",
+          "first": "Nicola"
+        }
+      ],
+      "reserves": [
+        {
+          "num": "14",
+          "name": "NITTO",
+          "first": "Riccardo"
+        },
+        {
+          "num": "7",
+          "name": "LONGHI",
+          "first": "Manuel"
+        },
+        {
+          "num": "15",
+          "name": "ANZIVINO",
+          "first": "Edoardo"
+        },
+        {
+          "num": "16",
+          "name": "BERARDI",
+          "first": "Federico"
+        },
+        {
+          "num": "18",
+          "name": "GIACOBONE",
+          "first": "Gian Andrea"
+        },
+        {
+          "num": "24",
+          "name": "GIOVANETTI",
+          "first": "Mauro"
+        },
+        {
+          "num": "27",
+          "name": "MAIOLI",
+          "first": "Filippo"
+        },
+        {
+          "num": "9",
+          "name": "ROMAGNOLI",
+          "first": "Luca"
+        }
+      ],
+      "kits": {
+        "white": {
+          "label": "Divisa Bianca col Veliero",
+          "primary": "#f4f4f2",
+          "pants": "#141416",
+          "helmet": "#f2f2f2",
+          "glove": "#141416"
+        },
+        "black": {
+          "label": "Divisa Nera",
+          "primary": "#18181a",
+          "pants": "#141416",
+          "helmet": "#f2f2f2",
+          "glove": "#f2f2f2"
+        }
+      },
+      "lines": [
+        [
+          {
+            "role": "C",
+            "num": "29",
+            "name": "MUCCIOLI",
+            "first": "Matteo",
+            "g": 5,
+            "a": 3,
+            "pts": 8
+          },
+          {
+            "role": "LW",
+            "num": "23",
+            "name": "BUIZO MONTESINOS",
+            "first": "Julio Manuel",
+            "g": 4,
+            "a": 1,
+            "pts": 5
+          },
+          {
+            "role": "RW",
+            "num": "8",
+            "name": "MONTANARI",
+            "first": "Devis",
+            "g": 3,
+            "a": 2,
+            "pts": 5
+          },
+          {
+            "role": "D",
+            "num": "4",
+            "name": "FABRIZIOLI",
+            "first": "Luca",
+            "g": 2,
+            "a": 0,
+            "pts": 2
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "10",
+            "name": "ACURIO SALGUERO",
+            "first": "Kevin",
+            "g": 2,
+            "a": 0,
+            "pts": 2
+          },
+          {
+            "role": "LW",
+            "num": "17",
+            "name": "TOMASSINI",
+            "first": "Riccardo",
+            "g": 2,
+            "a": 0,
+            "pts": 2
+          },
+          {
+            "role": "RW",
+            "num": "11",
+            "name": "MURO",
+            "first": "Federico",
+            "g": 0,
+            "a": 2,
+            "pts": 2
+          },
+          {
+            "role": "D",
+            "num": "5",
+            "name": "PARI",
+            "first": "Andrea",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          }
+        ],
+        [
+          {
+            "role": "C",
+            "num": "19",
+            "name": "GIULIETTI",
+            "first": "Giovanni",
+            "g": 1,
+            "a": 0,
+            "pts": 1
+          },
+          {
+            "role": "LW",
+            "num": "21",
+            "name": "ZAMAGNI",
+            "first": "Eraldo",
+            "g": 0,
+            "a": 1,
+            "pts": 1
+          },
+          {
+            "role": "RW",
+            "num": "22",
+            "name": "ZAMAGNI",
+            "first": "Enrico",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          },
+          {
+            "role": "D",
+            "num": "6",
+            "name": "VALDINOCI MEZZAPESA",
+            "first": "Gabriele",
+            "g": 0,
+            "a": 0,
+            "pts": 0
+          }
+        ]
+      ]
+    },
+    {
       "id": "padova",
       "league": "SERIE A VINTAGE",
       "name": "GHOSTS PADOVA",
